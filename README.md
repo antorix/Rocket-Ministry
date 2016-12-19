@@ -3,6 +3,6 @@
 
 ![](https://2.bp.blogspot.com/-a1LthXTkRIU/WDK8JIMlKZI/AAAAAAABQuk/pfbwBX0o2CYqsRqZ2MWv-31q8YhUYnNfQCLcB/s1600/gray.png)
 
-![](https://1.bp.blogspot.com/-IecVNaA6JYE/WFZix6afIYI/AAAAAAABQ4I/3cSOsYBtNPY3pYRUkFIhbMsDjBM3NukeACLcB/s1600/win.png)
+![](https://1.bp.blogspot.com/--TvgcItK9fg/WFeNfnKfFaI/AAAAAAABQ4c/uOxFAEUR2bM-_zBqo7YuRcRxOQs2Xi5EQCLcB/s1600/win.png)
 
 См. больше на http://promptministry.blogspot.com
