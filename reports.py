@@ -405,20 +405,27 @@ class Report():
                 if io2.osName=="android":
                     if os.path.exists(io2.AndroidUserPath + "logreport.txt"):   
                         with open(io2.AndroidUserPath + "logreport.txt", encoding="utf-8") as file: text = file.read()
-                        choice=dialogs.dialogHelp(
+                        choice=dialogs.dialogInfo(
                             title=icon("logreport", settings[0][4]) + " Журнал отчета %s" % getTimerIcon(settings[2][6], settings),
-                            message=text
+                            message=text,
+                            neutralButton=True,
+                            neutral="Очистить"
                         )
                         console.process(choice, houses, settings, resources)
+                        if choice=="neutral" and dialogs.dialogConfirm(message="Полностью очистить журнал отчета?")==True:
+                            os.remove(io2.AndroidUserPath + "logreport.txt")
                     else: io2.log("Файл журнала не найден! Попробуйте внести хотя бы одно изменение в отчет.")
                 else:
                     if os.path.exists("logreport.txt"):   
                         with open("logreport.txt", encoding="utf-8") as file: text = file.read()
                         choice=dialogs.dialogHelp(
                             title=icon("logreport", settings[0][4]) + " Журнал отчета %s" % getTimerIcon(settings[2][6], settings),
-                            message=text
+                            message=text,
+                            neutral="Очистить"
                         )
                         console.process(choice, houses, settings, resources)                        
+                        if choice.strip()=="" and dialogs.dialogConfirm(message="Полностью очистить журнал отчета?")==True:
+                            os.remove("logreport.txt")
                     else: io2.log("Файл журнала не найден! Попробуйте внести хотя бы одно изменение в отчет.")
                 
         if exit==1: return True

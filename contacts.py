@@ -321,11 +321,7 @@ def showContacts(houses, settings, resources):
                     message = "Введите имя (напр. Иван) либо номер квартиры с описанием контакта через запятую, например:\n3,Иван Иванович 50"
                 )
                 console.process(newContact, houses, settings, resources)
-                if newContact != None:
-                    if "cancelled!" in newContact:
-                        default=newContact[10:]
-                        continue
-                    else:
+                if newContact != None:                    
                         default=newContact 
                         default2=""
                         address=""
@@ -339,9 +335,6 @@ def showContacts(houses, settings, resources):
                     )
                     console.process(address, houses, settings, resources)
                     if address != None:
-                        if "cancelled!" in address:
-                            default2=address[10:]
-                            continue
                         resources[1].append(house_cl.House()) # create house address
                         resources[1][len(resources[1])-1].title = address.upper() 
                         resources[1][len(resources[1])-1].type = "condo"

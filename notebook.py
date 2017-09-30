@@ -89,11 +89,7 @@ def showNotebook(houses, settings, resources):
                 choice2 = dialogs.dialog(icon("note", settings[0][4], pureText=pureText) + " Новая заметка " + reports.getTimerIcon(settings[2][6], settings), default=default)
                 console.process(choice2, houses, settings, resources)
                 if choice2 != None:
-                    if "cancelled!" in choice2:
-                        default=choice2[10:]
-                        continue
-                    else:
-                        resources[0].append(choice2)                
+                    resources[0].append(choice2)                
                     io2.save(houses, settings, resources)
                     break
             
@@ -111,7 +107,6 @@ def showNotebook(houses, settings, resources):
                 choice3 = dialogs.dialog(icon("note", settings[0][4], pureText=pureText) + " Правка заметки " + reports.getTimerIcon(settings[2][6], settings), default = resources[0][choice-1])
                 console.process(choice3, houses, settings, resources)
                 if choice3 != None:
-                    if "cancelled!" in choice3: continue     
                     resources[0][choice-1] = choice3
                     io2.save(houses, settings, resources)
             elif choice2==1:

@@ -239,6 +239,8 @@ choiceboxWidget = None
 entryWidget = None
 boxRoot = None
 
+neutralPress = False
+
 #-------------------------------------------------------------------
 # various boxes built on top of the basic buttonbox
 #-----------------------------------------------------------------------
@@ -1089,7 +1091,8 @@ def __fillablebox(msg
     y_size = (screen_hsize/4)
     rootWindowPosition = "+%d+%d" % (x_size, y_size)
 
-    boxRoot.protocol('WM_DELETE_WINDOW', denyWindowManagerClose)
+    #boxRoot.protocol('WM_DELETE_WINDOW', denyWindowManagerClose)
+    boxRoot.protocol('WM_DELETE_WINDOW', __enterboxCancel)
     boxRoot.title(title)
     boxRoot.iconname('Dialog')
     boxRoot.geometry(rootWindowPosition)
@@ -1119,7 +1122,7 @@ def __enterboxRestore(event):
     entryWidget.insert(0, __enterboxDefaultText)
 
 
-def __enterboxCancel(event):
+def __enterboxCancel(event=None):
     global __enterboxText
 
     __enterboxText = None
@@ -1525,6 +1528,7 @@ def exceptionbox(msg=None
 
 def codebox(msg=""
             , title=" "
+            , neutral=""
             , text=""):
     """
     Display some text in a monospaced font, with no line wrapping.
@@ -1538,7 +1542,7 @@ def codebox(msg=""
     :param str title: the window title
     :param str text: what to display in the textbox
     """
-    return textbox(msg, title, text, codebox=1)
+    return textbox(msg, title, text, neutral, codebox=1)
 
 
 #-------------------------------------------------------------------
@@ -1547,6 +1551,7 @@ def codebox(msg=""
 def textbox(msg=""
             , title=" "
             , text=""
+            , neutral=""
             , codebox=0):
     """
     Display some text in a proportional font with line wrapping at word breaks.
@@ -1560,6 +1565,8 @@ def textbox(msg=""
     :param str text: what to display in the textbox
     :param str codebox: if 1, act as a codebox
     """
+    
+    global neutralPress
 
     if msg is None:
         msg = ""
@@ -1671,13 +1678,23 @@ def textbox(msg=""
 
     # put the buttons in the buttonsFrame
     okButton = ttk.Button(buttonsFrame, takefocus=YES, text="Назад")
-    okButton.pack(expand=NO, side=TOP, padx='1m', pady='1m')
+    okButton.pack(expand=NO, side=RIGHT, padx='1m', pady='1m')
+    
+    button2 = ttk.Button(buttonsFrame, takefocus=YES, text=neutral)
+    if neutral!="":        
+        button2.pack(expand=NO, side=RIGHT, padx='1m', pady='1m')
+        
 
     # for the commandButton, bind activation events to the activation event handler
     commandButton = okButton
+    
     handler = __textboxOK
+    handler2= __neutral
     for selectionEvent in ["Return", "Button-1", "Escape"]:
         commandButton.bind("<%s>" % selectionEvent, handler)
+    
+    #button2.bind("Button-1", lambda x: textArea.delete(0.0, 'end'))
+    button2.bind("<1>", handler2)
 
 
     # ----------------- the action begins ----------------------------------------
@@ -1708,14 +1725,24 @@ def textbox(msg=""
     # this line MUST go before the line that destroys boxRoot
     areaText = textArea.get(0.0, 'end-1c')
     boxRoot.destroy()
-    return areaText  # return __replyButtonText
-
+    
+    if neutralPress==True:
+        return ""
+    else:
+        return areaText  # return __replyButtonText
+    
 
 #-------------------------------------------------------------------
 # __textboxOK
 #-------------------------------------------------------------------
-def __textboxOK(event):
+def __textboxOK(event=None):
     global boxRoot
+    boxRoot.quit()
+    
+def __neutral(event=None):
+    print(1)
+    global boxRoot, neutralPress
+    neutralPress=True
     boxRoot.quit()
 
 

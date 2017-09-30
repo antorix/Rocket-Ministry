@@ -21,18 +21,23 @@ def dialog(title="", message="", default="", ok="Ввод", cancel="Назад",
     """ Console input """
     
     if io2.osName == "android":
-        phone.dialogCreateInput(title, message, default)
-        phone.dialogSetPositiveButtonText(ok)
-        phone.dialogSetNegativeButtonText(cancel)
-        if neutralButton == True: phone.dialogSetNeutralButtonText(neutral)
-        phone.dialogShow()
-        resp = phone.dialogGetResponse()[1]
-        phone.dialogDismiss()
-        if "canceled" in resp and resp["value"]=="": return None
-        elif "canceled" in resp and resp["value"]!="": return "cancelled!" + resp["value"]
-        elif "neutral" in resp["which"]: return "neutral"
-        elif "positive" in resp["which"]: return resp["value"]
-        else: return None
+        while 1:
+            phone.dialogCreateInput(title, message, default)
+            phone.dialogSetPositiveButtonText(ok)
+            phone.dialogSetNegativeButtonText(cancel)
+            if neutralButton == True: phone.dialogSetNeutralButtonText(neutral)
+            phone.dialogShow()
+            resp = phone.dialogGetResponse()[1]
+            phone.dialogDismiss()
+            default=""
+            if "canceled" in resp and resp["value"]=="": return None
+            elif "canceled" in resp and resp["value"]!="":
+                default=resp["value"]
+                continue            
+            elif "canceled" in resp and resp["value"]!="": return "cancelled!" + resp["value"]
+            elif "neutral" in resp["which"]: return "neutral"
+            elif "positive" in resp["which"]: return resp["value"]
+            else: return None
         
     elif io2.Textmode==True or "--textconsole" in sys.argv:
         os.system("cls")
@@ -214,12 +219,13 @@ def dialogInfo(title="", message="", neutralButton=False, neutral="", no="Наз
             
         else: buttonbox(message, title, [no])
         
-def dialogHelp(title="", message=""):    
+def dialogHelp(title="", message="", neutralButton=False, neutral=""):    
     """ Help dialog """
     
     if io2.osName=="android":
         phone.dialogCreateAlert(title, message)
         phone.dialogSetNegativeButtonText("Назад")
+        if neutralButton == True: phone.dialogSetNeutralButtonText(neutral)
         phone.dialogShow()
         phone.dialogGetResponse().result
         phone.dialogDismiss()
@@ -231,7 +237,8 @@ def dialogHelp(title="", message=""):
             print(title)
             print(message)
             return input()
-        else: codebox(title=title, msg="", text=message)
+        else:
+            return codebox(title=title, msg="", neutral=neutral, text=message)
 
 def pickDate(title="", message="Введите дату в формате ГГГГ-ММ-ДД:", settings=[],
             year = int( time.strftime("%Y", time.localtime()) ),

@@ -121,90 +121,86 @@ def search(houses, settings, resources, query=""):
     if "--textconsole" in sys.argv: pureText=True
     else: pureText=False
     
-    if io2.osName=="android":
-        from androidhelper import Android
-        phone = Android()
-        phone.dialogCreateSpinnerProgress(title="Prompt Ministry", message="Ищем", maximum_progress=100)
-            
-    if query=="":
+    while 1:    
         query = dialogs.dialog( # get search query 
             icon("search", settings[0][4], pureText=pureText) + " Поиск " + reports.getTimerIcon(settings[2][6], settings),
             default="", 
             message = "Введите поисковый запрос:"
         )
+        if io2.osName=="android":
+            from androidhelper import Android
+            phone = Android()
+            phone.dialogCreateSpinnerProgress(title="Prompt Ministry", message="Ищем", maximum_progress=100)
         console.process(query, houses, settings, resources)
-    if query!=None: 
-        
-        if "cancelled" in query: return
-        
-        # Valid query, run search
-        
-        while 1:     
+        if query==None: break
+        else:
             
-            query = query.lower() 
-            query = query.strip()
-            allContacts = contacts.getContacts(houses, settings, resources)
-            list=[]           
+            # Valid query, run search
             
-            for i in range(len(allContacts)): # start search in flats/contacts
-                found=False                
-                if query in allContacts[i][2].lower() or query in allContacts[i][2].lower() or query in allContacts[i][3].lower() or query in allContacts[i][8].lower() or query in allContacts[i][10].lower() or query in allContacts[i][11].lower() or query in allContacts[i][12].lower() or query in allContacts[i][13].lower(): 
-                    found=True                
+            while 1:    
                 
-                if allContacts[i][8]!="virtual":
-                    for r in range(len(houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[allContacts[i][7][2]].records)): # in records in flats
-                        if query in houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[allContacts[i][7][2]].records[r].title.lower(): 
-                            found=True
-                        if query in houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[allContacts[i][7][2]].records[r].date.lower(): 
-                            found=True
-                        if query in houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[allContacts[i][7][2]].records[r].note.lower(): 
-                            found=True
-                else:                     
-                    for r in range(len(resources[1][allContacts[i][7][0]].porches[0].flats[0].records)): # in records in contacts
-                        if query in resources[1][allContacts[i][7][0]].porches[0].flats[0].records[r].title.lower(): 
-                            found=True         
-                        if query in resources[1][allContacts[i][7][0]].porches[0].flats[0].records[r].date.lower(): 
-                            found=True
-                        if query in resources[1][allContacts[i][7][0]].porches[0].flats[0].records[r].note.lower(): 
-                            found=True
-                        
-                if found==True: list.append([allContacts[i][7], allContacts[i][8], allContacts[i][2]])
+                query = query.lower() 
+                query = query.strip()
+                allContacts = contacts.getContacts(houses, settings, resources)
+                list=[]           
+                
+                for i in range(len(allContacts)): # start search in flats/contacts
+                    found=False                
+                    if query in allContacts[i][2].lower() or query in allContacts[i][2].lower() or query in allContacts[i][3].lower() or query in allContacts[i][8].lower() or query in allContacts[i][10].lower() or query in allContacts[i][11].lower() or query in allContacts[i][12].lower() or query in allContacts[i][13].lower(): 
+                        found=True                
                     
-            options2=[]
-            for i in range(len(list)): # save results 
-                if list[i][1] != "virtual": # for regular flats
-                    options2.append("%d) %s, %s" % (i+1, houses[list[i][0][0]].title, houses[list[i][0][0]].porches[list[i][0][1]].flats[list[i][0][2]].title) ) 
-                else: # for standalone contacts
-                    options2.append("%d) %s, %s" % (i+1, resources[1][list[i][0][0]].title, resources[1][list[i][0][0]].porches[0].flats[0].title )
+                    if allContacts[i][8]!="virtual":
+                        for r in range(len(houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[allContacts[i][7][2]].records)): # in records in flats
+                            if query in houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[allContacts[i][7][2]].records[r].title.lower(): 
+                                found=True
+                            if query in houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[allContacts[i][7][2]].records[r].date.lower(): 
+                                found=True
+                            if query in houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[allContacts[i][7][2]].records[r].note.lower(): 
+                                found=True
+                    else:                     
+                        for r in range(len(resources[1][allContacts[i][7][0]].porches[0].flats[0].records)): # in records in contacts
+                            if query in resources[1][allContacts[i][7][0]].porches[0].flats[0].records[r].title.lower(): 
+                                found=True         
+                            if query in resources[1][allContacts[i][7][0]].porches[0].flats[0].records[r].date.lower(): 
+                                found=True
+                            if query in resources[1][allContacts[i][7][0]].porches[0].flats[0].records[r].note.lower(): 
+                                found=True
+                            
+                    if found==True: list.append([allContacts[i][7], allContacts[i][8], allContacts[i][2]])
+                        
+                options2=[]
+                for i in range(len(list)): # save results 
+                    if list[i][1] != "virtual": # for regular flats
+                        options2.append("%d) %s, %s" % (i+1, houses[list[i][0][0]].title, houses[list[i][0][0]].porches[list[i][0][1]].flats[list[i][0][2]].title) ) 
+                    else: # for standalone contacts
+                        options2.append("%d) %s, %s" % (i+1, resources[1][list[i][0][0]].title, resources[1][list[i][0][0]].porches[0].flats[0].title )
+                    )
+                
+                if len(options2)==0: options2.append("Ничего не найдено")
+                
+                if io2.osName=="android":
+                    phone.dialogDismiss()        
+            
+                choice2 = dialogs.dialogList(
+                    form="search",
+                    title = icon("search", settings[0][4]) +  " Поиск по запросу «%s» %s" % (query, reports.getTimerIcon(settings[2][6], settings)),
+                    message = "Результаты:",
+                    options=options2
                 )
-            
-            if len(options2)==0: options2.append("Ничего не найдено")
-            
-            if io2.osName=="android":
-                phone.dialogDismiss()        
-        
-            choice2 = dialogs.dialogList(
-                form="search",
-                title = icon("search", settings[0][4]) +  " Поиск по запросу «%s» %s" % (query, reports.getTimerIcon(settings[2][6], settings)),
-                message = "Результаты:",
-                options=options2
-            )
-            console.process(choice2, houses, settings, resources)
-            
-            # Show results
-            
-            if choice2==None: break
-            
-            elif options2[0]=="Ничего не найдено":
-                continue
-            
-            else: # go to flat
-                if list[choice2][1] != "virtual": # regular contacts
-                    if territory.flatView(list[choice2][0][0], list[choice2][0][1], list[choice2][0][2], houses, settings, resources)==True:
-                        return houses, settings, resources, True 
-                else: # standalone contacts
-                    if territory.flatView(list[choice2][0][0], 0, 0, resources[1], settings, resources)==True:
-                        return houses, settings, resources, True 
+                console.process(choice2, houses, settings, resources)
+                
+                # Show results
+                
+                if choice2==None: break
+                
+                elif options2[0]=="Ничего не найдено":
+                    continue
+                
+                else: # go to flat
+                    if list[choice2][1] != "virtual": # regular contacts
+                        territory.flatView(list[choice2][0][0], list[choice2][0][1], list[choice2][0][2], houses, settings, resources)
+                    else: # standalone contacts
+                        territory.flatView(list[choice2][0][0], 0, 0, resources[1], settings, resources)
 
 def status(setting, settings):
     
@@ -295,9 +291,8 @@ def preferences(houses, settings, resources):
                 message="Введите месячную норму часов для подсчета запаса или отставания от нормы по состоянию на текущий день. Чтобы не показывать норму в отчете, введите 0:", default = str(settings[0][3]))
                 console.process(choice2, houses, settings, resources)
                 try:
-                    if choice2!=None:
-                        if "cancelled!" in choice2: break
-                        elif choice2=="": settings[0][3]=0
+                    if choice2!=None:                        
+                        if choice2=="": settings[0][3]=0
                         else: settings[0][3] = int(choice2)                        
                         io2.save(houses, settings, resources)
                     else: break
@@ -316,7 +311,6 @@ def preferences(houses, settings, resources):
                 console.process(choice2, houses, settings, resources)
                 try:
                     if choice2!=None:
-                        if "cancelled!" in choice2: break
                         settings[0][6] = int(choice2)
                         if settings[0][6]>100: settings[0][6]=100
                         elif settings[0][6]<0: settings[0][6]=0
@@ -339,21 +333,18 @@ def preferences(houses, settings, resources):
             choice2 = dialogs.dialog(title= icon("preferences", settings[0][4], pureText=pureText) + " Шаблон записи посещения " + reports.getTimerIcon(settings[2][6], settings), message="Введите текст, который будет автоматически подставляться в новой записи посещения, либо оставьте поле пустым:", default = str(settings[0][12]))
             console.process(choice2, houses, settings, resources)
             if choice2!=None:
-                if "cancelled!" in choice2: continue
                 settings[0][12]=choice2
                 
         elif "Консольная команда" in result:
             choice2 = dialogs.dialog(title= icon("preferences", settings[0][4], pureText=pureText) + " Консольная команда по умолчанию " + reports.getTimerIcon(settings[2][6], settings), message="Введите команду, которая будет выполняться в консоли путем ввода символа _:", default = str(settings[0][13]))
             console.process(choice2, houses, settings, resources)
             if choice2!=None:
-                if "cancelled!" in choice2: continue
                 settings[0][13]=choice2.strip()
                 
         elif "URL импорта" in result:
             choice2 = dialogs.dialog(title= icon("preferences", settings[0][4], pureText=pureText) + " URL импорта базы данных " + reports.getTimerIcon(settings[2][6], settings), message="Введите URL-адрес, по которому будет загружаться база данных:", default = settings[0][14])
             console.process(choice2, houses, settings, resources)
             if choice2!=None:
-                if "cancelled!" in choice2: continue
                 settings[0][14]=choice2.strip()                
         elif "Переносить минуты" in result: settings[0][15] = toggle(settings[0][15])
         
@@ -361,7 +352,6 @@ def preferences(houses, settings, resources):
             choice2 = dialogs.dialog(title= icon("preferences", settings[0][4], pureText=pureText) + " Пароль на вход " + reports.getTimerIcon(settings[2][6], settings), message="Введите пароль для входа в программу. Если оставить поле пустым, пароль запрашиваться не будет:", default = str(settings[0][17]))
             console.process(choice2, houses, settings, resources)
             if choice2!=None:
-                if "cancelled!" in choice2: continue
                 settings[0][17]=choice2
                
         io2.save(houses, settings, resources)            
@@ -442,7 +432,6 @@ def houseSettings(houses, selectedHouse, settings, resources):
             choice2 = dialogs.dialog(title=icon("baloon", settings[0][4], pureText=pureText) + " Адрес " + reports.getTimerIcon(settings[2][6], settings), message=message, default = houses[selectedHouse].title)
             console.process(choice2, houses, settings, resources)
             if choice2 != None:
-                if "cancelled!" in choice2: continue
                 houses[selectedHouse].title = choice2.upper()
                 io2.save(houses, settings, resources)
                 
@@ -450,7 +439,6 @@ def houseSettings(houses, selectedHouse, settings, resources):
             choice2 = dialogs.dialog(icon("pin", settings[0][4], pureText=pureText) + " Заметка участка " + reports.getTimerIcon(settings[2][6], settings), default=houses[selectedHouse].note)
             console.process(choice2, houses, settings, resources)
             if choice2 != None:
-                if "cancelled!" in choice2: continue
                 houses[selectedHouse].note = choice2
                 io2.save(houses, settings, resources)
         
@@ -572,7 +560,6 @@ def porchSettings(houses, selectedHouse, selectedPorch, settings, resources):
             choice2 = dialogs.dialog(icon("baloon", settings[0][4], pureText=pureText) + " Название" + type + reports.getTimerIcon(settings[2][6], settings), message=message, default = houses[selectedHouse].porches[selectedPorch].title)
             console.process(choice2, houses, settings, resources)
             if choice2 != None:
-                if "cancelled!" in choice2: continue
                 houses[selectedHouse].porches[selectedPorch].title = choice2.strip()
                 io2.save(houses, settings, resources)
             else: continue
@@ -615,7 +602,6 @@ def porchSettings(houses, selectedHouse, selectedPorch, settings, resources):
                     while 1:
                         choice4 = dialogs.dialog(icon("sort", settings[0][4], pureText=pureText) + " Сортировка" + type2 + reports.getTimerIcon(settings[2][6], settings), message="Сколько этажей?")
                         if choice4!=None:
-                            if "cancelled!" in choice4: continue                    
                             if contacts.ifInt(choice4)!=True: io2.log("Ошибка, попробуйте еще раз")
                             else:
                                 houses[selectedHouse].porches[selectedPorch].flatsLayout = choice4                
@@ -635,7 +621,6 @@ def porchSettings(houses, selectedHouse, selectedPorch, settings, resources):
             choice2 = dialogs.dialog(icon("pin", settings[0][4], pureText=pureText) + " Заметка%s " % type + reports.getTimerIcon(settings[2][6], settings), default=houses[selectedHouse].porches[selectedPorch].note)
             console.process(choice2, houses, settings, resources)
             if choice2 != None:
-                if "cancelled!" in choice2: continue
                 houses[selectedHouse].porches[selectedPorch].note = choice2
                 io2.save(houses, settings, resources)
                 
@@ -737,7 +722,6 @@ def flatSettings(houses, selectedHouse, selectedPorch, selectedFlat, settings, r
                 choice2 = "?, " + choice2 # add ? if not entered
                 
             if choice2 != None and len(choice2)>0 and choice2[0]!="," and choice2[0]!="." and choice2!="!" and choice2[0]!=" ":
-                if "cancelled!" in choice2: continue
                 houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].title = "+" + choice2
                 houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].setFlat("+" + choice2)
                 io2.save(houses, settings, resources)
@@ -747,7 +731,6 @@ def flatSettings(houses, selectedHouse, selectedPorch, selectedFlat, settings, r
             choice2 = dialogs.dialog(icon("pin", settings[0][4], pureText=pureText) + " Заметка%s " % type + reports.getTimerIcon(settings[2][6], settings), default = houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].note)
             console.process(choice2, housesOrig, settings, resources)
             if choice2 != None:
-                if "cancelled!" in choice2: continue     
                 houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].note = choice2
                 io2.save(houses, settings, resources)
                 
@@ -777,7 +760,6 @@ def flatSettings(houses, selectedHouse, selectedPorch, selectedFlat, settings, r
                 default = houses[selectedHouse].title)
                 console.process(address, housesOrig, settings, resources)
                 if address != None:
-                    if "cancelled!" in address: break
                     houses[selectedHouse].title = address.upper()
                 break
             

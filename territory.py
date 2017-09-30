@@ -101,9 +101,8 @@ def terView(houses, settings, resources):
                 else: continue
                 
                 choice2 = dialogs.dialog(houseIcon + " Новый участок " + reports.getTimerIcon(settings[2][6], settings), message)
-                console.process(choice2, houses, settings, resources)
-                if "cancelled!" in choice2: continue
-                elif choice2 != None:
+                console.process(choice2, houses, settings, resources)                
+                if choice2 != None:
                     house_op.addHouse(houses, choice2, type) 
                     io2.log("Создан участок «%s»" % choice2.upper())
                     io2.save(houses, settings, resources)
@@ -171,42 +170,41 @@ def houseView(selectedHouse, houses, settings, resources, jump=""):
         console.process(choice, houses, settings, resources)
         choice2=""
         
-        try:
-            if choice==None: break
-            
-            elif choice=="neutral": # house settings
-                if set.houseSettings(houses, selectedHouse, settings, resources) == "deleted": break # exit to territory screen if house was deleted
-                    
-            elif choice=="positive": # console
-                if console.dialog(houses, settings, resources)==True: return True
-            
-            elif choice==0: # new porch
-                if houses[selectedHouse].type=="condo":
-                    type=" подъезд "
-                    message="Введите заголовок подъезда (обычно просто номер):"
-                elif houses[selectedHouse].type=="private":
-                    message="Введите название сегмента внутри участка. Это может быть группа домов, часть квартала, четная/нечетная сторона и т.п. Можно создать единственный сегмент с любым названием и даже без него:"    
-                    type=" сегмент "
-                elif houses[selectedHouse].type=="office":
-                    message="Введите название офиса или организации, например:\nПродуктовый магазин\nОфис 15"    
-                    type=" офис "
-                    
-                choice2 = dialogs.dialog(porchIcon + " Новый" + type + reports.getTimerIcon(settings[2][6], settings), message)
-                console.process(choice2, houses, settings, resources)
-                if choice2 != None:
-                    if "cancelled!" in choice2: continue
-                    if choice2[0]=="+": choice2=choice2[1:]
-                    houses[selectedHouse].addPorch(choice2)
-                    io2.save(houses, settings, resources)
-            
-            elif porchView(selectedHouse, choice-1, houses, settings, resources)==True: return True # go to porch
+        #try:
+        if choice==None: break
+        
+        elif choice=="neutral": # house settings
+            if set.houseSettings(houses, selectedHouse, settings, resources) == "deleted": break # exit to territory screen if house was deleted
+                
+        elif choice=="positive": # console
+            if console.dialog(houses, settings, resources)==True: return True
+        
+        elif choice==0: # new porch
+            if houses[selectedHouse].type=="condo":
+                type=" подъезд "
+                message="Введите заголовок подъезда (обычно просто номер):"
+            elif houses[selectedHouse].type=="private":
+                message="Введите название сегмента внутри участка. Это может быть группа домов, часть квартала, четная/нечетная сторона и т.п. Можно создать единственный сегмент с любым названием и даже без него:"    
+                type=" сегмент "
+            elif houses[selectedHouse].type=="office":
+                message="Введите название офиса или организации, например:\nПродуктовый магазин\nОфис 15"    
+                type=" офис "
+                
+            choice2 = dialogs.dialog(porchIcon + " Новый" + type + reports.getTimerIcon(settings[2][6], settings), message)
+            console.process(choice2, houses, settings, resources)
+            if choice2 != None:
+                if choice2[0]=="+": choice2=choice2[1:]
+                houses[selectedHouse].addPorch(choice2)
+                io2.save(houses, settings, resources)
+        
+        elif porchView(selectedHouse, choice-1, houses, settings, resources)==True: return True # go to porch
                         
-        except: continue
+        #except: continue
 
 def porchView(selectedHouse, selectedPorch, houses, settings, resources):
     """ Porch screen, console (yellow house) """
     
-    default=""
+    message=default=""
     
     while 1:
         choice=""
@@ -226,23 +224,18 @@ def porchView(selectedHouse, selectedPorch, houses, settings, resources):
         elif houses[selectedHouse].type=="private": neutral = icon("preferences", settings[0][4]) + " Сегмент"        
         elif houses[selectedHouse].type=="office": neutral = icon("preferences", settings[0][4]) + " Офис"        
         
-        try: choice = dialogs.dialog(title, message, default=default, neutral=neutral, neutralButton=True)            
+        try:
+            choice = dialogs.dialog(title, message, default=default, neutral=neutral, neutralButton=True)
         except:
-            try: choice = dialogs.dialog(title, message, default, neutral, neutralButton=True)                
+            houses[selectedHouse].porches[selectedPorch].flatsLayout = "а"
+            io2.log("Ошибка вывода, смена сортировки на алфавитную")
+            try: choice = dialogs.dialog(title, message, default=default, neutral=neutral, neutralButton=True)
             except:
-                houses[selectedHouse].porches[selectedPorch].flatsLayout = "а"
-                io2.log("Ошибка вывода, смена сортировки на алфавитную")
-                try: choice = dialogs.dialog(title, message, default, neutral, neutralButton=True)
-                except:
-                    io2.log("Ошибка вывода")
-                    return
+                io2.log("Ошибка вывода")
+                return
         
         try:  
             if choice == None: break
-            
-            elif "cancelled!" in choice:
-                default=choice[10:]
-                continue
             
             elif choice == "neutral" or choice == "!": # porch settings
                 if set.porchSettings(houses, selectedHouse, selectedPorch, settings, resources)=="deleted": break
@@ -280,8 +273,10 @@ def porchView(selectedHouse, selectedPorch, houses, settings, resources):
                         break
                 if flatFound == False:
                     selectedFlat = houses[selectedHouse].porches[selectedPorch].addFlat(choice, settings)[2]
-                    houses[selectedHouse].porches[selectedPorch].flats[len(houses[selectedHouse].porches[selectedPorch].flats)-1].addRecord("автоотказ 0")
-                io2.log("В «%s» добавлен автоотказ" % houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].title)
+                    houses[selectedHouse].                                      porches[selectedPorch].flats[len(houses[selectedHouse].porches[selectedPorch].flats)-1].addRecord("автоотказ 0")
+                    io2.log("В «%s» добавлен автоотказ" % houses[selectedHouse].porches[selectedPorch].flats[len(houses[selectedHouse].porches[selectedPorch].flats)-1].title)
+                else:
+                    io2.log("В «%s» добавлен автоотказ" % houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].title)
                 io2.save(houses, settings, resources)
             
             else: # go to flat view 
@@ -299,7 +294,7 @@ def porchView(selectedHouse, selectedPorch, houses, settings, resources):
                 except: continue
             elif io2.Textmode==True: console.process(choice, houses, settings, resources)
             
-        except: continue    
+        except: continue
         
 
 def flatView(selectedHouse, selectedPorch, selectedFlat, houses, settings, resources, virtual=False):
@@ -391,15 +386,11 @@ def flatView(selectedHouse, selectedPorch, selectedFlat, houses, settings, resou
                 if console.dialog(housesOrig, settings, resources)==True: return True
             
             elif choice==0: # new record
-                default=""
                 while 1:
                     if default=="": default=settings[0][12]
                     choice2 = dialogs.dialog(icon("tablet", settings[0][4], pureText=pureText) + " Новая запись посещения " + reports.getTimerIcon(settings[2][6], settings), default=default)
                     console.process(choice2, housesOrig, settings, resources)
-                    if choice2 != None:
-                        if "cancelled!" in choice2:
-                            default=choice2[10:]
-                            continue
+                    if choice2 != None:                        
                         houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].addRecord(choice2)
                         if len(houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].records)>1 and settings[0][7]==1: # auto writing return visit
                             reports.report(houses, settings, resources, choice="%п")
@@ -420,7 +411,6 @@ def flatView(selectedHouse, selectedPorch, selectedFlat, houses, settings, resou
                     choice3 = dialogs.dialog(icon("tablet", settings[0][4], pureText=pureText) + " Правка записи " + reports.getTimerIcon(settings[2][6], settings), default = houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].records[int(choice)-1].title)
                     console.process(choice3, housesOrig, settings, resources)
                     if choice3 != None:
-                        if "cancelled!" in choice3: continue
                         houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].records[int(choice)-1].title = choice3
                         houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].status = \
                             houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].records[int(choice)-1].title[len(choice3[:])-1] # status set to last character of last record

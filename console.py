@@ -16,6 +16,7 @@ import house_cl
 import set
 import territory
 from icons import icon
+from main import version
 
 def dialog(houses, settings, resources, houseTitle=""):
     """ Runs dialog window for console """
@@ -116,17 +117,18 @@ def process(inputOrig, houses, settings, resources, houseTitle=""):
         
     if "help" in input[:4] or "??" in input[:2]: # load
         if io2.osName=="android":
-            if os.path.exists("/storage/sdcard0/qpython/projects3/Prompt Ministry/help.txt"):   
-                with open("/storage/sdcard0/qpython/projects3/Prompt Ministry/help.txt") as file: help = file.read()
+            if os.path.exists(io2.AndroidUserPath + "help.txt"):
+                with open(io2.AndroidUserPath + "help.txt", encoding="utf-8") as file: help = file.read()
                 dialogs.dialogHelp(title=icon("help", settings[0][4]) + " Справка (Prompt Ministry)", message=help)
             else: io2.log("Файл справки не найден! Попробуйте перезагрузить архив программы")
         else:
-            try: webbrowser.open("help.txt")
-            except: io2.log("Файл справки не найден! Попробуйте перезагрузить архив программы")
-        
-    if "log" in input[:3] and io2.osName!="android":
-        try: webbrowser.open("log.txt")
-        except: io2.log("Файл справки не найден! Попробуйте перезагрузить архив программы")
+            if os.path.exists("help.txt"):   
+                with open("help.txt", encoding="utf-8") as file: help = file.read()
+                choice=dialogs.dialogHelp(
+                    title=icon("help", settings[0][4]) + " Справка (Prompt Ministry %s) %s" % (version, reports.getTimerIcon(settings[2][6], settings)),
+                    message=help
+                )                
+            else: io2.log("Файл справки не найден! Попробуйте перезагрузить архив программы")
     
     if "set" in input[:3] or "~" in input[0]: # settings
         set.preferences(houses, settings, resources)
