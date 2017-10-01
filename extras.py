@@ -16,7 +16,6 @@ if io2.osName=="android":
     phone = Android()      
 
 def stats(houses, settings, resources):
-
     status0 = status1= status2 = status9 = statusQ = statusNo = returns = returns1 = returns2 = returns3 = 0
             
     flats = records = 0.0
@@ -67,16 +66,14 @@ def stats(houses, settings, resources):
         )
     console.process(choice, houses, settings, resources)
 
-def library():
-    
+def library():    
     if io2.osName=="android":
         try: phone.startActivity(action="ACTION_MAIN",uri=None,type=None,extras=None,wait=True,packagename='org.jw.jwlibrary.mobile',classname='org.jw.jwlibrary.mobile.MainActivity')
         except: io2.log("Не удалось запустить JW Library")
         else: pass# io2.consoleReturn()
     else: webbrowser.open("http://wol.jw.org")
 
-def calendar():
-    
+def calendar():    
     if io2.osName=="android":
         from androidhelper import Android
         phone = Android()
@@ -98,10 +95,8 @@ def map(houseTitle):
         
     else: webbrowser.open("https://yandex.ru/maps/?text=%s" % houseTitle)               
 
-def serviceYear(houses, settings, resources):
-    
-    while 1:      
-            
+def serviceYear(houses, settings, resources):    
+    while 1:            
         if settings[0][5]==1:
             consoleStatus = icon("console", settings[0][4]) + " Консоль"
             buttonStatus = True
@@ -212,3 +207,42 @@ def serviceYear(houses, settings, resources):
             else: continue
             
             io2.save(houses, settings, resources)
+            
+def bible():
+    if io2.osName=="android":
+        from androidhelper import Android
+        phone = Android()
+        try:
+            phone.startActivity(action="ACTION_MAIN",uri=None,type=None,extras=None,wait=True,packagename="com.areastudio.floatingbible",classname="com.areastudio.floatingbible.SplashActivity")
+        except: io2.log("Не удалось запустить")
+    else:
+        webbrowser.open("https://wol.jw.org/ru/wol/binav/r2/lp-u/bi12/U/2007")
+        
+def viber():
+    if io2.osName=="android":
+        from androidhelper import Android
+        phone = Android()
+        try:            
+            phone.startActivity(action="ACTION_MAIN",uri=None,type=None,extras=None,wait=True,packagename="com.viber.voip",classname="com.viber.voip.WelcomeActivity")
+        except: io2.log("Не удалось запустить")
+    else: pass
+        #webbrowser.open('C:\Users\antor\AppData\Local\Viber\Viber.exe')
+        
+def mxplayer():
+    if io2.osName=="android":
+        from androidhelper import Android
+        phone = Android()
+        try:            
+            phone.startActivity(action="ACTION_MAIN",uri=None,type=None,extras=None,wait=True,packagename="com.mxtech.videoplayer.pro",classname="com.mxtech.videoplayer.pro.ActivityMediaList")
+        except: io2.log("Не удалось запустить")
+    else:
+        webbrowser.open("https://www.jw.org/ru/публикации/видео/#ru/categories/AllVideos")
+
+def modpack(list, position, settings):
+    """Insert additional items into list"""
+    list.insert(position, "\uD83D\uDCAC" + " Viber")
+    #list.insert(position, "\uD83D\uDD17" + " JW.org")
+    list.insert(position, icon("jwlibrary", settings[0][4]) + " JW Library")
+    list.insert(position, "\uD83C\uDFAC" + " Видео")
+    list.insert(position, "\uD83D\uDCD6" + " Библия")
+    

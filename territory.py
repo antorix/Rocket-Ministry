@@ -306,6 +306,8 @@ def flatView(selectedHouse, selectedPorch, selectedFlat, houses, settings, resou
     housesOrig=houses
     if virtual==True: houses=resources[1] # redefine houses if contact is virtual, but keep original for other operations
     
+    #default==""
+    
     while 1:
         
         # Prepare title
@@ -386,6 +388,7 @@ def flatView(selectedHouse, selectedPorch, selectedFlat, houses, settings, resou
                 if console.dialog(housesOrig, settings, resources)==True: return True
             
             elif choice==0: # new record
+                default=""
                 while 1:
                     if default=="": default=settings[0][12]
                     choice2 = dialogs.dialog(icon("tablet", settings[0][4], pureText=pureText) + " Новая запись посещения " + reports.getTimerIcon(settings[2][6], settings), default=default)
@@ -423,6 +426,5 @@ def flatView(selectedHouse, selectedPorch, selectedFlat, houses, settings, resou
                     else: houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].status =\
                         houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].records[len(houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].records)-1].title[len(houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].records[len(houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].records)-1].title[1:])]
                 if houses[selectedHouse].porches[selectedPorch].title!="virtual": io2.save(houses, settings, resources)                    
-                else: continue
-                
+                else: continue                
         except: continue

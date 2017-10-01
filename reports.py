@@ -53,11 +53,10 @@ class Report():
         else:
             with open("%s.txt" % monthName()[4],"w", encoding="utf-8") as file: file.write(output) #json.dump(output, file)
         
-        # Clear service year in October
-        
+        # Clear service year in October        
         if int(time.strftime("%m", time.localtime())) == 10: 
             settings[4] = [None, None, None, None, None, None, None, None, None, None, None, None]
-            io2.log("Предыдущий служебный год очищен" % int(time.strftime("%m", time.localtime())))
+            io2.log("Предыдущий, %s-й, служебный год очищен" % int(time.strftime("%Y", time.localtime())))
         
         # Save last month hour+credit into service year
         

@@ -20,6 +20,10 @@ else:
     osName = "windows"
     if "--textmode" in sys.argv: Textmode=True
 
+if osName=="android" and os.path.exists(AndroidUserPath + "mod.ini"): Mod=True
+elif osName != "android" and os.path.exists("mod.ini"): Mod=True
+else: Mod=False
+
 import json
 import time
 import house_op

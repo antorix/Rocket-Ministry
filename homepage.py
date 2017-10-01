@@ -12,6 +12,7 @@ import console
 import extras
 import sys
 import os
+import webbrowser
 from icons import icon
 from main import version
 
@@ -56,6 +57,9 @@ def homepage(houses, settings, resources):
             if io2.Textmode==True: del options[5]
             
             if io2.osName != "android": options.append(icon("preferences", settings[0][4]) + " Настройки") # neutral button on Android
+            
+            # Append mod items
+            if io2.Mod==True: extras.modpack(options, 5, settings)
             
             # Run home screen
             try:
@@ -135,3 +139,13 @@ def homepage(houses, settings, resources):
                         console.process(choice, houses, settings, resources)
                         
                     else: io2.log("Файл справки не найден! Попробуйте перезагрузить архив программы")
+                    
+            elif "Библия" in result: extras.bible()
+            
+            elif "Видео" in result: extras.mxplayer()
+                    
+            elif "Viber" in result: extras.viber()
+            
+            elif "JW.org" in result: webbrowser.open("https://www.jw.org/ru/")
+            
+            elif "JW Library" in result: extras.library()

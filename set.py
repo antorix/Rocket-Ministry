@@ -536,7 +536,10 @@ def porchSettings(houses, selectedHouse, selectedPorch, settings, resources):
             icon("globe", settings[0][4]) + " Карта"
         ]
         
-        if io2.osName=="android": options.append(icon("jwlibrary", settings[0][4]) + " JW Library")
+        if io2.osName=="android" and io2.Mod==False: options.append(icon("jwlibrary", settings[0][4]) + " JW Library")
+        
+        # Append mod items
+        if io2.Mod==True: extras.modpack(options, 4, settings) 
         
         choice = dialogs.dialogList(
             title = porchIcon + " " + houses[selectedHouse].porches[selectedPorch].title + reports.getTimerIcon(settings[2][6], settings),
@@ -652,7 +655,15 @@ def porchSettings(houses, selectedHouse, selectedPorch, settings, resources):
                 
         elif "Карта" in result: extras.map(houses[selectedHouse].title) # map
                 
-        elif "JW Library" in result: extras.library() # JW Library
+        elif "JW Library" in result: extras.library()
+        
+        elif "Библия" in result: extras.bible()
+        
+        elif "Видео" in result: extras.mxplayer()
+                    
+        elif "Viber" in result: extras.viber()
+        
+        elif "JW.org" in result: webbrowser.open("https://www.jw.org/ru/")
  
 def flatSettings(houses, selectedHouse, selectedPorch, selectedFlat, settings, resources, virtual=False, delete=False):
     
@@ -688,6 +699,9 @@ def flatSettings(houses, selectedHouse, selectedPorch, selectedFlat, settings, r
         options.append(icon("globe", settings[0][4]) + " Карта")
         
         if io2.osName=="android": options.append(icon("jwlibrary", settings[0][4]) + " JW Library")
+        
+        # Append mod items
+        if io2.Mod==True: extras.modpack(options, 3, settings)
         
         if delete==True: result="Удалить"
         else:
@@ -788,7 +802,17 @@ def flatSettings(houses, selectedHouse, selectedPorch, selectedFlat, settings, r
    
         elif "Карта" in result: extras.map(houses[selectedHouse].title) # map
 
-        elif "JW Library" in result: extras.library() # JW Library, Android-only
+        #elif "JW Library" in result: extras.library() # JW Library, Android-only
+        
+        elif "Библия" in result: extras.bible()
+            
+        elif "Видео" in result: extras.mxplayer()
+                
+        elif "Viber" in result: extras.viber()
+        
+        elif "JW.org" in result: webbrowser.open("https://www.jw.org/ru/")
+        
+        elif "JW Library" in result: extras.library()
 
 def getStatus(status, settings, type=0):
     """ Returns symbol """
