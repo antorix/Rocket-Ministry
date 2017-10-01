@@ -194,14 +194,13 @@ def showContacts(houses, settings, resources):
         options = [icon("plus", settings[0][4]) + " " + icon("contact", settings[0][4])]        
         
         # Sort
-        
         if settings[0][10]=="в": contacts.sort(key=lambda contacts: contacts[6]) # by appointment date
         elif settings[0][10]=="и": contacts.sort(key=lambda contacts: contacts[0]) # by name
-        elif settings[0][10]=="c": contacts.sort(key=lambda contacts: contacts[16]) # by status
-        elif settings[0][10]=="з": contacts.sort(key=lambda contacts: contacts[4], reverse=True) # by last record date
+        elif settings[0][10]=="с": contacts.sort(key=lambda contacts: contacts[16]) # by status
+        elif settings[0][10]=="з": contacts.sort(key=lambda contacts: contacts[4]) # by last record date
         elif settings[0][10]=="а": contacts.sort(key=lambda contacts: contacts[2]) # by address
-        elif settings[0][10]=="т": contacts.sort(key=lambda contacts: contacts[9], reverse=False) # by phone number        
-        elif settings[0][10]=="э": contacts.sort(key=lambda contacts: contacts[14], reverse=False) # by email
+        elif settings[0][10]=="т": contacts.sort(key=lambda contacts: contacts[9]) # by phone number        
+        elif settings[0][10]=="э": contacts.sort(key=lambda contacts: contacts[14]) # by email
         
         if io2.osName=="android": gap = "      "
         else: gap=" "
@@ -295,11 +294,11 @@ def showContacts(houses, settings, resources):
             elif ifInt(choice2[0])==True: result2 = options[choice2[0]]
             else: result2 = choice2
             
-            if result2=="По дате встречи": settings[0][10]="в"
+            if result2=="По дате назначенной встречи": settings[0][10]="в"
             elif result2=="По имени": settings[0][10]="и"
-            elif result2=="По статусу": settings[0][10]="c"
+            elif result2=="По статусу": settings[0][10]="с"
             elif result2=="По дате посл. записи": settings[0][10]="з"
-            elif result2=="По адресу дома": settings[0][10]="а"
+            elif result2=="По адресу": settings[0][10]="а"
             elif result2=="По номеру телефона": settings[0][10]="т"
             elif result2=="По email": settings[0][10]="э"
             

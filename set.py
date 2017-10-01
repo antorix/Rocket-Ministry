@@ -539,7 +539,10 @@ def porchSettings(houses, selectedHouse, selectedPorch, settings, resources):
         if io2.osName=="android" and io2.Mod==False: options.append(icon("jwlibrary", settings[0][4]) + " JW Library")
         
         # Append mod items
-        if io2.Mod==True: extras.modpack(options, 4, settings) 
+        if io2.Mod==True:
+            extras.modpack(options, 4, settings) 
+        elif io2.Mod==False and io2.osName=="android":
+            options.append(icon("jwlibrary", settings[0][4]) + " JW Library")
         
         choice = dialogs.dialogList(
             title = porchIcon + " " + houses[selectedHouse].porches[selectedPorch].title + reports.getTimerIcon(settings[2][6], settings),
@@ -594,29 +597,31 @@ def porchSettings(houses, selectedHouse, selectedPorch, settings, resources):
                     selected=selected
                 )
                 console.process(choice3, houses, settings, resources)
+                io2.log(choice3)
                 if choice3==None: break                                
                 elif contacts.ifInt(choice3[0])==True: result3 = options[choice3[0]]
                 else: result3 = choice3
                 
-                if  result3=="По номеру":
+                if result3=="По номеру":
                     houses[selectedHouse].porches[selectedPorch].flatsLayout="н"
                     break
                 elif result3=="По этажам":
                     while 1:
                         choice4 = dialogs.dialog(icon("sort", settings[0][4], pureText=pureText) + " Сортировка" + type2 + reports.getTimerIcon(settings[2][6], settings), message="Сколько этажей?")
-                        if choice4!=None:
+                        io2.log(choice4)
+                        if choice4==None: break
+                        else:
                             if contacts.ifInt(choice4)!=True: io2.log("Ошибка, попробуйте еще раз")
                             else:
                                 houses[selectedHouse].porches[selectedPorch].flatsLayout = choice4                
                                 break
-                        else: break
-                    break
                 elif result3=="По алфавиту":
                     houses[selectedHouse].porches[selectedPorch].flatsLayout="а"
                     break
                 elif result3=="По статусу":
                     houses[selectedHouse].porches[selectedPorch].flatsLayout="с"                
                     break
+                else: break
                     
             io2.save(houses, settings, resources)
             
@@ -698,10 +703,11 @@ def flatSettings(houses, selectedHouse, selectedPorch, selectedFlat, settings, r
         
         options.append(icon("globe", settings[0][4]) + " Карта")
         
-        if io2.osName=="android": options.append(icon("jwlibrary", settings[0][4]) + " JW Library")
-        
         # Append mod items
-        if io2.Mod==True: extras.modpack(options, 3, settings)
+        if io2.Mod==True:
+            extras.modpack(options, 3, settings)
+        elif io2.Mod==False and io2.osName=="android":
+            options.append(icon("jwlibrary", settings[0][4]) + " JW Library")
         
         if delete==True: result="Удалить"
         else:
@@ -731,6 +737,8 @@ def flatSettings(houses, selectedHouse, selectedPorch, selectedFlat, settings, r
                 default = houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].title
             )
             console.process(choice2, housesOrig, settings, resources)
+            
+            if choice2==None: continue
             
             if virtual==True and "," not in choice2:
                 choice2 = "?, " + choice2 # add ? if not entered
@@ -801,8 +809,6 @@ def flatSettings(houses, selectedHouse, selectedPorch, selectedFlat, settings, r
                 io2.log("SMS на номер %s отправлено" % phone)  
    
         elif "Карта" in result: extras.map(houses[selectedHouse].title) # map
-
-        #elif "JW Library" in result: extras.library() # JW Library, Android-only
         
         elif "Библия" in result: extras.bible()
             
