@@ -276,13 +276,13 @@ def showContacts(houses, settings, resources):
                 "По email"
             ]
             
-            if      settings[0][10]=="в": selected=0
-            elif    settings[0][10]=="и": selected=1
-            elif    settings[0][10]=="c": selected=2
+            if      settings[0][10]=="и": selected=1
+            elif    settings[0][10]=="с": selected=2
             elif    settings[0][10]=="з": selected=3
             elif    settings[0][10]=="а": selected=4
             elif    settings[0][10]=="т": selected=5
             elif    settings[0][10]=="э": selected=6
+            else:   selected=0
             
             choice2 = dialogs.dialogRadio(
                 title = icon("sort", settings[0][4]) + " Сортировка контактов " + reports.getTimerIcon(settings[2][6], settings),

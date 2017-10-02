@@ -90,13 +90,13 @@ def tools(houses, settings, resources, jumpToImport=False): # file, former "tool
         
         elif "Восстановление" in result: # restore backup
 
-            if io2.osName=="android": backupPath = io2.AndroidUserPath + "backup/"
+            if io2.osName=="android": backupPath = "backup/"
             else: backupPath = "./backup/"
                 
-            files = [f for f in os.listdir(backupPath) if os.path.isfile(os.path.join(backupPath, f))]            
+            files = [f for f in os.listdir(io2.AndroidUserPath+backupPath) if os.path.isfile(os.path.join(io2.AndroidUserPath+backupPath, f))]            
             
             fileDates=[]
-            for i in range(len(files)): fileDates.append(str("{:%d.%m.%Y, %H:%M}".format(datetime.datetime.strptime(time.ctime((os.path.getmtime(backupPath + files[i]))), "%a %b %d %H:%M:%S %Y"))))
+            for i in range(len(files)): fileDates.append(str("{:%d.%m.%Y, %H:%M}".format(datetime.datetime.strptime(time.ctime((os.path.getmtime(io2.AndroidUserPath+backupPath + files[i]))), "%a %b %d %H:%M:%S %Y"))))
             
             choice2 = dialogs.dialogList(
                 title=icon("restore", settings[0][4]) + " Выберите дату и время резервной копии для восстановления " + reports.getTimerIcon(settings[2][6], settings),
