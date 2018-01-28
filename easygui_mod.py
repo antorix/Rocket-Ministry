@@ -1310,15 +1310,12 @@ def __choicebox(msg
     else:
         pass # choices.sort(lambda x, y: cmp(x.lower(), y.lower()))  # case-insensitive sort
 
-    lastInserted = None
+    #lastInserted = None
     choiceboxChoices = list()
-    for choice in choices:
-        if choice == lastInserted:
-            continue
-        else:
-            choiceboxWidget.insert(END, choice)
-            choiceboxChoices.append(choice)
-            lastInserted = choice
+    for choice in choices:        
+        choiceboxWidget.insert(END, choice)
+        choiceboxChoices.append(choice)
+        #lastInserted = choice
 
     boxRoot.bind('<Any-Key>', KeyboardListener)
     

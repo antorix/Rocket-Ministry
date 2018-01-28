@@ -14,7 +14,7 @@ if os.name=="posix": # check OS
         phone = Android()        
         phone.dialogCreateSpinnerProgress(title="\ud83d\ude80 Prompt Ministry", message="Зажигание", maximum_progress=100)
         phone.dialogShow()        
-        AndroidUserPath = phone.environment()[1]["download"][:phone.environment()[1]["download"].index("/Download")] + "/qpython/projects3/Prompt Ministry/" # check location of PM folder      
+        AndroidUserPath = phone.environment()[1]["download"][:phone.environment()[1]["download"].index("/Download")] + "/qpython/scripts3/" # check location of PM folder      
         SDK = int(phone.environment()[1]["SDK"]) # check Android version        
 else:
     osName = "windows"
@@ -263,7 +263,7 @@ def save(houses, settings, resources, manual=False):
         else:
             if manual==True: log("База успешно сохранена в Dropbox")"""
 
-def share(houses, settings, resources, outside=False, manual=False, filePick=False, fileChoice=None):
+def share(houses, settings, resources, outside=False, manual=False, filePick=False, fileChoice=None, bluetooth=False):
     """ Sharing database """
     
     output = ["Prompt Ministry application data file. Format: JSON. Do NOT edit manually!"] + [settings] + [[resources[0], [ resources[1][i].export() for i in range(len(resources[1])) ] ]]
@@ -272,7 +272,12 @@ def share(houses, settings, resources, outside=False, manual=False, filePick=Fal
     buffer = json.dumps(output)    
     
     if osName == "android": # Sharing to cloud if on Android
-        try: phone.sendEmail("Введите email","data.jsn",buffer,attachmentUri=None)
+        try:
+            if bluetooth==False: phone.sendEmail("Введите email","data.jsn",buffer,attachmentUri=None)
+            else:
+                log(1)
+                log(phone.bluetoothGetConnectedDeviceName(connID=None))
+                phone.bluetoothWrite(buffer,connID=phone.bluetoothGetConnectedDeviceName(connID=None))
         except IOError: log("Не удалось отправить базу!")
         else:
             if outside==False: consoleReturn()

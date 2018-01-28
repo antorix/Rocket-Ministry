@@ -48,16 +48,21 @@ def homepage(houses, settings, resources):
                     icon("contacts", settings[0][4])+ " Контакты (%d)  %s" % (totalContacts, appointment),
                     icon("notebook", settings[0][4])+ " Блокнот (%d)" % len(resources[0]),
                     icon("search", settings[0][4])  + " Поиск",
-                    icon("console", settings[0][4]) + " Консоль",
-                    icon("stats", settings[0][4])   + " Статистика",
-                    icon("report", settings[0][4])  + " Служебный год",
-                    icon("file", settings[0][4])    + " Файл",
+                    #icon("console", settings[0][4]) + " Консоль",
+                    icon("calendar", settings[0][4])  + " Служебный год",
+                    icon("stats", settings[0][4])   + " Статистика",                    
+                    icon("database", settings[0][4])+ " База данных",
                     icon("help", settings[0][4])    + " Справка"
                 ]
             if io2.Textmode==True: del options[5]
+            if io2.osName != "android":
+                if io2.Textmode==False:
+                    options.append(icon("console", settings[0][4]) + " Консоль") # positive button on Android
+                options.append(icon("preferences", settings[0][4]) + " Настройки") # neutral button on Android
             
-            if io2.osName != "android": options.append(icon("preferences", settings[0][4]) + " Настройки") # neutral button on Android
-            
+            consoleStatus = icon("console", settings[0][4]) + " Консоль"
+            buttonStatus = True
+        
             # Append mod items
             if io2.Mod==True: extras.modpack(options, 5, settings)
             
@@ -70,7 +75,9 @@ def homepage(houses, settings, resources):
                     options = options,
                     cancel = "Выход",
                     neutral = icon("preferences", settings[0][4]) + " Настройки",
-                    neutralButton = True
+                    neutralButton = True,
+                    positiveButton = buttonStatus,
+                    positive = consoleStatus
                 )
             except:
                 io2.log("Ошибка вывода")
@@ -81,6 +88,7 @@ def homepage(houses, settings, resources):
             else: result = choice
             
             if result==None: # exit
+                """
                 choice2 = dialogs.dialogConfirm(
                     title = " Prompt Ministry " + reports.getTimerIcon(settings[2][6], settings),
                     message = "Действительно выйти?",
@@ -94,7 +102,12 @@ def homepage(houses, settings, resources):
                     io2.share(houses, settings, resources, manual=True)
                     sys.exit(0)
                 elif choice2==False: continue
-                
+                """
+                sys.exit(0)
+            
+            elif "positive" in result: # console
+                if console.dialog(houses, settings, resources)==True: return True
+        
             elif "neutral" in result: set.preferences(houses, settings, resources) # program settings
                 
             elif "Таймер" in result: # start/stop timer
@@ -117,7 +130,7 @@ def homepage(houses, settings, resources):
         
             elif "Служебный год" in result: extras.serviceYear(houses, settings, resources) # service year 
             
-            elif "Файл" in result: houses, settings, resources, exit = set.tools(houses, settings, resources) # tools
+            elif "База данных" in result: houses, settings, resources, exit = set.tools(houses, settings, resources) # tools
             
             elif "Справка" in result: # help
                 if io2.osName=="android":
@@ -146,6 +159,12 @@ def homepage(houses, settings, resources):
                     
             elif "Viber" in result: extras.viber()
             
-            elif "JW.org" in result: webbrowser.open("https://www.jw.org/ru/")
+            elif "JW.org" in result:
+                if io2.osName=="android":
+                    from androidhelper import Android
+                    Android().startActivity(action="ACTION_VIEW", uri="http://www.jw.org")
+                else:                    
+                    webbrowser.open("http://www.jw.org")                
+                    
             
             elif "JW Library" in result: extras.library()

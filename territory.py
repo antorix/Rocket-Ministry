@@ -58,23 +58,23 @@ def terView(houses, settings, resources):
             consoleStatus = ""
             buttonStatus = False
         
-        try:
-            choice = dialogs.dialogList( # display list of houses and options
-                title = icon("globe", settings[0][4]) + " Участки (%d) %s" % (len(houses), reports.getTimerIcon(settings[2][6], settings)), # houses sorting type, timer icon
-                message = "Выберите участок или создайте новый:",
-                options = housesList,
-                form = "terView",
-                cancel = "Назад",
-                neutral = icon("sort", settings[0][4]) + " Сорт.",
-                neutralButton = True,
-                positiveButton = buttonStatus,
-                positive = consoleStatus,
-                houses = houses
+        #try:
+        choice = dialogs.dialogList( # display list of houses and options
+            title = icon("globe", settings[0][4]) + " Участки (%d) %s" % (len(houses), reports.getTimerIcon(settings[2][6], settings)), # houses sorting type, timer icon
+            message = "Выберите участок или создайте новый:",
+            options = housesList,
+            form = "terView",
+            cancel = "Назад",
+            neutral = icon("sort", settings[0][4]) + " Сорт.",
+            neutralButton = True,
+            positiveButton = buttonStatus,
+            positive = consoleStatus,
+            houses = houses
         )
-        except ValueError:
-            io2.log("Ошибка вывода")
-            return
-        console.process(choice, houses, settings, resources)
+        #except ValueError:
+        #    io2.log("Ошибка вывода")
+        #    return
+        #console.process(choice, houses, settings, resources)
         choice2=""
         
         try:            
@@ -121,11 +121,12 @@ def houseView(selectedHouse, houses, settings, resources, jump=""):
     #else: pureText=False
     
     while 1:
+        
         houses[selectedHouse].sortPorches()        
         
         if houses[selectedHouse].type=="condo": porchIcon = icon("porch", settings[0][4], pureText=io2.Textmode)
         elif houses[selectedHouse].type=="private": porchIcon = icon("flag", settings[0][4], pureText=io2.Textmode)
-        elif houses[selectedHouse].type=="office": porchIcon = icon("door", settings[0][4], pureText=io2.Textmode)
+        else: porchIcon = icon("door", settings[0][4], pureText=io2.Textmode)
         
         porchesList = [icon("plus", settings[0][4]) + " " + porchIcon]
         
@@ -150,23 +151,24 @@ def houseView(selectedHouse, houses, settings, resources, jump=""):
         
         if houses[selectedHouse].type=="condo": houseIcon = icon("house", settings[0][4])            
         elif houses[selectedHouse].type=="private": houseIcon = icon("cottage", settings[0][4])  
-        elif houses[selectedHouse].type=="office": houseIcon = icon("office", settings[0][4])  
+        else: houseIcon = icon("office", settings[0][4])  
         
-        try:
-            choice = dialogs.dialogList( # display list of porches and options
-                form = "houseView",
-                title = houseIcon + " %s %s %s" % (houses[selectedHouse].title, noteTitle, reports.getTimerIcon(settings[2][6], settings)),
-                options = porchesList,
-                cancel = "Назад",
-                neutral = icon("preferences", settings[0][4]) + " Участок",
-                neutralButton = True,
-                positive = consoleStatus,
-                positiveButton = buttonStatus,
-                houses = houses,
-                selectedHouse = selectedHouse)
-        except:
-            io2.log("Ошибка вывода")
-            return
+        #try:
+        choice = dialogs.dialogList( # display list of porches and options
+            form = "houseView",
+            title = houseIcon + " %s %s %s" % (houses[selectedHouse].title, noteTitle, reports.getTimerIcon(settings[2][6], settings)),
+            options = porchesList,
+            cancel = "Назад",
+            neutral = icon("preferences", settings[0][4]) + " Участок",
+            neutralButton = True,
+            positive = consoleStatus,
+            positiveButton = buttonStatus,
+            houses = houses,
+            selectedHouse = selectedHouse
+            )
+        #except:
+        #    io2.log("Ошибка вывода2")
+        #    return
         console.process(choice, houses, settings, resources)
         choice2=""
         
@@ -208,10 +210,9 @@ def porchView(selectedHouse, selectedPorch, houses, settings, resources):
     
     while 1:
         choice=""
-        # Display dialog
-        
-        if houses[selectedHouse].porches[selectedPorch].note != "": noteTitle = icon("pin", settings[0][4]) + " " + houses[selectedHouse].porches[selectedPorch].note      
-        else: noteTitle=""        
+
+        if houses[selectedHouse].porches[selectedPorch].note != "": noteTitle = ""#icon("pin", settings[0][4]) + " " + houses[selectedHouse].porches[selectedPorch].note      
+        else: noteTitle=""
         
         if houses[selectedHouse].type=="condo": porchIcon = icon("porch", settings[0][4], pureText=io2.Textmode)
         elif houses[selectedHouse].type=="private": porchIcon = icon("flag", settings[0][4], pureText=io2.Textmode)
@@ -226,17 +227,18 @@ def porchView(selectedHouse, selectedPorch, houses, settings, resources):
         
         try:
             choice = dialogs.dialog(title, message, default=default, neutral=neutral, neutralButton=True)
+        
         except:
             houses[selectedHouse].porches[selectedPorch].flatsLayout = "а"
             io2.log("Ошибка вывода, смена сортировки на алфавитную")
             try: choice = dialogs.dialog(title, message, default=default, neutral=neutral, neutralButton=True)
             except:
-                io2.log("Ошибка вывода")
-                return
-        
-        try:  
+                io2.log("Ошибка вывода")                
+                return True        
+
+        try:
             if choice == None: break
-            
+
             elif choice == "neutral" or choice == "!": # porch settings
                 if set.porchSettings(houses, selectedHouse, selectedPorch, settings, resources)=="deleted": break
             
@@ -258,7 +260,9 @@ def porchView(selectedHouse, selectedPorch, houses, settings, resources):
                     if flatView(selectedHouse, selectedPorch, createdFlat, houses, settings, resources)==True: return True
                 default=""
                 
-            elif choice[0]== "[": houses[selectedHouse].porches[selectedPorch].flatsLayout = choice[1:] # change flats layout
+            elif choice[0]== "[":
+                houses[selectedHouse].porches[selectedPorch].flatsLayout = choice[1:] # change flats layout
+                io2.save(houses, settings, resources)
             
             #elif choice[0]== "-":
             
@@ -299,7 +303,7 @@ def porchView(selectedHouse, selectedPorch, houses, settings, resources):
 
 def flatView(selectedHouse, selectedPorch, selectedFlat, houses, settings, resources, virtual=False):
     """ Flat screen, list (silhouette) """
-    
+
     if "--textconsole" in sys.argv: pureText=True
     else: pureText=False
     
@@ -312,7 +316,7 @@ def flatView(selectedHouse, selectedPorch, selectedFlat, houses, settings, resou
         
         # Prepare title
         
-        if contacts.checkDate(houses[selectedHouse].porches[selectedPorch].flats[selectedFlat])[0] != "": appointment = icon("calendar", settings[0][4])
+        if contacts.checkDate(houses[selectedHouse].porches[selectedPorch].flats[selectedFlat])[0] != "": appointment = icon("appointment", settings[0][4])
         else: appointment = ""
         
         if contacts.checkPhone(houses[selectedHouse].porches[selectedPorch].flats[selectedFlat]) != "zzz": phone = icon("phone", settings[0][4])
@@ -340,15 +344,10 @@ def flatView(selectedHouse, selectedPorch, selectedFlat, houses, settings, resou
             if io2.osName!="android": options.append(icon("preferences", settings[0][4])+ " Квартира")
             neutral = icon("preferences", settings[0][4]) + " Квартира"
         
-        if houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].note=="": # where to show note depending on OS
-           noteTitle = ""
-           noteMessage = ""
-        elif houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].note!="" and io2.osName=="android":
+        if houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].note!="":
             noteTitle = icon("pin", settings[0][4]) + " " + houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].note
-            noteMessage = ""
-        elif houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].note!="" and io2.osName!="android":
-            noteTitle = ""
-            noteMessage = icon("pin", settings[0][4]) + " " + houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].note + "\n\n"
+        else:
+            noteTitle=""
 
         if io2.osName!="android" and io2.Textmode==False: options.append(icon("console", settings[0][4]) + " Консоль") # neutral button on Android
             
@@ -367,7 +366,7 @@ def flatView(selectedHouse, selectedPorch, selectedFlat, houses, settings, resou
             ),
             options=options,
             form="flatView",
-            message = "%sВыберите запись посещения или создайте новое:" % noteMessage,
+            message = "Выберите запись посещения или создайте новое:",
             neutral = neutral,
             neutralButton = True,
             positive = consoleStatus,
@@ -391,10 +390,10 @@ def flatView(selectedHouse, selectedPorch, selectedFlat, houses, settings, resou
                 default=""
                 while 1:
                     if default=="": default=settings[0][12]
-                    choice2 = dialogs.dialog(icon("tablet", settings[0][4], pureText=pureText) + " Новая запись посещения " + reports.getTimerIcon(settings[2][6], settings), default=default)
+                    choice2 = dialogs.dialog(icon("mic", settings[0][4], pureText=pureText) + " Новая запись посещения " + reports.getTimerIcon(settings[2][6], settings), default=default)
                     console.process(choice2, housesOrig, settings, resources)
                     if choice2 != None:                        
-                        houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].addRecord(choice2)
+                        houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].addRecord(choice2.strip())
                         if len(houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].records)>1 and settings[0][7]==1: # auto writing return visit
                             reports.report(houses, settings, resources, choice="%п")
                         if houses[selectedHouse].porches[selectedPorch].title!="virtual": io2.save(houses, settings, resources)                    
@@ -403,7 +402,7 @@ def flatView(selectedHouse, selectedPorch, selectedFlat, houses, settings, resou
             
             elif contacts.ifInt(choice)==True: # edit record             
                 options2 = [icon("edit", settings[0][4]) + " Править", icon("cut", settings[0][4]) + " Удалить"]
-                choice2 = dialogs.dialogList(title=icon("tablet", settings[0][4]) + " Запись посещения " + reports.getTimerIcon(settings[2][6], settings),
+                choice2 = dialogs.dialogList(title=icon("mic", settings[0][4]) + " Запись посещения " + reports.getTimerIcon(settings[2][6], settings),
                     options=options2, message="Что делать с записью?", form="noteEdit")
                     
                 if contacts.ifInt(choice2)==True: result2 = options2[choice2]
@@ -411,7 +410,7 @@ def flatView(selectedHouse, selectedPorch, selectedFlat, houses, settings, resou
                 
                 if result2==None: continue                    
                 elif "Править" in result2: # edit
-                    choice3 = dialogs.dialog(icon("tablet", settings[0][4], pureText=pureText) + " Правка записи " + reports.getTimerIcon(settings[2][6], settings), default = houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].records[int(choice)-1].title)
+                    choice3 = dialogs.dialog(icon("mic", settings[0][4], pureText=pureText) + " Правка записи " + reports.getTimerIcon(settings[2][6], settings), default = houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].records[int(choice)-1].title)
                     console.process(choice3, housesOrig, settings, resources)
                     if choice3 != None:
                         houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].records[int(choice)-1].title = choice3

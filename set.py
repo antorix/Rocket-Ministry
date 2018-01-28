@@ -14,8 +14,8 @@ import sys
 import datetime
 import territory
 import extras
+import copy
 from icons import icon
-
 
 def tools(houses, settings, resources, jumpToImport=False): # file, former "tools"
     """ Program settings on the start screen """
@@ -30,6 +30,7 @@ def tools(houses, settings, resources, jumpToImport=False): # file, former "tool
             #icon("jwlibrary", settings[0][4]) + " JW Library",
             #icon("calendar", settings[0][4]) + " Календарь",
             icon("export", settings[0][4]) + " Экспорт",
+            #icon("export", settings[0][4]) + " Отправка по Bluetooth",
             icon("import", settings[0][4]) + " Импорт по URL",
             icon("restore", settings[0][4]) + " Восстановление",
             icon("load", settings[0][4]) + " Загрузка",
@@ -54,7 +55,7 @@ def tools(houses, settings, resources, jumpToImport=False): # file, former "tool
         try:
             choice = dialogs.dialogList( # display list of settings
             form = "tools",
-            title = icon("file", settings[0][4]) + " Файл %s " % reports.getTimerIcon(settings[2][6], settings),
+            title = icon("database", settings[0][4]) + " База данных %s " % reports.getTimerIcon(settings[2][6], settings),
             message = "Выберите действие:",
             positiveButton = buttonStatus,
             positive = consoleStatus,
@@ -85,6 +86,9 @@ def tools(houses, settings, resources, jumpToImport=False): # file, former "tool
         elif "Экспорт" in result:
             io2.save(houses, settings, resources)
             io2.share(houses, settings, resources, manual=True, filePick=True) # send
+            
+        elif "Bluetooth" in result:
+            io2.share(houses, settings, resources, manual=True, filePick=True, bluetooth=True) # send via Bluetooth
             
         elif "Импорт" in result: houses, settings, resources = io2.load(url=settings[0][14]) # URL download (beta)            
         
@@ -234,7 +238,7 @@ def preferences(houses, settings, resources):
         
         if io2.osName=="android":
             options.append(status(settings[0][0], settings) + "Бесшумный режим при таймере") # settings[0][0]
-            options.append(status(settings[0][5], settings) + "Показывать консоль на отдельной кнопке") # settings[0][5]
+            options.append(status(settings[0][5], settings) + "Консоль на отдельной кнопке (кроме главного экрана)") # settings[0][5]
             options.append(status(settings[0][1], settings) + "Подгонять шрифты под мелкий системный шрифт") # settings[0][1]
         
         options.append(status(settings[0][11], settings) + "Индикатор встреч на сегодня на главной странице") # settings[0][11]
@@ -303,7 +307,7 @@ def preferences(houses, settings, resources):
                 
         elif "Упрощенные значки" in result: settings[0][4] = toggle(settings[0][4])
                 
-        elif "Показывать консоль" in result: settings[0][5] = toggle(settings[0][5])
+        elif "Консоль на отдельной кнопке" in result: settings[0][5] = toggle(settings[0][5])
         
         elif "Число резервных копий" in result: # backup copies
             while 1:
@@ -692,6 +696,8 @@ def flatSettings(houses, selectedHouse, selectedPorch, selectedFlat, settings, r
         
         if houses[selectedHouse].porches[selectedPorch].title=="virtual":
             options.append(icon("house", settings[0][4]) + " Правка адреса")
+        else:
+            options.append(icon("clipboard", settings[0][4]) + " Скопировать в отдельный контакт")
         
         phone = contacts.checkPhone(houses[selectedHouse].porches[selectedPorch].flats[selectedFlat])
         email = contacts.checkEmail(houses[selectedHouse].porches[selectedPorch].flats[selectedFlat])
@@ -701,11 +707,11 @@ def flatSettings(houses, selectedHouse, selectedPorch, selectedFlat, settings, r
                 options.append(icon("call", settings[0][4]) + " Звонок на " + phone)        
                 options.append(icon("call", settings[0][4]) + " SMS на " + phone)                    
         
-        options.append(icon("globe", settings[0][4]) + " Карта")
+        options.append(icon("globe", settings[0][4]) + " Карта")        
         
         # Append mod items
         if io2.Mod==True:
-            extras.modpack(options, 3, settings)
+            extras.modpack(options, 4, settings)
         elif io2.Mod==False and io2.osName=="android":
             options.append(icon("jwlibrary", settings[0][4]) + " JW Library")
         
@@ -775,7 +781,8 @@ def flatSettings(houses, selectedHouse, selectedPorch, selectedFlat, settings, r
             while 1:
                 if houses[selectedHouse].type=="office": message = "Введите название либо адрес объекта, например:\nТЦ «Радуга»\nПушкина, 20"
                 elif houses[selectedHouse].type=="private": message = "Введите улицу, например:\nЛесная"
-                elif houses[selectedHouse].type=="condo": message = "Введите улицу и номер дома, например:\nПушкина, 30"
+                #elif houses[selectedHouse].type=="condo": message = "Введите улицу и номер дома, например:\nПушкина, 30"
+                else: message = "Введите улицу и номер дома, например:\nПушкина, 30"
                 
                 address = dialogs.dialog(title=icon("house", settings[0][4], pureText=pureText) + " Правка адреса " + reports.getTimerIcon(settings[2][6], settings),
                 message = message,
@@ -784,6 +791,28 @@ def flatSettings(houses, selectedHouse, selectedPorch, selectedFlat, settings, r
                 if address != None:
                     houses[selectedHouse].title = address.upper()
                 break
+                
+        elif "Скопировать" in result:
+            #print(houses[selectedHouse].title)
+            #print(
+            resources[1].append(house_cl.House()) # create house address
+            resources[1][len(resources[1])-1].title = houses[selectedHouse].title 
+            resources[1][len(resources[1])-1].type = "condo"
+            resources[1][len(resources[1])-1].addPorch("virtual") # create virtual porch                        
+            resources[1][len(resources[1])-1].porches[0].addFlat("+" + houses[selectedHouse].porches[selectedPorch].flats[selectedFlat].title, settings, virtual=True) # create flat
+            
+            newContact = resources[1][len(resources[1])-1].porches[0].flats[0]
+            oldContact = houses[selectedHouse].porches[selectedPorch].flats[selectedFlat]
+                        
+            #newContact.addRecord("создана копия контакта")
+            
+            newContact.records = copy.deepcopy(oldContact.records)            
+                        
+            newContact.note = oldContact.note
+            newContact.status = oldContact.status
+            
+            io2.save(houses, settings, resources)
+            io2.log("Создан отдельный контакт %s" % newContact.title)
             
         elif "Email" in result: # Email
             if io2.osName=="android":

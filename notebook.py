@@ -94,7 +94,7 @@ def showNotebook(houses, settings, resources):
                     break
             
         else: # edit            
-            options2 = [icon("edit", settings[0][4]) + " Править ", icon("cut", settings[0][4]) + " Удалить "]
+            options2 = [icon("edit", settings[0][4]) + " Править ", icon("cut", settings[0][4]) + " Удалить ", icon("contact", settings[0][4]) + " Преобразовать в контакт "]
             choice2 = dialogs.dialogList(
                 title = icon("note", settings[0][4]) + " Заметка " + reports.getTimerIcon(settings[2][6], settings),
                 options=options2,
@@ -112,3 +112,5 @@ def showNotebook(houses, settings, resources):
             elif choice2==1:
                 del resources[0][choice-1]
                 io2.save(houses, settings, resources)
+            elif choice2==2:
+                console.process("con " + resources[0][choice-1].strip(), houses, settings, resources)

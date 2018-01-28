@@ -130,8 +130,7 @@ def retrieve(houses, h, p, f, contacts, settings):
     if title[0]==" ": title = title[1:]
     if houses[h].title=="": houses[h].title="(БЕЗ АДРЕСА)"
     
-    if len( houses[h].porches[p].flats[f].records )>0:        
-        
+    if len( houses[h].porches[p].flats[f].records )>0:
         lastRecordDate = houses[h].porches[p].flats[f].records[len(houses[h].porches[p].flats[f].records)-1].date
     else:
         lastRecordDate=""
@@ -180,7 +179,7 @@ def getContacts(houses, settings, resources):
                     retrieve(houses, h, p, f, contacts, settings)                    
     for h in range(len(resources[1])):
         retrieve(resources[1], h, 0, 0, contacts, settings)
-        
+    
     return contacts
 
 def showContacts(houses, settings, resources):
@@ -243,19 +242,19 @@ def showContacts(houses, settings, resources):
             buttonStatus = False
         
         # Display dialog
-        try:
-            choice = dialogs.dialogList(
-            form = "showContacts",
-            title = icon("contacts", settings[0][4]) + " Контакты (%d) %s " % (len(contacts), reports.getTimerIcon(settings[2][6], settings)), # houses sorting type, timer icon
-            message = "Выберите контакт:",
-            options = options,
-            neutralButton = True,
-            neutral = icon("sort", settings[0][4]) + " Сорт.",
-            positiveButton = buttonStatus,
-            positive = consoleStatus)
-        except:
-            io2.log("Ошибка вывода")
-            return
+        #try:
+        choice = dialogs.dialogList(
+        form = "showContacts",
+        title = icon("contacts", settings[0][4]) + " Контакты (%d) %s " % (len(contacts), reports.getTimerIcon(settings[2][6], settings)), # houses sorting type, timer icon
+        message = "Выберите контакт:",
+        options = options,
+        neutralButton = True,
+        neutral = icon("sort", settings[0][4]) + " Сорт.",
+        positiveButton = buttonStatus,
+        positive = consoleStatus)
+        #except:
+        #    io2.log("Ошибка вывода")
+        #    return
         
         if ifInt(choice)==True: result = options[choice]
         else: result = choice 
@@ -337,15 +336,8 @@ def showContacts(houses, settings, resources):
                         resources[1].append(house_cl.House()) # create house address
                         resources[1][len(resources[1])-1].title = address.upper() 
                         resources[1][len(resources[1])-1].type = "condo"
-                        resources[1][len(resources[1])-1].addPorch("virtual") # create virtual porch
-                        
+                        resources[1][len(resources[1])-1].addPorch("virtual") # create virtual porch                        
                         resources[1][len(resources[1])-1].porches[0].addFlat("+" + newContact, settings, virtual=True) # create flat
-                        
-                        #if "," in newContact:                            
-                        #    resources[1][len(resources[1])-1].porches[0].addFlat("+" + newContact, settings, virtual=True) # create flat
-                        #else: resources[1][len(resources[1])-1].porches[0].addFlat("+?, " + newContact, settings)
-                        
-                        #if len(resources[1][len(resources[1])-1].porches[0].flats[0].records)==0: resources[1][len(resources[1])-1].porches[0].flats[0].addRecord("Создан отдельный контакт, 2")
                         newContact=None
                     io2.save(houses, settings, resources)
                     break            

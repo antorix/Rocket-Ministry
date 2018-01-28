@@ -200,7 +200,7 @@ class House():
             f=0        
             for i in range(len(input)):
                 if input[i]=="-": s=i
-                if input[i]=="/": f=i
+                if input[i]=="/" or input[i]=="[": f=i
             start = int(input[1:s])
             if f==0: end = int(input[s+1:])
             else: end = int(input[s+1:f])
@@ -235,9 +235,9 @@ class House():
                 except: return 0                
             
             def showRecords(self, settings):
-                options = [icon("plus", settings[0][4]) + " " + icon("tablet", settings[0][4])]
+                options = [icon("plus", settings[0][4]) + " " + icon("mic", settings[0][4])]
                 for i in range(len(self.records)):
-                    options.append(icon("tablet", settings[0][4]) + " %s: %s" % (self.records[i].date, self.records[i].title))
+                    options.append(icon("mic", settings[0][4]) + " %s: %s" % (self.records[i].date, self.records[i].title))
                 #options.append("\ud83d\udccc %s" % self.note)
                 return options
                 
@@ -298,12 +298,12 @@ class House():
                 elif self.status=="0": return 4
                 elif self.status=="9": return 5
                 else: return 2
-                
-            def export(self):                
+
+            def export(self):
                 return [self.title, self.note, [self.records[i].export() for i in range(len(self.records))]]
-            
-            class Record():            
-                
+
+            class Record():
+
                 def __init__(self):
                     self.date = ""
                     self.title = ""

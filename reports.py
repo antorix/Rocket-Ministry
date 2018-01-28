@@ -194,7 +194,7 @@ class Report():
             message = "Ваш отчет"
             options = [
                 icon("placements", settings[0][4]) + " Публикации: %d" % self.placements,
-                icon("videos", settings[0][4]) + " Видео: %d" % self.videos,
+                icon("video", settings[0][4]) + " Видео: %d" % self.videos,
                 hoursLine]
                 
             if settings[0][3]!=0: options.append(gap_str)
@@ -208,7 +208,7 @@ class Report():
                 
             if io2.osName!="android":
                 if io2.Textmode==False: options.append(icon("console", settings[0][4]) + " Консоль") # positive button on Android
-                options.append(monthName()[2]) # neutral button on Android
+                options.append(icon("prevmonth", settings[0][4]) + " " + monthName()[2]) # neutral button on Android
                 
             if settings[0][5]==1:
                 consoleStatus = icon("console", settings[0][4]) + " Консоль"

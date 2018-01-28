@@ -135,7 +135,7 @@ def serviceYear(houses, settings, resources):
                 
         try:
             choice = dialogs.dialogList( 
-            title = icon("report", settings[0][4]) + " %s: итого %d ч. %s %s" % (year, hourSum, gapEmo, reports.getTimerIcon(settings[2][6], settings)), 
+            title = icon("calendar", settings[0][4]) + " %s: итого %d ч. %s %s" % (year, hourSum, gapEmo, reports.getTimerIcon(settings[2][6], settings)), 
             message = "Выберите месяц:",
             form = "serviceYear",
             neutralButton = True,
@@ -240,9 +240,9 @@ def mxplayer():
 
 def modpack(list, position, settings):
     """Insert additional items into list"""
-    list.insert(position, "\uD83D\uDCAC" + " Viber")
-    #list.insert(position, "\uD83D\uDD17" + " JW.org")
+    list.insert(position, icon("viber", settings[0][4]) + " Viber")
+    #list.insert(position, "\uD83D\uDC8E" + " JW.org")
     list.insert(position, icon("jwlibrary", settings[0][4]) + " JW Library")
-    list.insert(position, "\uD83C\uDFAC" + " Видео")
-    list.insert(position, "\uD83D\uDCD6" + " Библия")
+    #list.insert(position, icon("video", settings[0][4]) + " Видео")
+    #list.insert(position, icon("bible", settings[0][4]) + " Библия")
     

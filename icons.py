@@ -5,22 +5,23 @@ import io2
 #import sys
 
 def icon(myIcon, setting=1, pureText=False):
-    
+        
     if io2.Textmode==True: pureText=True
     
-    if setting==1 or io2.osName=="linux" or pureText==True:
+    if setting==1 or io2.osName!="android" or pureText==True:
         if myIcon=="globe": return "○"
         elif myIcon=="map": return "◦"    
         elif myIcon=="rocket": return "♠"
-        elif myIcon=="timer": return "◷"
+        elif myIcon=="timer": return "ↄ"
         elif myIcon=="report": return "±"
         elif myIcon=="contacts": return "☺"
         elif myIcon=="notebook": return "□"
         elif myIcon=="console": return "▪"
+        elif myIcon=="database": return "◊"
         elif myIcon=="file": return "▪"        
         elif myIcon=="appointment": return "☼"
         elif myIcon=="calendar": return "©"        
-        elif myIcon=="preferences": return "▪"
+        elif myIcon=="preferences": return "▫"
         elif myIcon=="plus": return "+"          
         elif myIcon=="contact": return "☺"
         elif myIcon=="phone": return "(тел.)"     
@@ -37,7 +38,6 @@ def icon(myIcon, setting=1, pureText=False):
         elif myIcon=="extra": return "▫"
         elif myIcon=="slippage": return "▫"
         elif myIcon=="placements": return "▫"
-        elif myIcon=="videos": return "▫"
         elif myIcon=="credit": return "▫"
         elif myIcon=="returns": return "▫" 
         elif myIcon=="studies": return "▫"
@@ -57,15 +57,19 @@ def icon(myIcon, setting=1, pureText=False):
         elif myIcon=="lamp": return "☼"
         elif myIcon=="bullet": return "◦"
         elif myIcon=="arrow": return "↑"
-        elif myIcon=="jwlibrary": return "◦"
         elif myIcon=="search": return "?"
         elif myIcon=="flag": return "\u2302" # the same as porch
         elif myIcon=="calc": return "▪"
         elif myIcon=="import": return "▼"
         elif myIcon=="logreport": return "□"
         elif myIcon=="lock": return ""
-        
-        else: return ""
+        elif myIcon=="clipboard": return "→"
+        elif myIcon=="bible": return "◦"
+        elif myIcon=="viber": return "◦"
+        elif myIcon=="jwlibrary": return "◦"
+        elif myIcon=="video": return "▫"
+        elif myIcon=="prevmonth": return "←"
+        else: return "-"
         
     else:
         if myIcon=="globe":
@@ -82,9 +86,10 @@ def icon(myIcon, setting=1, pureText=False):
         elif myIcon=="contacts": return "\ud83d\udcc7"
         elif myIcon=="notebook": return "\ud83d\udcd2"
         elif myIcon=="console": return "\ud83d\udcbb"
+        elif myIcon=="database": return "\ud83d\uddc4\ufe0f"
         elif myIcon=="file": return "\ud83d\udcbe"
         elif myIcon=="appointment": return "\ud83d\udcc5"
-        elif myIcon=="calendar": return "\ud83d\udcc5"
+        elif myIcon=="calendar": return "\ud83d\udcc6"
         elif myIcon=="preferences": return "\ud83d\udd27" #"\ud83d\udd28"      
         elif myIcon=="plus": return "\u2795"          
         elif myIcon=="contact": return "\ud83d\udc64"
@@ -93,7 +98,7 @@ def icon(myIcon, setting=1, pureText=False):
         elif myIcon=="mark": return "\u2714"     
         elif myIcon=="pin": return "\ud83d\udccc"     
         elif myIcon=="cut": return "\u2702"
-        elif myIcon=="tablet": return "\ud83d\udccb"
+        elif myIcon=="mic": return "\ud83d\uddd2\ufe0f" #"\uD83C\uDF99"
         elif myIcon=="smile": return "\u263A"
         elif myIcon=="note": return "\ud83d\udcc4"
         elif myIcon=="export": return "\ud83d\udce7"
@@ -101,7 +106,6 @@ def icon(myIcon, setting=1, pureText=False):
         elif myIcon=="extra": return "\ud83d\ude4c"
         elif myIcon=="slippage": return "\ud83d\ude2d"               
         elif myIcon=="placements": return "\ud83d\udcda"
-        elif myIcon=="videos": return "\ud83d\udcf9"
         elif myIcon=="credit": return "\u231A"
         elif myIcon=="returns": return "\u23e9"
         elif myIcon=="studies": return "\ud83d\udcd6"
@@ -124,11 +128,15 @@ def icon(myIcon, setting=1, pureText=False):
         elif myIcon=="lamp": return "\ud83d\udca1"
         elif myIcon=="bullet": return "\ud83d\udd27"
         elif myIcon=="arrow": return "\u2197"
-        elif myIcon=="jwlibrary": return "\ud83d\udcd5"     
         elif myIcon=="search": return "\ud83d\udd0e"     
         elif myIcon=="flag": return "\ud83d\udea9"
         elif myIcon=="calc": return "\ud83d\udcdf"
         elif myIcon=="import": return "\ud83d\udce9"
         elif myIcon=="logreport": return "\uD83D\uDCD4"
         elif myIcon=="lock": return "\uD83D\uDD12"
-        else: return ""       
+        elif myIcon=="clipboard": return "\uD83D\uDCCB"
+        elif myIcon=="video": return "\ud83d\udcfd\ufe0f"
+        elif myIcon=="jwlibrary": return "\ud83d\udcd5"
+        elif myIcon=="bible": return "\uD83D\uDCD6"
+        elif myIcon=="viber": return "\uD83D\uDCAC"                
+        else: return ""
