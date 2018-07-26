@@ -33,13 +33,24 @@ class Report():
         
         rolloverHours = rolloverCredit = 0.0
         
+        # Adjust credit so that self.hours + self.credit <= limit (=settings[0][3])       
+        """
+        limit = settings[0][3]
+        creditOld = self.credit
+        if (self.hours + self.credit) > limit:
+            self.credit = limit - self.hours            
+            if self.credit < 0:
+                self.credit = 0
+            io2.log("Отсечено %0.2f ч. кредита" % (creditOld - self.credit))
+        """
+
         # Calculate rollovers
-        
+
         if settings[0][15]==1: # rollover seconds to next month if activated
-            rolloverHours = self.hours - int(self.hours)
-            self.hours = int(self.hours-rolloverHours)            
-            rolloverCredit = self.credit - int(self.credit)
-            self.credit = int(self.credit-rolloverCredit)
+            rolloverHours = round(self.hours,2) - int(round(self.hours,2))
+            self.hours = int(round(self.hours,2)-rolloverHours)
+            rolloverCredit = round(self.credit,2) - int(round(self.credit,2))
+            self.credit = int(round(self.credit,2)-rolloverCredit)
 
         if settings[0][2]==1: credit = "Кредит: %0.2f\n" % self.credit # whether save credit to file
         else: credit = ""

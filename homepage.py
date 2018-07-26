@@ -13,6 +13,7 @@ import extras
 import sys
 import os
 import webbrowser
+import time
 from icons import icon
 from main import version
 
@@ -36,6 +37,12 @@ def homepage(houses, settings, resources):
                 remind = icon("lamp", settings[0][4])
             else: remind=""
             
+            if settings[0][3]!=0:                            
+                gap = float((settings[2][0]+settings[2][1]) - int(time.strftime("%d", time.localtime()))*settings[0][3]/reports.days())            
+                if gap >= 0: gap_str = icon("extra", settings[0][4]) # happy emoticon
+                else: gap_str = icon("slippage", settings[0][4]) # crying emoticon    
+            else: gap_str = ""
+            
             appointment = "" # сounting contacts and check closest appointment date, if enabled
             totalContacts, datedFlats = contacts.getContactsAmount(houses, resources, settings[0][11])
             if len(datedFlats)>0: appointment = icon("appointment", settings[0][4])
@@ -43,7 +50,7 @@ def homepage(houses, settings, resources):
             
             options = [
                     icon("timer", settings[0][4])   + " Таймер" + timerTime,
-                    icon("report", settings[0][4])  + " Отчет (%0.2f ч.)  %s" % (settings[2][0], remind),
+                    icon("report", settings[0][4])  + " Отчет (%0.2f ч.) %s %s" % (settings[2][0], gap_str, remind),
                     icon("globe", settings[0][4])   + " Участки (%d)" % len(houses),
                     icon("contacts", settings[0][4])+ " Контакты (%d)  %s" % (totalContacts, appointment),
                     icon("notebook", settings[0][4])+ " Блокнот (%d)" % len(resources[0]),
@@ -165,6 +172,5 @@ def homepage(houses, settings, resources):
                     Android().startActivity(action="ACTION_VIEW", uri="http://www.jw.org")
                 else:                    
                     webbrowser.open("http://www.jw.org")                
-                    
             
             elif "JW Library" in result: extras.library()

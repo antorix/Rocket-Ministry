@@ -353,7 +353,7 @@ def backup(output, limit):
             if os.path.isfile(file_i):
                 os.remove(file_i)
 
-def consoleReturn():    
+def consoleReturn():
     os.system("clear")
     input("\nНажмите Enter/Ввод для возврата")
     os.system("clear")

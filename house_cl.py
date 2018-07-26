@@ -126,31 +126,20 @@ class House():
                 
                 for r in range(rows):
                     for c in range(columns):
-                        if c < len(self.flats):
-                            
-                            if io2.osName=="android":
-                                
-                                if settings[0][1]==0: # adaptation for small system fonts DISABLED
-                                    if   len(self.flats[i].number)==1: gap = "\u00A0\u00A0\u00A0" # formatting by spaces (Android)
-                                    elif len(self.flats[i].number)==2: gap = "\u00A0"
-                                    #elif len(self.flats[i].number)==3: gap = "\u00A0"
-                                    else: gap = ""
-                                else:
-                                    if   len(self.flats[i].number)==1: gap = "\u00A0\u00A0\u00A0\u00A0" # formatting by spaces (Android)
-                                    elif len(self.flats[i].number)==2: gap = "\u00A0\u00A0"
-                                    elif len(self.flats[i].number)==3: gap = "\u00A0"
-                                    else: gap = ""
-                            else:
-                                if   len(self.flats[i].number)==1: gap = "" 
-                                elif len(self.flats[i].number)==2: gap = ""
-                                elif len(self.flats[i].number)==3: gap = ""
+                        if c < len(self.flats):                            
+                            if io2.osName=="android":                                
+                                if   len(self.flats[i].number)==1: gap = "  "#"++" # formatting by spaces (Android)
+                                elif len(self.flats[i].number)==2: gap = " "#"+"
                                 else: gap = ""
-                            
-                            message += "%s%s)%s\t" % (gap, self.flats[i].number, set.getStatus(self.flats[i].status, settings)[0])
-                            #message += "%3s)%s\t" % (self.flats[i].number, set.getStatus(self.flats[i].status, settings))
+                                
+                                message += "%s%s)%-03s\t" % (gap, self.flats[i].number, set.getStatus(self.flats[i].status, settings)[0])                                
+                                
+                            else:
+                                message += "%03s)%-01s\t" % (self.flats[i].number, set.getStatus(self.flats[i].status, settings)[0])
+                                
                             i+=1
-                    
-                    #print("rows: %d\nr: %d" % (rows, r))                
+
+                    #print("rows: %d\nr: %d" % (rows, r))
                     if rows-r != 1:
                         message += "\n"              
                 

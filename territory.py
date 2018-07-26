@@ -149,6 +149,8 @@ def houseView(selectedHouse, houses, settings, resources, jump=""):
         if houses[selectedHouse].note !="": noteTitle = icon("pin", settings[0][4]) + " " + houses[selectedHouse].note
         else: noteTitle=""
         
+        noteTitle=""
+        
         if houses[selectedHouse].type=="condo": houseIcon = icon("house", settings[0][4])            
         elif houses[selectedHouse].type=="private": houseIcon = icon("cottage", settings[0][4])  
         else: houseIcon = icon("office", settings[0][4])  

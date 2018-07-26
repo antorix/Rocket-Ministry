@@ -94,7 +94,12 @@ def showNotebook(houses, settings, resources):
                     break
             
         else: # edit            
-            options2 = [icon("edit", settings[0][4]) + " Править ", icon("cut", settings[0][4]) + " Удалить ", icon("contact", settings[0][4]) + " Преобразовать в контакт "]
+            options2 = [
+                icon("edit", settings[0][4]) +      " Править ",
+                icon("cut", settings[0][4]) +       " Удалить ",                
+                icon("clipboard", settings[0][4]) +   " В буфер обмена ",
+                icon("contact", settings[0][4]) +   " Преобразовать в контакт "
+                ]
             choice2 = dialogs.dialogList(
                 title = icon("note", settings[0][4]) + " Заметка " + reports.getTimerIcon(settings[2][6], settings),
                 options=options2,
@@ -113,4 +118,16 @@ def showNotebook(houses, settings, resources):
                 del resources[0][choice-1]
                 io2.save(houses, settings, resources)
             elif choice2==2:
+                if io2.osName == "android":
+                    from androidhelper import Android
+                    Android().setClipboard(resources[0][choice-1].strip())
+                else:
+                    from tkinter import Tk
+                    r = Tk()
+                    r.withdraw()
+                    r.clipboard_clear()
+                    r.clipboard_append(resources[0][choice-1].strip())
+                    r.update()
+                    r.destroy()
+            elif choice2==3:
                 console.process("con " + resources[0][choice-1].strip(), houses, settings, resources)

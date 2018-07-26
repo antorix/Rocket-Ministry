@@ -108,8 +108,15 @@ def serviceYear(houses, settings, resources):
         for i in range(12): # filling options by months
             if i<4: monthNum = i+9
             else: monthNum = i-3
-            if settings[4][i]==None: options.append(reports.monthName(monthNum=monthNum)[0])
-            else: options.append("%s: %d" % ((reports.monthName(monthNum=monthNum)[0], settings[4][i])))
+            
+            if settings[4][i]==None:
+                options.append(reports.monthName(monthNum=monthNum)[0])            
+            else:
+                if settings[4][i] == settings[0][3]:  check=icon("mark", settings[0][4])
+                elif settings[4][i] < settings[0][3]: check=icon("fail", settings[0][4])
+                elif settings[4][i] > settings[0][3] and settings[0][3]!=0: check=icon("up", settings[0][4])
+                else: check=""                
+                options.append("%s %d %s" % ((reports.monthName(monthNum=monthNum)[0]+":", settings[4][i], check)))
         
         if io2.osName != "android":
             if io2.Textmode==False: options.append(icon("console", settings[0][4]) + " Консоль") # positive button on Android
@@ -240,9 +247,8 @@ def mxplayer():
 
 def modpack(list, position, settings):
     """Insert additional items into list"""
-    list.insert(position, icon("viber", settings[0][4]) + " Viber")
+    #list.insert(position, icon("viber", settings[0][4]) + " Viber")
     #list.insert(position, "\uD83D\uDC8E" + " JW.org")
     list.insert(position, icon("jwlibrary", settings[0][4]) + " JW Library")
     #list.insert(position, icon("video", settings[0][4]) + " Видео")
     #list.insert(position, icon("bible", settings[0][4]) + " Библия")
-    

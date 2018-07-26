@@ -55,7 +55,7 @@ def dialog(title="", message="", default="", ok="Ввод", cancel="Назад",
         return choice
 
 def dialogRadio(title="", options=[], selected=0, message="", positive="OK"):
-    
+    """ Radio buttons """
     if io2.osName=="android":
         phone.dialogCreateAlert(title, message)
         phone.dialogSetSingleChoiceItems(options, selected)
@@ -116,8 +116,6 @@ def dialogList(title="", message="", close=True, options=[], pureText=False, pos
         if choice=="\\" or choice==None:                    return None # exit
         
         elif choice==result: return choice
-        
-        #elif choice=="delete":                              return "delete" # delete item
         
         elif "Участки" in choice and form!="main":          return "neutral" # buttons when not in Android
         elif "Участок" in choice and form=="houseView":     return "neutral"

@@ -129,7 +129,7 @@ def search(houses, settings, resources, query=""):
         query = dialogs.dialog( # get search query 
             icon("search", settings[0][4], pureText=pureText) + " Поиск " + reports.getTimerIcon(settings[2][6], settings),
             default="", 
-            message = "Введите поисковый запрос:"
+            message = "Найдите любую квартиру или контакт:"
         )
         if io2.osName=="android":
             from androidhelper import Android
@@ -209,7 +209,7 @@ def search(houses, settings, resources, query=""):
 def status(setting, settings):
     
     if setting!=0: return icon("mark", settings[0][4]) + " "
-    else: return "□ "
+    else: return icon("box", settings[0][4]) + " "
     
 def toggle(setting):
     
@@ -231,7 +231,7 @@ def preferences(houses, settings, resources):
         
         options.append(status(settings[0][7], settings) + "Автоматически записывать повторные посещения") # settings[0][7]
         options.append(status(settings[0][9], settings) + "Выходить из квартиры после добавления записи") # settings[0][9]
-        options.append("▪ Шаблон записи посещения: «%s»" % settings[0][12]) # settings[0][12]
+        options.append("%s Шаблон записи посещения: «%s»" % (icon("plus", settings[0][4]), settings[0][12])) # settings[0][12]
         options.append(status(settings[0][8], settings) + "Напоминать о сдаче отчета") # settings[0][8]
         options.append(status(settings[0][15], settings) + "Переносить минуты отчета на следующий месяц") # settings[0][15]
         options.append(status(settings[0][2], settings) + "Кредит часов") # settings[0][2]
@@ -239,17 +239,17 @@ def preferences(houses, settings, resources):
         if io2.osName=="android":
             options.append(status(settings[0][0], settings) + "Бесшумный режим при таймере") # settings[0][0]
             options.append(status(settings[0][5], settings) + "Консоль на отдельной кнопке (кроме главного экрана)") # settings[0][5]
-            options.append(status(settings[0][1], settings) + "Подгонять шрифты под мелкий системный шрифт") # settings[0][1]
+            #options.append(status(settings[0][1], settings) + "Подгонять шрифты под мелкий системный шрифт") # settings[0][1]
         
         options.append(status(settings[0][11], settings) + "Индикатор встреч на сегодня на главной странице") # settings[0][11]
-        options.append("▪ Месячная норма: %d" % settings[0][3]) # settings[0][3]
+        options.append("%s Месячная норма: %d" % (icon("plus", settings[0][4]), settings[0][3])) # settings[0][3]
         
         if io2.osName!="linux": options.append(status(settings[0][4], settings) + "Упрощенные значки") # settings[0][4]
-        options.append("▪ Число резервных копий: %d" % settings[0][6]) # settings[0][6]                
+        options.append("%s Число резервных копий: %d" % (icon("plus", settings[0][4]), settings[0][6])) # settings[0][6]                
         #options.append("Сортировка контактов") settings[0][10]       
-        options.append("▪ Консольная команда по умолчанию: «%s»" % settings[0][13]) # settings[0][13]
-        options.append("▪ URL импорта базы данных: %s" % importURL) # settings[0][14]        
-        options.append("▪ Пароль на вход: %s" % settings[0][17]) # settings[0][17]
+        options.append("%s Консольная команда по умолчанию: «%s»" % (icon("plus", settings[0][4]), settings[0][13])) # settings[0][13]
+        options.append("%s URL импорта базы данных: %s" % (icon("plus", settings[0][4]), importURL)) # settings[0][14]        
+        options.append("%s Пароль на вход: %s" % (icon("plus", settings[0][4]), settings[0][17])) # settings[0][17]
         
         if io2.osName != "android" and io2.Textmode==False: options.append(icon("console", settings[0][4]) + " Консоль") # positive button on Android
         
@@ -292,7 +292,7 @@ def preferences(houses, settings, resources):
         elif "Месячная норма" in result: 
             while 1:
                 choice2 = dialogs.dialog(title = icon("preferences", settings[0][4], pureText=pureText) + " Месячная норма " + reports.getTimerIcon(settings[2][6], settings),
-                message="Введите месячную норму часов для подсчета запаса или отставания от нормы по состоянию на текущий день. Чтобы не показывать норму в отчете, введите 0:", default = str(settings[0][3]))
+                message="Введите месячную норму часов для подсчета запаса или отставания от нормы по состоянию на текущий день. Если эта функция не нужна, введите 0:", default = str(settings[0][3]))
                 console.process(choice2, houses, settings, resources)
                 try:
                     if choice2!=None:                        
@@ -537,16 +537,15 @@ def porchSettings(houses, selectedHouse, selectedPorch, settings, resources):
             icon("pin", settings[0][4]) + " Заметка" + type,
             icon("cut", settings[0][4]) + " Удалить",
             icon("help", settings[0][4]) + " Команды",
-            icon("globe", settings[0][4]) + " Карта"
+            icon("globe", settings[0][4]) + " Карта",
+            icon("jwlibrary", settings[0][4]) + " JW Library"
         ]
         
-        if io2.osName=="android" and io2.Mod==False: options.append(icon("jwlibrary", settings[0][4]) + " JW Library")
-        
-        # Append mod items
+        """# Append mod items
         if io2.Mod==True:
             extras.modpack(options, 4, settings) 
         elif io2.Mod==False and io2.osName=="android":
-            options.append(icon("jwlibrary", settings[0][4]) + " JW Library")
+            options.append(icon("jwlibrary", settings[0][4]) + " JW Library")"""
         
         choice = dialogs.dialogList(
             title = porchIcon + " " + houses[selectedHouse].porches[selectedPorch].title + reports.getTimerIcon(settings[2][6], settings),
@@ -704,16 +703,18 @@ def flatSettings(houses, selectedHouse, selectedPorch, selectedFlat, settings, r
         if email != "zzz": options.append(icon("export", settings[0][4]) + " Email на " + email)        
         if io2.osName=="android":
             if phone != "zzz":
-                options.append(icon("call", settings[0][4]) + " Звонок на " + phone)        
-                options.append(icon("call", settings[0][4]) + " SMS на " + phone)                    
+                options.append(icon("call", settings[0][4]) + " Звонок на " + phone)
+                options.append(icon("call", settings[0][4]) + " SMS на " + phone)
+                options.append(icon("viber", settings[0][4]) + " Сообщение на " + phone)
         
-        options.append(icon("globe", settings[0][4]) + " Карта")        
+        options.append(icon("globe", settings[0][4]) + " Карта")
+        options.append(icon("jwlibrary", settings[0][4]) + " JW Library")
         
-        # Append mod items
+        """# Append mod items
         if io2.Mod==True:
             extras.modpack(options, 4, settings)
         elif io2.Mod==False and io2.osName=="android":
-            options.append(icon("jwlibrary", settings[0][4]) + " JW Library")
+            options.append(icon("jwlibrary", settings[0][4]) + " JW Library")"""
         
         if delete==True: result="Удалить"
         else:
@@ -827,6 +828,7 @@ def flatSettings(houses, selectedHouse, selectedPorch, selectedFlat, settings, r
             if io2.osName=="android": 
                 from androidhelper import Android
                 Android().phoneCallNumber(phone)
+                time.sleep(0.5)
             
         elif "SMS на" in result: # SMS, Android-only
             if io2.osName=="android": 
@@ -835,7 +837,16 @@ def flatSettings(houses, selectedHouse, selectedPorch, selectedFlat, settings, r
                 if text==None or "cancelled" in text: continue
                 from androidhelper import Android
                 Android().smsSend(destinationAddress=phone, text=text)
-                io2.log("SMS на номер %s отправлено" % phone)  
+                io2.log("SMS на номер %s отправлено" % phone)
+                
+        elif "Сообщение" in result: # Email
+            if io2.osName=="android":
+                try:
+                    from androidhelper import Android
+                    Android().setClipboard(phone)
+                    Android().sendEmail(phone,phone,phone,attachmentUri=None) # message on Android
+                except IOError: io2.log("Не удалось отправить сообщение!")
+                else: io2.consoleReturn()
    
         elif "Карта" in result: extras.map(houses[selectedHouse].title) # map
         
@@ -854,30 +865,28 @@ def getStatus(status, settings, type=0):
     
     string=""
                 
-    if io2.osName == "android":
-        if settings[0][4]==0:
-            if status=="0": string = "\u00A0\u2716\u00A0" # cross
-            elif status=="1": string = "\u00A0\u21AA\u00A0" # arrow right 
-            elif status=="2": string = "\ud83d\udd38" # yellow diamond
-            elif status=="9": string = "\ud83d\udd39" # red diamond
-            elif status=="":  string = "\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0" # spaces
+    if io2.osName == "android": #" "
+        if settings[0][4]==0: # if simplified icons
+            if status=="0":     string = "\u2716 " # cross
+            elif status=="1":   string = "\u21AA " # arrow right 
+            elif status=="2":   string = "\ud83d\udd38 " # yellow diamond
+            elif status=="9":   string = "\ud83d\udd39 " # red diamond
+            elif status=="":    string = "   " # spaces
             else:
-                if settings[0][1]==0: # adaptation for small system fonts DISABLED
-                    string = "\u00A0\u00A0?\u00A0\u00A0"
-                else: string = "\u00A0\u00A0?\u00A0\u00A0\u00A0"
+                string = "  ?   "
         else: # pseudo graphics on Android
-            if status=="0": string = "\u00A0×\u00A0" # cross
-            elif status=="1": string = "\u00A0>\u00A0" # arrow right 
-            elif status=="2": string = "▫" # yellow diamond
-            elif status=="9": string = "▪" # red diamond
-            elif status=="":  string = "\u00A0\u00A0\u00A0\u00A0" # spaces
+            if status=="0":     string = "х " # cross
+            elif status=="1":   string = "> " # arrow right 
+            elif status=="2":   string = "▫ " # yellow diamond
+            elif status=="9":   string = "▪ " # red diamond
+            elif status=="":    string = "  " # spaces
             else: string = "?"            
     else:
         if status=="0": string = "\u2716" # cross
         elif status=="1": string = "→" # arrow right 
         elif status=="2": string = "□" # yellow diamond
         elif status=="9": string = "■" # red diamond
-        elif status=="":  string = "\u00A0" # spaces
+        elif status=="":  string = " " # spaces
         else: string = "?"    
     
     if   status=="2": value=0 # value serves to correctly sort by status 
