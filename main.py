@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-version = "1.5.0"
+version = "1.4.2"
 
 import io2
 import homepage
