@@ -1,6 +1,8 @@
 ﻿#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+# This is a file from Github
+
 import time
 import io2
 from io2 import settings
