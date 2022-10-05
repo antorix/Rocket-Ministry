@@ -193,7 +193,7 @@ def showContacts():
             else:
                 appointment=""
             if contacts[i][9] != "":
-                phone = "%s%s" % (icon("phone2"), contacts[i][9]) # phone
+                phone = "%s%s" % (icon("phone"), contacts[i][9]) # phone
             else:
                 phone=""
             if contacts[i][14] != "zzz":
@@ -244,10 +244,11 @@ def showContacts():
             options.append(icon("sort") + " Сортировка") # neutral button
 
         # Display dialog
+
         if choice!="positive":
             choice = dialogs.dialogList(
                 form = "showContacts",
-                title = icon("contacts") + " Контакты " + reports.getTimerIcon(settings[2][6]), # houses sorting type, timer icon
+                title = icon("contacts") + " Контакты " + reports.getTimerIcon(settings[2][6]),
                 message = "Выберите контакт:",
                 options = options,
                 positiveButton=True,

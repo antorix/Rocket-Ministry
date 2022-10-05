@@ -1,15 +1,12 @@
 ﻿#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# This is a file from Github
-
 import time
 import io2
 from io2 import settings
+from io2 import resources
 import os
-import webbrowser
 import dialogs
-import console
 import set
 import datetime
 from icons import icon
@@ -30,9 +27,11 @@ class Report():
         self.difTime = settings[2][9]
         self.note = settings[2][10]
         self.reminder = settings[2][11]
-   
-    def saveReport(self, message=""):
+        self.lastMonth = settings[2][12]
+
+    def saveReport(self, message="", mute=False):
         """ Выгрузка данных из класса в настройки, сохранение и оповещение """
+
         settings[2] = [
             self.hours,
             self.credit,
@@ -45,10 +44,15 @@ class Report():
             self.reportTime,
             self.difTime,
             self.note,
-            self.reminder
+            self.reminder,
+            self.lastMonth
         ]
+        if mute == False:
+            io2.log(message)
+            date = time.strftime("%d.%m", time.localtime()) + "." + str(int(time.strftime("%Y", time.localtime())) - 2000)
+            time2 = time.strftime("%H:%M:%S", time.localtime())
+            resources[2].insert(0, "\n%s %s: %s" % (date, time2, message))
         io2.save()
-        io2.logReport(message)
 
     def saveLastMonth(self):
         """ Save last month report to file """
@@ -74,196 +78,165 @@ class Report():
             self.credit = int(round(self.credit,2)-rolloverCredit)
 
         if settings[0][2]==1:
-            credit = "Кредит: %0.2f\n" % self.credit # whether save credit to file
+            credit = "Кредит: %s\n" % timeFloatToHHMM(self.credit) # whether save credit to file
         else:
             credit = ""
 
         # Save file of last month
-        output = "Отчет за %s\n\nПубликации: %d\nВидео: %d\nЧасы: %0.2f\n%sПовторные посещения: %d\nИзучения Библии: %d" %\
-                 (monthName()[3], self.placements, self.videos, self.hours, credit, self.returns, self.studies)
+        self.lastMonth = ("Отчет за %s:\nПубликации: %d\nВидео: %d\nЧасы: %s\n%sПовторные посещения: %d\nИзучения Библии: %d" % \
+                       (monthName()[3],
+                        self.placements,
+                        self.videos,
+                        timeFloatToHHMM(self.hours),
+                        credit,
+                        self.returns,
+                        self.studies)
+                 )
         if self.note!="":
-            output += "\nПримечание: " + self.note
-        if io2.osName=="android": 
-            with open(io2.AndroidUserPath + "%s.txt" % monthName()[4],"w", encoding="utf-8") as file: file.write(output) #json.dump(output, file)
-        else:
-            with open("%s.txt" % monthName()[4],"w", encoding="utf-8") as file: file.write(output) #json.dump(output, file)
+            self.lastMonth += "\nПримечание: " + self.note
+        self.saveReport()
         
         # Clear service year in October        
         if int(time.strftime("%m", time.localtime())) == 10: 
             settings[4] = [None, None, None, None, None, None, None, None, None, None, None, None]
-            io2.log("Предыдущий, %s-й, служебный год очищен" % int(time.strftime("%Y", time.localtime())))
         
         # Save last month hour+credit into service year
         settings[4][monthName()[7]-1] = self.hours + self.credit
+
+        # Сокращаем журнал, если он превышает 500 строк (limit)
+
+        limit = 500
+        if len(resources[2]) > limit:
+            extra = len(resources[2]) - limit
+            for i in range(extra):
+                del resources[2][len(resources[2]) - 1]
+
+        io2.save()
         
         return rolloverHours, rolloverCredit # return rollovers for amending new month report
         
     def clear(self, rolloverHours, rolloverCredit):
         """ Clears all fields of report """
-        
-        self.hours = "00:00" #+ rolloverHours
-        self.credit = "00:00" #+ rolloverCredit
+
+        self.hours = 0.0 + rolloverHours
+        self.credit = 0.0 + rolloverCredit
         self.placements = 0
         self.videos = 0
         self.returns = 0
         self.studies = 0
-        self.startTime = "00:00"
-        self.endTime = "00:00"
-        self.reportTime = "00:00"
-        self.difTime = "00:00"
+        self.startTime = 0
+        self.endTime = 0
+        self.reportTime = 0.0
+        self.difTime = 0.0
         self.note = ""
         self.reminder = 1
+        #self.lastMonth = ""
                 
     def modify(self, input):
         """ Modifying report on external commands """
 
-        if input[0]=="(": # start timer
-            self.startTime = time.strftime("%H:%M", time.localtime())
+        #print(input)
+
+        if input[0] == "(":  # start timer
+            self.startTime = int(time.strftime("%H", time.localtime())) * 3600 + int(
+            time.strftime("%M", time.localtime())) * 60 + int(time.strftime("%S", time.localtime()))
             vibrate(True)
             self.saveReport("Таймер запущен")
 
-        elif input[0]==")": # stop timer
-            if timeHHMMToTimeDelta(self.startTime) > zeroTimeDelta():
-                self.endTime = time.strftime("%H:%M", time.localtime())
-                hoursStart=int(self.startTime[0:2])
-                minutesStart=int(self.startTime[3:5])
-                hoursEnd = int(self.endTime[0:2])
-                minutesEnd = int(self.endTime[3:5])
-                self.reportTime = timeDeltaToHHMM(
-                    datetime.timedelta(hours=hoursEnd, minutes=minutesEnd) -\
-                    datetime.timedelta(hours=hoursStart, minutes=minutesStart)
-                )
-                self.hours = timeDeltaToHHMM( timeHHMMToTimeDelta(self.hours) + timeHHMMToTimeDelta(self.reportTime) )
-                self.saveReport("Таймер остановлен, в отчет добавлено: %s." % self.reportTime)
-                self.startTime = "00:00"
-                self.reportTime = "00:00"
-                self.saveReport()
+        elif input[0] == ")":  # остановка таймера
+            if self.startTime > 0:
+                self.endTime = int(time.strftime("%H", time.localtime())) * 3600 + int(
+                    time.strftime("%M", time.localtime())) * 60 + int(time.strftime("%S", time.localtime()))
+                self.reportTime = (self.endTime - self.startTime) / 3600
+                if self.reportTime < 0: self.reportTime += 24  # if timer worked after 0:00
+                self.hours += self.reportTime
+                self.startTime = 0
+                self.saveReport("Таймер остановлен, в отчет добавлено: %s ч." % timeFloatToHHMM(self.reportTime))
+                self.reportTime = 0.0
                 vibrate(False)
+                self.saveReport(mute=True)
 
-        elif input[0]=="$": # credit
-            if settings[0][2] == 0:
-                io2.log("Включите учет кредита в настройках")
-            elif timeHHMMToTimeDelta(settings[2][6]) != zeroTimeDelta():
-                self.endTime = time.strftime("%H:%M", time.localtime())
-                hoursStart = int(self.startTime[0:2])
-                minutesStart = int(self.startTime[3:5])
-                hoursEnd = int(self.endTime[0:2])
-                minutesEnd = int(self.endTime[3:5])
-                self.reportTime = timeDeltaToHHMM(
-                    datetime.timedelta(hours=hoursEnd, minutes=minutesEnd) - \
-                    datetime.timedelta(hours=hoursStart, minutes=minutesStart)
-                )
-                self.credit = timeDeltaToHHMM(timeHHMMToTimeDelta(self.credit) + timeHHMMToTimeDelta(self.reportTime))
-                self.saveReport("Таймер остановлен, в отчет добавлено: %s кредита" % self.reportTime)
-                self.startTime = "00:00"
-                self.reportTime = "00:00"
-                self.saveReport()
+        elif input[0] == "$":  # остановка таймера с кредитом
+            if self.startTime > 0:
+                self.endTime = int(time.strftime("%H", time.localtime())) * 3600 + int(
+                    time.strftime("%M", time.localtime())) * 60 + int(time.strftime("%S", time.localtime()))
+                self.reportTime = (self.endTime - self.startTime) / 3600
+                if self.reportTime < 0: self.reportTime += 24  # if timer worked after 0:00
+                self.credit += self.reportTime
+                self.startTime = 0
+                self.saveReport("Таймер остановлен, в отчет добавлено: %s ч. кредита" % timeFloatToHHMM(self.reportTime))
+                self.reportTime = 0.0
                 vibrate(False)
+                self.saveReport(mute=True)
 
-        elif not "1" in input and not "2" in input and not "3" in input and not "4" in input and not "5" in input\
-                and not "6" in input and not "7" in input and not "8" in input and not "9" in input and not "0" in input\
-                and not "(" in input and not ")" in input and not "*" in input\
-                and ("р" in input or "ж" in input or "ч" in input or "б" in input or "в" in input or "п" in input or "и" in input or "к" in input):
+        elif "р" in input or "ж" in input or "ч" in input or "б" in input or "в" in input or "п" in input or "и" in input or "к" in input:
             message="В отчет добавлено:"
             for i in range(len(input)):
-                if input[i]=="ч":
-                    self.hours = timeDeltaToHHMM(timeHHMMToTimeDelta(self.hours) + datetime.timedelta(hours=1))
+                if input[i]=="=" and input[i+1]=="ч":
+                    self.hours += 1
                     message += "\nчас"
-                if input[i]=="р":
-                    self.credit = timeDeltaToHHMM(timeHHMMToTimeDelta(self.credit) + datetime.timedelta(hours=1))
-                    message += "\nкр. час"
-                if input[i]=="б":
+                if input[i]=="=" and input[i+1]=="р":
+                    self.credit += 1
+                    message += "\nчас кредита"
+                if input[i]=="=" and input[i+1]=="б":
                     self.placements += 1
                     message += "\nпубликация"
-                if input[i]=="ж":
+                if input[i]=="=" and input[i+1]=="ж":
                     self.placements += 1
                     message += "\nпубликация"
-                if input[i]=="к":
+                if input[i]=="=" and input[i+1]=="к":
                     self.placements += 1
                     message += "\nпубликация"
-                if input[i]=="в":
+                if input[i]=="=" and input[i+1]=="в":
                     self.videos += 1
                     message += "\nвидео"
-                if input[i]=="п":
+                if input[i]=="=" and input[i+1]=="п":
                     self.returns += 1
                     message += "\nповторное"
-                if input[i]=="и":
+                if input[i]=="=" and input[i+1]=="и":
                     self.studies += 1
                     message += "\nизучение"
-            self.saveReport(message)
+            if message != "В отчет добавлено:":
+                self.saveReport(message)
 
-        elif input[0]=="ч": # commands like %ч2
-            self.hours = timeDeltaToHHMM(timeHHMMToTimeDelta(self.hours) + datetime.timedelta(hours=int(input[1:])))
-            self.saveReport("В отчет добавлено: %d ч." % int(input[1:]))
-        elif input[0] == "р":
-            self.credit = timeDeltaToHHMM(timeHHMMToTimeDelta(self.credit) + datetime.timedelta(hours=int(input[1:])))
-            self.saveReport("В отчет добавлено: %d ч. кредита" % int(input[1:]))
-        elif input[0]=="ж":
-            self.placements += int(input[1:])
-            self.saveReport("В отчет добавлено: %d пуб." % int(input[1:]))
-        elif input[0]=="к":
-            self.placements += int(input[1:])
-            self.saveReport("В отчет добавлено: %d пуб." % int(input[1:]))
-        elif input[0]=="б":
-            self.placements += int(input[1:])
-            self.saveReport("В отчет добавлено: %d пуб." % int(input[1:]))
-        elif input[0]=="в":
-            self.videos += int(input[1:])
-            self.saveReport("В отчет добавлено: %d вид." % int(input[1:]))
-        elif input[0]=="п":
-            self.returns += int(input[1:])
-            self.saveReport("В отчет добавлено: %d ПП" % int(input[1:]))
-        elif input[0]=="и":
-            self.studies += int(input[1:])
-            self.saveReport("В отчет добавлено: %d ИБ" % int(input[1:]))
-        elif input[0]=="*":
-            self.note = input[1:]
-            self.saveReport("Примечание отчета: %s" % self.note)
-        #except:
-        #    io2.log("Не удалось распознать ввод")
+        if input=="{б}":
+            self.placements += 1
+            self.saveReport("В отчет добавлена 1 публикация")
+        if input=="{в}":
+            self.videos += 1
+            self.saveReport("В отчет добавлено 1 видео")
                 
     def display(self):
         """ Displaying report """
-
-        if settings[0][8]==1 and settings[2][11]==1: # show reminder dialog
-            if io2.osName == "android":
-                from androidhelper import Android
-                Android().notify("Отчет", "Не забыть сдать отчет!")
-            answer=dialogs.dialogConfirm(icon("lamp") + " " + getTimerIcon(self.startTime), "Вы уже сдали отчет за %s?" % monthName()[3])
-            #console.process(answer)
-            if answer==True:
-                self.reminder = 0
         
         while 1:
-
             # Главный цикл показа отчета
             
             title = icon("report") + " Отчет за %s %s " % (monthName()[1], getTimerIcon(self.startTime))
 
-            gap = hourGap(self.hours, self.credit)
+            if settings[0][2]==True: # включен кредит часов
+                credit=self.credit
+            else:
+                credit=0
+            gap = float((self.hours+credit) - int(time.strftime("%d", time.localtime()))*settings[0][3]/days())
             
             if gap >= 0:
                 gap_str = icon("extra2") + " Запас: %s" % timeFloatToHHMM(gap) # happy emoticon
             else:
                 gap_str = icon("slippage") + " Отставание: %s" % timeFloatToHHMM(-gap) # crying emoticon
-            
-            if timeHHMMToTimeDelta(self.startTime) > zeroTimeDelta() and timeHHMMToTimeDelta(self.reportTime) == zeroTimeDelta():
-                self.endTime = time.strftime("%H:%M", time.localtime())
-                hoursStart = int(self.startTime[0:2])
-                minutesStart = int(self.startTime[3:5])
-                hoursEnd = int(self.endTime[0:2])
-                minutesEnd = int(self.endTime[3:5])
-                self.difTime = timeDeltaToHHMM(
-                    datetime.timedelta(hours=hoursEnd, minutes=minutesEnd) -\
-                    datetime.timedelta(hours=hoursStart, minutes=minutesStart)
+
+            if self.startTime > 0 and self.reportTime == 0:
+                self.endTime = int(time.strftime("%H", time.localtime())) * 3600 + int(
+                    time.strftime("%M", time.localtime())) * 60 + int(time.strftime("%S", time.localtime()))
+                self.difTime = (self.endTime - self.startTime) / 3600
+
+            if settings[0][2] == 1:
+                hoursLine = icon("timer") + " Часы: %s\n     (с кредитом: %s)" % (
+                    timeFloatToHHMM(self.hours), timeFloatToHHMM(self.hours + self.credit)
                 )
-            
-            if settings[0][2]==1:
-                combinedHours = timeDeltaToHHMM( timeHHMMToTimeDelta(self.hours) + timeHHMMToTimeDelta(self.credit) )
-                hoursLine = icon("timer") + " Часы: %s\n     (с кредитом: %s)" % (self.hours, combinedHours)
             else:
-                hoursLine = icon("timer") + " Часы: %s" % self.hours
-            
+                hoursLine = icon("timer") + " Часы: %s" % timeFloatToHHMM(self.hours)
+
             message = "Ваш отчет"
             options = [
                 icon("placements") + " Публикации: %d" % self.placements,
@@ -273,16 +246,14 @@ class Report():
                 
             if settings[0][3]!=0:
                 options.append(gap_str)
-                
             if settings[0][2]==1:
-                options.append(icon("credit") + " Кредит: %s" % self.credit)
-            
+                options.append(icon("credit") + " Кредит: %s" % timeFloatToHHMM(self.credit))
             options.append(icon("returns")  + " Повторные: %d" % self.returns)
             options.append(icon("studies")  + " Изучения: %d" % self.studies)
-            options.append(icon("pin")      + " Примечание: %s" % self.note)
             options.append(icon("logreport")+ " Журнал")
-                
-            if io2.osName!="android":
+            options.insert(7, icon("pin")      + " Примечание: %s" % self.note)
+
+            if io2.Mode!="sl4a":
                 options.append(icon("prevmonth") + " " + monthName()[2]) # neutral button on Android
 
             choice = dialogs.dialogList(
@@ -292,68 +263,27 @@ class Report():
                 options=options,
                 neutral = monthName()[2],                
                 neutralButton = True)
-            #console.process(choice)
             choice2=""
-            result=set.unify(options, choice)
-         
-            if result==None:                
-                return
+            if choice==None:
+                break
+            elif choice=="neutral": # last month report
+                self.showLastMonthReport()
+                continue
+            elif set.ifInt(choice)==True:
+                result = options[choice]
+            else:
+                continue
 
-            elif result == "":
-                if io2.settings[0][1] == True:
-                    return
-            
-            elif "neutral" in result: # last month report
-                if io2.osName=="android":
-                    if os.path.exists(io2.AndroidUserPath + "%s.txt" % monthName()[4]):
-                        try:
-                            with open(io2.AndroidUserPath + "%s.txt" % monthName()[4], "r", encoding="utf-8") as file: report=file.read()#report = json.load(file)
-                        except:
-                            io2.log("Не удалось загрузить отчет")
-                            continue
-                    else:
-                        io2.log("Отчет за %s не найден!" % monthName()[3])
-                        continue                        
-                else:
-                    if os.path.exists("%s.txt" % monthName()[4]):
-                        with open("%s.txt" % monthName()[4], "r", encoding="utf-8") as file: report=file.read()#report = json.load(file)
-                    else:
-                        io2.log("Отчет за %s не найден!" % monthName()[3])                       
-                        continue
-                
-                answer=dialogs.dialogConfirm(
-                        title = icon("report") + " Архив " + getTimerIcon(settings[2][6]),
-                        message=report,
-                        choices=[icon("export") + " Экспорт", "Назад"]
-                    )
-                #console.process(answer)
-                if answer==True: # export last month report
-                    if io2.osName == "android":
-                        try:
-                            from androidhelper import Android
-                            Android().sendEmail("Введите email","Отчет за %s" % monthName()[3],report,attachmentUri=None)
-                            os.system("clear")
-                            input("\nНажмите Enter для возврата")                
-                        except IOError:
-                            io2.log("Экспорт не удался!")
-                        else: io2.log("Экспорт выполнен")
-                        os.system("clear")
-                    else:
-                        webbrowser.open(monthName()[4] + ".txt")
-                    
-            elif choice==None:
-                break # exit
-
-            elif "Публикации" in result: # placements
+            if "Публикации" in result: # placements
+                message = "Изменение на:"
                 while choice2!=None:
                     choice2 = dialogs.dialogText(
                         neutralButton=True,
                         autoplus=True,
                         title=icon("placements") + " Публикации " + getTimerIcon(self.startTime),
-                        message="Изменение на:"
+                        message=message
                     )
-                    #console.process(choice2)
-                    if choice2 == "":
+                    if choice2 == None or choice2=="":
                         break
                     else:
                         try:
@@ -366,23 +296,23 @@ class Report():
                                 if "neutral" in choice2:
                                     self.placements += 1
                                     self.saveReport("В отчет добавлена 1 публикация")
-                                    continue
-                                io2.log("Не удалось изменить, попробуйте еще")
+                                    break
+                                message="Требуется целое число, можно с минусом"
                             continue
                         else:
                             self.saveReport("В отчет добавлено: %d пуб." % int(choice2))
                             break
-            
+
             elif "Видео" in result: # video
+                message="Изменение на:"
                 while choice2!=None:
                     choice2 = dialogs.dialogText(
                         neutralButton=True,
                         autoplus=True,
-                        title=icon("videos") + " Видео " + getTimerIcon(self.startTime),
-                        message="Изменение на:"
+                        title=icon("video") + " Видео " + getTimerIcon(self.startTime),
+                        message=message
                     )
-                    console.process(choice2)
-                    if choice2 == "":
+                    if choice2 == None or choice2=="":
                         break
                     else:
                         try:
@@ -394,112 +324,103 @@ class Report():
                                 if "neutral" in choice2:
                                     self.videos += 1
                                     self.saveReport("В отчет добавлено 1 видео")
-                                    continue
-                                io2.log("Не удалось изменить, попробуйте еще")
+                                    break
+                                message="Требуется целое число, можно с минусом"
                             continue
                         else:
                             self.saveReport("В отчет добавлено: %d вид." % int(choice2))
                             break
-                        
+
             elif "Часы" in result: # hours
+                message="Изменение на:"
                 while choice2!=None:
                     choice2 = dialogs.dialogText(
                         neutralButton=True,
                         autoplus=True,
                         title=icon("timer") + " Часы " + getTimerIcon(self.startTime),
-                        message="Изменение на (ЧЧ:ММ):"
+                        message=message
                     )
-                    console.process(choice2)
-                    if choice2 == "":
+                    if choice2 == None or choice2=="":
                         break
                     else:
                         try:
+                            input=timeHHMMToFloat(choice2)
                             if choice2[0]!="-":
-                                self.hours = timeDeltaToHHMM( timeHHMMToTimeDelta(self.hours) + timeHHMMToTimeDelta(choice2) )
+                                if (self.hours + input) >= 500:
+                                    message="Вы уверены, что так много часов?"
+                                    continue
+                                else:
+                                    self.hours += input
                             else:
-                                self.hours = timeDeltaToHHMM( timeHHMMToTimeDelta(self.hours) - timeHHMMToTimeDelta(choice2[1:]) )
+                                if (self.hours-input) >= 0: # проверка, чтобы отчет всегда был положительным
+                                    self.hours -= input
+                                else:
+                                    message="Отчет не может быть отрицательным"
+                                    continue
                         except:
                             if choice2!=None:
                                 if "cancelled!" in choice2:
                                     continue
                                 if "neutral" in choice2:
-                                    self.hours = timeDeltaToHHMM( timeHHMMToTimeDelta(self.hours) + datetime.timedelta(hours=1) )
+                                    self.hours += 1
                                     self.saveReport("В отчет добавлен 1 час")
-                                    continue
-                                io2.log("Ошибка! Требуется формат Ч или ЧЧ:ММ, можно с минусом")
+                                    break
+                                message="Требуется формат Ч или Ч:ММ, можно с минусом"
                             continue
                         else:
                             self.saveReport("В отчет добавлено: %s ч." % choice2)
                             break
-                        
-            elif "Запас" in result or "Отставание" in result: # gap
-                while 1:
-                    choice2 = dialogs.dialogText(
-                        title=icon("extra") + " Запас/отставание " + getTimerIcon(settings[2][6]),
-                        message="Введите месячную норму часов для подсчета запаса или отставания от нормы по состоянию на текущий день. Чтобы не показывать норму в отчете, введите 0 (можно снова активировать в настройках):",
-                        default = str(settings[0][3])
-                    )
-                    console.process(choice2)
-                    if choice2 == "":
-                        break
-                    else:
-                        try:
-                            if choice2!=None:
-                                if "cancelled!" in choice2: continue
-                                elif choice2=="":
-                                    settings[0][3]=0
-                                    io2.save()
-                                else:
-                                    settings[0][3] = int(choice2)
-                                    io2.save()
-                            else: break
-                        except:
-                            io2.logReport("Ошибка! Требуется формат Ч или ЧЧ:ММ, можно с минусом")
-                            continue
-                        else:
-                            break
                 
             elif "Кредит" in result: # credit hours
+                message="Изменение на:"
                 while choice2!=None:
                     choice2 = dialogs.dialogText(
                         neutralButton=True,
                         autoplus=True,
                         title=icon("credit") + " Кредит " + getTimerIcon(self.startTime),
-                        message="Изменение на:"
+                        message=message
                     )
-                    console.process(choice2)
-                    if choice2 == "":
+                    if choice2 == None or choice2=="":
                         break
                     else:
                         try:
+                            input = timeHHMMToFloat(choice2)
                             if choice2[0]!="-":
-                                self.credit = timeDeltaToHHMM(timeHHMMToTimeDelta(self.credit) + timeHHMMToTimeDelta(choice2))
+                                if (self.credit + input) >= 500:
+                                    message="Вы уверены, что так много часов?"
+                                    continue
+                                else:
+                                    self.credit += input
                             else:
-                                self.credit = timeDeltaToHHMM(timeHHMMToTimeDelta(self.credit) - timeHHMMToTimeDelta(choice2[1:]))
+                                if (self.credit - input) >= 0:  # проверка, чтобы отчет всегда был положительным
+                                    self.credit -= input
+                                else:
+                                    message="Отчет не может быть отрицательным"
+                                    continue
                         except:
                             if choice2!=None:
                                 if "cancelled!" in choice2:
                                     continue
                                 if "neutral" in choice2:
-                                    self.credit = timeDeltaToHHMM(timeHHMMToTimeDelta(self.credit) + datetime.timedelta(hours=1))
+                                    self.credit += 1
                                     self.saveReport("В отчет добавлен 1 час кредита")
-                                    continue
-                                io2.log("Не удалось изменить, попробуйте еще")
+                                    break
+                                message="Требуется формат Ч или Ч:ММ, можно с минусом"
                             continue
                         else:
                             self.saveReport("В отчет добавлено: %s ч. кредита" % choice2)
                             break
-                        
+
             elif "Повторные" in result: # returns
+                message = "Изменение на:"
                 while choice2!=None:
                     choice2 = dialogs.dialogText(
                         neutralButton=True,
                         autoplus=True,
                         title=icon("returns") + " Повторные " + getTimerIcon(self.startTime),
-                        message="Изменение на:"
+                        message=message
                     )
-                    console.process(choice2)
-                    if choice2 == "":
+                    if choice2 == None or choice2=="":
                         break
                     else:
                         try:
@@ -511,23 +432,23 @@ class Report():
                                 if "neutral" in choice2:
                                     self.returns += 1
                                     self.saveReport("В отчет добавлено 1 повт. посещение")
-                                    continue
-                                io2.log("Не удалось изменить, попробуйте еще")
+                                    break
+                                message="Требуется целое число, можно с минусом"
                             continue
                         else:
                             self.saveReport("В отчет добавлено: %d ПП" % int(choice2))
                             break
             
             elif "Изучения" in result: # studies
+                message = "Изменение на:"
                 while choice2!=None:
                     choice2 = dialogs.dialogText(
                         neutralButton=True,
                         autoplus=True,
                         title=icon("studies") + " Изучения " + getTimerIcon(self.startTime),
-                        message="Изменение на:"
+                        message=message
                     )
-                    console.process(choice2)
-                    if choice2 == "":
+                    if choice2 == None or choice2=="":
                         break
                     else:
                         try:
@@ -539,8 +460,8 @@ class Report():
                                 if "neutral" in choice2:
                                     self.studies += 1
                                     self.saveReport("В отчет добавлено 1 изучение")
-                                    continue
-                                io2.log("Не удалось изменить, попробуйте еще")
+                                    break
+                                message="Требуется целое число, можно с минусом"
                             continue
                         else:
                             self.saveReport("В отчет добавлено: %d ИБ" % int(choice2))
@@ -549,9 +470,9 @@ class Report():
             elif "Примечание" in result: # note
                 choice2 = dialogs.dialogText(
                     title=icon("pin") + " Примечание " + getTimerIcon(self.startTime),
+                    message="Примечание для себя и для отчета:",
                     default=self.note
                 )
-                console.process(choice2)
                 if choice2==None or "cancelled!" in choice2:
                     continue
                 else:
@@ -559,119 +480,63 @@ class Report():
                     self.saveReport()
 
             elif "Журнал" in result: # show logReport
-                if io2.osName=="android":
-                    if os.path.exists(io2.AndroidUserPath + "logreport.txt"):
-                        with open(io2.AndroidUserPath + "logreport.txt", encoding="utf-8") as file:
-                            text = file.read()
-                        choice=dialogs.dialogInfo(
-                            title=icon("logreport") + " Журнал отчета %s" % getTimerIcon(settings[2][6]),
-                            message=text,
-                            neutralButton=True,
-                            neutral="Очистить"
+                        message=""
+                        for line in resources[2]:
+                            message+=line
+                        dialogs.dialogHelp(
+                            title=icon("logreport") + " Журнал отчета",
+                            message=message
                         )
-                        console.process(choice)
-                        if choice=="neutral" and dialogs.dialogConfirm(message="Полностью очистить журнал отчета?")==True:
-                            os.remove(io2.AndroidUserPath + "logreport.txt")
-                    else:
-                        io2.log("Файл журнала не найден! Попробуйте внести хотя бы одно изменение в отчет.")
-                else:
-                    if os.path.exists("logreport.txt"):
-                        with open("logreport.txt", encoding="utf-8") as file:
-                            text = file.read()
-                        choice=dialogs.dialogHelp(
-                            title=icon("logreport") + " Журнал отчета %s" % getTimerIcon(settings[2][6]),
-                            message=text,
-                            neutral="Очистить"
-                        )
-                        console.process(choice)
-                        if choice=="" and dialogs.dialogConfirm(message="Полностью очистить журнал отчета?")==True:
-                            os.remove("logreport.txt")
-                    else:
-                        io2.log("Файл журнала не найден! Внесите хотя бы одно изменение в отчет.")
         
         if exit==1:            
             return True
 
-def timeDeltaToHHMM(delta):
-    delta=str(delta)
-    if len(delta)==7:                           # "1:00:00"
-        result = "0%s:%s" % (delta[0:1], delta[2:4])
-
-    elif len(delta)==8:                         # "10:00:00"
-        result = "%s:%s" % (delta[0:2], delta[3:5])
-
-    elif len(delta)==6:                         # "100:00"
-        result = "%s:%s" % (delta[0:3], delta[4:6])
-
-    elif "day" in delta and len(delta)==14:     # "1 day, 6:00:00"
-        days=int(delta[0])*24
-        hours = days + int(delta[7:8])
-        minutes = int(delta[9:11])
-        result = str("%02d:%02d" % (hours, minutes))
-
-    elif "day" in delta and len(delta)==15:     # "1 day, 12:00:00"
-        days=int(delta[0])*24
-        hours = days + int(delta[7:9])
-        minutes = int(delta[10:12])
-        result = str("%02d:%02d" % (hours, minutes))
-
-    elif "days" in delta and len(delta)==15:    # "2 days, 2:00:00"
-        days=int(delta[0])*24
-        hours = days + int(delta[8:9])
-        minutes = int(delta[10:12])
-        result = str("%02d:%02d" % (hours, minutes))
-
-    elif "days" in delta and len(delta)==16:    # "2 days, 12:00:00"
-        days=int(delta[0])*24
-        hours = days + int(delta[8:10])
-        minutes = int(delta[12:13])
-        result = str("%02d:%02d" % (hours, minutes))
-
-    else:
-        result = delta#"999:99"#"00:00"
-    return result
-
-def timeHHMMToTimeDelta(time="00:00"):
-    time=time.strip()
-    if ":" not in time:  # "1"
-        hours = int(time)
-        minutes=0
-        print(time)
-    elif len(time)==5:   # "00:00"
-        hours = int(time[0:2])
-        minutes = int(time[3:5])
-    elif len(time)==6:  # "100:00"
-        hours = int(time[0:3])
-        minutes = int(time[4:6])
-    else:
-        hours=0
-        minutes=0
-    return datetime.timedelta(hours=hours, minutes=minutes)
-
-def zeroTimeDelta():
-    return datetime.timedelta(hours=0, minutes=0)
+    def showLastMonthReport(self):
+        """ Показываем отчет прошлого месяца """
+        if io2.Mode == "sl4a":
+            exportButton = " Экспорт"
+        else:
+            exportButton = " В буфер обмена"
+        answer = dialogs.dialogConfirm(
+            title=icon("report") + " Отчет прошлого месяца ",
+            message=settings[2][12],
+            choices=[icon("export") + exportButton, "Назад"]
+        )
+        if answer == True:  # export last month report
+            if io2.Mode == "sl4a":
+                try:
+                    from androidhelper import Android
+                    Android().sendEmail("Введите email", "Отчет за %s" % monthName()[3], self.lastMonth, attachmentUri=None)
+                    os.system("clear")
+                    input("\nНажмите Enter для возврата")
+                except IOError:
+                    io2.log("Экспорт не удался!")
+                os.system("clear")
+            else:
+                from tkinter import Tk
+                r = Tk()
+                r.withdraw()
+                r.clipboard_clear()
+                r.clipboard_append(self.lastMonth)
+                r.destroy()
 
 def updateTimer(startTime):
     """ Returns current endTime to anyone """
-    endTime = time.strftime("%H:%M", time.localtime())
-    hoursStart = int(startTime[0:2])
-    minutesStart = int(startTime[3:5])
-    hoursEnd = int(endTime[0:2])
-    minutesEnd = int(endTime[3:5])
-    return datetime.timedelta(hours=hoursEnd, minutes=minutesEnd) - datetime.timedelta(hours=hoursStart, minutes=minutesStart)
+
+    endTime = int(time.strftime("%H", time.localtime())) * 3600 + int(time.strftime("%M", time.localtime())) * 60 + int(time.strftime("%S", time.localtime()))
+    return (endTime - startTime) / 3600
 
 def getTimerIcon(startTime):
     """ Returns timer and ringer icon, if active, and add silent icon on Android """
 
-    if timeHHMMToTimeDelta(startTime) > zeroTimeDelta():
+    if startTime > 0:
         output = " " + icon("timer")
-        if io2.osName=="android":
-            if settings[0][0]==1:
-                output += " " + icon("mute")
+        if io2.Mode == "sl4a":
+            if settings[0][0] == 1:
+        #        output += " " + icon("mute")
                 vibrate(True)
             else:
                 vibrate(False)
-            
         return output
     else:
         return ""
@@ -679,7 +544,7 @@ def getTimerIcon(startTime):
 def vibrate(key):
     """ Toggle ringer on/off """
     
-    if io2.osName != "android":
+    if io2.Mode != "sl4a":
         return
     if settings[0][0]==1:
         from androidhelper import Android
@@ -689,16 +554,6 @@ def vibrate(key):
         elif key==False:
             Android().setRingerVolume(100)
             return
-    
-def checkNewMonth():
-    """ Checks if month is over """
-    
-    savedMonth = settings[3]
-    currentMonth = time.strftime("%b", time.localtime())
-    if savedMonth==currentMonth:
-        return False   # same month
-    else:
-        return True                           # new month began
 
 def monthName(monthCode=None, monthNum=None):
     """ Returns names of current and last months in lower and upper cases """
@@ -843,23 +698,81 @@ def monthName(monthCode=None, monthNum=None):
         
     return curMonthUp, curMonthLow, lastMonthUp, lastMonthLow, lastMonthEn, curMonthRuShort, monthNum, lastTheoMonthNum, curTheoMonthNum
 
-def hourGap(hours, credit):
-    """Вычисление запаса или отставания от месячной нормы"""
-    h = timeDeltaToHHMM( timeHHMMToTimeDelta(hours) + timeHHMMToTimeDelta(credit) )
-    combinedHours = int( h[0 : h.index(":")] ) # обычные часы и кредит
-    d = int(time.strftime("%d", time.localtime())) # текущий день месяца
-    norm = settings[0][3] # месячная норма
-    result = combinedHours - d * norm / days()
-    return result
+def timeHHMMToFloat(mytime):
+    if mytime==None:
+        return None
 
-def timeHHMMToFloat(time):
-    lis = [time]
-    start_dt = datetime.datetime.strptime("00:00", '%H:%M')
-    result=[float('{:0.2f}'.format((datetime.datetime.strptime(time, '%H:%M') - start_dt).seconds / 3600)) for time in lis][0]
+    if mytime[0]=="-":
+        mytime = mytime[1:]
+
+    if ":" not in mytime:
+        result = abs(int(mytime.strip()))
+    else:
+        lis = [mytime]
+        start_dt = datetime.datetime.strptime("00:00", '%H:%M')
+        result = [float('{:0.2f}'.format((datetime.datetime.strptime(mytime, '%H:%M') - start_dt).seconds / 3600)) for mytime in lis][0]
+
     return result
 
 def timeFloatToHHMM(hours):
-    return str(datetime.timedelta(hours=hours)).rsplit(':', 1)[0]
+    delta = str(datetime.timedelta(hours=hours)).strip()
+
+    if "." in delta:
+        delta = delta[ 0 : delta.index(".") ]
+
+    if len(delta) == 7:  # "1:00:00"
+        result = "%s:%s" % (delta[0:1], delta[2:4])
+
+    elif len(delta) == 8:  # "10:00:00"
+        result = "%s:%s" % (delta[0:2], delta[3:5])
+
+    elif len(delta) == 6:  # "100:00"
+        result = "%s:%s" % (delta[0:3], delta[4:6])
+
+    elif "day" in delta and len(delta) == 14:  # "1 day, 6:00:00"
+        days = int(delta[0]) * 24
+        hours = days + int(delta[7:8])
+        minutes = int(delta[9:11])
+        result = str("%d:%02d" % (hours, minutes))
+
+    elif "day" in delta and len(delta) == 15:  # "1 day, 12:00:00"
+        days = int(delta[0]) * 24
+        hours = days + int(delta[7:9])
+        minutes = int(delta[10:12])
+        result = str("%d:%02d" % (hours, minutes))
+
+    elif "days" in delta and len(delta) == 15:  # "2 days, 2:00:00"
+        days = int(delta[0]) * 24
+        hours = days + int(delta[8:9])
+        minutes = int(delta[10:12])
+        result = str("%d:%02d" % (hours, minutes))
+
+    elif "days" in delta and len(delta) == 16\
+            and set.ifInt(delta[0])==True\
+            and set.ifInt(delta[1])==False:     # "2 days, 12:00:00"
+        days = int(delta[0]) * 24
+        hours = days + int(delta[8:10])
+        minutes = int(delta[12:13])
+        result = str("%d:%02d" % (hours, minutes))
+        
+    elif "days" in delta and len(delta) == 16 \
+            and set.ifInt(delta[0]) == True \
+            and set.ifInt(delta[1]) == True:    # "12 days, 2:00:00"
+        days = int(delta[0:2]) * 24
+        hours = days + int(delta[9:10])
+        minutes = int(delta[12:13])
+        result = str("%d:%02d" % (hours, minutes))
+
+    elif "days" in delta and len(delta) == 17:  # "12 days, 12:00:00"
+        days = int(delta[0:2]) * 24
+        hours = days + int(delta[9:11])
+        minutes = int(delta[13:14])
+        result = str("%d:%02d" % (hours, minutes))
+
+    else:
+        result=delta
+
+    return result
 
 def days():
     """ Returns number of days in current month """
@@ -878,21 +791,29 @@ def days():
     elif time.strftime("%b", time.localtime())=="Dec": return 31
     else: return 30.5
     
-def report(choice="", stop=False):
+def report(choice="", stop=False, newMonthDetected=False, disableNotification=False, showLastMonth=False):
     """ Callable program """
     exit=0
     
     report = Report() # create current report
-    
+
     # Check if new month began
     
-    if checkNewMonth()==True:
+    if newMonthDetected==True:
         rolloverHours, rolloverCredit = report.saveLastMonth()
         report.clear(rolloverHours, rolloverCredit)
-        settings[3] = time.strftime("%b", time.localtime())
-        settings[2][11]=1 # turn on report reminder
-        self.saveReport("Начался новый месяц, отчет за %s заархивирован" % monthName()[3])
-        stop=False
+        report.reminder=1 # включить напоминание сдать отчет
+        report.saveReport()
+        dialogs.dialogNotify("Начался новый месяц, не забудьте сдать отчет!")
+        stop=True
+
+    if disableNotification==True:
+        report.reminder = 0
+        report.saveReport()
+        stop=True
+
+    if showLastMonth==True:
+        report.showLastMonthReport()
     
     if stop==True:
         if exit==1:

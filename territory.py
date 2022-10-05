@@ -19,7 +19,6 @@ def terView():
         if choice!="positive":
             choice = dialogs.dialogList( # display list of houses and options
                 title = icon("globe") + " Участки " + reports.getTimerIcon(settings[2][6]), # houses sorting type, timer icon
-                message = "Выберите участок или создайте новый:",
                 options = house_op.showHouses(),
                 form = "terView",
                 negative = "Назад",
@@ -39,25 +38,20 @@ def terView():
             house_op.terSort()
         elif choice=="positive": # новый участок
             choice=""
-            type = house_op.pickHouseType()
-            if type=="condo":
-                houseIcon = icon("house")
-                message = "Введите улицу и номер дома, например:\nПушкина, 30"
-            elif type=="private":
-                houseIcon = icon("cottage")
-                message = "Введите улицу или район, например:\nЛесная\nЮжная часть"
-            elif type=="office":
-                houseIcon = icon("office")
-                message = "Введите название либо адрес объекта, например:\nТЦ «Радуга»\nПушкина, 20"
-            elif type=="phone":
-                houseIcon = icon("phone")
-                message = "Введите список номеров, например:\n231-000 – 231-499"
-            else: continue
-
-            choice2 = dialogs.dialogText(houseIcon + " Новый участок", message)
-            if choice2 != None:
-                house_op.addHouse(houses, choice2, type)
-                io2.log("Создан участок «%s»" % choice2.upper())
+            while 1:
+                type = house_op.pickHouseType()
+                if type==None:
+                    break
+                house_op.addHouse(houses, "", type) # создается временный дом
+                temphouse = houses[len(houses)-1]
+                choice2 = dialogs.dialogText(temphouse.getTipIcon()[1] + " Новый участок", temphouse.getTipIcon()[0])
+                del houses [len(houses)-1] # удаляется временный дом
+                if choice2==None:
+                    continue
+                else:
+                    house_op.addHouse(houses, choice2, type)
+                    io2.log("Создан участок «%s»" % choice2.upper())
+                    break
         else:
             continue
 
@@ -68,23 +62,19 @@ def houseView(selectedHouse):
 
     choice = ""
     while 1:
-        if house.note !="":
-            noteTitle = icon("pin") + " " + house.note
-        else:
-            noteTitle=""
         if house.type=="condo":
             houseIcon = icon("house")
         elif house.type=="private":
             houseIcon = icon("cottage")
         elif house.type == "phone":
-            houseIcon = icon("phone")
+            houseIcon = icon("phone2")
         else:
             houseIcon = icon("house")
 
         if choice!="positive":
             choice = dialogs.dialogList(
                 form = "houseView",
-                title = houseIcon + " %s ⇨ подъезды %s" % (house.title, reports.getTimerIcon(settings[2][6])),
+                title = houseIcon + " %s ⇨ %sы %s" % (house.title, house.getPorchType()[0], reports.getTimerIcon(settings[2][6])),
                 options = house.showPorches(),
                 negative = "Назад",
                 positiveButton=True,
@@ -103,36 +93,22 @@ def houseView(selectedHouse):
         elif choice=="positive": # новый подъезд
             choice=""
             if house.type=="private":
-                message="Введите название сегмента внутри участка. Это может быть группа домов, часть квартала, четная/нечетная сторона и т.п. Можно создать единственный сегмент с любым названием и даже без него:"
-                type="сегмент"
+                message="Введите название сегмента внутри участка. Это может быть группа домов, часть квартала, четная/нечетная сторона улицы и т.п. Можно создать единственный сегмент с любым названием:"
             elif house.type=="office":
                 message="Введите название отдела внутри организации, например:\nКасса\nАдминистрация\nОхрана"
-                type="отдел"
             elif house.type=="phone":
                 message="Введите диапазон номеров, например:\n100–200"
-                type="диапазон"
             else:
                 message = "Введите заголовок подъезда (обычно просто номер):"
-                type = "подъезд"
-            if house.type == "condo":
-                porchIcon = icon("porch")
-            elif house.type == "private":
-                porchIcon = icon("flag")
-            elif house.type == "office":
-                porchIcon = icon("door")
-            elif house.type == "phone":
-                porchIcon = icon("flag")
-            else:
-                porchIcon = icon("porch")
 
             choice2 = dialogs.dialogText(
-                title= porchIcon + " Новый %s" % type,
+                title= house.getPorchType()[1] + " Новый %s" % house.getPorchType()[0],
                 message = message
             )
             if choice2 != None:
                 if choice2=="+":
                     choice2=choice2[1:]
-                house.addPorch(choice2, type)
+                house.addPorch(choice2, house.getPorchType()[0])
         elif set.ifInt(choice) == True:
             if "Создайте" in house.showPorches()[choice]:
                 choice="positive"
@@ -152,7 +128,7 @@ def porchView(house, selectedPorch):
         """ Меню, которое выводится при первом заходе в квартиру"""
 
         options = [
-            icon("interest")    + " Записать посещение",
+            icon("edit")    + " Записать посещение",
             icon("reject")      + " Отказ и выход",
             icon("preferences") + " Детали",
         ]
@@ -182,7 +158,7 @@ def porchView(house, selectedPorch):
             if name == None:
                 return
             else:
-                flat.updateName(name)
+                flat.updateName(name, forceStatusUpdate=True)
                 record = dialogs.dialogText(
                     title="%s Ввод данных о первом посещении" % icon("mic"),
                     message="Описание разговора:"
@@ -199,14 +175,14 @@ def porchView(house, selectedPorch):
                             icon("interest") + " Установить статус «интерес» ",
                             icon("placements") + " Добавить публикацию",
                             icon("video") + " Добавить видео",
-                            icon("phone2") + " Записать телефон",
+                            icon("phone") + " Записать телефон",
                             icon("appointment") + " Назначить встречу"
                         ]
                     )
                     if choices!=None:
                         checked = ' '.join(choices)
                         if "Установить статус" in checked:  # интерес
-                            flat.updateStatus(status="1")
+                            flat.status="1"
                         if "Добавить публикацию" in checked: # публикация
                             reports.report(choice="{{б}")
                         if "Добавить видео" in checked: # видео
@@ -227,7 +203,7 @@ def porchView(house, selectedPorch):
             )
             if input==None:
                 pass
-            elif input=="neutral":
+            elif input=="neutral" or input=="\\" or input=="справка" or input=="help":
                 dialogs.dialogHelp(
                     title="%s Умная строка" % icon("rocket"),
                     message="«Умная строка» – это самый мощный и быстрый способ добавления нового посещения, а также работы с отчетами!\n\n" +
@@ -276,7 +252,7 @@ def porchView(house, selectedPorch):
             for i in range(len(porch.flats)):
                 if number == porch.flats[i].number:
                     found = True
-                    if len(porch.flats[i].records)==0 and porch.flats[i].getName()=="" and porch.flats[i].status=="": # если первый раз, запускаем меню первого посещения
+                    if len(porch.flats[i].records)==0 and porch.flats[i].getName()=="": # если первый раз, запускаем меню первого посещения
                         exit = firstCallMenu(porch.flats[i])
                         if exit == "deleted":
                             porch.deleteFlat(i)
@@ -293,23 +269,14 @@ def porchView(house, selectedPorch):
     default = choice = ""
     while 1: # Показываем весь подъезд
 
-        if house.type=="condo":
-            porchIcon = icon("porch")
-        elif house.type=="private":
-            porchIcon = icon("flag")
-        elif house.type=="office":
-            porchIcon = icon("door")
-        elif house.type=="phone":
-            porchIcon = icon("flag")
+        # Стандартный списочный вид
 
-        # Режим сетки отключен, показываем стандартно
-
-        if settings[0][5] == 0:
+        if settings[0][1]==0 and io2.Mode!="text":
 
             if choice!="positive":
                 options = porch.showFlats()
                 choice = dialogs.dialogList(
-                    title=porchIcon + "Подъезд %s %s" % (porch.title, reports.getTimerIcon(settings[2][6])),
+                    title=house.getPorchType()[1] + "%s %s" % (porch.title, reports.getTimerIcon(settings[2][6])),
                     options=options,
                     form="porchViewGUIList",
                     positiveButton=True,
@@ -336,7 +303,7 @@ def porchView(house, selectedPorch):
                 continue
             elif choice=="positive":
                 addFlat = dialogs.dialogText(
-                    title="Добавление новых квартир",
+                    title="Добавление новых " + house.getPorchType()[2],
                     default=default,
                     message="Введите один номер (напр. 1) или диапазон через дефис (напр. 1–50)"
                 )
@@ -402,15 +369,17 @@ def porchView(house, selectedPorch):
                 else:
                     continue
 
-        # Режим сетки включен - классический вид
+        # Текстовое представление подъезда
 
         else:
+
             choice = dialogs.dialogText(
-                title=porchIcon + "%s (%s) %s %s" % (porch.title,
+                title=house.getPorchType()[1] + "%s (%s) %s %s" % (porch.title,
                                                      house.title,
                                                      house.note,
                                                      reports.getTimerIcon(settings[2][6])),
                 message=porch.showFlats(),
+                form="porchText",
                 default=default,
                 neutralButton=True,
                 neutral=icon("preferences") + " Детали"
@@ -425,7 +394,7 @@ def porchView(house, selectedPorch):
                     return
             elif choice[0] == "+":  # добавление квартир(ы) разными способами
                 if len(choice) == 1:
-                    io2.log("Чтобы добавить квартиру, введите номер!")
+                    io2.log("Чтобы добавить квартиру, введите + и сразу номер!")
                     choice = default = ""
                 elif set.ifInt(choice[1]) == True and "-" not in choice:  # add new flat (and enter)
                     porch.addFlat(choice)
@@ -475,7 +444,7 @@ def flatView(flat, house, virtual=False):
             appointment = ""
 
         if flat.phone != "":
-            phone = icon("phone2")
+            phone = icon("phone")
         else:
             phone = ""
 
@@ -509,7 +478,6 @@ def flatView(flat, house, virtual=False):
                     noteTitle,
                     reports.getTimerIcon(settings[2][6])
                 ),
-                message = "Выберите запись посещения или создайте новую:",
                 options=options,
                 form="flatView",
                 positiveButton=True,
@@ -525,11 +493,9 @@ def flatView(flat, house, virtual=False):
                 return "deleted"
 
         elif choice=="positive": # new record
-            default=settings[0][12]
             choice2 = dialogs.dialogText(
                 title = icon("mic") + " Новая запись посещения",
                 message = "О чем говорили?",
-                default=default,
                 largeText=True
             )
             if choice2 == None or choice2 == "":
@@ -539,10 +505,6 @@ def flatView(flat, house, virtual=False):
                 flat.addRecord(choice2.strip())
                 choice=""
                 continue
-                #if settings[0][9]==1:
-                #    break
-                #else:
-                #    continue
         elif set.ifInt(choice)==True:
             if "Создайте" in options[choice]:
                 choice = "positive"
@@ -577,4 +539,3 @@ def flatView(flat, house, virtual=False):
 
         else:
             continue
-
