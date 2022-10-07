@@ -177,7 +177,7 @@ QPython программу можно установить и из Android Marke
 
 # Обратная связь
 
-Пишите мне на [antorix@gmail.com]("mailto:antorix@gmail.com?subject=Вопрос по Rocket Ministry").
+Пишите мне на [antorix@gmail.com](mailto:antorix@gmail.com).
 
 # Лицензия
 
