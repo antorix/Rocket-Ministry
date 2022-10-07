@@ -173,4 +173,4 @@ QPython программу можно установить и из Android Marke
 
 ## Меня не устраивает быстродействие программы, можно как-то его повысить?
 
-Смотрите [два совета по оптимизации](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#зачем-нужен-qpython-3s) выше.
+Смотрите [два совета по оптимизации](https://github.com/antorix/Rocket-Ministry/blob/1.0.0/README.md#зачем-нужен-qpython-3s) выше.
