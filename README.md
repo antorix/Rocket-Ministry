@@ -64,11 +64,24 @@ QPython программу можно установить и из Android Marke
 
 ## Windows
 
-Этот раздел появится чуть позже.
+1. Скачайте архив с GitHub: [https://github.com/antorix/Rocket-Ministry/archive/refs/heads/1.0.0.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/1.0.0.zip).
+2. Скачайте и установите Python с [python.org](python.org).
+3. Запустите файл Rocket Ministry.bat.
+4. С помощью прилагаемой иконки можно создать ярлык для рабочего стола.
 
 ## Linux
 
-Этот раздел появится чуть позже.
+1. Скачайте архив с GitHub: [https://github.com/antorix/Rocket-Ministry/archive/refs/heads/1.0.0.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/1.0.0.zip).
+2. Установите Python IDLE. В Ubuntu/Debian введите:
+
+`sudo apt-get install idle3`
+`idle3`
+
+Для RHEL/Fedora:
+
+`su yum install python-tools`
+
+3. В IDLE откройте файл main.py и нажмите F5.
 
 # Основные понятия программы
 
