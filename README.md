@@ -190,7 +190,7 @@ QPython программу можно установить и из Android Marke
 
 # Обратная связь
 
-Пишите мне на [antorix@gmail.com](mailto:antorix@gmail.com).
+Пишите мне на [antorix@gmail.com](mailto:antorix@gmail.com) или в Telegram [t.me/chivchalov](https://t.me/chivchalov).
 
 # Лицензия
 
