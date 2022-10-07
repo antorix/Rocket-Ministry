@@ -1,12 +1,12 @@
 *Документация по программе Rocket Ministry. Последнее обновление: 07.10.2022*
 
-* [Возможности](https://github.com/antorix/Rocket-Ministry/blob/1.0/README.md#возможности)
-* [Установка и настройки](https://github.com/antorix/Rocket-Ministry/blob/1.0/README.md#установка-и-настройки)
-* [Основные понятия программы](https://github.com/antorix/Rocket-Ministry/blob/1.0/README.md#основные-понятия-программы)
-* [Синхронизация данных](https://github.com/antorix/Rocket-Ministry/blob/1.0/README.md#синхронизация-данных)
-* [Часто задаваемые вопросы](https://github.com/antorix/Rocket-Ministry/blob/1.0/README.md#часто-задаваемые-вопросы)
-* [Обратная связь](https://github.com/antorix/Rocket-Ministry/blob/1.0/README.md#обратная-связь)
-* [Лицензия](https://github.com/antorix/Rocket-Ministry/blob/1.0/README.md#лицензия)
+* [Возможности](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#возможности)
+* [Установка и настройки](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#установка-и-настройки)
+* [Основные понятия программы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#основные-понятия-программы)
+* [Синхронизация данных](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#синхронизация-данных)
+* [Часто задаваемые вопросы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#часто-задаваемые-вопросы)
+* [Обратная связь](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#обратная-связь)
+* [Лицензия](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#лицензия)
 
 # Возможности
 
@@ -190,7 +190,7 @@ QPython можно установить и из Android Market, а затем в
 
 ## Меня не устраивает быстродействие программы, можно как-то его повысить?
 
-Смотрите [два совета по оптимизации](https://github.com/antorix/Rocket-Ministry/blob/1.0/README.md#зачем-нужен-qpython-3s) выше.
+Смотрите [два совета по оптимизации](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#зачем-нужен-qpython-3s) выше.
 
 # Обратная связь
 
