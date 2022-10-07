@@ -9,7 +9,7 @@ def icon(myIcon, forceText=False):
     if Mode=="sl4a" and settings[0][1]==False and forceText==False:
         if myIcon=="globe": return "🗺" #"\ud83c\udfe2" # if Android below 4.4
         elif myIcon=="map": return "🧭" #"\ud83d\udea9"
-        elif myIcon=="rocket": return "\ud83d\ude80"
+        elif myIcon=="rocket": return "🚀"
         elif myIcon=="timer": return "⌚" #"\u23F0"
         elif myIcon=="report": return "🗒" #"\ud83d\udcc3"
         elif myIcon=="contacts": return "\ud83d\udc65" # "\ud83d\udcc7"
@@ -24,10 +24,11 @@ def icon(myIcon, forceText=False):
         elif myIcon=="contact": return "\ud83d\udc64"
         elif myIcon=="case": return "💼"
         elif myIcon=="sort": return "\ud83d\udd03"
-        elif myIcon=="mark": return "✔"
+        elif myIcon=="mark": return "✅"#✔
+        elif myIcon=="cross": return "❌"
+        elif myIcon=="box": return "⬜"
         elif myIcon=="fail": return "\u274c"
         elif myIcon=="up": return "\u2b06\ufe0f"
-        elif myIcon=="box": return "⬜"
         elif myIcon=="pin": return "📌" #"\ud83d\udd8d\ufe0f"
         elif myIcon=="cut": return "🗑"
         elif myIcon=="table": return "\u2702" # new
@@ -77,14 +78,15 @@ def icon(myIcon, forceText=False):
         elif myIcon=="circle": return "⚪"
         elif myIcon=="clipboard": return "📋"
         elif myIcon=="clear": return "🗑"
-        elif myIcon=="mic": return "🗨" #💭
+        elif myIcon=="mic": return "💬" #💭🗨
         elif myIcon=="intercom": return "📟"  #
         elif myIcon=="prevmonth": return "📋" # new
-        elif myIcon=="up": return "⬆"
-        elif myIcon=="down": return "⬇"
+        elif myIcon=="up": return "🔼"#⬆
+        elif myIcon=="down": return "🔽"#⬇
         elif myIcon=="phone": return "📱"
         elif myIcon=="phone2": return "☎"
         elif myIcon=="phone3": return "📞"
+        elif myIcon=="warning": return "❗"
 
         elif myIcon=="reject":
             if Simplified==1 and settings[0][16]==0:             # статус 0
@@ -106,8 +108,13 @@ def icon(myIcon, forceText=False):
                 return "🟣"
             else:
                 return "👾"
-        elif myIcon=="danger":
+        elif myIcon=="brown":
             if Simplified==1 and settings[0][16]==0:           # статус 4
+                return "🟤"
+            else:
+                return "🤠"
+        elif myIcon=="danger":
+            if Simplified==1 and settings[0][16]==0:           # статус 5
                 return "🔴"
             else:
                 return "😡"
@@ -139,9 +146,10 @@ def icon(myIcon, forceText=False):
         elif myIcon=="case": return "□"
         elif myIcon=="sort": return "±"        
         elif myIcon=="mark": return "√"
+        elif myIcon=="cross": return "×"
+        elif myIcon=="box": return "□"
         elif myIcon=="fail": return "˟"
         elif myIcon=="up": return "↑"
-        elif myIcon=="box": return "□"
         elif myIcon=="pin": return ">"
         elif myIcon=="cut": return "×"
         elif myIcon=="tablet": return "□"
@@ -153,8 +161,8 @@ def icon(myIcon, forceText=False):
         elif myIcon=="export": return "▲"
         elif myIcon=="edit": return "✶"
         elif myIcon=="extra": return "☺"
-        elif myIcon=="extra2": return "+"
-        elif myIcon=="slippage": return "–"
+        elif myIcon=="extra2": return "↑"
+        elif myIcon=="slippage": return "↓"
         elif myIcon=="placements": return "▫"
         elif myIcon=="video": return "▫"
         elif myIcon=="credit": return "○"
@@ -198,12 +206,14 @@ def icon(myIcon, forceText=False):
         elif myIcon=="phone": return "◊"
         elif myIcon=="phone2": return "◊"
         elif myIcon=="phone3": return "◊"
+        elif myIcon=="warning": return "⚠"
 
         elif myIcon=="reject": return "×"#○"#x"     # статус 0
         elif myIcon=="interest": return "●"         # статус 1
         elif myIcon=="green": return "◊"           # статус 2
-        elif myIcon=="purple": return "♦"            # статус 3
-        elif myIcon=="danger": return "!"           # статус 4
+        elif myIcon=="purple": return "○"            # статус 3
+        elif myIcon=="brown": return "♦"            # статус 4
+        elif myIcon=="danger": return "!"           # статус 5
         elif myIcon=="question": return "?"         # статус ?
         elif myIcon=="void": return " "         # статус ""
         else: return "?"

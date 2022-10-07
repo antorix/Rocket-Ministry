@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-Simplified=0
+Simplified=1
 
 import sys
 import os
@@ -8,13 +8,14 @@ import time
 import datetime
 import json
 import urllib.request
+#from copy import deepcopy
 
 def initializeDB():
     """ Возвращает изначальное значение houses, settings, resources как при создании базы заново"""
 
     return [],\
         [
-        [1, 0, 0, 0, "с", 0, 50, 1, 1, 0, 1, 0, 1, "#", "", 1, 0, "", 1, "д", 1, 0, 1], # program settings: settings[0][0…], see set.preferences()
+        [1, 0, 0, 0, "с", 0, 50, 1, 1, 0, 1, 1, 1, 0, "", 1, 0, "", 1, "д", 1, 0, 1], # program settings: settings[0][0…], see set.preferences()
         "",  # не используется!         settings[1]
         # report:                       settings[2]
         [0.0,       # [0] hours         settings[2][0…]
@@ -42,21 +43,25 @@ def initializeDB():
 
 houses, settings, resources = initializeDB()
 DBCreatedTime = ""
-Version = "0.7.0"
+Version = "1.0.0"
 
 """
 # Изменения новой версии:
+* Оптимизация производительности
+* Автоматическое обновление программы в фоновом режиме
 * Четыре типа участков: многоквартирный дом, деловая территория, частный сектор, список телефонных номеров
 * В отчете можно создать примечание
-* Консольный режим для стандартного Python без графики (по умолчанию отключен в настройках)
 * Функция определения статуса квартиры с помощью цифры в конце строки посещения (по умолчанию отключена)
-* Автоматическое обновление программы в фоновом режиме
+* Консольный режим без графики (по умолчанию отключен)
+* При удалении участка все интересующиеся копируются в отдельные контакты, чтобы они не пропали
+* Новый статус контактов (коричневый)
+* Сортировка квартир по номеру телефона 
+* Сортировка подъездов по номеру обратная (от последнего к первому)
 * Мелкие интерфейсные изменения
 """
 
 try: # определяем ОС
     print("Загружаем графическую библиотеку")
-    time.sleep(0.2)
     from androidhelper import Android
 except:
     try:
@@ -101,6 +106,9 @@ def clearDB():
     resources.clear()
     settings[:] = initializeDB()[1][:]
     resources[:] = initializeDB()[2][:]
+
+def removeFiles():
+    """ Удаление базы данных и резервной папки"""
     if os.path.exists(UserPath + "data.jsn"):
         os.remove(UserPath + "data.jsn")
     if os.path.exists(UserPath + 'backup'):
@@ -109,23 +117,21 @@ def clearDB():
 
 def getDBCreatedTime(dataFile="data.jsn"):
     """ Выдает время последнего изменения базы данных, но не в упрощенном режиме """
-    if Simplified==True:
-        return ""
     try:
         if Mode=="sl4a" and os.path.exists(UserPath + dataFile):
             DBCreatedTime = datetime.datetime.fromtimestamp(os.path.getmtime(UserPath + dataFile))
         elif os.path.exists(dataFile):
             DBCreatedTime = datetime.datetime.fromtimestamp(os.path.getmtime(dataFile))
         else:
-            DBCreatedTime = "(Не удалось получить время базы данных)"
-        return "(сохр. {:%d.%m %H:%M})".format(DBCreatedTime)
+            DBCreatedTime = "не удалось получить"
+        return "{:%d.%m %H:%M}".format(DBCreatedTime)
     except:
-        return "(отсутствует)"
+        return "нет"
 
 def load(dataFile="data.jsn", download=False, clipboard=False, forced=False, delete=False):
     """ Loading houses and settings from JSON file """
 
-    print("Загружаем базу данных")
+    global houses, settings, resources
 
     buffer=[]
 
@@ -161,7 +167,6 @@ def load(dataFile="data.jsn", download=False, clipboard=False, forced=False, del
                 else:
                     settings[0][14] = choice.strip()
                     dataFile = settings[0][14]
-                    save()
             if forced==False and not os.path.exists(dataFile):
                 print("База не найдена, начинаем заново")
             try:
@@ -185,58 +190,59 @@ def load(dataFile="data.jsn", download=False, clipboard=False, forced=False, del
             pass
 
     elif len(buffer)>0: # буфер получен, читаем из него
-        if forced==True: # при импорте из интерфейса программы сначала нужно очистить базу
+        if forced==True: # при импорте из интерфейса программы очищаем базу
             clearDB()
+            #del buffer[0]
+        try:
+            if buffer[0] == "Rocket Ministry application data file. Format: JSON. Do NOT edit manually!":
+                del buffer[0]
 
-        if buffer[0] == "Rocket Ministry application data file. Format: JSON. Do NOT edit manually!":
-            del buffer[0]
-            settings[4] = buffer[0][4]
+                settings[0] = buffer[0][0]      # загружаем настройки
+                settings[1] = buffer[0][1]
+                settings[2] = buffer[0][2]
+                settings[3] = buffer[0][3]
+                settings[4] = buffer[0][4]
+
+                resources[0] = buffer[1][0]     # загружаем блокнот
+
+                resources[1] = []               # загружаем отдельные контакты
+                virHousesNumber = int(len(buffer[1][1]))
+                hr = []
+                for s in range(virHousesNumber):
+                    hr.append(buffer[1][1][s])
+                houseRetrieve(resources[1], virHousesNumber, hr, silent=True)
+
+                resources[2] = buffer[1][2]     # загружаем журнал отчета
+
+                housesNumber = int(len(buffer)) - 2     # загружаем участки
+                h = []
+                for s in range(2, housesNumber + 2):
+                    h.append(buffer[s])
+                houseRetrieve(houses, housesNumber, h, silent=True)
+
+            else:
+                5/0 # искусственно генерируем ошибку, чтобы перейти к except
+
+        except:
+            log("Загрузка не удалась, проверьте файл")
+            return "fail" # не удалось загрузить данные, выходим и оставляем чистую базу
         else:
-            settings[4] = [None, None, None, None, None, None, None, None, None, None, None, None, None]
-        settings[0] = buffer[0][0]
-        settings[1] = buffer[0][1]
-        settings[2] = buffer[0][2]
-        settings[3] = buffer[0][3]
-
-        #if len(settings[0])<23:
-        #    settings[0].append(1) # добавление новых настроек для тех пользователей, у которых их нет
-
-        resources[0] = buffer[1][0]  # загружаем блокнот
-
-        resources[1] = []  # загружаем отдельные контакты
-        virHousesNumber = int(len(buffer[1][1]))
-        hr = []
-        for s in range(virHousesNumber):
-            hr.append(buffer[1][1][s])  # creating temporary string houses, one string per house
-        houseRetrieve(resources[1], virHousesNumber, hr, silent=True)
-
-        resources[2] = buffer[1][2] # загружаем журнал отчета
-
-        housesNumber = int(len(buffer)) - 2 # загружаем обычные дома
-        h = []
-        for s in range(2, housesNumber + 2):
-            h.append(buffer[s])  # creating temporary string houses, one string per house
-        houseRetrieve(houses, housesNumber, h, silent=True)
-
-    #except:
-    #    return # не удалось загрузить данные, выходим и оставляем чистую базу
-    #else:
-        if forced == True:
-            log("База успешно загружена")
+            if forced == True:
+                log("База успешно загружена")
 
 def houseRetrieve(containers, housesNumber, h, silent=False):
     """ Retrieves houses from JSON buffer into objects """
 
     for a in range(housesNumber):
 
-        addHouse(containers, h[a][0], h[a][4], save=False)  # creating house and writing its title and type
+        addHouse(containers, h[a][0], h[a][4])  # creating house and writing its title and type
         containers[a].porchesLayout = h[a][1]
         containers[a].date = h[a][2]
         containers[a].note = h[a][3]
 
         porchesNumber = len(h[a][5])  # counting porches
         for b in range(porchesNumber):
-            containers[a].addPorch(h[a][5][b][0], save=False)  # creating porch and writing its title and layout
+            containers[a].addPorch(h[a][5][b][0])  # creating porch and writing its title and layout
             containers[a].porches[b].status = h[a][5][b][1]
             containers[a].porches[b].flatsLayout = h[a][5][b][2]
             containers[a].porches[b].floor1 = h[a][5][b][3]
@@ -245,7 +251,8 @@ def houseRetrieve(containers, housesNumber, h, silent=False):
 
             flatsNumber = len(h[a][5][b][6])  # counting flats
             for c in range(flatsNumber):
-                containers[a].porches[b].addFlat("+" + h[a][5][b][6][c][0], silent=True, save=False, forceStatusUpdate=True)  # creating flat and writing its title
+                containers[a].porches[b].flats.append(containers[a].porches[b].Flat())  # creating flat and writing its title
+                containers[a].porches[b].flats[c].title = h[a][5][b][6][c][0]
                 containers[a].porches[b].flats[c].note = h[a][5][b][6][c][1]
                 containers[a].porches[b].flats[c].number = h[a][5][b][6][c][2]
                 containers[a].porches[b].flats[c].status = h[a][5][b][6][c][3]
@@ -254,12 +261,11 @@ def houseRetrieve(containers, housesNumber, h, silent=False):
 
                 visitNumber = len(h[a][5][b][6][c][6])  # counting visits
                 for d in range(visitNumber):
-                    containers[a].porches[b].flats[c].addRecord(
-                        h[a][5][b][6][c][6][d][1], save=False, forceStatusUpdate=True)  # creating visit and writing its title
-                    containers[a].porches[b].flats[c].records[d].date = h[a][5][b][6][c][6][d][
-                        0]  # rewriting date to original
+                    containers[a].porches[b].flats[c].records.append(containers[a].porches[b].flats[c].Record())
+                    containers[a].porches[b].flats[c].records[d].date = h[a][5][b][6][c][6][d][0]
+                    containers[a].porches[b].flats[c].records[d].title= h[a][5][b][6][c][6][d][1]
 
-def save(forced=False):
+def save(forced=False, silent=True):
     """ Saving database to JSON file """
 
     global LastTimeBackedUp
@@ -286,7 +292,7 @@ def save(forced=False):
         savedTime = time.strftime("%Y-%m-%d_%H%M%S", time.localtime())
         with open(BackupFolderLocation + "data_" + savedTime + ".jsn", "w") as newbkfile:
             json.dump(output, newbkfile)
-            if forced == True:
+            if silent == False:
                 log("Создана резервная копия")
             LastTimeBackedUp = curTime
 
@@ -298,7 +304,7 @@ def save(forced=False):
     except IOError:
         log("Не удалось сохранить базу!")
     else:
-        if forced == True:
+        if silent == False:
             log("База успешно сохранена")
 
 def share(outside=False):
@@ -370,7 +376,7 @@ def backupRestore(restore=False, delete=False, silent=False):
     # Если выбран режим удаления лишних файлов
 
     elif delete == True:
-        print("Проверяем лишние резервные копии")
+        print("Обрабатываем папку резервных копий")
         limit = settings[0][6]
         if len(files) > limit:  # лимит превышен, удаляем
             extra = len(files) - limit

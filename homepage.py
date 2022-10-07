@@ -14,6 +14,8 @@ import notebook
 import house_op
 import time
 from icons import icon
+if io2.Mode=="sl4a":
+    from androidhelper import Android
 
 def homepage():
     """ Home page """
@@ -23,6 +25,7 @@ def homepage():
     #if "--textmode" in sys.argv:  # проверяем параметры командной строки
     #    settings[0][1] = 1
 
+    #set.houseSettings(houses[0])
     while 1:
 
         appointment = "" # поиск контактов со встречей на сегодня
@@ -41,6 +44,13 @@ def homepage():
                 if io2.update()==True:
                     print("Найдено обновление, необходим перезапуск программы!")
                     return
+
+            print("Обрабатываем журнал отчета")
+            limit = 500
+            if len(resources[2]) > limit:
+                extra = len(resources[2]) - limit
+                for i in range(extra):
+                    del resources[2][len(resources[2]) - 1]
 
             if settings[0][6] > 0:  # проверяем лишние резервные копии
                 io2.backupRestore(delete=True, silent=True)
@@ -61,7 +71,7 @@ def homepage():
             if settings[2][11] == 1:
                 print("Проверяем сдачу отчета")
                 answer = dialogs.dialogConfirm(
-                    title=icon("lamp") + " Отчет",
+                    title=icon("warning") + " Отчет",
                     message=" Вы уже сдали отчет?"
                 )
                 if answer == True:
@@ -69,26 +79,26 @@ def homepage():
                 else:
                     reports.report(showLastMonth=True)
 
-            io2.save(forced=True)
-
             print("Все готово!")
+
+            if io2.Mode=="sl4a": # останавливаем заставку
+                Android().dialogDismiss()
 
         if reports.updateTimer(settings[2][6]) >= 0: # проверка, включен ли таймер
             time2 = reports.updateTimer(settings[2][6])
         else:
             time2 = reports.updateTimer(settings[2][6]) + 24
         if settings[2][6] > 0:
-            timerTime = " \u2b1b %s" % reports.timeFloatToHHMM(time2)  # check if timer is on to show time
+            timerTime = " \u2b1b %s" % reports.timeFloatToHHMM(time2)
         else:
             timerTime = " \u25b6"
 
         if settings[2][11]==1:
-            remind = icon("lamp")
+            remind = icon("warning")
         else:
             remind=""
 
         if settings[0][3] != 0:
-
             if settings[0][2] == True:  # включен кредит часов
                 credit = settings[2][1]
             else:
@@ -106,29 +116,30 @@ def homepage():
             if house_op.days_between(
                     houses[h].date,
                     time.strftime("%Y-%m-%d", time.localtime())
-            ) > 180:  # сколько просроченных домов
+            ) > 180:  # время просрочки
                 housesDue += 1
         if housesDue==0:
             due = ""
         else:
-            due = icon("lamp")
+            due = icon("warning")
 
         options = [
-                icon("globe") +   " Участки (%d)" % len(houses),
+                icon("globe") +   " Участки (%d) %s" % (len(houses), due),
                 icon("contacts")+ " Контакты (%d)  %s" % (totalContacts, appointment),
                 icon("report") +  " Отчет (%s) %s %s" % (reports.timeFloatToHHMM(settings[2][0]), gap_str, remind),
                 icon("notebook")+ " Блокнот (%d)" % len(resources[0]),
                 icon("search")  + " Поиск",
-                icon("stats")   + " Статистика %s" % due,
+                icon("stats")   + " Статистика",
                 icon("calendar")+ " Служебный год",
-                icon("file")    + " Файл " + io2.getDBCreatedTime(),
-                icon("preferences")+" Настройки"
+                icon("file")    + " Файл ",
+                icon("preferences")+" Настройки",
+                icon("help") +    " О программе"
                 ]
 
         if io2.Mode == "sl4a":
-            title = "%s Rocket Ministry (v. %s) %s" % ( icon("rocket"), io2.Version, reports.getTimerIcon(settings[2][6]) )
+            title = "%s Rocket Ministry %s" % ( icon("rocket"), reports.getTimerIcon(settings[2][6]) )
         else:
-            title = "%s Rocket Ministry (v. %s)" % (reports.getTimerIcon(settings[2][6]), io2.Version)
+            title = "%s Rocket Ministry " % reports.getTimerIcon(settings[2][6])
             options.append(icon("timer") + " Таймер" + timerTime)  # positive button
 
         if io2.Mode == "sl4a": # очистка экрана на всякий случай
@@ -137,6 +148,8 @@ def homepage():
                 system("clear")
             except:
                 system('cls')
+
+        #io2.save()
 
         # Run home screen
 
@@ -202,7 +215,22 @@ def homepage():
 
         elif "Настройки" in result:
             preferences()
-            continue
+
+        elif "О программе" in result:
+            choice = dialogs.dialogHelp(
+                title=icon("help") + " Rocket Ministry " + reports.getTimerIcon(settings[2][6]),
+                message =   "Универсальный комбайн вашего служения\n\n"+\
+                            "Версия приложения: %s\n\n" % io2.Version +\
+                            "Последнее сохранение базы данных: %s\n\n" % io2.getDBCreatedTime() +\
+                            "Официальный Telegram-канал:\nt.me/rocketministry\n\n"+\
+                            "Если есть вопрос или проблема, вам туда!",
+                positiveButton=False,
+                negativeButton=True,
+                neutralButton=True,
+                neutral="Поддержка"
+            )
+            if choice=="neutral":
+                Android().view("https://t.me/rocketministry")
 
         elif "Выход" in result:
             return "quit"
@@ -240,7 +268,7 @@ def tools():
             result = options[choice]
 
         if "Сохранение" in result:
-            io2.save(forced=True)  # save
+            io2.save(forced=True, silent=False)  # save
 
         elif "Загрузка" in result:
             io2.houses.clear()
@@ -270,12 +298,16 @@ def tools():
                 title="Импорт",
                 message="Будет выполнен импорт базы данных из внешнего файла. Можно указать его в настройках, тогда он запрашиваться не будет. При сбоях восстановите резервную копию последней работоспособной версии. Продолжать?"
             )==True:
-                io2.load(dataFile=settings[0][14], forced=True, delete=True)
-                io2.save()
+                result = io2.load(dataFile=settings[0][14], forced=True, delete=True)
+                if result!="fail":
+                    io2.save()
+                else:
+                    io2.load()
             else:
                 continue
 
         elif "Восстановление" in result:  # restore backup
+            io2.save(forced=True, silent=True)
             io2.backupRestore(restore=True)
             io2.save()
 
@@ -285,34 +317,38 @@ def tools():
                 message="Все данные программы будут полностью удалены, включая все резервные копии! Вы уверены, что это нужно сделать?"
             )==True:
                 io2.clearDB()
+                io2.removeFiles()
                 io2.log("База данных очищена!")
-                #io2.save()
+                io2.save()
         else:
             continue
 
     return False
-
-def toggle(setting):
-    if setting == 1:
-        return 0
-    else:
-        return 1
 
 def preferences():
     """ Program preferences """
 
     def status(setting):
         """ Переключение настройки """
-        if setting != 0:
-            return icon("mark") + " "
+        if setting == 0 or set.ifInt(setting) == False:
+            return icon("cross") + " "
         else:
-            return icon("box") + " "
+            return icon("mark") + " "
+
+    def toggle(setting):
+        if set.ifInt(setting) == False:
+            setting=0
+        if setting == 1:
+            return 0
+        else:
+            return 1
+
     exit = 0
 
     while 1:
         options = []
         if settings[0][14] != "":
-            importURL = "%s..." % settings[0][14][:15]
+            importURL = "%s..." % settings[0][14]
         else:
             importURL = "нет"
         if settings[0][17] != "":
@@ -326,16 +362,16 @@ def preferences():
         options.append(status(settings[0][11]) + "Уведомления о встречах на сегодня")
         options.append(status(settings[0][8])  + "Напоминать о сдаче отчета")
         options.append(status(settings[0][15]) + "Переносить минуты отчета на следующий месяц")
-        options.append(status(settings[0][20]) + "Предлагать разбивку по этажам после добавления квартир")
+        options.append(status(settings[0][20]) + "Предлагать разбивку по этажам в многоквартирных домах")
         if io2.Mode == "sl4a":
             options.append(status(settings[0][0])+"Бесшумный режим при включенном таймере")
-        options.append(                       "%s Месячная норма часов: %d" % (icon("circle"), settings[0][3]))
+        options.append(                       "%s Месячная норма часов: %d" % (icon("box"), settings[0][3]))
         options.append(status(settings[0][21]) + "Статус обработки подъездов")
         options.append(status(settings[0][9]) + "Последний символ посещения влияет на статус контакта")
-        options.append(                       "%s Число резервных копий: %d" % (icon("circle"), settings[0][6]))
+        options.append(                       "%s Число резервных копий: %d" % (icon("box"), settings[0][6]))
         if io2.Mode!="sl4a":
-            options.append(                   "%s Файл импорта базы данных: %s" % (icon("circle"), importURL))
-        options.append(                       "%s Пароль на вход: %s" % (icon("circle"), password))
+            options.append(                   "%s Файл импорта базы данных: %s" % (icon("box"), importURL))
+        options.append(                       "%s Пароль на вход: %s" % (icon("box"), password))
         options.append(status(settings[0][16]) + "Режим смайликов")
         options.append(status(settings[0][12]) + "Проверять обновления")
         if io2.Mode != "text":
@@ -459,8 +495,8 @@ def preferences():
             if settings[0][9]==1:
                 dialogs.dialogHelp(
                     title="Последний символ посещения влияет на статус контакта",
-                    message="Внимание, вы входите в зону хардкора! :) При включении этого параметра в конце каждого посещения должна стоять цифра от 0 до 4, определяющая статус (в стиле «умной строки», только во всех посещениях):\n\n0 = %s\n1 = %s\n2 = %s\n3 = %s\n4 = %s\n\nЭто должен быть строго последний символ строки. При отсутствии такой цифры статус контакта становится неопределенным (%s)." %
-                            ( icon("reject"), icon("interest"), icon("green"), icon("purple"), icon("danger"), icon("question")),
+                    message="Внимание, вы входите в зону хардкора! :) При включении этого параметра в конце каждого посещения должна стоять цифра от 0 до 5, определяющая статус (в стиле «умной строки», только во всех посещениях):\n\n0 = %s\n1 = %s\n2 = %s\n3 = %s\n4 = %s\n5 = %s\n\nЭто должен быть строго последний символ строки. При отсутствии такой цифры статус контакта становится неопределенным (%s)." %
+                            ( icon("reject"), icon("interest"), icon("green"), icon("purple"), icon("brown"), icon("danger"), icon("question")),
                     positiveButton = True,
                     negativeButton = False,
                 ),
@@ -494,7 +530,7 @@ def preferences():
         return True
 
 def stats():
-    status0 = status1 = status2 = status3 = status4 = nostatus = statusQ = returns = returns1 = returns2 = housesDue = porches = porchesCompleted = 0
+    status0 = status1 = status2 = status3 = status4 = status5 = nostatus = statusQ = returns = returns1 = returns2 = housesDue = porches = porchesCompleted = 0
     flats = records = 0.0
 
     # while 1:
@@ -523,6 +559,8 @@ def stats():
                     status3 += 1
                 if houses[h].porches[p].flats[f].status == "4":
                     status4 += 1
+                if houses[h].porches[p].flats[f].status == "5":
+                    status5 += 1
                 if houses[h].porches[p].flats[f].status == "?":
                     statusQ += 1
                 if houses[h].porches[p].flats[f].status == "":
@@ -537,7 +575,7 @@ def stats():
     if housesDue == 0:
         due = ""
     else:
-        due = icon("lamp")
+        due = icon("warning")
     if records == 0:
         records = 0.0001
     if porches == 0:
@@ -552,7 +590,8 @@ def stats():
                 "\nВ статусе %s: %s (%d%%)" % (icon("interest"), str(status1), status1 / flats * 100) + \
                 "\nВ статусе %s: %s (%d%%)" % (icon("green"), str(status2), status2 / flats * 100) + \
                 "\nВ статусе %s: %s (%d%%)" % (icon("purple"), str(status3), status3 / flats * 100) + \
-                "\nВ статусе %s: %s (%d%%)" % (icon("danger"), str(status4), status4 / flats * 100) + \
+                 "\nВ статусе %s: %s (%d%%)" % (icon("brown"), str(status4), status4 / flats * 100) + \
+                 "\nВ статусе %s: %s (%d%%)" % (icon("danger"), str(status5), status5 / flats * 100) + \
                  "\n\nБез посещений: %d (%d%%)" % (
                 flats - returns1 - returns2, (flats - returns1 - returns2) / flats * 100) +\
                 "\nС одним посещением: %d (%d%%)" % (returns1, returns1 / flats * 100) +\
@@ -563,7 +602,6 @@ def stats():
                         (porchesCompleted, porches, porchesCompleted / porches * 100)
 
     dialogs.dialogHelp(title=icon("stats") + " Статистика " + reports.getTimerIcon(settings[2][6]), message=message)
-
 
 def search(query=""):
     """ Search flats/contacts """
@@ -582,9 +620,7 @@ def search(query=""):
                 neutral="Очист."
             )
             if io2.Mode == "sl4a" and settings[0][1] == False:
-                from androidhelper import Android
-                phone = Android()
-                phone.dialogCreateSpinnerProgress(title="Prompt Ministry", message="Ищем", maximum_progress=100)
+                Android().dialogCreateSpinnerProgress(title="Rocket Ministry", message="Ищем", maximum_progress=100)
 
         elif query == None:
             return
@@ -642,9 +678,6 @@ def search(query=""):
                 if len(options2) == 0:
                     options2.append("Ничего не найдено")
 
-                if io2.Mode == "sl4a" and settings[0][1] == False:
-                    phone.dialogDismiss()
-
                 choice2 = dialogs.dialogList(
                     form="search",
                     title=icon("search") + " Поиск по запросу «%s»" % query,
@@ -672,9 +705,21 @@ def search(query=""):
                     p = list[choice2][0][1]
                     f = list[choice2][0][2]
                     if list[choice2][1] != "virtual":  # regular contacts
-                        territory.flatView(flat=houses[h].porches[p].flats[f], house=houses[h])
+                        delete = territory.flatView(flat=houses[h].porches[p].flats[f], house=houses[h])
+                        if delete=="deleted":
+                            houses[h].porches[p].deleteFlat(f)
+                            io2.save()
+                            query == None
+                            break
+
                     else:  # standalone contacts
-                        territory.flatView(flat=resources[1][h].porches[0].flats[0], house=resources[1][h], virtual=True)
+                        delete = territory.flatView(flat=resources[1][h].porches[0].flats[0], house=resources[1][h], virtual=True)
+                        if delete == "deleted":
+                            io2.log("«%s» удален" % resources[1][h].porches[0].flats[0].getName())
+                            del resources[1][h]
+                            io2.save()
+                            query == None
+                            break
 
 def serviceYear():
     while 1:

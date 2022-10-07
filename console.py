@@ -97,7 +97,11 @@ def process(input):
         success = True
 
     if "import" in input[:6]:
-        io2.load(dataFile=settings[0][14], forced=True, delete=True)
+        result = io2.load(dataFile=settings[0][14], forced=True, delete=True)
+        if result != "fail":
+            io2.save()
+        else:
+            io2.load()
         success = True
         
     if "ter" in input[:3] or "[]" in input[:2]:

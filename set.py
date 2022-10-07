@@ -3,16 +3,11 @@
 
 import os
 import io2
-from io2 import houses
-from io2 import settings
-from io2 import resources
+from io2 import houses, settings
 import dialogs
-import reports
-import house_cl
 import webbrowser
 import time
 import house_op
-import copy
 from icons import icon
 
 def houseSettings(selectedHouse):
@@ -61,25 +56,40 @@ def houseSettings(selectedHouse):
                 house.note = choice2
                 io2.save()
         
-        elif "Дата взятия" in result: # edit date
-            date = dialogs.dialogPickDate(title = icon("date") + " Дата взятия участка",
-                    year = int ( house.date[0:4]),
-                    month = int ( house.date[5:7]),
-                    day = int ( house.date[8:10])
-            )
-            if date!=None:
-                house.date = date
-                io2.save()
-        
         elif "Удалить" in result: # delete house
+            interest=[] # считаем все квартиры со статусом 1
+            for p in range(len(house.porches)):
+                for f in range(len(house.porches[p].flats)):
+                    if house.porches[p].flats[f].status=="1":
+                        interest.append([p, f])
+            message="Перед удалением участка его желательно сдать."
+            if len(interest)>0:
+                message += " Также в участке есть %d интересующихся. Они будут скопированы в отдельные контакты." % len(interest)
+            message += "\n\nУдаляем?"
             answer=dialogs.dialogConfirm(
-                icon("cut") + "Удаление %s" % house.title, "Перед удалением участка убедитесь, что все нужные люди скопированы в отдельные контакты, иначе они будут удалены вместе с участком! Удаляем?"
+                title = icon("cut") + "Удаление %s" % house.title,
+                message=message
             )
             if answer==True:
+                if len(interest)>0:
+                    for int in interest:
+                        flat = house.porches[int[0]].flats[int[1]]
+                        flat.copyToStandalone(house.title)
                 del houses[selectedHouse]
                 io2.save()
                 return "deleted"
                 
+        elif "Дата взятия" in result: # edit date
+            year = house.date[0:4]
+            month = (house.date[5:7])
+            day = (house.date[8:10])
+            date = dialogs.dialogPickDate(title = icon("date") + " Дата взятия участка",
+                    year=year, month=month, day=day
+            )
+            if date!=None:
+                house.date = date
+                io2.save()
+
         elif "Изменить тип" in result:
             house_op.pickHouseType(house) # house type
             io2.save()
@@ -174,14 +184,20 @@ def porchSettings(house, selectedPorch):
             options=[
                 "По этажам",
                 "По номеру",
-                "По статусу"
+                "По номеру обратная",
+                "По статусу",
+                "По телефону"
             ]
             if ifInt(porch.flatsLayout)==True:
                 selected=0
             elif porch.flatsLayout=="н":
                 selected=1
-            elif porch.flatsLayout=="с":
+            elif porch.flatsLayout=="о":
                 selected=2
+            elif porch.flatsLayout=="с":
+                selected=3
+            elif porch.flatsLayout=="т":
+                selected=4
             else:
                 selected=0
 
@@ -202,8 +218,14 @@ def porchSettings(house, selectedPorch):
             elif choice3 == "По номеру":
                 porch.flatsLayout="н"
                 io2.save()
+            elif choice3 == "По номеру обратная":
+                porch.flatsLayout="о"
+                io2.save()
             elif choice3=="По статусу":
                 porch.flatsLayout="с"
+                io2.save()
+            elif choice3=="По телефону":
+                porch.flatsLayout="т"
                 io2.save()
             
         elif "Заметка" in result: # porch note
@@ -324,6 +346,7 @@ def flatSettings(flat, house, virtual=False):
             elif len(mychoice)>0 and mychoice[0]!="," and mychoice[0]!="."\
                     and mychoice!="!" and mychoice[0]!="+": # правка name
                 flat.updateName(mychoice)
+                io2.save()
                 continue
 
         elif "Статус" in result:
@@ -337,6 +360,8 @@ def flatSettings(flat, house, virtual=False):
                 selected=3
             elif flat.status=="4":
                 selected=4
+            elif flat.status=="5":
+                selected=5
             else:
                 selected = 0
 
@@ -345,6 +370,7 @@ def flatSettings(flat, house, virtual=False):
                 icon("interest") + " Интерес",
                 icon("green") + " Зеленый",
                 icon("purple") + " Фиолетовый",
+                icon("brown") + " Коричневый",
                 icon("danger") + " Красный"
             ]
             status = dialogs.dialogRadio(title="Статус контакта", options=options, selected=selected)
@@ -358,7 +384,7 @@ def flatSettings(flat, house, virtual=False):
             newPhone = setPhone(flat.phone)
             if newPhone!=None:
                 flat.phone = newPhone
-            io2.save()
+                io2.save()
 
         elif "Встреча" in result:
             flat.meeting = setMeeting(flat.meeting)
@@ -391,20 +417,9 @@ def flatSettings(flat, house, virtual=False):
                 break
                 
         elif "В отдельный контакт" in result:
-            tempFlatNumber = flat.title[ 0 : flat.title.index(",") ]
-            resources[1].append(house_cl.House()) # create house address
-            newVirtualHouse = resources[1][len(resources[1])-1]
-            newVirtualHouse.addPorch("virtual")  # create virtual porch
-            newVirtualHouse.porches[0].addFlat("+" + flat.getName(), virtual=True)  # create flat
-            newContact = newVirtualHouse.porches[0].flats[0]
-            newContact.title = newContact.getName()
-            newVirtualHouse.title = "%s-%s" % (house.title, tempFlatNumber)
-            newVirtualHouse.type = "virtual"
-            newContact.records = copy.deepcopy(flat.records)
-            newContact.note = copy.deepcopy(flat.note)
-            newContact.status = copy.deepcopy(flat.status)
+            name = flat.copyToStandalone(house.title)
             io2.save()
-            io2.log("Создан отдельный контакт %s" % newContact.title)
+            io2.log("Создан отдельный контакт %s" % name)
             
         elif "Email" in result: # Email
             if io2.Mode=="sl4a":

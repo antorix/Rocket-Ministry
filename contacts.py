@@ -7,7 +7,7 @@ from io2 import settings
 from io2 import resources
 import reports
 import dialogs
-import house_cl
+import house_op
 import territory
 import time
 import string
@@ -75,14 +75,12 @@ def getContactsAmount(date=0):
     for h in range(len(houses)):
         for p in range(len(houses[h].porches)):
             for f in range(len(houses[h].porches[p].flats)):
-                if houses[h].porches[p].flats[f].status != "0" \
-                    and houses[h].porches[p].flats[f].status != "" \
-                    and houses[h].porches[p].flats[f].status != "4":
-                    c+=1
                 if date==1: # check appointment date
                     dateApp = checkDate(houses[h].porches[p].flats[f])[1]
                     if dateApp!=999999 and dateApp == today:
                         datedFlats.append(dateApp) # check if matches with today's date
+                if houses[h].porches[p].flats[f].status != "" and houses[h].porches[p].flats[f].status != "0":
+                    c+=1
 
     for h in range(len(resources[1])):
         c+=1
@@ -146,12 +144,9 @@ def getContacts(forSearch=False):
         for p in range(len(houses[h].porches)):
             for f in range(len(houses[h].porches[p].flats)):
                 if forSearch==False: # поиск для списка контактов - только актуальные контакты
-                    if houses[h].porches[p].flats[f].status != "0" \
-                            and houses[h].porches[p].flats[f].status != "4"\
-                            and houses[h].porches[p].flats[f].status != "":
+                    if houses[h].porches[p].flats[f].status != "" and houses[h].porches[p].flats[f].status != "0":
                         retrieve(houses, h, p, f, contacts)
                 else: # поиск для поиска - все контакты вне зависимости от статуса
-
                     retrieve(houses, h, p, f, contacts)
 
     for h in range(len(resources[1])):
@@ -174,7 +169,7 @@ def showContacts():
             contacts.sort(key=lambda x: x[0])  # by name
         elif settings[0][4]=="с":
             contacts.sort(key=lambda x: x[16]) # by status
-        elif settings[0][4]=="з":
+        elif settings[0][4]=="п":
             contacts.sort(key=lambda x: x[4])  # by last record date
         elif settings[0][4]=="а":
             contacts.sort(key=lambda x: x[2])  # by address
@@ -237,7 +232,7 @@ def showContacts():
 
         if len(options) == 0:
             options.append(
-                "Здесь будут отображаться жильцы всех участков с активным статусом. Также вы можете создавать контакты вручную, которые будут отображаться независимо от статуса")
+                "Здесь будут отображаться жильцы всех участков, кроме отказавшихся. Также можно создавать контакты вручную")
 
         if settings[0][1] == True or io2.Mode != "sl4a":
             options.append(icon("plus") + " Новый контакт")  # positive button
@@ -265,7 +260,7 @@ def showContacts():
                 "По имени",
                 "По статусу",
                 "По адресу",
-                "По дате последней записи",
+                "По дате последнего посещения",
                 "По номеру телефона",
                 # "По email"
                 # "По email"
@@ -274,7 +269,7 @@ def showContacts():
                 selected = 1
             elif settings[0][4] == "с":
                 selected = 2
-            elif settings[0][4] == "з":
+            elif settings[0][4] == "п":
                 selected = 3
             elif settings[0][4] == "а":
                 selected = 4
@@ -292,24 +287,18 @@ def showContacts():
             )
             if choice2 == None:
                 continue
-            # else:
-            #    continue
-            # print(result2)
-            elif "По дате назначенной встречи" in choice2:
-                settings[0][4] = "в"
             elif choice2 == "По имени":
                 settings[0][4] = "и"
             elif choice2 == "По статусу":
                 settings[0][4] = "с"
             elif choice2 == "По адресу":
                 settings[0][4] = "а"
-            elif choice2 == "По дате последней записи":
-                settings[0][4] = "з"
+            elif choice2 == "По дате последнего посещения":
+                settings[0][4] = "п"
             elif choice2 == "По номеру телефона":
                 settings[0][4] = "т"
-            # elif result2=="По email":
-            #    settings[0][4]="э"
-
+            else:
+                settings[0][4] = "в"
             io2.save()
 
         elif choice == "positive":  # добавление нового контакта
@@ -322,12 +311,9 @@ def showContacts():
             if newContact == None or newContact == "":
                 continue
             else:
-                default2 = ""
-                resources[1].append(house_cl.House())  # create house address
-                resources[1][len(resources[1]) - 1].title = ""
-                resources[1][len(resources[1]) - 1].type = "virtual"
-                resources[1][len(resources[1]) - 1].addPorch("virtual")  # create virtual porch
-                resources[1][len(resources[1]) - 1].porches[0].addFlat("+" + newContact, virtual=True)  # create flat
+                house_op.addHouse(resources[1], "", "virtual") # создается новый виртуальный дом
+                resources[1][len(resources[1]) - 1].addPorch(input="virtual", type="virtual")
+                resources[1][len(resources[1]) - 1].porches[0].addFlat("+" + newContact, virtual=True)
                 resources[1][len(resources[1]) - 1].porches[0].flats[0].status = "1"
                 io2.save()
 

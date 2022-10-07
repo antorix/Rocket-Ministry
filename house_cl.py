@@ -39,7 +39,7 @@ class House():
         elif self.type == "office":
             return "Введите название либо адрес объекта, например:\nТЦ «Радуга»\nПушкина, 20", icon("office")
         elif self.type == "phone":
-            return "Введите список телефонных номеров, например:\n353-2000 – 353-2200", icon("phone2")
+            return "Введите название участка, например список номеров или произвольно, например:\n353-2000 – 353-2200\nМои телефоны", icon("phone2")
         else:
             return "Введите улицу и номер дома, например:\nПушкина, 30", icon("house")
 
@@ -76,23 +76,19 @@ class House():
         if len(list) == 0:
             list.append("Создайте %s внутри участка" % self.getPorchType()[0])
 
-
         if io2.settings[0][1]==True or io2.Mode != "sl4a":
             list.append("%s Новый %s" % (icon("plus"), self.getPorchType()[0]))  # создание нового участка
             list.append(icon("preferences") + " Детали")
 
         return list
         
-    def addPorch(self, input="", type="подъезд", save=True):
+    def addPorch(self, input="", type="condo"):
         self.porches.append(self.Porch()) 
         self.porches[len(self.porches)-1].title = input.strip()
-        self.porches[len(self.porches) - 1].type = type
-        if save==True:
-            io2.save()
+        self.porches[len(self.porches)-1].type = type
         
     def rename(self, input):
         self.title = input[3:].upper()
-        io2.save()
         
     def export(self):
         return [
@@ -130,27 +126,31 @@ class House():
 
         def deleteFlat(self, number):
             answer=True
-            if len(self.flats[number].records)!=0 or len(self.getName()!=""): # проверка, что квартира не пустая
+            if len(self.flats[number].records)!=0 or self.flats[number].getName()!="": # проверка, что квартира не пустая
                 answer = dialogs.dialogConfirm(
                     title=icon(
-                        "cut") + " Удалить «%s»?" % self.flats[number].getName(),
+                        "cut") + " Удалить «%s»?" % self.flats[number].number,
                         neutralButton=False,
                         message="Внутри есть данные! Вы уверены?"
                     )
             if answer==True:
-                io2.log("«%s» удален" % self.flats[number].title)
+                io2.log("«%s» удален" % self.flats[number].getName())
                 del self.flats[number]
-                io2.save()
                 return "deleted"
 
         def sortFlats(self, forceNumerical=False):
             if self.flatsLayout == "н" or forceNumerical==True: # numeric by number
                 self.flats.sort(key=lambda x: float(x.number))
+            elif self.flatsLayout == "о": # numeric by number reversed
+                self.flats.sort(key=lambda x: float(x.number), reverse=True)
             elif self.flatsLayout=="а": # numeric-alphabetic by number
                 self.flats.sort(key=lambda x: x.getNumericalNumber())
             elif self.flatsLayout=="с": # alphabetic by status character
                 self.flats.sort(key=lambda x: float(x.number))
                 self.flats.sort(key=lambda x: x.getStatus()[1])
+            elif self.flatsLayout=="т": # by phone number
+                self.flats.sort(key=lambda x: float(x.number))
+                self.flats.sort(key=lambda x: x.phone, reverse=True)
             elif set.ifInt(self.flatsLayout)==True: # floors view with reversed numeric order
                 #try:
                 a = len(self.flats)/int(self.flatsLayout)
@@ -172,7 +172,6 @@ class House():
                 #except:
                 #    print("error")
                 #    self.flatsLayout="н"
-            io2.save()
             return 0
 
         def autoFloorArrange(self, silent=False):
@@ -210,9 +209,6 @@ class House():
                         message += "%2d│ " % (rows-r+self.floor1-1)
                     for c in range(columns):
                         if c < len(self.flats):
-                            #if   len(self.flats[i].number)==1: gap = "  "#"++" # formatting by spaces (Android)
-                            #elif len(self.flats[i].number)==2: gap = " "#"+"
-                            #else: gap = ""
                             message += "%3s%s " % (self.flats[i].number, self.flats[i].getStatus(forceText=forceText)[0])
                             i+=1
                     if rows-r != 1:
@@ -274,10 +270,10 @@ class House():
             # Сначала сортируем квартиры
 
             stop = self.sortFlats()
-            if self.flatsLayout=="н" or self.flatsLayout=="а" or self.flatsLayout=="с":# or settings[0][5]==1:
+            if set.ifInt(self.flatsLayout)==False: # если любая сортировка кроме поэтажной
                 rows = 1
                 columns = 999
-            elif stop==1: # if per-floor layout activated
+            elif stop==1: # включена поэтажная сортировка
                 io2.log("Ошибка поэтажной раскладки, измените кол-во квартир или этажей")
                 rows = 1
                 columns = 999
@@ -312,12 +308,12 @@ class House():
                 flats = showListOfFlats()
                 return flats
         
-        def addFlat(self, input, silent=False, virtual=False, save=True, forceStatusUpdate=False):
+        def addFlat(self, input, silent=False, virtual=False, forceStatusUpdate=False):
             """Создает квартиру и возвращает ссылку на нее (объект)"""
             input=input.strip()
             self.flats.append(self.Flat())
             last = len(self.flats)-1 # number of modified flat is the last appended
-            record = self.flats[last].setFlat(input, virtual, save=save)
+            record = self.flats[last].setFlat(input, virtual)
             createdFlat = last
             delete = False
 
@@ -346,11 +342,9 @@ class House():
                 del self.flats[i]
                 createdFlat = last-1
 
-            if save==True:
-                io2.save()
             return self.flats[createdFlat]
             
-        def addFlats(self, input, save=True):
+        def addFlats(self, input):
             s=f=0
             success=True
 
@@ -375,15 +369,13 @@ class House():
 
             if success==True and start<=end:
                 for i in range(start, end+1):
-                    self.addFlat("+%s" % (str(i)), save=save)
+                    self.addFlat("+%s" % (str(i)))
                 if f!=0:
                     self.flatsLayout = input[f+1:]
             else:
                 io2.log("Ошибка массового ввода, проверьте номера")
                 success=0
 
-            if save==True:
-                io2.save()
             return success
 
         def autoreject(self, flat=None, choice=None):
@@ -411,13 +403,11 @@ class House():
                     flat.addRecord("отказ")
                     flat.status = "0"
                     io2.log("В «%s» добавлен отказ" % flat.title)
-                    io2.save()
             else: # квартира с указанным номером не найдена - создаем новую
                 self.addFlat(choice)
                 self.flats[len(self.flats) - 1].addRecord("отказ")
                 self.flats[len(self.flats) - 1].status = "0"
                 io2.log("Создан номер «%s» с отказом" % self.flats[len(self.flats) - 1].title)
-                io2.save()
 
         def export(self):
             return [
@@ -492,10 +482,10 @@ class House():
 
                 return neutral, options
 
-            def addRecord(self, input, save=True, forceStatusUpdate=False):
+            def addRecord(self, input, forceStatusUpdate=False):
                 self.records.insert(0, self.Record())
                 self.records[0].title = input
-                if save==True and len(self.records)==1: # если создана первая запись, то вне зависимости от настроек ставится временный статус "?"
+                if len(self.records)==1: # если создана первая запись, то вне зависимости от настроек ставится временный статус "?"
                     self.status="?"
                 
                 date = time.strftime("%d", time.localtime())
@@ -504,28 +494,24 @@ class House():
                 
                 self.records[0].date = "%s %s %s" % (date, month, timeCur)
 
-                if save==True and (settings[0][9]==1 or forceStatusUpdate==True):
+                if settings[0][9]==1 or forceStatusUpdate==True:
                     if len(input)>0:
                         self.status = self.records[0].title[len(input)-1] # status set to last character of last record
                     else:
                         self.status=""
 
-                if save==True:
-                    io2.save()
                 return len(self.records)-1
 
             def editRecord(self, f, input):
                 self.records[f].title = input
                 if settings[0][9]==1:
                     self.updateStatus()
-                io2.save()
 
             def deleteRecord(self, f):
                 del self.records[f]
                 if settings[0][9]==1 or (len(self.records)==0 and self.getName()==""):
                     self.updateStatus()
                 io2.log("Запись посещения удалена")
-                io2.save()
 
             def updateStatus(self):
                 """ Обновление статуса квартиры после любой операции """
@@ -539,7 +525,6 @@ class House():
                         self.status = self.records[0].title[ len(self.records[0].title) - 1 ]  # статус по последней букве последней записи
                 else:
                     self.status = "?"
-                io2.save()
 
             def updateName(self, choice, forceStatusUpdate=False):
                 """ Получаем только имя и соответственно обновляем заголовок"""
@@ -551,9 +536,8 @@ class House():
                     self.title = self.number + ", " + choice
                 if settings[0][9]==1 or forceStatusUpdate==True or (len(self.records)==0 and self.getName()==""):
                     self.updateStatus()
-                io2.save()
 
-            def setFlat(self, input="", virtual=False, save=True):
+            def setFlat(self, input="", virtual=False):
                 """ Определяет и прописывает корректные title и number, возвращает запись посещения.
                  Используется при любом создании и правке любых контактов, адресных и отдельных!
                  Input подается начиная с "+". """
@@ -582,9 +566,7 @@ class House():
                 if virtual==True:
                     self.number = "virtual"
 
-                if save == True:
-                    self.updateStatus()
-                    io2.save()
+                self.updateStatus()
                 return result
 
             def getStatus(self, forceText=False):
@@ -592,7 +574,7 @@ class House():
 
                 if self.status == "0":
                     string = icon("reject", forceText)
-                    value = 6 # value нужно для сортировки квартир по статусу
+                    value = 7 # value нужно для сортировки квартир по статусу
                 elif self.status == "1":
                     string = icon("interest", forceText)
                     value = 0
@@ -603,16 +585,41 @@ class House():
                     string = icon("purple", forceText)
                     value = 2
                 elif self.status == "4":
+                    string = icon("brown", forceText)
+                    value = 3
+                elif self.status == "5":
                     string = icon("danger", forceText)
                     value = 6
                 elif self.status == "":
                     string = icon("void", forceText)
-                    value = 4
+                    value = 5
                 else:
                     string = icon("question", forceText)
-                    value = 3
+                    value = 4
 
                 return string, value
+
+            def copyToStandalone(self, title):
+                """ Копирование квартиры в отдельный контакт """
+                from io2 import resources
+                from house_cl import House
+                from copy import deepcopy
+                if "," in self.title:
+                    tempFlatNumber = self.title[0: self.title.index(",")]
+                else:
+                    tempFlatNumber = self.title
+                resources[1].append(House())  # create house address
+                newVirtualHouse = resources[1][len(resources[1]) - 1]
+                newVirtualHouse.addPorch("virtual")  # create virtual porch
+                newVirtualHouse.porches[0].addFlat("+" + self.getName(), virtual=True)  # create flat
+                newContact = newVirtualHouse.porches[0].flats[0]
+                newContact.title = newContact.getName()
+                newVirtualHouse.title = "%s-%s" % (title, tempFlatNumber)
+                newVirtualHouse.type = "virtual"
+                newContact.records = deepcopy(self.records)
+                newContact.note = deepcopy(self.note)
+                newContact.status = deepcopy(self.status)
+                return newContact.getName()
 
             def export(self):
                 return [

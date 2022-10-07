@@ -400,8 +400,15 @@ def dialogHelp(title="", message="",
         if negativeButton==True:
             phone.dialogSetNegativeButtonText(negative)
         phone.dialogShow()
-        phone.dialogGetResponse().result
+        resp = phone.dialogGetResponse()[1]
         phone.dialogDismiss()
+        if "positive" in resp["which"]:
+            return "positive"
+        elif "neutral" in resp["which"]:
+            return "neutral"
+        else:
+            return None
+
     else:
         if io2.settings[0][1]==True or io2.Mode=="text":
             if io2.Mode != "sl4a":
@@ -414,8 +421,13 @@ def dialogHelp(title="", message="",
             print(message)
             return input()
         else:
-            codebox(title=title, msg="", neutral=neutral, text=message)
-            return None
+            choice = codebox(title=title, msg="", neutral=neutral, text=message)
+            if console.process(choice) == True:
+                return ""
+            if choice != None:
+                return choice.strip()
+            else:
+                return None
 
 def dialogFileSave(msg="", title="", default="data.jsn", filetypes= "\*.jsn"):
     if io2.Mode=="sl4a":
@@ -490,7 +502,7 @@ def dialogPickDate(
         else: return None
         
     else:
-        default = "%04d-%02d-%02d" % (year, month, day)
+        default = "%04d-%02d-%02d" % (int(year), int(month), int(day))
         if io2.settings[0][1]==True or io2.Mode=="text":
             if io2.Mode != "sl4a":
                 clear = lambda: os.system('cls')

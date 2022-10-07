@@ -29,7 +29,7 @@ class Report():
         self.reminder = settings[2][11]
         self.lastMonth = settings[2][12]
 
-    def saveReport(self, message="", mute=False):
+    def saveReport(self, message="", mute=False, save=True, backup=False):
         """ Выгрузка данных из класса в настройки, сохранение и оповещение """
 
         settings[2] = [
@@ -52,7 +52,10 @@ class Report():
             date = time.strftime("%d.%m", time.localtime()) + "." + str(int(time.strftime("%Y", time.localtime())) - 2000)
             time2 = time.strftime("%H:%M:%S", time.localtime())
             resources[2].insert(0, "\n%s %s: %s" % (date, time2, message))
-        io2.save()
+        if save==True and backup==True:
+            io2.save(forced=True, silent=True) # после выключения секундомера делаем резервную копию принудительно
+        elif save==True:
+            io2.save()
 
     def saveLastMonth(self):
         """ Save last month report to file """
@@ -94,7 +97,7 @@ class Report():
                  )
         if self.note!="":
             self.lastMonth += "\nПримечание: " + self.note
-        self.saveReport()
+            self.saveReport()
         
         # Clear service year in October        
         if int(time.strftime("%m", time.localtime())) == 10: 
@@ -102,14 +105,6 @@ class Report():
         
         # Save last month hour+credit into service year
         settings[4][monthName()[7]-1] = self.hours + self.credit
-
-        # Сокращаем журнал, если он превышает 500 строк (limit)
-
-        limit = 500
-        if len(resources[2]) > limit:
-            extra = len(resources[2]) - limit
-            for i in range(extra):
-                del resources[2][len(resources[2]) - 1]
 
         io2.save()
         
@@ -151,10 +146,10 @@ class Report():
                 if self.reportTime < 0: self.reportTime += 24  # if timer worked after 0:00
                 self.hours += self.reportTime
                 self.startTime = 0
-                self.saveReport("Таймер остановлен, в отчет добавлено: %s ч." % timeFloatToHHMM(self.reportTime))
+                self.saveReport("Таймер остановлен, в отчет добавлено: %s ч." % timeFloatToHHMM(self.reportTime), save=False)
                 self.reportTime = 0.0
                 vibrate(False)
-                self.saveReport(mute=True)
+                self.saveReport(mute=True, backup=True)
 
         elif input[0] == "$":  # остановка таймера с кредитом
             if self.startTime > 0:
@@ -164,10 +159,10 @@ class Report():
                 if self.reportTime < 0: self.reportTime += 24  # if timer worked after 0:00
                 self.credit += self.reportTime
                 self.startTime = 0
-                self.saveReport("Таймер остановлен, в отчет добавлено: %s ч. кредита" % timeFloatToHHMM(self.reportTime))
+                self.saveReport("Таймер остановлен, в отчет добавлено: %s ч. кредита" % timeFloatToHHMM(self.reportTime), save=False)
                 self.reportTime = 0.0
                 vibrate(False)
-                self.saveReport(mute=True)
+                self.saveReport(mute=True, backup=True)
 
         elif "р" in input or "ж" in input or "ч" in input or "б" in input or "в" in input or "п" in input or "и" in input or "к" in input:
             message="В отчет добавлено:"
@@ -198,13 +193,6 @@ class Report():
                     message += "\nизучение"
             if message != "В отчет добавлено:":
                 self.saveReport(message)
-
-        if input=="{б}":
-            self.placements += 1
-            self.saveReport("В отчет добавлена 1 публикация")
-        if input=="{в}":
-            self.videos += 1
-            self.saveReport("В отчет добавлено 1 видео")
                 
     def display(self):
         """ Displaying report """
@@ -288,7 +276,6 @@ class Report():
                     else:
                         try:
                             self.placements += int(choice2)
-                            self.saveReport()
                         except:
                             if choice2!=None:
                                 if "cancelled!" in choice2:
