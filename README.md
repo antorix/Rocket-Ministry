@@ -1,8 +1,8 @@
-[Возможности программы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#%D0%B2%D0%BE%D0%B7%D0%BC%D0%BE%D0%B6%D0%BD%D0%BE%D1%81%D1%82%D0%B8-%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D1%8B)](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#возможности-программы)
+[Возможности программы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#возможности-программы)
 
 [Установка и настройки](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#установка-и-настройки)
 
-[Основные понятия программы]
+[Основные понятия программы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#основные-понятия-программы)
 
 [Часто задаваемые вопросы]
  
