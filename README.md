@@ -1,14 +1,12 @@
-[Возможности программы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#возможности-программы)
+[Возможности Rocket Ministry](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#возможности-программы)
 
 [Установка и настройки](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#установка-и-настройки)
 
 [Основные понятия программы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#основные-понятия-программы)
 
-[Часто задаваемые вопросы]
+[Часто задаваемые вопросы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#часто-задаваемые-вопросы)
  
- 
-
-# Возможности программы
+# Возможности Rocket Ministry
 
 * Автоматическая простановка даты и времени посещений, учет повторных посещений, оставленных публикаций и видео, времени служения.
 * Быстрый ввод отказа двумя кликами.
