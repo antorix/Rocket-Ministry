@@ -2,6 +2,8 @@
 * [Установка и настройки](https://github.com/antorix/Rocket-Ministry/blob/1.0.0/README.md#установка-и-настройки)
 * [Основные понятия программы](https://github.com/antorix/Rocket-Ministry/blob/1.0.0/README.md#основные-понятия-программы)
 * [Часто задаваемые вопросы](https://github.com/antorix/Rocket-Ministry/blob/1.0.0/README.md#часто-задаваемые-вопросы)
+* [Обратная связь](https://github.com/antorix/Rocket-Ministry/blob/1.0.0/README.md#обратная-связь)
+* [Лицензия](https://github.com/antorix/Rocket-Ministry/blob/1.0.0/README.md#лицензия)
  
 # Возможности Rocket Ministry
 
@@ -173,3 +175,11 @@ QPython программу можно установить и из Android Marke
 ## Меня не устраивает быстродействие программы, можно как-то его повысить?
 
 Смотрите [два совета по оптимизации](https://github.com/antorix/Rocket-Ministry/blob/1.0.0/README.md#зачем-нужен-qpython-3s) выше.
+
+# Обратная связь
+
+Пишите на [antorix@gmail.com](mailto:antorix@gmail.com).
+
+# Лицензия
+
+GNU/GPL. Вы можете свободно распространять и видоизменять программу.
