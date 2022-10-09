@@ -8,6 +8,8 @@
 * [Обратная связь](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#обратная-связь)
 * [Лицензия](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#лицензия)
 
+![](https://lh3.googleusercontent.com/j0pQY5rYHN9CAeLaAxK0-pI2T3nAnVxtnScilfBqEQuJGRzt5IsON_eOBawu_PX4Cq9m5WRNEsb2u7l2fhaPcvW4o196MrHiXbJweBL9MeJeyl7DotF887KyUvZbiYsWhpa5bzSOe3KZzk0V615BP8R1dMAkAUjWQfLN7ka0vryHxdx4-cY2AxOwL_JfLAC7e-EaZRTJdNTTTDZnV6iP8O-D9-dqt-yClW4mswGXAQmBDgZpZ14mpp6Or2Q_aYcR8cn8lkoa8m9Ca07rV6QyPMIYj-NTmDwlDXJW8K2tW_5-1dw8434pdBrLwSsOsp7lByqWh5MKpoU-wzOs88X-st0Rpf0gn9kTw_fbEKmcHL0c5OwiAWhNoz__WfbkUqjeHNCjKTNL98Q36vY9GcC5GAqyksDZ6R8-Ck8ZXr_V_K7VcyH9o5lKIUEu8_80c72-sMojya1TVaSG9_C6grQO17jy9tKOxj9vXJt7PxzO_9WhVkH0tz30kqMEjo_q5djrLJfGiAvLuQIkFF5TyukCbjcRVZc6tSjsp0WNBIks4-uyrINOhlb7m2GzOMR_b77W5d2uIIH74rPOW3tv4FiqJ4x9xPhYP4zDoGOGUQTnzNKirf07M_t_2i19p--psfGjGGDTGJ-zW8nlIrkYXZIEa-6ENG5ZeoJGwbE7YL47bJ1kMvboUAAKKjNolKDHf4OZvyx_PGTTp2eodl7EEbfnMKWmZMu0iXRjhvurAXCq1W0bIYH4R7Lbd0i1e4d_MYYoHYqAceeP4iULLpfjGDpR0LSkDOpmSt8d9zExORZGzrlG35uNwgFY5Z81Rrb9_z8IxtNtSDIkGDg9ga8qYeTcunRwMNtd7ZpsVTC6K_ZNKMVIy0cncx5AtZyZNzb862gqtFdXA2-YyMRH6eSgyaqEF4MA28BtUco8Q7ZREwk=w1104-h769-no?authuser=0)
+
 # Возможности
 
 * Автоматическая простановка даты и времени посещений, учет повторных посещений, оставленных публикаций и видео, времени служения.
@@ -63,14 +65,14 @@ QPython можно установить и из Android Market, а затем в
 
 ## Windows
 
-1. Скачайте архив с GitHub: [https://github.com/antorix/Rocket-Ministry/archive/refs/heads/1.0.0.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/1.0.0.zip).
-2. Скачайте и установите Python с [python.org](python.org).
-3. Запустите файл Rocket Ministry.bat.
-4. С помощью прилагаемой иконки можно создать ярлык для рабочего стола.
+1. Скачайте и установите Python (прямая ссылка: [https://www.python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe](https://www.python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe).
+2. Скачайте Rocket Ministry: [https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip)
+4. Запустите файл Rocket Ministry.pyw.
+5. С помощью прилагаемой иконки можно создать ярлык для рабочего стола.
 
 ## Linux
 
-1. Скачайте архив с GitHub: [https://github.com/antorix/Rocket-Ministry/archive/refs/heads/1.0.0.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/1.0.0.zip).
+1. Скачайте архив с программой: [https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip).
 2. Установите Python IDLE. В Ubuntu/Debian введите:
 
 `sudo apt-get install idle3`
