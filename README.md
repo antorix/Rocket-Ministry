@@ -1,4 +1,4 @@
-*Документация по программе Rocket Ministry. Последнее обновление: 07.10.2022*
+*Документация по программе Rocket Ministry. Последнее обновление: 09.10.2022*
 
 * [Возможности](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#возможности)
 * [Установка и настройки](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#установка-и-настройки)
