@@ -18,17 +18,19 @@ if io2.Mode=="sl4a":
     from androidhelper import Android
     phone = Android()
 elif io2.Mode=="easygui":
-    import tkinter as tk
     import tkinter.messagebox
-    from easygui_mod import textbox, enterbox, choicebox, multchoicebox, buttonbox, codebox, filesavebox, fileopenbox
+    from choice_box import choicebox, multchoicebox
+    from text_box import textbox, enterbox, passwordbox
+    from fileopen_box import fileopenbox
+    from button_box import msgbox, buttonbox
 
 def dialogText(title="",
                message="",
                default="",
                ok="Ввод",
                form="",
-               cancel="Назад",
-               neutralButton=True,
+               positive="OK",
+               negative="Назад",
                largeText=False,
                neutral="Очист.",
                autoplus=False):
@@ -62,11 +64,15 @@ def dialogText(title="",
     elif io2.Mode == "sl4a" and io2.settings[0][1]==False:
         while 1:
             phone.dialogCreateInput(title, message, default)
-            phone.dialogSetPositiveButtonText(ok)
-            phone.dialogSetNegativeButtonText(cancel)
+            if positive!=None:
+                phone.dialogSetPositiveButtonText(positive)
+            if neutral != None:
+                phone.dialogSetNeutralButtonText(neutral)
+            if negative != None:
+                phone.dialogSetNegativeButtonText(negative)
             if autoplus==True:
                 neutral="+1"
-            if neutralButton == True:
+            if neutral!=None:
                 phone.dialogSetNeutralButtonText(neutral)
             phone.dialogShow()
             resp = phone.dialogGetResponse()[1]
@@ -94,22 +100,21 @@ def dialogText(title="",
     else:
         if autoplus==True:
             neutral="+1"
-        if neutral=="Очист.":
-            neutralButton=False # на Windows средняя кнопка очистки не актуальна
         if largeText==False:
             choice = enterbox(
                 msg=message,
                 title=title,
                 default=default,
-                neutral=neutral,
-                neutralButton=neutralButton
+                neutral=neutral
             )
         else:
             choice = textbox(
                 msg=message,
                 title=title,
                 text=default,
-                buttontext="Сохранить"
+                positive=positive,
+                neutral=neutral,
+                negative=negative
             )
 
         if console.process(choice)==True:
@@ -124,23 +129,21 @@ def dialogList(
         title="",
         message="",
         options=[],
-        positiveButton=False,
-        positive="",
-        neutralButton=False,
-        neutral="Настр.",
-        negativeButton=True,
+        positive=None,
+        neutral=None,
         negative="Назад",
+        selected=0,
         form=""):
     """ List """
     
     if io2.Mode=="sl4a" and io2.settings[0][1]==False:# and form!="home":
         phone.dialogCreateAlert(title, message)
         phone.dialogSetItems(options)
-        if positiveButton == True:
+        if positive!=None:
             phone.dialogSetPositiveButtonText(positive)
-        if neutralButton == True:
+        if neutral!=None:
             phone.dialogSetNeutralButtonText(neutral)
-        if negativeButton == True:
+        if negative!=None:
             phone.dialogSetNegativeButtonText(negative)
         phone.dialogShow()
         resp = phone.dialogGetResponse()[1]
@@ -182,37 +185,58 @@ def dialogList(
                 else:
                     choice=result
 
+            # согласование результатов текстового вывода кнопкам на Android: neutral, positive, None или номер строки:
+            if choice==None:                                    return None # exit
+            elif "Участки" in choice and form!="home":          return "neutral"
+            elif "Детали" in choice and form!="firstCallMenu":  return "neutral"
+            elif "Контакт" in choice and form=="flatView":      return "neutral"
+            elif "Аналитика" in choice:                         return "neutral"
+            elif "Справка" in choice:                           return "neutral"
+            elif "Запись" in choice:                            return "neutral"
+            elif reports.monthName()[2] in choice\
+                and form!="serviceYear":                        return "neutral" # last month in report
+            elif "Экспорт" in choice and form=="showNotebook":  return "neutral"
+            elif "Сортировка" in choice\
+                and form!="porchSettings":                      return "neutral" # sorting contacts or houses
+            elif form=="flatView" and\
+                    "Новое посещение" in choice:                return "positive"
+            elif "Таймер" in choice:                            return "positive"
+            elif "Новая заметка" in choice:                     return "positive"
+            elif "Добавить" in choice:                          return "positive"
+            elif "Новый контакт" in choice:                     return "positive"
+            elif form=="terView" and "Новый" in choice:         return "positive"
+            elif form=="houseView" and "Новый" in choice:       return "positive"
+            elif form=="porchViewGUIOneFloor" and\
+                    "Вниз" in choice:                           return "positive"
+            elif form == "porchViewGUIOneFloor" and\
+                    "Вверх" in choice:                          return "neutral"
+            else:
+                for i in range(len(options)):
+                    if options[i]==str(choice):                 return i
+                else:                                           return choice
+
         else:
-            choice = choicebox(message, title, options)     # Результаты вывода choicebox (должны всегда соответствовать
-                                                            # кнопкам на Android: neutral, positive, None или номер строки):
-        if choice==None:                                    return None # exit
-        elif "Участки" in choice and form!="home":          return "neutral"
-        elif "Детали" in choice and form!="firstCallMenu":  return "neutral"
-        elif "Контакт" in choice and form=="flatView":      return "neutral"
-        elif "Аналитика" in choice:                         return "neutral"
-        elif "Справка" in choice:                           return "neutral"
-        elif "Запись" in choice:                            return "neutral"
-        elif reports.monthName()[2] in choice\
-            and form!="serviceYear":                        return "neutral" # last month in report
-        elif "Экспорт" in choice and form=="showNotebook":  return "neutral"
-        elif "Сортировка" in choice\
-            and form!="porchSettings":                      return "neutral" # sorting contacts or houses
-        elif form=="flatView" and\
-                "Новое посещение" in choice:                return "positive"
-        elif "Таймер" in choice:                            return "positive"
-        elif "Новая заметка" in choice:                     return "positive"
-        elif "Добавить" in choice:                          return "positive"
-        elif "Новый контакт" in choice:                     return "positive"
-        elif form=="terView" and "Новый" in choice:         return "positive"
-        elif form=="houseView" and "Новый" in choice:       return "positive"
-        elif form=="porchViewGUIOneFloor" and\
-                "Вниз" in choice:                           return "positive"
-        elif form == "porchViewGUIOneFloor" and\
-                "Вверх" in choice:                          return "neutral"
-        else:
-            for i in range(len(options)):
-                if options[i]==str(choice):                 return i
-            else:                                           return choice
+            if positive=="OK":
+                positive=None # чтобы на Windows не было двух кнопок ОК
+            choice = choicebox(
+                msg=message,
+                title=title,
+                choices=options,
+                preselect=selected,
+                positive=positive,
+                neutral=neutral,
+                negative=negative
+            )     # Результаты вывода choicebox (должны всегда соответствовать
+
+            if choice==None:
+                return None
+            elif choice=="positive" or choice=="neutral":
+                return choice
+            else:
+                for i in range(len(options)):
+                    if options[i] == str(choice):
+                        return i
+
 
 def dialogChecklist(
         title="",
@@ -265,7 +289,7 @@ def dialogRadio(
         selected=0,
         message="",
         positiveButton=True,
-        negativeButton=True,
+        #negativeButton=True,
         positive="OK"):
         #negative="Отмена"):
     """ Radio buttons """
@@ -280,6 +304,7 @@ def dialogRadio(
         phone.dialogShow()
         phone.dialogGetResponse()
         resp = phone.dialogGetSelectedItems()[1]
+        phone.dialogDismiss()
         if resp!=None:
             return options[resp[0]].strip()
         else:
@@ -300,7 +325,7 @@ def dialogRadio(
             except:
                 choice=result
         else:
-            choice = choicebox(title=title, msg=message, choices=options)
+            choice = choicebox(title=title, msg=message, choices=options, preselect=selected)
         return choice
 
 def dialogConfirm(title="", message="", neutralButton=False, choices=["Да", "Нет"]):
@@ -343,11 +368,7 @@ def dialogConfirm(title="", message="", neutralButton=False, choices=["Да", "�
             except:
                 return result
         
-        elif choices==["Да", "Нет"]:
-            tk.Tk().withdraw()
-            result = tkinter.messagebox.askyesno(title, message)
-        else:
-            result = buttonbox(message, title, choices)
+        result = tkinter.messagebox.askyesno(title, message)
             
         if result==choices[0] or result==True:
             return True
@@ -355,7 +376,7 @@ def dialogConfirm(title="", message="", neutralButton=False, choices=["Да", "�
             return "neutral"
         else: return False        
         
-def dialogInfo(title="Внимание!", message="", neutralButton=False, neutral="", no="Оk"):
+def dialogAlert(title="Внимание!", message="", neutralButton=False, neutral="", no="Оk"):
     """ Simple information windows """
     
     if io2.Mode=="sl4a" and io2.settings[0][1]==False:
@@ -386,23 +407,24 @@ def dialogInfo(title="Внимание!", message="", neutralButton=False, neutr
             tkinter.messagebox.showinfo(title, message)
             #buttonbox(message, title)
         
-def dialogHelp(title="", message="",
-               positiveButton=True, neutralButton=False, negativeButton=False,
-               positive="OK",       negative="Назад",    neutral=""):
+def dialogInfo(title="", message="",
+               positive=None,       negative="Назад",    neutral=None):
     """ Help dialog """
     
     if io2.Mode=="sl4a" and io2.settings[0][1]==False:
         phone.dialogCreateAlert(title, message)
-        if positiveButton == True:
+        if positive!=None:
             phone.dialogSetNeutralButtonText(positive)
-        if neutralButton == True:
+        if neutral!=None:
             phone.dialogSetNeutralButtonText(neutral)
-        if negativeButton==True:
+        if negative!=None:
             phone.dialogSetNegativeButtonText(negative)
         phone.dialogShow()
         resp = phone.dialogGetResponse()[1]
         phone.dialogDismiss()
-        if "positive" in resp["which"]:
+        if "canceled" in resp:
+            return None
+        elif "positive" in resp["which"]:
             return "positive"
         elif "neutral" in resp["which"]:
             return "neutral"
@@ -421,20 +443,13 @@ def dialogHelp(title="", message="",
             print(message)
             return input()
         else:
-            choice = codebox(title=title, msg="", neutral=neutral, text=message)
+            choice = msgbox(title=title, msg=message, neutral=neutral)#, positive=positive, neutral=neutral, negative=negative)
             if console.process(choice) == True:
                 return ""
             if choice != None:
                 return choice.strip()
             else:
                 return None
-
-def dialogFileSave(msg="", title="", default="data.jsn", filetypes= "\*.jsn"):
-    if io2.Mode=="sl4a":
-        return
-    else:
-        choice = filesavebox(msg,title,default,filetypes)
-        return choice
 
 def dialogFileOpen(message="", title="Выбор файла", default="", filetypes= "\*.jsn"):
     if io2.Mode == "sl4a" and io2.settings[0][1] == False:
@@ -602,7 +617,7 @@ def dialogGetPassword(title="Пароль", message="Введите пароль
             return None
         """
     else:
-        choice = enterbox(
+        choice = passwordbox(
             msg=message,
             title=title,
             default=default

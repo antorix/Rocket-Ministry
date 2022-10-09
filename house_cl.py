@@ -3,7 +3,6 @@
 
 import time
 import io2
-from io2 import settings
 import dialogs
 import set
 import reports
@@ -76,7 +75,7 @@ class House():
         if len(list) == 0:
             list.append("Создайте %s внутри участка" % self.getPorchType()[0])
 
-        if io2.settings[0][1]==True or io2.Mode != "sl4a":
+        if io2.settings[0][1]==True or io2.Mode == "text":
             list.append("%s Новый %s" % (icon("plus"), self.getPorchType()[0]))  # создание нового участка
             list.append(icon("preferences") + " Детали")
 
@@ -113,7 +112,7 @@ class House():
 
         def showStatus(self):
             """ Выдает статус подъезда в виде графики или цифр в зависимости от режима вывода """
-            if settings[0][21]==False:
+            if io2.settings[0][21]==False:
                 return ""
             result="?"
             for i in range(len(house_op.getPorchStatuses()[0])):
@@ -124,18 +123,17 @@ class House():
                         result=house_op.getPorchStatuses()[1][i]
             return result
 
-        def deleteFlat(self, number):
+        def deleteFlat(self, ind):
             answer=True
-            if len(self.flats[number].records)!=0 or self.flats[number].getName()!="": # проверка, что квартира не пустая
+            if len(self.flats[ind].records)!=0 or self.flats[ind].getName()!="": # проверка, что квартира не пустая
                 answer = dialogs.dialogConfirm(
                     title=icon(
-                        "cut") + " Удалить «%s»?" % self.flats[number].number,
-                        neutralButton=False,
+                        "cut") + " Удалить «%s»?" % self.flats[ind].number,
                         message="Внутри есть данные! Вы уверены?"
                     )
             if answer==True:
-                io2.log("«%s» удален" % self.flats[number].getName())
-                del self.flats[number]
+                io2.log("«%s» удален" % self.flats[ind].number)
+                del self.flats[ind]
                 return "deleted"
 
         def sortFlats(self, forceNumerical=False):
@@ -185,7 +183,7 @@ class House():
                 if len(options)>1:
                     del options[len(options)-1]
                     if silent==False: # в тихом режиме только считаем, но не показываем список
-                        choice=dialogs.dialogList(title="Сколько этажей в подъезде?", positiveButton = True, options=options)
+                        choice=dialogs.dialogList(title="Сколько этажей в подъезде?", positive="OK", options=options)
                         if choice==None:
                             return
                         elif set.ifInt(choice) == True:
@@ -228,7 +226,7 @@ class House():
                     if len(options) == 0:
                         options.append("Создайте одну или несколько квартир (контактов)")
 
-                    if io2.settings[0][1]==True or io2.Mode != "sl4a":
+                    if io2.settings[0][1]==True or io2.Mode == "text":
                         options.append(icon("plus") + " Добавить")
                         options.append(icon("preferences") + " Детали")
 
@@ -240,7 +238,7 @@ class House():
                             if rows-r == floor:
                                 options.append(self.flats[i].addFlatTolist())
                             i += 1
-                    if settings[0][1] == True or io2.Mode != "sl4a":  # добавляем кнопки для Windows
+                    if io2.settings[0][1] == True or io2.Mode == "text":
                         if floor<rows:
                             options.append(icon("up") + " Вверх")
                         if floor>1:
@@ -260,7 +258,7 @@ class House():
                             flat += "%s%s " % (self.flats[i].number, self.flats[i].getStatus(forceText=forceText)[0])
                             i += 1
                         options.append(floorNumber + flat)
-                    if settings[0][1] == True or io2.Mode != "sl4a":  # добавляем кнопки
+                    if io2.settings[0][1] == True or io2.Mode == "text":  # добавляем кнопки
                         options.append(icon("plus") + " Добавить")
                         options.append(icon("preferences") + " Детали")
                 except:
@@ -291,7 +289,7 @@ class House():
 
             forceText = False
 
-            if settings[0][1]==1 or io2.Mode=="text":  # показываем подъезд в режиме сетки
+            if io2.settings[0][1]==1 or io2.Mode=="text":  # показываем подъезд в режиме сетки
                 return showGrid()
 
             if floor!=0: # если получен конкретный этаж, функция вывода списка всего подъезда выдает список только одного этажа
@@ -473,10 +471,10 @@ class House():
                     for i in range(len(self.records)): # добавляем записи разговоров
                         options.append(icon("mic") + " %s: %s" % (self.records[i].date, self.records[i].title))
 
-                if io2.Mode != "sl4a" or io2.settings[0][1]==True:
+                if io2.Mode == "text" or io2.settings[0][1]==True:
                     options.append(icon("plus") + " Новое посещение")  # positive button on Android
 
-                if io2.Mode != "sl4a":
+                if io2.Mode == "text":
                     options.append(icon("preferences") + " Детали")  # positive button on Android
                 neutral = icon("preferences") + " Детали"
 
@@ -494,22 +492,25 @@ class House():
                 
                 self.records[0].date = "%s %s %s" % (date, month, timeCur)
 
-                if settings[0][9]==1 or forceStatusUpdate==True:
+                if io2.settings[0][9]==1 or forceStatusUpdate==True:
                     if len(input)>0:
                         self.status = self.records[0].title[len(input)-1] # status set to last character of last record
                     else:
                         self.status=""
 
+                if len(self.records)>1 and io2.settings[0][7]==1:
+                    reports.report("==п")
+
                 return len(self.records)-1
 
             def editRecord(self, f, input):
                 self.records[f].title = input
-                if settings[0][9]==1:
+                if io2.settings[0][9]==1:
                     self.updateStatus()
 
             def deleteRecord(self, f):
                 del self.records[f]
-                if settings[0][9]==1 or (len(self.records)==0 and self.getName()==""):
+                if io2.settings[0][9]==1 or (len(self.records)==0 and self.getName()==""):
                     self.updateStatus()
                 io2.log("Запись посещения удалена")
 
@@ -534,7 +535,7 @@ class House():
                     self.title=choice
                 else:
                     self.title = self.number + ", " + choice
-                if settings[0][9]==1 or forceStatusUpdate==True or (len(self.records)==0 and self.getName()==""):
+                if io2.settings[0][9]==1 or forceStatusUpdate==True or (len(self.records)==0 and self.getName()==""):
                     self.updateStatus()
 
             def setFlat(self, input="", virtual=False):

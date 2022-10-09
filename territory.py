@@ -22,9 +22,7 @@ def terView():
                 options = house_op.showHouses(),
                 form = "terView",
                 negative = "Назад",
-                positiveButton=True,
                 positive = icon("plus"),
-                neutralButton=True,
                 neutral = icon("sort") + " Сорт."
             )
         if choice==None:
@@ -78,9 +76,7 @@ def houseView(selectedHouse):
                 title = houseIcon + " %s ⇨ %sы %s" % (house.title, house.getPorchType()[0], reports.getTimerIcon(settings[2][6])),
                 options = house.showPorches(),
                 negative = "Назад",
-                positiveButton=True,
                 positive=icon("plus"),
-                neutralButton=True,
                 neutral = icon("preferences") + " Детали"
             )
 
@@ -130,11 +126,17 @@ def porchView(house, selectedPorch):
 
         options = [
             icon("mic")    + " Посещение",
-            icon("reject")      + " Отказ и выход",
+            icon("reject")      + " Отказ",
             icon("preferences") + " Детали",
         ]
+        if settings[0][13] == 1:
+            options.insert(1, icon("lock") + " Нет дома")
+
         if settings[0][10]==1:
-            options.insert(2, icon("rocket") + " Умная строка")
+            if settings[0][13] == 1:
+                options.insert(3, icon("rocket") + " Умная строка")
+            else:
+                options.insert(2, icon("rocket") + " Умная строка")
 
         choice = dialogs.dialogList(
             title="%s ⇨ первое посещение" % flat.number,
@@ -150,6 +152,10 @@ def porchView(house, selectedPorch):
 
         if "Отказ" in result:
             porch.autoreject(flat=flat)
+            io2.save()
+
+        elif "Нет дома" in result:
+            porch.addFlat(input="+%s.нет дома" % flat.number, forceStatusUpdate=True)
             io2.save()
 
         elif "Посещение" in result:
@@ -188,9 +194,9 @@ def porchView(house, selectedPorch):
                         if "Установить статус" in checked:  # интерес
                             flat.status="1"
                         if "Добавить публикацию" in checked: # публикация
-                            reports.report(choice="{{б}")
+                            reports.report(choice="==б")
                         if "Добавить видео" in checked: # видео
-                            reports.report(choice="{{в}")
+                            reports.report(choice="==в")
                         if "Записать телефон" in checked:  # телефон
                             flat.phone = set.setPhone()
                         if "Назначить встречу" in checked:  # встреча
@@ -201,14 +207,13 @@ def porchView(house, selectedPorch):
             notebookOriginalSize = len(io2.resources[0])
             input = dialogs.dialogText(
                 title="%s Умная строка" % icon("rocket"),
-                neutralButton=True,
                 neutral="%s Справка" % icon("help"),
                 message="Нажмите на справку для подсказки по этой функции"
             )
             if input==None:
                 pass
             elif input=="neutral" or input=="\\" or input=="справка" or input=="help":
-                dialogs.dialogHelp(
+                dialogs.dialogInfo(
                     title="%s Умная строка" % icon("rocket"),
                     message="«Умная строка» – это самый мощный и быстрый способ добавления нового посещения, а также работы с отчетами!\n\n" +
                             "Введите любой текст без точки, и он превратится в заметку квартиры.\n\n" + \
@@ -280,12 +285,10 @@ def porchView(house, selectedPorch):
             if choice!="positive":
                 options = porch.showFlats()
                 choice = dialogs.dialogList(
-                    title=house.getPorchType()[1] + "%s %s" % (porch.title, reports.getTimerIcon(settings[2][6])),
+                    title=house.getPorchType()[1] + " %s %s " % (porch.title, reports.getTimerIcon(settings[2][6])),
                     options=options,
                     form="porchViewGUIList",
-                    positiveButton=True,
                     positive=icon("plus"),
-                    neutralButton=True,
                     neutral=icon("preferences") + " Детали"
                 )
             if choice==None:
@@ -326,7 +329,7 @@ def porchView(house, selectedPorch):
                     continue
                 elif set.ifInt(addFlat[0]) == True and "-" in addFlat: # массовое добавление квартир
                     porch.addFlats("+"+addFlat)
-                    if settings[0][20] == True:
+                    if settings[0][20] == True and house.type == "condo":
                         porch.autoFloorArrange()
                     choice = default = ""
                     io2.save()
@@ -342,25 +345,19 @@ def porchView(house, selectedPorch):
 
                 rows = int(porch.flatsLayout)
                 if (floorNumber - porch.floor1 + 1) < rows:
-                    neutralButton = True
                     neutral = "↑"
                 else:
-                    neutralButton = False
-                    neutral = ""
+                    neutral = None
                 if (floorNumber - porch.floor1 + 1) > 1:
-                    positiveButton = True
                     positive = "↓"
                 else:
-                    positiveButton = False
-                    positive = ""
+                    positive = None
                 options = porch.showFlats(floor=floorNumber - porch.floor1 + 1)
                 choice = dialogs.dialogList(
                     title="Этаж %d" % floorNumber,
                     options=options,
                     form="porchViewGUIOneFloor",
-                    positiveButton=positiveButton,
                     positive=positive,
-                    neutralButton=neutralButton,
                     neutral=neutral
                 )
                 if choice==None:
@@ -387,7 +384,6 @@ def porchView(house, selectedPorch):
                 message=porch.showFlats(),
                 form="porchText",
                 default=default,
-                neutralButton=True,
                 neutral=icon("preferences") + " Детали"
             )
             if choice==None:
@@ -491,9 +487,7 @@ def flatView(flat, house, virtual=False):
                 ),
                 options=options,
                 form="flatView",
-                positiveButton=True,
                 positive=icon("plus"),
-                neutralButton = True,
                 neutral = neutral
             )
         if choice==None:
@@ -507,7 +501,9 @@ def flatView(flat, house, virtual=False):
             choice2 = dialogs.dialogText(
                 title = icon("mic") + " Новая запись посещения",
                 message = "О чем говорили?",
-                largeText=True
+                largeText=True,
+                positive="Сохранить",
+                negative="Отмена"
             )
             if choice2 == None or choice2 == "":
                 choice = ""
@@ -539,7 +535,9 @@ def flatView(flat, house, virtual=False):
                     choice3 = dialogs.dialogText(
                         icon("mic") + " Правка записи",
                         default = flat.records[int(choice)].title,
-                        largeText=True
+                        largeText=True,
+                        positive="Сохранить",
+                        negative="Отмена"
                     )
                     if choice3==None:
                         continue

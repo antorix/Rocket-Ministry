@@ -46,8 +46,6 @@ def showHouses():
         else:
             houseDue=""
 
-
-
         housesList.append("%s %s %s (%s) %s %s %s" %
                 (house.getTipIcon()[1], house.title, houseDue, shortenDate(house.date), visited, interested, note)
         )
@@ -55,7 +53,7 @@ def showHouses():
     if len(housesList)==0:
         housesList.append("Создайте свой первый участок")
 
-    if settings[0][1]==True or io2.Mode != "sl4a":
+    if settings[0][1]==True or io2.Mode == "text":
         housesList.append(icon("plus") + " Новый участок")  # neutral button on Android
         housesList.append(icon("sort") + " Сортировка")  # neutral button on Android
 
@@ -152,8 +150,9 @@ def terSort():
         title=icon("sort") + " Сортировка участков " + reports.getTimerIcon(settings[2][6]),
         selected=selected,
         options=options)
-
-    if choice=="По названию":
+    if choice==None:
+        return
+    elif choice=="По названию":
         settings[0][19] = "н"
     elif choice=="По дате взятия":
         settings[0][19] = "д"

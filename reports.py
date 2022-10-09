@@ -3,8 +3,6 @@
 
 import time
 import io2
-from io2 import settings
-from io2 import resources
 import os
 import dialogs
 import set
@@ -15,24 +13,24 @@ class Report():
 
     def __init__(self):
         
-        self.hours = settings[2][0]
-        self.credit = settings[2][1]
-        self.placements = settings[2][2]
-        self.videos = settings[2][3]
-        self.returns = settings[2][4]
-        self.studies = settings[2][5]
-        self.startTime = settings[2][6]
-        self.endTime = settings[2][7]
-        self.reportTime = settings[2][8]
-        self.difTime = settings[2][9]
-        self.note = settings[2][10]
-        self.reminder = settings[2][11]
-        self.lastMonth = settings[2][12]
+        self.hours = io2.settings[2][0]
+        self.credit = io2.settings[2][1]
+        self.placements = io2.settings[2][2]
+        self.videos = io2.settings[2][3]
+        self.returns = io2.settings[2][4]
+        self.studies = io2.settings[2][5]
+        self.startTime = io2.settings[2][6]
+        self.endTime = io2.settings[2][7]
+        self.reportTime = io2.settings[2][8]
+        self.difTime = io2.settings[2][9]
+        self.note = io2.settings[2][10]
+        self.reminder = io2.settings[2][11]
+        self.lastMonth = io2.settings[2][12]
 
     def saveReport(self, message="", mute=False, save=True, backup=False):
         """ Выгрузка данных из класса в настройки, сохранение и оповещение """
 
-        settings[2] = [
+        io2.settings[2] = [
             self.hours,
             self.credit,
             self.placements,
@@ -51,8 +49,8 @@ class Report():
             io2.log(message)
             date = time.strftime("%d.%m", time.localtime()) + "." + str(int(time.strftime("%Y", time.localtime())) - 2000)
             time2 = time.strftime("%H:%M:%S", time.localtime())
-            resources[2].insert(0, "\n%s %s: %s" % (date, time2, message))
-        if save==True and backup==True:
+            io2.resources[2].insert(0, "\n%s %s: %s" % (date, time2, message))
+        if save==True or backup==True:
             io2.save(forced=True, silent=True) # после выключения секундомера делаем резервную копию принудительно
         elif save==True:
             io2.save()
@@ -74,13 +72,13 @@ class Report():
         """
 
         # Calculate rollovers
-        if settings[0][15]==1: # rollover seconds to next month if activated
+        if io2.settings[0][15]==1: # rollover seconds to next month if activated
             rolloverHours = round(self.hours,2) - int(round(self.hours,2))
             self.hours = int(round(self.hours,2)-rolloverHours)
             rolloverCredit = round(self.credit,2) - int(round(self.credit,2))
             self.credit = int(round(self.credit,2)-rolloverCredit)
 
-        if settings[0][2]==1:
+        if io2.settings[0][2]==1:
             credit = "Кредит: %s\n" % timeFloatToHHMM(self.credit) # whether save credit to file
         else:
             credit = ""
@@ -101,10 +99,10 @@ class Report():
         
         # Clear service year in October        
         if int(time.strftime("%m", time.localtime())) == 10: 
-            settings[4] = [None, None, None, None, None, None, None, None, None, None, None, None]
+            io2.settings[4] = [None, None, None, None, None, None, None, None, None, None, None, None]
         
         # Save last month hour+credit into service year
-        settings[4][monthName()[7]-1] = self.hours + self.credit
+        io2.settings[4][monthName()[7]-1] = self.hours + self.credit
 
         io2.save()
         
@@ -202,11 +200,11 @@ class Report():
             
             title = icon("report") + " Отчет за %s %s " % (monthName()[1], getTimerIcon(self.startTime))
 
-            if settings[0][2]==True: # включен кредит часов
+            if io2.settings[0][2]==True: # включен кредит часов
                 credit=self.credit
             else:
                 credit=0
-            gap = float((self.hours+credit) - int(time.strftime("%d", time.localtime()))*settings[0][3]/days())
+            gap = float((self.hours+credit) - int(time.strftime("%d", time.localtime()))*io2.settings[0][3]/days())
             
             if gap >= 0:
                 gap_str = icon("extra2") + " Запас: %s" % timeFloatToHHMM(gap) # happy emoticon
@@ -218,7 +216,7 @@ class Report():
                     time.strftime("%M", time.localtime())) * 60 + int(time.strftime("%S", time.localtime()))
                 self.difTime = (self.endTime - self.startTime) / 3600
 
-            if settings[0][2] == 1:
+            if io2.settings[0][2] == 1:
                 hoursLine = icon("timer") + " Часы: %s\n     (с кредитом: %s)" % (
                     timeFloatToHHMM(self.hours), timeFloatToHHMM(self.hours + self.credit)
                 )
@@ -232,16 +230,16 @@ class Report():
                 hoursLine
             ]
                 
-            if settings[0][3]!=0:
+            if io2.settings[0][3]!=0:
                 options.append(gap_str)
-            if settings[0][2]==1:
+            if io2.settings[0][2]==1:
                 options.append(icon("credit") + " Кредит: %s" % timeFloatToHHMM(self.credit))
             options.append(icon("returns")  + " Повторные: %d" % self.returns)
             options.append(icon("studies")  + " Изучения: %d" % self.studies)
             options.append(icon("logreport")+ " Журнал")
             options.insert(7, icon("pin")      + " Примечание: %s" % self.note)
 
-            if io2.Mode!="sl4a":
+            if io2.Mode == "text":
                 options.append(icon("prevmonth") + " " + monthName()[2]) # neutral button on Android
 
             choice = dialogs.dialogList(
@@ -249,8 +247,7 @@ class Report():
                 form = "display",
                 message=message,
                 options=options,
-                neutral = monthName()[2],                
-                neutralButton = True)
+                neutral = monthName()[2])
             choice2=""
             if choice==None:
                 break
@@ -266,7 +263,6 @@ class Report():
                 message = "Изменение на:"
                 while choice2!=None:
                     choice2 = dialogs.dialogText(
-                        neutralButton=True,
                         autoplus=True,
                         title=icon("placements") + " Публикации " + getTimerIcon(self.startTime),
                         message=message
@@ -294,7 +290,6 @@ class Report():
                 message="Изменение на:"
                 while choice2!=None:
                     choice2 = dialogs.dialogText(
-                        neutralButton=True,
                         autoplus=True,
                         title=icon("video") + " Видео " + getTimerIcon(self.startTime),
                         message=message
@@ -322,7 +317,6 @@ class Report():
                 message="Изменение на:"
                 while choice2!=None:
                     choice2 = dialogs.dialogText(
-                        neutralButton=True,
                         autoplus=True,
                         title=icon("timer") + " Часы " + getTimerIcon(self.startTime),
                         message=message
@@ -362,7 +356,6 @@ class Report():
                 message="Изменение на:"
                 while choice2!=None:
                     choice2 = dialogs.dialogText(
-                        neutralButton=True,
                         autoplus=True,
                         title=icon("credit") + " Кредит " + getTimerIcon(self.startTime),
                         message=message
@@ -402,7 +395,6 @@ class Report():
                 message = "Изменение на:"
                 while choice2!=None:
                     choice2 = dialogs.dialogText(
-                        neutralButton=True,
                         autoplus=True,
                         title=icon("returns") + " Повторные " + getTimerIcon(self.startTime),
                         message=message
@@ -430,7 +422,6 @@ class Report():
                 message = "Изменение на:"
                 while choice2!=None:
                     choice2 = dialogs.dialogText(
-                        neutralButton=True,
                         autoplus=True,
                         title=icon("studies") + " Изучения " + getTimerIcon(self.startTime),
                         message=message
@@ -464,15 +455,20 @@ class Report():
                     continue
                 else:
                     self.note = choice2.strip()
-                    self.saveReport()
+                    self.saveReport(mute=True, save=False)
 
             elif "Журнал" in result: # show logReport
                         message=""
-                        for line in resources[2]:
+                        for line in io2.resources[2]:
                             message+=line
-                        dialogs.dialogHelp(
+                        dialogs.dialogText(
                             title=icon("logreport") + " Журнал отчета",
-                            message=message
+                            default=message,
+                            message=message,
+                            positive=None,
+                            neutral=None,
+                            negative="Назад",
+                            largeText=True
                         )
         
         if exit==1:            
@@ -483,22 +479,25 @@ class Report():
         if io2.Mode == "sl4a":
             exportButton = " Экспорт"
         else:
-            exportButton = " В буфер обмена"
-        answer = dialogs.dialogConfirm(
+            exportButton = " В буфер"
+        answer = dialogs.dialogInfo(
             title=icon("report") + " Отчет прошлого месяца ",
-            message=settings[2][12],
-            choices=[icon("export") + exportButton, "Назад"]
+            message=io2.settings[2][12],
+            neutral = icon("export") + exportButton,
+            negative = "Назад"
         )
-        if answer == True:  # export last month report
+        if answer == None:
+            return
+        elif "neutral" or icon("export") in answer:  # export last month report
             if io2.Mode == "sl4a":
                 try:
                     from androidhelper import Android
                     Android().sendEmail("Введите email", "Отчет за %s" % monthName()[3], self.lastMonth, attachmentUri=None)
-                    os.system("clear")
-                    input("\nНажмите Enter для возврата")
                 except IOError:
-                    io2.log("Экспорт не удался!")
-                os.system("clear")
+                    io2.log("Экспорт отчета не удался!")
+                else:
+                    io2.consoleReturn()
+
             else:
                 from tkinter import Tk
                 r = Tk()
@@ -519,7 +518,7 @@ def getTimerIcon(startTime):
     if startTime > 0:
         output = " " + icon("timer")
         if io2.Mode == "sl4a":
-            if settings[0][0] == 1:
+            if io2.settings[0][0] == 1:
         #        output += " " + icon("mute")
                 vibrate(True)
             else:
@@ -533,7 +532,7 @@ def vibrate(key):
     
     if io2.Mode != "sl4a":
         return
-    if settings[0][0]==1:
+    if io2.settings[0][0]==1:
         from androidhelper import Android
         if key==True:
             Android().setRingerVolume(0)

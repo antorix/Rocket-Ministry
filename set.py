@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import os
-import io2
-from io2 import houses, settings
 import dialogs
 import webbrowser
 import time
 import house_op
 from icons import icon
+import io2
+from io2 import houses, settings
 
 def houseSettings(selectedHouse):
     """ House settings """
@@ -67,7 +67,7 @@ def houseSettings(selectedHouse):
                 message += " Также в участке есть %d интересующихся. Они будут скопированы в отдельные контакты." % len(interest)
             message += "\n\nУдаляем?"
             answer=dialogs.dialogConfirm(
-                title = icon("cut") + "Удаление %s" % house.title,
+                title = icon("cut") + " Удалить %s" % house.title,
                 message=message
             )
             if answer==True:
@@ -109,7 +109,6 @@ def porchSettings(house, selectedPorch):
             icon("baloon") + " Название %sа" % porch.type,
             icon("sort") + " Сортировка " + house.getPorchType()[2],
             icon("pin") + " Заметка %sа" % porch.type,
-            icon("intercom") + " Режим домофона",
             icon("map") + " Маршрут",
             icon("cut") + " Удалить %s" % porch.type,
         ]
@@ -119,6 +118,9 @@ def porchSettings(house, selectedPorch):
 
         if ifInt(porch.flatsLayout)==True:
             options.insert(2, icon("porch") + " Номер первого этажа")
+
+        if porch.type=="подъезд":
+            options.insert(4, icon("intercom") + " Режим домофона")
         
         choice = dialogs.dialogList(
             title = porch.title,
@@ -211,7 +213,7 @@ def porchSettings(house, selectedPorch):
                 continue
             elif choice3 == "По этажам":
                 if porch.autoFloorArrange(silent=True) == False:
-                    dialogs.dialogInfo("Сортировка", "Поэтажное представление невозможно при данном числе квартир!")
+                    dialogs.dialogAlert("Сортировка", "Поэтажное представление невозможно при данном числе квартир!")
                 else:
                     porch.autoFloorArrange()
                     io2.save()
@@ -306,9 +308,9 @@ def flatSettings(flat, house, virtual=False):
         if io2.Mode=="sl4a":
             if phone != "":
                 if virtual==False:
-                    options.insert(3, icon("phone") + " Набрать номер")
+                    options.insert(3, icon("phone") + " Вызов")
                 else:
-                    options.insert(4, icon("smartphone") + " Набрать номер")
+                    options.insert(4, icon("smartphone") + " Вызов")
                 #options.insert(5, icon("phone") + " SMS")
                 #options.append(icon("mail") + " Сообщение")
         options.append(icon("map") + " Маршрут")
@@ -362,8 +364,10 @@ def flatSettings(flat, house, virtual=False):
                 selected=4
             elif flat.status=="5":
                 selected=5
+            elif flat.status=="":
+                selected=6
             else:
-                selected = 0
+                selected = 6
 
             options=[
                 icon("reject") + " Отказ",
@@ -371,14 +375,25 @@ def flatSettings(flat, house, virtual=False):
                 icon("green") + " Зеленый",
                 icon("purple") + " Фиолетовый",
                 icon("brown") + " Коричневый",
-                icon("danger") + " Красный"
+                icon("danger") + " Красный",
+                icon("void") + " «Не были»"
             ]
             status = dialogs.dialogRadio(title="Статус контакта", options=options, selected=selected)
-            if status!=None:
+            if status==None:
+                continue
+            if status!=None and not "Не были" in status:
                 for i in range(len(options)):
                     if status == options[i]:
                         flat.status=str(i)
-                io2.save()
+            elif "Не были" in status:
+                if dialogs.dialogConfirm("Статус контакта", "При установке этого статуса будут удалены все записи посещений и имя жильца (если есть). Продолжать?")\
+                    ==True:
+                    del flat.records[:]
+                    flat.status=""
+                    flat.title=flat.number
+                    if flat.title=="virtual":
+                        flat.title=""
+            io2.save()
 
         elif "Телефон" in result:
             newPhone = setPhone(flat.phone)
@@ -389,7 +404,6 @@ def flatSettings(flat, house, virtual=False):
         elif "Встреча" in result:
             flat.meeting = setMeeting(flat.meeting)
             if flat.meeting!="":
-                io2.log("Назначена встреча на %s!" % house_op.shortenDate(flat.meeting))
                 io2.save()
                 
         elif "Заметка" in result:
@@ -433,12 +447,12 @@ def flatSettings(flat, house, virtual=False):
             else:
                 webbrowser.open("mailto:%s" % email) # email on Windows/Linux
 
-        elif "Набрать номер" in result: # phone call, Android-only
+        elif "Вызов" in result: # phone call, Android-only
             if io2.Mode=="sl4a":
                 from androidhelper import Android
                 myphone=Android()
                 myphone.setClipboard(phone)
-                io2.log("Номер скопирован в буфер обмена")
+                #io2.log("Номер скопирован в буфер обмена")
                 #myphone.phoneCallNumber(phone)
                 myphone.phoneDialNumber(phone)
                 time.sleep(3)
@@ -492,28 +506,19 @@ def map(houseTitle=""):
 def setPhone(phone=""):
     message="Введите номер"
     default=phone
-    while 1:
-        phone = dialogs.dialogText(
-            title=icon("date") + " Номер телефона",
-            message=message,
-            default=default,
-            neutralButton=True
-        )
-        if phone==None:
-            return None
-        elif phone.strip() == "":
-            return ""
-        else:
-            phone=phone.strip()
-        if ifInt(phone)==True:
-            return phone
-        elif phone[0]=="+":
-            if ifInt(phone[1:]) == True:
-                return phone
-        else:
-            message="Допустимы только цифры и знак «+» в начале"
-            default=phone
-            continue
+    phone = dialogs.dialogText(
+        title=icon("phone") + " Номер телефона",
+        message=message,
+        default=default,
+        positive="OK",
+        negative="Назад"
+    )
+    if phone==None:
+        return None
+    elif phone.strip() == "":
+        return ""
+    else:
+        return phone
 
 def setMeeting(meeting=""):
     if meeting == "":
@@ -533,4 +538,5 @@ def setMeeting(meeting=""):
     if date == None or date.strip()=="":
         return ""
     else:
+        io2.log("Назначена встреча на %s!" % house_op.shortenDate(date))
         return date

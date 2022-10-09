@@ -138,7 +138,7 @@ def process(input):
         io2.save()
         success = True
 
-    if input=="gopro":
+    if input=="capmode":
         io2.Simplified=0
         io2.log("Вы играетесь с огнем, кэп")
         success = True

@@ -14,35 +14,20 @@ import notebook
 import house_op
 import time
 from icons import icon
-if io2.Mode=="sl4a":
-    from androidhelper import Android
 
 def homepage():
     """ Home page """
 
-    #territory.porchView(houses[3], 0)
+    io2.save(forcedBackup=True)
 
-    #if "--textmode" in sys.argv:  # проверяем параметры командной строки
-    #    settings[0][1] = 1
-
-    #set.houseSettings(houses[0])
-    while 1:
-
-        appointment = "" # поиск контактов со встречей на сегодня
-        totalContacts, datedFlats = contacts.getContactsAmount(date=1)
-        if len(datedFlats)>0:
-            appointment = icon("appointment")
-
-        curTime = int(time.strftime("%H", time.localtime())) * 3600 \
-                  + int(time.strftime("%M", time.localtime())) * 60 \
-                  + int(time.strftime("%S", time.localtime()))
+    def dailyRoutine():
+        curTime = io2.getCurTime()
 
         if (curTime - io2.LastTimeDidChecks) > 86400 or (curTime - io2.LastTimeDidChecks) < 3:
             io2.LastTimeDidChecks = curTime
 
             if settings[0][12] == 1:  # проверяем обновления
-                if io2.update()==True:
-                    print("Найдено обновление, необходим перезапуск программы!")
+                if io2.update() == True:
                     return
 
             print("Обрабатываем журнал отчета")
@@ -81,8 +66,24 @@ def homepage():
 
             print("Все готово!")
 
-            if io2.Mode=="sl4a": # останавливаем заставку
-                Android().dialogDismiss()
+            # if io2.Mode=="sl4a": # останавливаем заставку
+            #    Android().dialogDismiss()
+
+    #territory.porchView(houses[1], 0)
+
+    #if "--textmode" in sys.argv:  # проверяем параметры командной строки
+    #    settings[0][1] = 1
+
+    while 1:
+
+        #weeklyRoutine()
+
+        appointment = "" # поиск контактов со встречей на сегодня
+        totalContacts, datedFlats = contacts.getContactsAmount(date=1)
+        if len(datedFlats)>0:
+            appointment = icon("appointment")
+
+        dailyRoutine()
 
         if reports.updateTimer(settings[2][6]) >= 0: # проверка, включен ли таймер
             time2 = reports.updateTimer(settings[2][6])
@@ -140,7 +141,6 @@ def homepage():
             title = "%s Rocket Ministry %s" % ( icon("rocket"), reports.getTimerIcon(settings[2][6]) )
         else:
             title = "%s Rocket Ministry " % reports.getTimerIcon(settings[2][6])
-            options.append(icon("timer") + " Таймер" + timerTime)  # positive button
 
         if io2.Mode == "sl4a": # очистка экрана на всякий случай
             from os import system
@@ -157,11 +157,11 @@ def homepage():
             form = "home",
             title = title,
             options = options,
-            negative = "Выход",
-            positiveButton = True,
-            negativeButton=False,
-            positive = icon("timer") + " Таймер" + timerTime
+            positive = icon("timer") + " Таймер" + timerTime,
+            negative=None,
+            neutral=None
         )
+
         if choice == None and io2.Mode=="easygui" and settings[0][1]==0:
             return
         elif choice=="positive": # таймер
@@ -217,20 +217,25 @@ def homepage():
             preferences()
 
         elif "О программе" in result:
-            choice = dialogs.dialogHelp(
+            choice = dialogs.dialogInfo(
                 title=icon("help") + " Rocket Ministry " + reports.getTimerIcon(settings[2][6]),
                 message =   "Универсальный комбайн вашего служения\n\n"+\
                             "Версия приложения: %s\n\n" % io2.Version +\
-                            "Последнее сохранение базы данных: %s\n\n" % io2.getDBCreatedTime() +\
-                            "Официальный Telegram-канал:\nt.me/rocketministry\n\n"+\
-                            "Если есть вопрос или проблема, вам туда!",
-                positiveButton=False,
-                negativeButton=True,
-                neutralButton=True,
-                neutral="Поддержка"
+                            "Последнее изменение базы данных: %s\n\n" % io2.getDBCreatedTime() +\
+                            "Официальная страница: github.com/antorix/Rocket-Ministry\n\n"+\
+                            "Официальный Telegram-канал:\nt.me/rocketministry\n\n",
+                positive=None,
+                neutral="Помощь",
+                negative="Назад"
             )
-            if choice=="neutral":
-                Android().view("https://t.me/rocketministry")
+            if choice=="neutral" or choice=="Помощь":
+                if io2.Mode=="sl4a":
+                    from androidhelper import Android
+                    Android().view("https://github.com/antorix/Rocket-Ministry#readme")
+                    io2.consoleReturn()
+                else:
+                    from webbrowser import open
+                    open("https://github.com/antorix/Rocket-Ministry#readme")
 
         elif "Выход" in result:
             return "quit"
@@ -252,7 +257,6 @@ def tools():
             options.insert(0, icon("import") + " Импорт из файла")
 
         if io2.Simplified == False:
-            options.insert(1, icon("import") + " Импорт из буфера")
             options.append(icon("load") + " Загрузка")
             options.append(icon("save") + " Сохранение")
 
@@ -283,33 +287,15 @@ def tools():
             io2.share()  # export
 
         elif "Импорт из загрузок" in result: # для Android
-            if dialogs.dialogConfirm(
-                    title="Импорт",
-                    message="Будет выполнен импорт базы данных из папки загрузок устройства. При сбоях восстановите резервную копию последней работоспособной версии. Продолжать?"
-            ) == True:
-                io2.load(download=True, delete=True, forced=True)
-                io2.save()
-
-        elif "Импорт из буфера" in result: # для Windows
-            io2.load(clipboard=True, forced=True)
+            io2.load(download=True, delete=True, forced=True)
 
         elif "Импорт из файла" in result: # для Windows
-            if dialogs.dialogConfirm(
-                title="Импорт",
-                message="Будет выполнен импорт базы данных из внешнего файла. Можно указать его в настройках, тогда он запрашиваться не будет. При сбоях восстановите резервную копию последней работоспособной версии. Продолжать?"
-            )==True:
-                result = io2.load(dataFile=settings[0][14], forced=True, delete=True)
-                if result!="fail":
-                    io2.save()
-                else:
-                    io2.load()
-            else:
-                continue
+            io2.load(dataFile=None, forced=True, delete=True)
 
         elif "Восстановление" in result:  # restore backup
-            io2.save(forced=True, silent=True)
+            #io2.save(forced=True, silent=True)
             io2.backupRestore(restore=True)
-            io2.save()
+            #io2.save()
 
         elif "Очистка" in result:
             if dialogs.dialogConfirm(
@@ -356,6 +342,7 @@ def preferences():
         else:
             password = "нет"
 
+        options.append(status(settings[0][13]) + "Пункт «нет дома» при первом посещении")
         options.append(status(settings[0][7])  + "Автоматически записывать повторные посещения")
         options.append(status(settings[0][10]) + "Умная строка в первом посещении")
         options.append(status(settings[0][2])  + "Кредит часов")
@@ -369,26 +356,26 @@ def preferences():
         options.append(status(settings[0][21]) + "Статус обработки подъездов")
         options.append(status(settings[0][9]) + "Последний символ посещения влияет на статус контакта")
         options.append(                       "%s Число резервных копий: %d" % (icon("box"), settings[0][6]))
-        if io2.Mode!="sl4a":
+        if io2.Simplified==0 and io2.Mode!="sl4a":
             options.append(                   "%s Файл импорта базы данных: %s" % (icon("box"), importURL))
         options.append(                       "%s Пароль на вход: %s" % (icon("box"), password))
         options.append(status(settings[0][16]) + "Режим смайликов")
         options.append(status(settings[0][12]) + "Проверять обновления")
-        if io2.Mode != "text":
+        if io2.Simplified==0 and io2.Mode != "text":
             options.append(status(settings[0][1])+"Консольный режим")
 
         # settings[0][4] - занято под сортировку контактов!
         # settings[0][19] - занято под сортировку участков!
 
         # Свободные настройки:
-        # settings[0][13]
         # settings[0][18]
 
         choice = dialogs.dialogList(  # display list of settings
             form="preferences",
             title=icon("preferences") + " Настройки " + reports.getTimerIcon(settings[2][6]),
             options=options,
-            negative="Назад"
+            positive=None,
+            negative="Ok"
         )
 
         if choice==None:
@@ -400,6 +387,10 @@ def preferences():
 
         if "Бесшумный режим" in result:
             settings[0][0] = toggle(settings[0][0])
+            io2.save()
+
+        elif "нет дома" in result:
+            settings[0][13] = toggle(settings[0][13])
             io2.save()
 
         elif "Кредит часов" in result:
@@ -462,10 +453,8 @@ def preferences():
         elif "Статус обработки подъездов" in result:
             settings[0][21] = toggle(settings[0][21])
             if settings[0][21]==1:
-                dialogs.dialogHelp(
+                dialogs.dialogInfo(
                     title="Статус обработки подъездов",
-                    positiveButton=True,
-                    negativeButton=False,
                     message="При включении этого параметра вы сможете указывать для каждого подъезда участка, когда вы в нем были:\n\nв будний день в первой половине дня (первый кружок – 🟡);\n\nв будний день вечером (второй кружок – 🟣);\n\nв выходной (третий кружок – 🔴).\n\nЕсли подъезд посещен все три раза, он показан как обработанный в разделе статистики."
                 )
             io2.save()
@@ -493,13 +482,10 @@ def preferences():
         elif "Последний символ" in result:
             settings[0][9] = toggle(settings[0][9])
             if settings[0][9]==1:
-                dialogs.dialogHelp(
+                dialogs.dialogInfo(
                     title="Последний символ посещения влияет на статус контакта",
                     message="Внимание, вы входите в зону хардкора! :) При включении этого параметра в конце каждого посещения должна стоять цифра от 0 до 5, определяющая статус (в стиле «умной строки», только во всех посещениях):\n\n0 = %s\n1 = %s\n2 = %s\n3 = %s\n4 = %s\n5 = %s\n\nЭто должен быть строго последний символ строки. При отсутствии такой цифры статус контакта становится неопределенным (%s)." %
-                            ( icon("reject"), icon("interest"), icon("green"), icon("purple"), icon("brown"), icon("danger"), icon("question")),
-                    positiveButton = True,
-                    negativeButton = False,
-                ),
+                            ( icon("reject"), icon("interest"), icon("green"), icon("purple"), icon("brown"), icon("danger"), icon("question"))),
             io2.save()
 
         elif "Файл импорта" in result:
@@ -519,7 +505,7 @@ def preferences():
         elif "Пароль на вход" in result:
             choice2 = dialogs.dialogText(
                 title=icon("preferences") + " Пароль на вход",
-                message="Введите пароль для входа в программу. Если оставить поле пустым, пароль запрашиваться не будет:",
+                message="Задайте пароль для входа в программу. Чтобы отменить пароль, сохраните пустое поле:",
                 default=str(settings[0][17])
             )
             if choice2 != None:
@@ -601,7 +587,7 @@ def stats():
         message += "\n\nОбработано подъездов: %d/%d (%d%%)" % \
                         (porchesCompleted, porches, porchesCompleted / porches * 100)
 
-    dialogs.dialogHelp(title=icon("stats") + " Статистика " + reports.getTimerIcon(settings[2][6]), message=message)
+    dialogs.dialogInfo(title=icon("stats") + " Статистика " + reports.getTimerIcon(settings[2][6]), message=message)
 
 def search(query=""):
     """ Search flats/contacts """
@@ -616,11 +602,10 @@ def search(query=""):
                 title = icon("search") + " Поиск " + reports.getTimerIcon(settings[2][6]),
                 default="",
                 message="Найдите любую квартиру или контакт:",
-                neutralButton=True,
                 neutral="Очист."
             )
-            if io2.Mode == "sl4a" and settings[0][1] == False:
-                Android().dialogCreateSpinnerProgress(title="Rocket Ministry", message="Ищем", maximum_progress=100)
+            #if io2.Mode == "sl4a" and settings[0][1] == False:
+            #    Android().dialogCreateSpinnerProgress(title="Rocket Ministry", message="Ищем", maximum_progress=100)
 
         elif query == None:
             return
@@ -742,9 +727,6 @@ def serviceYear():
                     check = ""
                 options.append("%s %d %s" % ((reports.monthName(monthNum=monthNum)[0] + ":", settings[4][i], check)))
 
-        if io2.Mode != "sl4a":
-            options.append(icon("calc") + " Аналитика")  # neutral button on Android
-
         #if int(time.strftime("%m", time.localtime())) <= 9:  # current service year, changes in October
         #    year = "%d" % int(time.strftime("%Y", time.localtime()))
         #else:
@@ -779,7 +761,6 @@ def serviceYear():
             ),
             message="Выберите месяц:",
             form="serviceYear",
-            neutralButton=True,
             neutral=icon("calc") + " Аналитика",
             options=options)
 
@@ -792,7 +773,7 @@ def serviceYear():
                 average = (yearNorm - hourSum) / (12 - monthNumber)  # average
             else:
                 average = yearNorm - hourSum
-            dialogs.dialogHelp(
+            dialogs.dialogInfo(
                 title="%s Аналитика" % icon("calc"),
                 message="Месяцев введено: %d\n\n" % monthNumber +
                         "Часов введено: %d\n\n" % hourSum +

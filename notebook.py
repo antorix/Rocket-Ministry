@@ -23,7 +23,7 @@ def showNotebook():
         if len(options)==0:
             options.append("Пишите любые заметки прямо здесь")
         
-        if settings[0][1]==True or io2.Mode!="sl4a":
+        if settings[0][1]==True or io2.Mode == "text":
             options.append(icon("plus") + " Новая заметка")  # positive button
             options.append(icon("export") + " Экспорт") # neutral button on Android
         
@@ -34,9 +34,7 @@ def showNotebook():
                 title = icon("notebook") + " Блокнот " + reports.getTimerIcon(settings[2][6]),
                 message = "Выберите заметку:",
                 form = "showNotebook",
-                positiveButton=True,
                 positive=icon("plus"),
-                neutralButton = True,
                 neutral = icon("export") + " Экспорт",
                 options = options
             )
@@ -57,15 +55,20 @@ def showNotebook():
                     io2.consoleReturn()                    
                     return True
             else:
-                with open("notes.txt", "w", encoding="utf-8") as file:
+                with open("мои заметки.txt", "w", encoding="utf-8") as file:
                     for i in range(len(resources[0])):
                         file.write(resources[0][i]+"\n\n")
-                webbrowser.open("notes.txt")
+                webbrowser.open("мои заметки.txt")
                 io2.log("Экспорт выполнен")
 
         elif choice=="positive": # новая заметка
             choice = ""
-            choice2 = dialogs.dialogText(title = icon("note") + " Новая заметка")
+            choice2 = dialogs.dialogText(
+                title = icon("note") + " Новая заметка",
+                positive="Сохранить",
+                negative="Отмена",
+                largeText=True
+            )
             if choice2 != None and len(choice2)>0:
                 resources[0].append(choice2)
                 io2.save()
@@ -93,6 +96,8 @@ def showNotebook():
                     choice3 = dialogs.dialogText(
                         icon("note") + " Правка заметки " + reports.getTimerIcon(settings[2][6]),
                         default = resources[0][result],
+                        positive="Сохранить",
+                        negative="Отмена",
                         largeText=True
                     )
                     if choice3 != None:

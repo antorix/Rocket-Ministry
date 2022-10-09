@@ -1,12 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from io2 import settings
-from io2 import Mode
-from io2 import Simplified
+import io2
 
 def icon(myIcon, forceText=False):
-    if Mode=="sl4a" and settings[0][1]==False and forceText==False:
+    if io2.Mode=="sl4a" and io2.settings[0][1]==False and forceText==False:
         if myIcon=="globe": return "🗺" #"\ud83c\udfe2" # if Android below 4.4
         elif myIcon=="map": return "🧭" #"\ud83d\udea9"
         elif myIcon=="rocket": return "🚀"
@@ -72,7 +70,7 @@ def icon(myIcon, forceText=False):
         elif myIcon=="calc": return "\ud83c\udf9b\ufe0f"
         elif myIcon=="import": return "\ud83d\udce9"
         elif myIcon=="logreport": return "\ud83d\udcd2"
-        elif myIcon=="lock": return "\uD83D\uDD12"
+        elif myIcon=="lock": return "🔒"
         elif myIcon=="jwlibrary": return "\ud83d\udc8e"
         elif myIcon=="image": return "🖼"
         elif myIcon=="circle": return "⚪"
@@ -89,37 +87,37 @@ def icon(myIcon, forceText=False):
         elif myIcon=="warning": return "❗"
 
         elif myIcon=="reject":
-            if Simplified==1 and settings[0][16]==0:             # статус 0
+            if io2.Simplified==1 and io2.settings[0][16]==0:             # статус 0
                 return "🔘"
             else:
                 return "🥶"
         elif myIcon=="interest":
-            if Simplified == 1 and settings[0][16] == 0:
+            if io2.Simplified == 1 and io2.settings[0][16] == 0:
                 return "🙂"                                      # статус 1
             else:
                 return "😍"
         elif myIcon=="green":
-            if Simplified==1 and settings[0][16]==0:             # статус 2
+            if io2.Simplified==1 and io2.settings[0][16]==0:             # статус 2
                 return "🟢"
             else:
                 return "🤢"
         elif myIcon=="purple":
-            if Simplified==1 and settings[0][16]==0:           # статус 3
+            if io2.Simplified==1 and io2.settings[0][16]==0:           # статус 3
                 return "🟣"
             else:
                 return "👾"
         elif myIcon=="brown":
-            if Simplified==1 and settings[0][16]==0:           # статус 4
+            if io2.Simplified==1 and io2.settings[0][16]==0:           # статус 4
                 return "🟤"
             else:
                 return "🤠"
         elif myIcon=="danger":
-            if Simplified==1 and settings[0][16]==0:           # статус 5
+            if io2.Simplified==1 and io2.settings[0][16]==0:           # статус 5
                 return "🔴"
             else:
                 return "😡"
         elif myIcon=="question":                            # статус ?
-            if Simplified == 1 and settings[0][16] == 0:
+            if io2.Simplified == 1 and io2.settings[0][16] == 0:
                 return "❔"
             else:
                 return "🙄"#
@@ -141,7 +139,7 @@ def icon(myIcon, forceText=False):
         elif myIcon=="appointment": return "☼"
         elif myIcon=="calendar": return "©"        
         elif myIcon=="preferences": return "▫"
-        elif myIcon=="plus": return "+"          
+        elif myIcon=="plus": return "\u2795"#"+"
         elif myIcon=="contact": return "Ω"
         elif myIcon=="case": return "□"
         elif myIcon=="sort": return "±"        
@@ -192,7 +190,7 @@ def icon(myIcon, forceText=False):
         elif myIcon=="calc": return "▪"
         elif myIcon=="import": return "▼"
         elif myIcon=="logreport": return "□"
-        elif myIcon=="lock": return ""
+        elif myIcon=="lock": return "◊"
         elif myIcon=="jwlibrary": return "◊"
         elif myIcon=="image": return "□"
         elif myIcon=="circle": return "●"

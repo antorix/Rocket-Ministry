@@ -2,21 +2,36 @@
 # -*- coding: utf-8 -*-
 Simplified=1
 
-import sys
-import os
-import time
-import datetime
-import json
-import urllib.request
-#from copy import deepcopy
+try: # определяем ОС
+    print("Загружаем графическую библиотеку")
+    from androidhelper import Android
+except:
+    try:
+        import global_state
+    except:
+        Mode = "text"
+        UserPath = ""
+        BackupFolderLocation = "./backup/"
+        print("Графическая библиотека не найдена, входим в консольный режим")
+    else:
+        Mode = "easygui"
+        UserPath = ""
+        BackupFolderLocation = "./backup/"
+else:
+    Mode = "sl4a"
+    phone = Android()
+    UserPath = phone.environment()[1]["download"][:phone.environment()[1]["download"].index("/Download")]\
+                      + "/qpython/projects3/RocketMinistry/" # check location of PM folder
+    BackupFolderLocation = UserPath + "backup/"
+    AndroidDownloadPath = Android().environment()[1]["download"] + "/"
 
 def initializeDB():
     """ Возвращает изначальное значение houses, settings, resources как при создании базы заново"""
-
+    import time
     return [],\
         [
-        [1, 0, 0, 0, "с", 0, 50, 1, 1, 0, 1, 1, 1, 0, "", 1, 0, "", 1, "д", 1, 0, 1], # program settings: settings[0][0…], see set.preferences()
-        "",  # не используется!         settings[1]
+        [1, 0, 0, 0, "с", 0, 50, 1, 1, 0, 1, 1, 1, 1, "", 1, 0, "", 1, "д", 1, 0, 1], # program settings: settings[0][0…], see set.preferences()
+        0,  # не используется!         settings[1]
         # report:                       settings[2]
         [0.0,       # [0] hours         settings[2][0…]
          0.0,       # [1] credit
@@ -38,52 +53,23 @@ def initializeDB():
         [
             [],     # notebook              resources[0]
             [],     # standalone contacts   resources[1]
-            []      # report log             resources[2]
+            []      # report log            resources[2]
     ]
 
 houses, settings, resources = initializeDB()
 DBCreatedTime = ""
 Version = "1.0.0"
 
-"""
-# Изменения новой версии:
-* Оптимизация производительности
-* Автоматическое обновление программы в фоновом режиме
-* Четыре типа участков: многоквартирный дом, деловая территория, частный сектор, список телефонных номеров
-* В отчете можно создать примечание
-* Функция определения статуса квартиры с помощью цифры в конце строки посещения (по умолчанию отключена)
-* Консольный режим без графики (по умолчанию отключен)
-* При удалении участка все интересующиеся копируются в отдельные контакты, чтобы они не пропали
-* Новый статус контактов (коричневый)
-* Сортировка квартир по номеру телефона 
-* Сортировка подъездов по номеру обратная (от последнего к первому)
-* Мелкие интерфейсные изменения
-"""
-
-try: # определяем ОС
-    print("Загружаем графическую библиотеку")
-    from androidhelper import Android
-except:
-    try:
-        import easygui_mod
-    except:
-        Mode = "text"
-        UserPath = ""
-        BackupFolderLocation = "./backup/"
-        print("Графическая библиотека не найдена, входим в консольный режим")
-    else:
-        Mode = "easygui"
-        UserPath = ""
-        BackupFolderLocation = "./backup/"
-else:
-    Mode = "sl4a"
-    phone = Android()
-    UserPath = phone.environment()[1]["download"][:phone.environment()[1]["download"].index("/Download")]\
-                      + "/qpython/projects3/RocketMinistry/" # check location of PM folder    
-    BackupFolderLocation = UserPath + "backup/"
-    AndroidDownloadPath = Android().environment()[1]["download"] + "/"
-
+import dialogs
+import sys
+import os
+import datetime
+import json
+import time
+import urllib.request
+from copy import deepcopy
 from house_op import addHouse
+
 
 LastTimeDidChecks = LastTimeBackedUp = int(time.strftime("%H", time.localtime())) * 3600 \
                 + int(time.strftime("%M", time.localtime())) * 60 \
@@ -128,107 +114,108 @@ def getDBCreatedTime(dataFile="data.jsn"):
     except:
         return "нет"
 
-def load(dataFile="data.jsn", download=False, clipboard=False, forced=False, delete=False):
+def loadOutput(buffer):
+    """ Загружает данные из буфера"""
+    try:
+        settings[0] = buffer[0][0]      # загружаем настройки
+        settings[1] = buffer[0][1]
+        settings[2] = buffer[0][2]
+        settings[3] = buffer[0][3]
+        settings[4] = buffer[0][4]
+
+        resources[0] = buffer[1][0]     # загружаем блокнот
+
+        resources[1] = []               # загружаем отдельные контакты
+        virHousesNumber = int(len(buffer[1][1]))
+        hr = []
+        for s in range(virHousesNumber):
+            hr.append(buffer[1][1][s])
+        houseRetrieve(resources[1], virHousesNumber, hr, silent=True)
+
+        resources[2] = buffer[1][2]     # загружаем журнал отчета
+
+        housesNumber = int(len(buffer)) - 2     # загружаем участки
+        h = []
+        for s in range(2, housesNumber + 2):
+            h.append(buffer[s])
+        houseRetrieve(houses, housesNumber, h, silent=True)
+    except:
+        success=False
+    else:
+        success=True
+
+    return success
+
+def load(dataFile="data.jsn", download=False, forced=False, delete=False):
     """ Loading houses and settings from JSON file """
 
     global houses, settings, resources
-
+    from dialogs import dialogAlert
     buffer=[]
+    temp = deepcopy(getOutput())  # создаем временную базу
 
     if Mode == "sl4a":
         if download == True: # загрузка файла из папки загрузок телефона
             if os.path.exists(AndroidDownloadPath + dataFile):
                 with open(AndroidDownloadPath + dataFile, "r") as file:
                     buffer = json.load(file)
-                if delete==True:
-                    os.remove(AndroidDownloadPath + dataFile) # файл удаляется, чтобы при последующем сохранении на телефоне у него не изменилось название
+            else:
+                dialogAlert(title="Загрузка базы данных",
+                            message="Файл базы данных data.jsn не найден в папке «Загрузки» либо поврежден!")
+                return
 
         elif os.path.exists(UserPath + dataFile): # обычная загрузка
             with open(UserPath + dataFile, "r") as file:
                 buffer = json.load(file)
 
-    else:
-        if clipboard == True: # вставляем базу данных из буфера обмена
-            try:
-                import win32clipboard
-                win32clipboard.OpenClipboard()
-                buffer = json.loads(win32clipboard.GetClipboardData())
-                win32clipboard.CloseClipboard()
-            except:
-                log("Ошибка импорта!")
-                return
-
-        else: # обычная загрузка, файла по умолчанию или через импорт
-            if forced==True and not os.path.exists(dataFile):
+    else: # обычная загрузка файла по умолчанию или через импорт
+        if forced==True:
+            if dataFile==None:
                 from dialogs import dialogFileOpen
-                choice = dialogFileOpen(default=settings[0][14])
-                if choice == None or choice==".":
+                dataFile = dialogFileOpen()
+                if dataFile==".":
                     return
-                else:
-                    settings[0][14] = choice.strip()
-                    dataFile = settings[0][14]
-            if forced==False and not os.path.exists(dataFile):
-                print("База не найдена, начинаем заново")
-            try:
-                with open(dataFile, "r") as file:
-                    buffer = json.load(file)
-                #if delete==True:
-                #    os.remove(dataFile) # файл удаляется, поскольку с телефона может не получиться перезаписать существующий файл
-            except:
-                if forced==True:
-                    from dialogs import dialogInfo
-                    dialogInfo(title="Загрузка базы данных",
-                               message="Файл базы данных не найден или поврежден! Проверьте путь файла и попробуйте еще раз."
-                    )
-                return
-
-    if len(buffer)==0:
-        if forced == True:
-            from dialogs import dialogInfo
-            dialogInfo(title="Загрузка данных", message="Файл не найден!")
-        else:
-            pass
-
-    elif len(buffer)>0: # буфер получен, читаем из него
-        if forced==True: # при импорте из интерфейса программы очищаем базу
-            clearDB()
-            #del buffer[0]
-        try:
-            if buffer[0] == "Rocket Ministry application data file. Format: JSON. Do NOT edit manually!":
-                del buffer[0]
-
-                settings[0] = buffer[0][0]      # загружаем настройки
-                settings[1] = buffer[0][1]
-                settings[2] = buffer[0][2]
-                settings[3] = buffer[0][3]
-                settings[4] = buffer[0][4]
-
-                resources[0] = buffer[1][0]     # загружаем блокнот
-
-                resources[1] = []               # загружаем отдельные контакты
-                virHousesNumber = int(len(buffer[1][1]))
-                hr = []
-                for s in range(virHousesNumber):
-                    hr.append(buffer[1][1][s])
-                houseRetrieve(resources[1], virHousesNumber, hr, silent=True)
-
-                resources[2] = buffer[1][2]     # загружаем журнал отчета
-
-                housesNumber = int(len(buffer)) - 2     # загружаем участки
-                h = []
-                for s in range(2, housesNumber + 2):
-                    h.append(buffer[s])
-                houseRetrieve(houses, housesNumber, h, silent=True)
-
             else:
-                5/0 # искусственно генерируем ошибку, чтобы перейти к except
+                print("Загружаем из настроек, кэп")
 
+        if forced==False and not os.path.exists(dataFile):
+            print("База не найдена, начинаем заново")
+        try:
+            with open(dataFile, "r") as file:
+                buffer = json.load(file)
         except:
-            log("Загрузка не удалась, проверьте файл")
-            return "fail" # не удалось загрузить данные, выходим и оставляем чистую базу
-        else:
-            if forced == True:
-                log("База успешно загружена")
+            if forced==True:
+                dialogAlert(title="Загрузка базы данных",
+                            message="Файл базы данных не найден в указанном месте либо поврежден!")
+                settings[0][14]=""
+            return
+
+    # буфер получен, читаем из него
+    if buffer[0] == "Rocket Ministry application data file. Format: JSON. Do NOT edit manually!":
+        del buffer[0]
+        clearDB()
+        if loadOutput(buffer)==False: # ошибочный импорт, восстанавливаем временную базу
+            dialogAlert(title="Загрузка базы данных",
+                        message="Файл базы данных поврежден!")
+            clearDB()
+            loadOutput(temp[1:])
+            settings[0][14] = ""
+        elif forced == True:
+            log("База успешно загружена")
+            save()
+            #if delete==True:
+            #    if Mode=="sl4a":
+            #        os.remove(AndroidDownloadPath + dataFile) # на телефоне файл удаляется, чтобы при последующем сохранении на телефоне у него не изменилось название
+            #    else:
+            #        os.remove(dataFile)  # файл на компьютере удаляется, поскольку с телефона может не получиться перезаписать существующий файл
+
+
+    else:
+        dialogAlert(title="Загрузка базы данных", message="Файл базы данных поврежден, создаю новый.")
+        clearDB()
+        loadOutput(temp[1:])
+    #save()
+
 
 def houseRetrieve(containers, housesNumber, h, silent=False):
     """ Retrieves houses from JSON buffer into objects """
@@ -265,24 +252,27 @@ def houseRetrieve(containers, housesNumber, h, silent=False):
                     containers[a].porches[b].flats[c].records[d].date = h[a][5][b][6][c][6][d][0]
                     containers[a].porches[b].flats[c].records[d].title= h[a][5][b][6][c][6][d][1]
 
-def save(forced=False, silent=True):
+def getOutput():
+    """ Возвращает строку со всеми данными программы, которые затем либо сохраняются локально, либо экспортируются"""
+    output = ["Rocket Ministry application data file. Format: JSON. Do NOT edit manually!"] + [settings] + \
+            [[resources[0], [resources[1][i].export() for i in range(len(resources[1]))], resources[2]]]
+    for i in range(len(houses)):
+        output.append(houses[i].export())
+    return output
+
+def save(forced=False, silent=True, forcedBackup=False):
     """ Saving database to JSON file """
 
     global LastTimeBackedUp
 
     # Выгружаем все данные в список
 
-    output = ["Rocket Ministry application data file. Format: JSON. Do NOT edit manually!"] + [settings] + \
-             [[resources[0], [resources[1][i].export() for i in range(len(resources[1]))], resources[2]]]
-    for i in range(len(houses)):
-        output.append(houses[i].export())
+    output = getOutput()
 
     # Сначала резервируем раз в 5 минут
 
-    curTime = int(time.strftime("%H", time.localtime())) * 3600 \
-              + int(time.strftime("%M", time.localtime())) * 60 \
-              + int(time.strftime("%S", time.localtime()))
-    if forced==True or (settings[0][6] > 0 and (curTime - LastTimeBackedUp) > 300):
+    curTime = getCurTime()
+    if forced==True or forcedBackup==True or (settings[0][6] > 0 and (curTime - LastTimeBackedUp) > 300):
         if not os.path.exists(BackupFolderLocation):
             try:
                 os.makedirs(BackupFolderLocation)
@@ -296,6 +286,9 @@ def save(forced=False, silent=True):
                 log("Создана резервная копия")
             LastTimeBackedUp = curTime
 
+    if forcedBackup==True:
+        return
+
     # Сохраняем
 
     try:
@@ -307,13 +300,10 @@ def save(forced=False, silent=True):
         if silent == False:
             log("База успешно сохранена")
 
-def share(outside=False):
+def share():
     """ Sharing database """
     
-    output = ["Rocket Ministry application data file. Format: JSON. Do NOT edit manually!"] + [settings] +\
-             [[resources[0], [ resources[1][i].export() for i in range(len(resources[1])) ] ]]
-    for i in range(len(houses)):
-        output.append(houses[i].export())
+    output = getOutput()
     
     buffer = json.dumps(output)    
     
@@ -323,10 +313,7 @@ def share(outside=False):
         except IOError:
             log("Не удалось отправить базу!")
         else:
-            if outside==False:
-                consoleReturn()
-            else:
-                log("Выгрузка базы данных")
+            consoleReturn()
     else:
         from webbrowser import open
         open("data.jsn")
@@ -334,10 +321,10 @@ def share(outside=False):
 def backupRestore(restore=False, delete=False, silent=False):
     """ Восстановление файла из резервной копии """
 
-    from dialogs import dialogInfo
+    from dialogs import dialogAlert
     if os.path.exists(BackupFolderLocation)==False:
         if silent == False:
-            dialogInfo(title="Восстановление", message="Папки резервных файлов не существует!")
+            dialogAlert(title="Восстановление", message="Папки резервных файлов не существует!")
         return
     files = [f for f in os.listdir(BackupFolderLocation) if os.path.isfile(os.path.join(BackupFolderLocation, f))]
     fileDates = []
@@ -372,11 +359,12 @@ def backupRestore(restore=False, delete=False, silent=False):
                 log("Не удалось восстановить данные!")
             else:
                 log("Данные успешно восстановлены из файла " + BackupFolderLocation + files[choice2])
+                save()
 
-    # Если выбран режим удаления лишних файлов
+    # Если выбран режим удаления лишних резервных файлов
 
     elif delete == True:
-        print("Обрабатываем папку резервных копий")
+        print("Обрабатываем резервные копии")
         limit = settings[0][6]
         if len(files) > limit:  # лимит превышен, удаляем
             extra = len(files) - limit
@@ -387,35 +375,57 @@ def update():
     """ Проверяем новую версию и при наличии обновляем программу с GitHub """
 
     print("Проверяем обновления")
-    for line in urllib.request.urlopen("https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/version"):
-        version = line.decode('utf-8')
-
-    curVersion = [int(Version[0]), int(Version[2]), int(Version[4])]
-    newVersion = [int(version[0]), int(version[2]), int(version[4])]
-    if newVersion > curVersion:
-        print("Найдена новая версия!")
-        """
-        urls = ["https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/console.py",
-                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/contacts.py",
-                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/dialogs.py",
-                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/homepage.py",
-                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_cl.py",
-                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_op.py",
-                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/icons.py",
-                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/io2.py",
-                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/main.py",
-                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/notebook.py",
-                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/reports.py",
-                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/set.py",
-                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/territory.py"
-                ]
-        if Mode=="easy_gui":
-            urls.append("https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/easy_gui.py")    
-        for url in urls:
-            urllib.request.urlretrieve(url, UserPath + url[url.index("master/") + 7:])
-        """
+    try:
+        for line in urllib.request.urlopen("https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/version"):
+            newVersion = line.decode('utf-8')
+    except:
+        print("Не удалось подключиться к серверу")
+        return
+    if newVersion > Version:
+        choice = dialogs.dialogConfirm("Обновление", "Найдена новая версия. Установить?")
+        if choice==True:
+            try:
+                urls = ["https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/console.py",
+                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/contacts.py",
+                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/dialogs.py",
+                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/homepage.py",
+                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_cl.py",
+                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_op.py",
+                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/icons.py",
+                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/io2.py",
+                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/main.py",
+                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/notebook.py",
+                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/reports.py",
+                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/set.py",
+                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/territory.py"
+                        ]
+                if Mode=="easy_gui":
+                    urls += [   "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/global_state.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/choice_box.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/button_box.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/fileboxsetup.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/fileopen_box.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/fillable_box.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/text_box.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/utils.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/Rocket Ministry.vbs",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/main.pyw",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/icon.ico",
+                    ]
+                for url in urls:
+                    urllib.request.urlretrieve(url, UserPath + url[url.index("master/") + 7:])
+            except:
+                dialogs.dialogAlert("Не удалось загрузить обновление")
+            else:
+                dialogs.dialogAlert("Обновление", "Необходим перезапуск программы.")
+                return True
 
 def consoleReturn():
     os.system("clear")
     input("\nНажмите Enter для возврата")
     os.system("clear")
+
+def getCurTime():
+    return int(time.strftime("%H", time.localtime())) * 3600 \
+              + int(time.strftime("%M", time.localtime())) * 60 \
+              + int(time.strftime("%S", time.localtime()))

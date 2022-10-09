@@ -207,8 +207,11 @@ def showContacts():
                 myicon = icon("office")
             elif contacts[i][15] == "private":
                 myicon = icon("cottage")
+            elif contacts[i][15] == "phone":
+                myicon = icon("phone2")
             else:
                 myicon=icon("star")
+
             if contacts[i][8]=="virtual" or contacts[i][15]=="office":
                 hyphen=""
             else:
@@ -232,9 +235,9 @@ def showContacts():
 
         if len(options) == 0:
             options.append(
-                "Здесь будут отображаться жильцы всех участков, кроме отказавшихся. Также можно создавать контакты вручную")
+                "Здесь будут отображаться жильцы со всех участков и отдельные контакты, созданные вами")
 
-        if settings[0][1] == True or io2.Mode != "sl4a":
+        if settings[0][1] == True or io2.Mode == "text":
             options.append(icon("plus") + " Новый контакт")  # positive button
             options.append(icon("sort") + " Сортировка") # neutral button
 
@@ -246,9 +249,7 @@ def showContacts():
                 title = icon("contacts") + " Контакты " + reports.getTimerIcon(settings[2][6]),
                 message = "Выберите контакт:",
                 options = options,
-                positiveButton=True,
                 positive=icon("plus"),
-                neutralButton = True,
                 neutral = icon("sort") + " Сорт."
             )
         if choice==None:
