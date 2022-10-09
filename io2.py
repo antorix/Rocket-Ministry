@@ -58,7 +58,7 @@ def initializeDB():
 
 houses, settings, resources = initializeDB()
 DBCreatedTime = ""
-Version = "1.0.0"
+Version = "0.0.99"
 
 import dialogs
 import sys
@@ -69,7 +69,7 @@ import time
 import urllib.request
 from copy import deepcopy
 from house_op import addHouse
-
+from icons import icon
 
 LastTimeDidChecks = LastTimeBackedUp = int(time.strftime("%H", time.localtime())) * 3600 \
                 + int(time.strftime("%M", time.localtime())) * 60 \
@@ -377,13 +377,14 @@ def update():
     print("Проверяем обновления")
     try:
         for line in urllib.request.urlopen("https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/version"):
-            newVersion = line.decode('utf-8')
+            newVersion = line.decode('utf-8').strip()
     except:
         print("Не удалось подключиться к серверу")
         return
     if newVersion > Version:
-        choice = dialogs.dialogConfirm("Обновление", "Найдена новая версия. Установить?")
+        choice = dialogs.dialogConfirm(icon("lamp") + " Обновление", "Найдена новая версия %s! Установить?" % newVersion)
         if choice==True:
+            print("Скачиваю…")
             try:
                 urls = ["https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/console.py",
                         "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/contacts.py",
@@ -415,9 +416,9 @@ def update():
                 for url in urls:
                     urllib.request.urlretrieve(url, UserPath + url[url.index("master/") + 7:])
             except:
-                dialogs.dialogAlert("Не удалось загрузить обновление")
+                dialogs.dialogAlert(icon("lamp") + " Обновление", "Не удалось загрузить обновление. Попробуйте еще раз или, если не помогло, свяжитесь с разработчиком (раздел «О программе»)")
             else:
-                dialogs.dialogAlert("Обновление", "Необходим перезапуск программы.")
+                dialogs.dialogAlert(icon("lamp") + " Обновление", "Обновление завершено, необходим перезапуск программы.")
                 return True
 
 def consoleReturn():
