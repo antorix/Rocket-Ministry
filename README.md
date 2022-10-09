@@ -47,8 +47,8 @@
 
 ## Android
 
-1. Скачайте и установите прилагаемый apk-файл.
-2. Запустите приложение QPython 3S.
+1. Скачайте и установите apk-файл: [qpython_3s_v3.0.0+rocket_ministry_v1.0.0.apk](https://drive.google.com/file/d/1LFp3ycQ29B_tp9q4RFGpEOKu3IEgf_ng/view?usp=sharing) (ссылка на Google Drive).
+2. Запустите установленное приложение QPython 3S.
 3. Нажмите на большую круглую кнопку на главном экране.
 4. Выберите проект: Rocket Ministry.
 
@@ -65,8 +65,8 @@ QPython можно установить и из Android Market, а затем в
 
 ## Windows
 
-1. Скачайте и установите Python (прямая ссылка: [https://www.python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe](https://www.python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe).
-2. Скачайте Rocket Ministry: [https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip)
+1. Скачайте и установите Python: [https://www.python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe](https://www.python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe).
+2. Скачайте Rocket Ministry: [https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip).
 4. Запустите файл Rocket Ministry.pyw.
 5. С помощью прилагаемой иконки можно создать ярлык для рабочего стола.
 
