@@ -83,7 +83,8 @@ def homepage():
         if len(datedFlats)>0:
             appointment = icon("appointment")
 
-        dailyRoutine()
+        if dailyRoutine() == True:
+            break
 
         if reports.updateTimer(settings[2][6]) >= 0: # проверка, включен ли таймер
             time2 = reports.updateTimer(settings[2][6])
