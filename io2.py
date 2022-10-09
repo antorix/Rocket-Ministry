@@ -58,7 +58,7 @@ def initializeDB():
 
 houses, settings, resources = initializeDB()
 DBCreatedTime = ""
-Version = "0.0.99"
+Version = "1.0.0"
 
 import dialogs
 import sys
@@ -191,7 +191,9 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
             return
 
     # буфер получен, читаем из него
-    if buffer[0] == "Rocket Ministry application data file. Format: JSON. Do NOT edit manually!":
+    if len(buffer)==0:
+        print("База данных не найдена, создаю новую.")
+    elif buffer[0] == "Rocket Ministry application data file. Format: JSON. Do NOT edit manually!":
         del buffer[0]
         clearDB()
         if loadOutput(buffer)==False: # ошибочный импорт, восстанавливаем временную базу
@@ -203,9 +205,9 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
         elif forced == True:
             log("База успешно загружена")
             save()
-            #if delete==True:
-            #    if Mode=="sl4a":
-            #        os.remove(AndroidDownloadPath + dataFile) # на телефоне файл удаляется, чтобы при последующем сохранении на телефоне у него не изменилось название
+            if delete==True:
+                if Mode=="sl4a":
+                    os.remove(AndroidDownloadPath + dataFile) # на телефоне файл удаляется, чтобы при последующем сохранении на телефоне у него не изменилось название
             #    else:
             #        os.remove(dataFile)  # файл на компьютере удаляется, поскольку с телефона может не получиться перезаписать существующий файл
 
@@ -418,7 +420,7 @@ def update():
             except:
                 dialogs.dialogAlert(icon("lamp") + " Обновление", "Не удалось загрузить обновление. Попробуйте еще раз или, если не помогло, свяжитесь с разработчиком (раздел «О программе»)")
             else:
-                dialogs.dialogAlert(icon("lamp") + " Обновление", "Обновление завершено, необходим перезапуск программы.")
+                print("Обновление завершено, необходим перезапуск программы. Нажмите Enter, чтобы закрыть консоль.")
                 return True
 
 def consoleReturn():
