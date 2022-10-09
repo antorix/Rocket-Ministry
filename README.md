@@ -45,7 +45,7 @@
 
 ## Android
 
-1. Скачайте и установите apk-файл: [qpython_3s_v3.0.0+rocket_ministry_v1.0.0.apk](https://drive.google.com/file/d/1LFp3ycQ29B_tp9q4RFGpEOKu3IEgf_ng/view?usp=sharing) (ссылка на Google Drive).
+1. Скачайте и установите apk-файл: **[qpython_3s_v3.0.0+rocket_ministry_v1.0.0.apk](https://drive.google.com/file/d/1LFp3ycQ29B_tp9q4RFGpEOKu3IEgf_ng/view?usp=sharing)** (ссылка на Google Drive).
 2. Запустите установленное приложение QPython 3S.
 3. Нажмите на большую круглую кнопку на главном экране.
 4. Выберите проект: Rocket Ministry.
