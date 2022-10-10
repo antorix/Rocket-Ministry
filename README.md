@@ -4,7 +4,7 @@
 
 * [Возможности](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#возможности)
 * [Установка и настройки](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#установка-и-настройки)
-* [Некоторые понятия программы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#некоторые-понятия-программы)
+* [Некоторые принципы работы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#некоторые-принципы-работы)
 * [Синхронизация данных](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#синхронизация-данных)
 * [Консольный режим](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#консольный-режим)
 * [Часто задаваемые вопросы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#часто-задаваемые-вопросы)
@@ -72,7 +72,7 @@
 ## Linux
 
 1. Скачайте архив с Rocket Ministry: [https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip).
-2. Установите Python IDLE средствами ОС либо скачайте с [python.org](http://python.org). В Ubuntu/Debian можно ввести:
+2. Установите Python 3 средствами ОС. В Ubuntu/Debian можно ввести:
 
 `sudo apt-get install idle3`
 `idle3`
@@ -83,9 +83,7 @@
 
 3. В IDLE откройте файл *main.py* и нажмите F5 либо запустите *main.py* из консоли.
 
-Уверен, что настоящий линуксоид и без меня знает способы запуска Python-скриптов :)
-
-# Некоторые понятия программы
+# Некоторые принципы работы
 
 Многое в программе самоочевидно из интерфейса и (или) снабжено подсказками. Здесь я собрал некоторые моменты, которые очевидны чуть менее. Если вы хотите использовать потенциал программы по максимуму, настоятельно рекомендую ознакомиться с этим разделом.
 
