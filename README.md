@@ -1,5 +1,6 @@
-*Документация по программе Rocket Ministry.
-Если есть вопрос, пожалуйста, сначала прочитайте раздел [часто задаваемых вопросов](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#часто-задаваемые-вопросы). Если там нет ответа, пишите мне.*
+*Документация по программе Rocket Ministry
+
+Если есть вопрос, пожалуйста, сначала прочитайте раздел [часто задаваемых вопросов](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#часто-задаваемые-вопросы)*
 
 * [Возможности](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#возможности)
 * [Установка и настройки](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#установка-и-настройки)
