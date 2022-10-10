@@ -64,7 +64,8 @@
 1. Скачайте архив с Rocket Ministry: [https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip).
 1. Скачайте и установите Python: [https://www.python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe](https://www.python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe).
 4. Запустите файл Rocket Ministry.pyw.
-5. С помощью прилагаемой иконки можно создать ярлык для рабочего стола.
+
+С помощью прилагаемой иконки можно создать ярлык для рабочего стола. Рекомендую установить шрифт Liberation Mono, если не установлен (идет в комплекте с приложением). С ним программа будет выглядеть наиболее красиво.
 
 ## Linux
 
