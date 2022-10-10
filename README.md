@@ -65,14 +65,14 @@
 
 1. Скачайте архив с Rocket Ministry: [https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip).
 1. Скачайте и установите Python: [https://www.python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe](https://www.python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe).
-4. Запустите файл Rocket Ministry.pyw.
+4. Запустите файл *Rocket Ministry.pyw*.
 
-С помощью прилагаемой иконки можно создать ярлык для рабочего стола. Также рекомендую установить шрифт Liberation Mono, если не установлен (идет в комплекте с приложением). С ним настольная версия программы будет выглядеть наиболее красиво.
+С помощью прилагаемой иконки можно создать ярлык для рабочего стола. Также рекомендую установить шрифт Liberation Mono, если не установлен (идет в комплекте с приложением). С ним настольная версия выглядит наиболее красиво.
 
 ## Linux
 
 1. Скачайте архив с Rocket Ministry: [https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip).
-2. Установите Python IDLE. В Ubuntu/Debian введите:
+2. Установите Python IDLE средствами ОС либо скачайте с [python.org](http://python.org). В Ubuntu/Debian можно ввести:
 
 `sudo apt-get install idle3`
 `idle3`
@@ -81,7 +81,9 @@
 
 `su yum install python-tools`
 
-3. В IDLE откройте файл main.py и нажмите F5.
+3. В IDLE откройте файл *main.py* и нажмите F5 либо запустите *main.py* из консоли.
+
+Уверен, что настоящий линуксоид и без меня знает способы запуска Python-скриптов :)
 
 # Некоторые понятия программы
 
