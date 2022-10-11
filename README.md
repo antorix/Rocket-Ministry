@@ -63,15 +63,15 @@
 
 ## Windows
 
-1. Скачайте архив с Rocket Ministry: [https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip).
-1. Скачайте и установите Python: [https://www.python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe](https://www.python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe).
-4. Запустите файл *Rocket Ministry.pyw*.
+1. Скачайте и установите Python: [python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe](https://www.python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe).
+2. Скачайте и распакуйте архив с Rocket Ministry: [github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip).
+3. Запустите файл *Rocket Ministry.pyw*.
 
 С помощью прилагаемой иконки можно создать ярлык для рабочего стола. Также рекомендую установить шрифт Liberation Mono, если не установлен (идет в комплекте с приложением). С ним настольная версия выглядит наиболее красиво.
 
 ## Linux
 
-1. Скачайте архив с Rocket Ministry: [https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip).
+1. Скачайте архив с Rocket Ministry: [github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip).
 2. Установите Python 3 средствами ОС. В Ubuntu/Debian можно ввести:
 
 `sudo apt-get install idle3`
