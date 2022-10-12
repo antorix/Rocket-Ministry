@@ -236,8 +236,8 @@ class Report():
                 options.append(icon("credit") + " Кредит: %s" % timeFloatToHHMM(self.credit))
             options.append(icon("returns")  + " Повторные: %d" % self.returns)
             options.append(icon("studies")  + " Изучения: %d" % self.studies)
+            options.append(icon("pin") + " Примечание: %s" % self.note)
             options.append(icon("logreport")+ " Журнал")
-            options.insert(7, icon("pin")      + " Примечание: %s" % self.note)
 
             if io2.Mode == "text":
                 options.append(icon("prevmonth") + " " + monthName()[2]) # neutral button on Android
