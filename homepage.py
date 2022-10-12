@@ -339,6 +339,7 @@ def preferences():
         options.append(status(settings[0][13]) + "Пункт «нет дома» в первом посещении")
         options.append(status(settings[0][10]) + "Умная строка в первом посещении")
         options.append(status(settings[0][7]) + "Автоматически записывать повторные посещения")
+        options.append("%s Норма часов в месяц: %d" % (icon("box"), settings[0][3]))
         options.append(status(settings[0][2])  + "Кредит часов")
         options.append(status(settings[0][11]) + "Уведомления о встречах на сегодня")
         options.append(status(settings[0][8])  + "Напоминать о сдаче отчета")
@@ -346,7 +347,6 @@ def preferences():
         options.append(status(settings[0][20]) + "Предлагать разбивку по этажам в многоквартирных домах")
         if io2.Mode == "sl4a":
             options.append(status(settings[0][0])+"Бесшумный режим при включенном таймере")
-        options.append(                       "%s Норма часов в месяц: %d" % (icon("box"), settings[0][3]))
         options.append(status(settings[0][21]) + "Статус обработки подъездов")
         options.append(status(settings[0][9]) + "Последний символ посещения влияет на статус контакта")
         options.append(                       "%s Резервных копий: %d" % (icon("box"), settings[0][6]))
