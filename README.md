@@ -1,5 +1,7 @@
 ![](https://lh3.googleusercontent.com/pw/AL9nZEXlB3eMqZ0noxCFohoMGkvuEiFUokEg6VDFXtLrQlmjaVKHyHb7BISJc3aOJhFcDH_C0TDi8v-s3XXSUf1u8K8AkfBN88avmuOYHvMflpY514mPe_RxjdSkLqbaqis2F3hy421ikI6PIPTgqBtAwAz0Pw=w641-h646-no?authuser=0)
 
+# Возможности программы
+
 * [Возможности программы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#возможности-программы)
 * [Установка и настройки](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#установка-и-настройки)
 * [Некоторые принципы работы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#некоторые-принципы-работы)
@@ -8,8 +10,6 @@
 * [Часто задаваемые вопросы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#часто-задаваемые-вопросы)
 * [Обратная связь](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#обратная-связь)
 * [Лицензия](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#лицензия)
-
-# Возможности программы
 
 * Автоматическая простановка даты и времени посещений, автоматический учет повторных посещений, публикаций, видео и времени служения.
 * Быстрый ввод «отказа» и «нет дома» двумя кликами.
