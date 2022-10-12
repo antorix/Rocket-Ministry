@@ -338,8 +338,8 @@ def preferences():
 
         options.append(status(settings[0][13]) + "Пункт «нет дома» в первом посещении")
         options.append(status(settings[0][10]) + "Умная строка в первом посещении")
-        options.append(status(settings[0][7]) + "Автоматически записывать повторные посещения")
-        options.append("%s Норма часов в месяц: %d" % (icon("box"), settings[0][3]))
+        options.append(status(settings[0][7]) +  "Автоматически записывать повторные посещения")
+        options.append(                       "%s Норма часов в месяц: %d" % (icon("box"), settings[0][3]))
         options.append(status(settings[0][2])  + "Кредит часов")
         options.append(status(settings[0][11]) + "Уведомления о встречах на сегодня")
         options.append(status(settings[0][8])  + "Напоминать о сдаче отчета")
@@ -348,7 +348,7 @@ def preferences():
         if io2.Mode == "sl4a":
             options.append(status(settings[0][0])+"Бесшумный режим при включенном таймере")
         options.append(status(settings[0][21]) + "Статус обработки подъездов")
-        options.append(status(settings[0][9]) + "Последний символ посещения влияет на статус контакта")
+        options.append(status(settings[0][9]) +  "Последний символ посещения влияет на статус контакта")
         options.append(                       "%s Резервных копий: %d" % (icon("box"), settings[0][6]))
         if io2.Simplified==0 and io2.Mode!="sl4a":
             options.append(                   "%s Файл импорта базы данных: %s" % (icon("box"), importURL))
@@ -840,11 +840,11 @@ def about():
     if choice=="neutral" or choice=="Помощь":
         if io2.Mode=="sl4a":
             from androidhelper import Android
-            Android().view("https://github.com/antorix/Rocket-Ministry#readme")
+            Android().view("https://github.com/antorix/Rocket-Ministry/blob/master/README.md#часто-задаваемые-вопросы")
             io2.consoleReturn()
         else:
             from webbrowser import open
-            open("https://github.com/antorix/Rocket-Ministry#readme")
+            open("https://github.com/antorix/Rocket-Ministry/blob/master/README.md#часто-задаваемые-вопросы")
 
 def menuProcess(choice):
     """ Обрабатывает ввод, если он получен из меню (только в easygui)"""
