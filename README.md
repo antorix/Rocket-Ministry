@@ -1,3 +1,5 @@
+Нужна помощь? Сначала посмотрите раздел [вопросов и ответов](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#часто-задаваемые-вопросы). Решение вашей проблемы находится там с вероятностью 99% 😊
+
 ![](https://lh3.googleusercontent.com/pw/AL9nZEXlB3eMqZ0noxCFohoMGkvuEiFUokEg6VDFXtLrQlmjaVKHyHb7BISJc3aOJhFcDH_C0TDi8v-s3XXSUf1u8K8AkfBN88avmuOYHvMflpY514mPe_RxjdSkLqbaqis2F3hy421ikI6PIPTgqBtAwAz0Pw=w641-h646-no?authuser=0)
 
 **Возможности программы Rocket Ministry:**
