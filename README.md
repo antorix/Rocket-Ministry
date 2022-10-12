@@ -1,19 +1,6 @@
-*Документация по программе Rocket Ministry*
-
-> Если есть вопрос или проблема, пожалуйста, сначала прочитайте раздел [часто задаваемых вопросов](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#часто-задаваемые-вопросы). Если там нет ответа, [пишите мне](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#обратная-связь).
-
-* [Возможности](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#возможности)
-* [Установка и настройки](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#установка-и-настройки)
-* [Некоторые принципы работы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#некоторые-принципы-работы)
-* [Синхронизация данных](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#синхронизация-данных)
-* [Консольный режим](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#консольный-режим)
-* [Часто задаваемые вопросы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#часто-задаваемые-вопросы)
-* [Обратная связь](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#обратная-связь)
-* [Лицензия](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#лицензия)
-
 ![](https://lh3.googleusercontent.com/pw/AL9nZEXlB3eMqZ0noxCFohoMGkvuEiFUokEg6VDFXtLrQlmjaVKHyHb7BISJc3aOJhFcDH_C0TDi8v-s3XXSUf1u8K8AkfBN88avmuOYHvMflpY514mPe_RxjdSkLqbaqis2F3hy421ikI6PIPTgqBtAwAz0Pw=w641-h646-no?authuser=0)
 
-# Возможности
+**Возможности программы Rocket Ministry:**
 
 * Автоматическая простановка даты и времени посещений, автоматический учет повторных посещений, публикаций, видео и времени служения.
 * Быстрый ввод «отказа» и «нет дома» двумя кликами.
@@ -33,7 +20,7 @@
 * Опционально: функция «умная строка», позволяющая в одной-единственной строке ввести имя жильца и текст посещения, проставить статус квартиры, внести изменения в отчет либо сделать заметку к квартире. 
 * Для пионеров: подсчет запаса или отставания от месячной нормы на текущий день; аналитика служебного года с часами за год, годовым запасом/отставанием, подсчетом оставшегося числа часов и среднего числа часов в месяц.
 * Умный блокнот, в который можно отправлять заметки, связанные с квартирой/контактом и временем создания записи.
-* Режим домофона: ставим галочки на квартиры, в которые позвонили.
+* Режим домофона: все квартиры в едином списке и отметкой, в какую позвонили последней.
 * Вызов из приложения навигационной программы с прокладкой маршрута до участка или адреса человека.
 * Сохранение в журнале каждого обновления отчета с меткой даты и времени.
 * Все пользовательские данные хранятся в одном текстовом файле, который легко сохранять, пересылать, резервировать.
@@ -43,6 +30,18 @@
 * Синхронизация данных между устройствами через облачный сервис.
 * Поддержка Android, Windows и Linux (скорее всего, также Mac).
 * Версия для консольного режима, в котором программа способна работать на любой платформе.
+
+---
+
+**Если есть вопрос или проблема, пожалуйста, сначала прочитайте раздел [часто задаваемых вопросов](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#часто-задаваемые-вопросы). Если там нет ответа, [пишите мне](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#обратная-связь).**
+
+* [Установка и настройки](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#установка-и-настройки)
+* [Некоторые принципы работы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#некоторые-принципы-работы)
+* [Синхронизация данных](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#синхронизация-данных)
+* [Консольный режим](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#консольный-режим)
+* [Часто задаваемые вопросы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#часто-задаваемые-вопросы)
+* [Обратная связь](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#обратная-связь)
+* [Лицензия](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#лицензия)
 
 # Установка и настройки
 
