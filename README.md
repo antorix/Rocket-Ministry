@@ -7,6 +7,10 @@
 * [Обратная связь](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#обратная-связь)
 * [Лицензия](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#лицензия)
 
+>
+> **Канал проекта в Telegram: [t.me/rocketministry](https://t.me/rocketministry)**
+>
+
 ![](https://lh3.googleusercontent.com/pw/AL9nZEXlB3eMqZ0noxCFohoMGkvuEiFUokEg6VDFXtLrQlmjaVKHyHb7BISJc3aOJhFcDH_C0TDi8v-s3XXSUf1u8K8AkfBN88avmuOYHvMflpY514mPe_RxjdSkLqbaqis2F3hy421ikI6PIPTgqBtAwAz0Pw=w641-h646-no?authuser=0)
 
 # Возможности программы
