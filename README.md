@@ -33,8 +33,6 @@
 
 ---
 
-**Если есть вопрос или проблема, пожалуйста, сначала прочитайте раздел [часто задаваемых вопросов](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#часто-задаваемые-вопросы). Если там нет ответа, [пишите мне](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#обратная-связь).**
-
 * [Установка и настройки](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#установка-и-настройки)
 * [Некоторые принципы работы](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#некоторые-принципы-работы)
 * [Синхронизация данных](https://github.com/antorix/Rocket-Ministry/blob/master/README.md#синхронизация-данных)
