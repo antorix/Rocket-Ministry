@@ -93,7 +93,7 @@ def process(input):
         success=True
     
     if "file" in input[:4] or "{}" in input[:2]:
-        homepage.tools()
+        homepage.file()
         success = True
 
     if "import" in input[:6]:

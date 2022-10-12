@@ -22,7 +22,7 @@ elif io2.Mode=="easygui":
     from choice_box import choicebox, multchoicebox
     from text_box import textbox, enterbox, passwordbox
     from fileopen_box import fileopenbox
-    from button_box import msgbox, buttonbox
+    from button_box import msgbox
 
 def dialogText(title="",
                message="",
@@ -66,8 +66,6 @@ def dialogText(title="",
             phone.dialogCreateInput(title, message, default)
             if positive!=None:
                 phone.dialogSetPositiveButtonText(positive)
-            if neutral != None:
-                phone.dialogSetNeutralButtonText(neutral)
             if negative != None:
                 phone.dialogSetNegativeButtonText(negative)
             if autoplus==True:
@@ -76,7 +74,7 @@ def dialogText(title="",
                 phone.dialogSetNeutralButtonText(neutral)
             phone.dialogShow()
             resp = phone.dialogGetResponse()[1]
-            phone.dialogDismiss()
+            #phone.dialogDismiss()
             default=""
             if "canceled" in resp and resp["value"]=="":
                 return None
@@ -147,7 +145,7 @@ def dialogList(
             phone.dialogSetNegativeButtonText(negative)
         phone.dialogShow()
         resp = phone.dialogGetResponse()[1]
-        phone.dialogDismiss()
+        #phone.dialogDismiss()
         if "canceled" in resp:
             return None
         elif "item" in resp:
@@ -226,11 +224,12 @@ def dialogList(
                 positive=positive,
                 neutral=neutral,
                 negative=negative
-            )     # Результаты вывода choicebox (должны всегда соответствовать
-
+            )
             if choice==None:
                 return None
-            elif choice=="positive" or choice=="neutral":
+            elif choice=="positive" or choice=="neutral" or choice=="settings"\
+                    or choice=="report" or choice=="file" or choice=="notebook"\
+                    or choice=="exit":
                 return choice
             else:
                 for i in range(len(options)):
@@ -288,25 +287,25 @@ def dialogRadio(
         options=[],
         selected=0,
         message="",
-        positiveButton=True,
-        #negativeButton=True,
-        positive="OK"):
-        #negative="Отмена"):
+        positive="OK",
+        negative="Отмена"):
     """ Radio buttons """
 
     if io2.Mode=="sl4a" and io2.settings[0][1]==False:
         phone.dialogCreateAlert(title, message)
         phone.dialogSetSingleChoiceItems(options, selected)
-        if positiveButton== True:
+        if positive!=None:
             phone.dialogSetPositiveButtonText(positive)
-        #if negativeButton == True:
-        #    phone.dialogSetNegativeButtonText(negative)
+        if negative!=None:
+            phone.dialogSetNegativeButtonText(negative)
         phone.dialogShow()
-        phone.dialogGetResponse()
-        resp = phone.dialogGetSelectedItems()[1]
-        phone.dialogDismiss()
-        if resp!=None:
-            return options[resp[0]].strip()
+        resp = phone.dialogGetResponse()[1]
+        resp2 = phone.dialogGetSelectedItems()[1]
+        #phone.dialogDismiss()
+        if "canceled" in resp:
+            return None
+        elif "positive" in resp["which"]:
+            return options[resp2[0]].strip()
         else:
             return None
     else:
@@ -341,7 +340,7 @@ def dialogConfirm(title="", message="", neutralButton=False, choices=["Да", "�
             phone.dialogSetNegativeButtonText(choices[1])
         phone.dialogShow()
         response=phone.dialogGetResponse().result
-        phone.dialogDismiss()
+        #phone.dialogDismiss()
         if "which" in response:
             if response["which"]=="positive":
                 return True
@@ -386,7 +385,7 @@ def dialogAlert(title="Внимание!", message="", neutralButton=False, neut
         phone.dialogSetNegativeButtonText(no)
         phone.dialogShow()
         response = phone.dialogGetResponse().result
-        phone.dialogDismiss()
+        #phone.dialogDismiss()
         if "which" in response:
             if response["which"]=="negative":
                 return False
@@ -421,7 +420,7 @@ def dialogInfo(title="", message="",
             phone.dialogSetNegativeButtonText(negative)
         phone.dialogShow()
         resp = phone.dialogGetResponse()[1]
-        phone.dialogDismiss()
+        #phone.dialogDismiss()
         if "canceled" in resp:
             return None
         elif "positive" in resp["which"]:
@@ -459,7 +458,7 @@ def dialogFileOpen(message="", title="Выбор файла", default="", filety
             phone.dialogSetNegativeButtonText("Отмена")
             phone.dialogShow()
             resp = phone.dialogGetResponse()[1]
-            phone.dialogDismiss()
+            #phone.dialogDismiss()
             if "canceled" in resp and resp["value"] == "":
                 return None
             elif "canceled" in resp and resp["value"] != "":
@@ -510,7 +509,7 @@ def dialogPickDate(
         phone.dialogSetNegativeButtonText("Отмена")
         phone.dialogShow()
         response = phone.dialogGetResponse()[1]
-        phone.dialogDismiss()
+        #phone.dialogDismiss()
         os.system("clear")
         if "positive" in response["which"]:
             return "%s-%02d-%02d" % (str(response["year"]), response["month"], response["day"])
@@ -594,7 +593,7 @@ def dialogGetPassword(title="Пароль", message="Введите пароль
         phone.dialogSetNegativeButtonText(cancel)
         phone.dialogShow()
         resp = phone.dialogGetPassword()[1]
-        phone.dialogDismiss()
+        #phone.dialogDismiss()
 
         return resp
         """

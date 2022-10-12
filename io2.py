@@ -58,7 +58,14 @@ def initializeDB():
 
 houses, settings, resources = initializeDB()
 DBCreatedTime = ""
-Version = "1.0.0"
+Version = "1.0.1"
+
+"""
+* Исправлен баг, из-за которого при копировании квартиры в контакт не сохранялся телефон и дата встречи.
+* Изменен режим домофона, теперь в нем можно входить в квартиру.
+* Более корректно работает выбор статуса квартиры.
+* Мелкие текстовые правки. 
+"""
 
 import dialogs
 import sys
@@ -93,13 +100,25 @@ def clearDB():
     settings[:] = initializeDB()[1][:]
     resources[:] = initializeDB()[2][:]
 
-def removeFiles():
+def removeFiles(totalDestruction=False):
     """ Удаление базы данных и резервной папки"""
-    if os.path.exists(UserPath + "data.jsn"):
-        os.remove(UserPath + "data.jsn")
-    if os.path.exists(UserPath + 'backup'):
-        from shutil import rmtree
-        rmtree(UserPath + 'backup')
+    from shutil import rmtree
+    if totalDestruction==True: # полное удаление с выходом из программы
+        try:
+            if Mode=="sl4a":
+                rmtree( (UserPath[0: UserPath.index("projects3")]) + "scripts3" )
+                rmtree( (UserPath[0: UserPath.index("projects3")]) + "projects3" )
+            else:
+                rmtree(".")
+        except:
+            pass
+        return True
+    else: # удаление только базы данных и резервной папки без выхода из программы
+        if os.path.exists(UserPath + "data.jsn"):
+            os.remove(UserPath + "data.jsn")
+        if os.path.exists(UserPath + 'backup'):
+            from shutil import rmtree
+            rmtree(UserPath + 'backup')
 
 def getDBCreatedTime(dataFile="data.jsn"):
     """ Выдает время последнего изменения базы данных, но не в упрощенном режиме """

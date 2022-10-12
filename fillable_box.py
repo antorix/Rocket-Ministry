@@ -51,7 +51,7 @@ def __fillablebox(msg, title="", default="", mask=None, image=None, root=None, n
 
     boxRoot.protocol('WM_DELETE_WINDOW', __enterboxQuit)
     boxRoot.title(title)
-    from os import name
+    #from os import name
     #if name == "nt":
     #    boxRoot.iconbitmap('icon.ico')
     boxRoot.geometry(global_state.window_position)

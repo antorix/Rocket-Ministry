@@ -13,6 +13,7 @@ import time
 import string
 import set
 from icons import icon
+import homepage
 
 def checkDate(flat):
     """ Returns appointment dates in two types """
@@ -252,9 +253,10 @@ def showContacts():
                 positive=icon("plus"),
                 neutral = icon("sort") + " Сорт."
             )
-        if choice==None:
+        if homepage.menuProcess(choice)==True:
+            continue
+        elif choice==None:
             break
-
         elif choice == "neutral":  # sorting
             options = [
                 "По дате назначенной встречи",

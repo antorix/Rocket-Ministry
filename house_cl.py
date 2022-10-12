@@ -8,6 +8,7 @@ import set
 import reports
 import house_op
 from icons import icon
+import homepage
 
 class House():
     
@@ -17,8 +18,8 @@ class House():
         self.date = time.strftime("%Y-%m-%d", time.localtime())
         self.note = ""
         self.type = ""
-        self.porches = []        
-        
+        self.porches = []
+
     def getHouseStats(self):
         """ Finds how many interested (status==1) people in house """
         
@@ -183,7 +184,13 @@ class House():
                 if len(options)>1:
                     del options[len(options)-1]
                     if silent==False: # в тихом режиме только считаем, но не показываем список
-                        choice=dialogs.dialogList(title="Сколько этажей в подъезде?", positive="OK", options=options)
+                        choice=dialogs.dialogList(
+                            title="Сколько этажей в подъезде?",
+                            positive=None,
+                            negative="Этажи не нужны",
+                            options=options)
+                        if homepage.menuProcess(choice) == True:
+                            return
                         if choice==None:
                             return
                         elif set.ifInt(choice) == True:
@@ -200,7 +207,7 @@ class House():
 
             def showGrid():
                 """ Вывод подъезда в классическом текстовом окне """
-                message = "«+1» – добавить новую квартиру.\n«+1-50» – добавить диапазон.\n«\\» – детали.\n\n"
+                message = "«+1» – добавить новую квартиру.\n«+1-50» – добавить диапазон.\n«*» – детали.\n\n"
                 i = 0
                 for r in range(rows):
                     if self.flatsLayout!="н" and self.flatsLayout!="а" and self.flatsLayout!="с": # display floor number
@@ -620,6 +627,8 @@ class House():
                 newContact.records = deepcopy(self.records)
                 newContact.note = deepcopy(self.note)
                 newContact.status = deepcopy(self.status)
+                newContact.phone = deepcopy(self.phone)
+                newContact.meeting = deepcopy(self.meeting)
                 return newContact.getName()
 
             def export(self):

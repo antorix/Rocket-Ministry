@@ -85,6 +85,7 @@ def icon(myIcon, forceText=False):
         elif myIcon=="phone2": return "☎"
         elif myIcon=="phone3": return "📞"
         elif myIcon=="warning": return "❗"
+        elif myIcon=="explosion": return "💥"
 
         elif myIcon=="reject":
             if io2.Simplified==1 and io2.settings[0][16]==0:             # статус 0
@@ -135,11 +136,11 @@ def icon(myIcon, forceText=False):
         elif myIcon=="notebook": return "□"
         elif myIcon=="console": return "▪"
         elif myIcon=="database": return "◊"
-        elif myIcon=="file": return "◊"
+        elif myIcon=="file": return "■"
         elif myIcon=="appointment": return "☼"
         elif myIcon=="calendar": return "©"        
-        elif myIcon=="preferences": return "▫"
-        elif myIcon=="plus": return "\u2795"#"+"
+        elif myIcon=="preferences": return "✶"
+        elif myIcon=="plus": return "+"
         elif myIcon=="contact": return "Ω"
         elif myIcon=="case": return "□"
         elif myIcon=="sort": return "±"        
@@ -205,6 +206,7 @@ def icon(myIcon, forceText=False):
         elif myIcon=="phone2": return "◊"
         elif myIcon=="phone3": return "◊"
         elif myIcon=="warning": return "⚠"
+        elif myIcon=="explosion": return "☼"
 
         elif myIcon=="reject": return "×"#○"#x"     # статус 0
         elif myIcon=="interest": return "●"         # статус 1

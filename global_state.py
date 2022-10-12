@@ -2,7 +2,6 @@
 # Copyright (c) 2014, Stephen Raymond Ferg
 # All rights reserved.
 
-
 """
 
 .. moduleauthor:: easygui developers and Stephen Raymond Ferg
@@ -32,14 +31,13 @@ def getWinFonts():
     fonts.append("Courier New")
     return fonts
 
-PROPORTIONAL_FONT_FAMILY = getWinFonts()[0]#("MS", "Sans", "Serif")
-MONOSPACE_FONT_FAMILY = getWinFonts()[0]#"Courier"
+PROPORTIONAL_FONT_FAMILY = ("Calibri", "Arial", "MS", "Sans", "Serif")
+MONOSPACE_FONT_FAMILY = getWinFonts()[0]
 
 PROPORTIONAL_FONT_SIZE = 11
 # a little smaller, because it is more legible at a smaller size
 MONOSPACE_FONT_SIZE = 11
 TEXT_ENTRY_FONT_SIZE = 11  # a little larger makes it easier to see
-
 
 STANDARD_SELECTION_EVENTS = ["Return", "Button-1", "space"]
 
@@ -48,21 +46,21 @@ fixw_font_line_length = 80
 num_lines_displayed = 50
 default_hpad_in_chars = 40
 
-boxRoot = None
-
+#boxRoot = None
 
 def bindArrows(widget):
+    pass
+    #№widget.bind("<Down>", tabRight)
+    #widget.bind("<Up>", tabLeft)
 
-    widget.bind("<Down>", tabRight)
-    widget.bind("<Up>", tabLeft)
-
-    widget.bind("<Right>", tabRight)
-    widget.bind("<Left>", tabLeft)
-
+    #widget.bind("<Right>", tabRight)
+    #widget.bind("<Left>", tabLeft)
 
 def tabRight(event):
-    boxRoot.event_generate("<Tab>")
+    if event!=None:
+        boxRoot.event_generate("<Tab>")
 
 
 def tabLeft(event):
-    boxRoot.event_generate("<Shift-Tab>")
+    if event != None:
+        boxRoot.event_generate("<Shift-Tab>")

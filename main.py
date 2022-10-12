@@ -9,7 +9,6 @@ from icons import icon
 def app():
     """ Callable program """
 
-    print("Подготовка…")
     load()
 
     if settings[0][17]!="":

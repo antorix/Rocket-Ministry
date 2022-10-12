@@ -24,51 +24,6 @@ def buttonbox(msg="",
               default_choice=None,
               cancel_choice=None,
               callback=None,
-              run=True):
-    """
-    Display a msg, a title, an image, and a set of buttons.
-    The buttons are defined by the members of the choices global_state.
-
-    :param str msg: the msg to be displayed
-    :param str title: the window title
-    :param list choices: a list or tuple of the choices to be displayed
-    :param str image: (Only here for backward compatibility)
-    :param str images: Filename of image or iterable or iteratable of iterable to display
-    :param str default_choice: The choice you want highlighted when the gui appears
-    :return: the text of the button that the user selected
-
-
-
-    """
-
-    if image and images:
-        raise ValueError("Specify 'images' parameter only for buttonbox.")
-    if image:
-        images = image
-    bb = ButtonBox(
-        msg=msg,
-        title=title,
-        choices=choices,
-        images=images,
-        default_choice=default_choice,
-        cancel_choice=cancel_choice,
-        callback=callback)
-    if not run:
-        return bb
-    else:
-        reply = bb.run()
-        return reply
-
-
-
-def buttonbox(msg="",
-              title=" ",
-              choices=("Button[1]", "Button[2]", "Button[3]"),
-              image=None,
-              images=None,
-              default_choice=None,
-              cancel_choice=None,
-              callback=None,
               run=True,
               neutral=None):
     """
@@ -82,9 +37,6 @@ def buttonbox(msg="",
     :param str images: Filename of image or iterable or iteratable of iterable to display
     :param str default_choice: The choice you want highlighted when the gui appears
     :return: the text of the button that the user selected
-
-
-
     """
 
     if image and images:
@@ -265,14 +217,12 @@ class GUItk(object):
         self._images = list()
 
         self.boxRoot = tk.Tk()
-        # self.boxFont = tk_Font.Font(
-        #     family=global_state.PROPORTIONAL_FONT_FAMILY,
-        #     size=global_state.PROPORTIONAL_FONT_SIZE)
+        self.boxFont = tk_Font.Font(
+             family=global_state.PROPORTIONAL_FONT_FAMILY,
+             size=global_state.PROPORTIONAL_FONT_SIZE)
 
-        self.boxFont = tk_Font.nametofont("TkFixedFont")
+        #self.boxFont = tk_Font.nametofont("TkFixedFont")
         self.width_in_chars = global_state.fixw_font_line_length
-
-        # default_font.configure(size=global_state.PROPORTIONAL_FONT_SIZE)
 
         self.configure_root(title)
 
@@ -316,7 +266,7 @@ class GUItk(object):
         numlines = 25#self.get_num_lines(self.messageArea) # высота окна текста
         self.set_msg_height(numlines)
         self.messageArea.update()
-        self.messageArea.config(width=55, padx=20)  # ширина окна текста
+        self.messageArea.config(width=57, padx=20, background="grey97")  # ширина окна текста
 
     def set_msg_height(self, numlines):
         self.messageArea.configure(height=numlines)
@@ -420,7 +370,7 @@ class GUItk(object):
         )
         self.set_msg(msg)
         self.messageArea.configure(
-            font=(global_state.MONOSPACE_FONT_FAMILY, global_state.MONOSPACE_FONT_SIZE)
+            font=(global_state.PROPORTIONAL_FONT_FAMILY, global_state.PROPORTIONAL_FONT_SIZE)
         )
         self.messageArea.grid(row=0)
         self.boxRoot.rowconfigure(0, weight=10, minsize='10m')
@@ -479,7 +429,13 @@ class GUItk(object):
 
     def create_buttons_frame(self):
         self.buttonsFrame = ttk.Frame(self.boxRoot)
-        self.buttonsFrame.grid(row=2, column=0)
+        self.buttonsFrame.grid(row=2, column=0, padx=2, pady=1)
+
+        # add a vertical scrollbar to the frame
+        self.rightScrollbar = ttk.Scrollbar(
+            self.imagesFrame, orient=tk.VERTICAL, command=self.messageArea.yview)
+        self.messageArea.configure(yscrollcommand=self.rightScrollbar.set)
+        self.rightScrollbar.grid()#(column=0, row=0)
 
     def create_buttons(self, choices, default_choice):
         unique_choices = ut.uniquify_list_of_strings(choices)
@@ -497,7 +453,8 @@ class GUItk(object):
                     underline=hotkey_position)
             fn = lambda text=button_text, row=row, column=0: self.button_pressed(text, (row, column))
             this_button['widget'].configure(command=fn)
-            this_button['widget'].grid(row=0, column=i_hack, padx='2m', pady='2m', ipadx='1m', ipady='1m')
+            if button_text != None:
+                this_button['widget'].grid(row=0, column=i_hack, padx='2m', pady='1m', ipadx='1m', ipady='1m')
             self.buttonsFrame.columnconfigure(i_hack, weight=10)
             i_hack += 1
             buttons[unique_button_text] = this_button

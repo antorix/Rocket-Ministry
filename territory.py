@@ -6,6 +6,7 @@ import set
 import io2
 from io2 import houses
 from io2 import settings
+import homepage
 import house_op
 import dialogs
 import contacts
@@ -25,7 +26,9 @@ def terView():
                 positive = icon("plus"),
                 neutral = icon("sort") + " Сорт."
             )
-        if choice==None:
+        if homepage.menuProcess(choice) == True:
+            continue
+        elif choice==None:
             break
         elif set.ifInt(choice) == True:
             if "Создайте" in house_op.showHouses()[choice]:
@@ -80,7 +83,9 @@ def houseView(selectedHouse):
                 neutral = icon("preferences") + " Детали"
             )
 
-        if choice==None:
+        if homepage.menuProcess(choice) == True:
+            continue
+        elif choice==None:
             break
         elif choice=="neutral": # Детали
             if set.houseSettings(selectedHouse) == "deleted":
@@ -121,160 +126,6 @@ def porchView(house, selectedPorch):
 
     messageFailedInput = "Не сработало, попробуйте еще раз"
 
-    def firstCallMenu(flat):
-        """ Меню, которое выводится при первом заходе в квартиру"""
-
-        options = [
-            icon("mic")    + " Посещение",
-            icon("reject")      + " Отказ",
-            icon("preferences") + " Детали",
-        ]
-        if settings[0][13] == 1:
-            options.insert(1, icon("lock") + " Нет дома")
-
-        if settings[0][10]==1:
-            if settings[0][13] == 1:
-                options.insert(3, icon("rocket") + " Умная строка")
-            else:
-                options.insert(2, icon("rocket") + " Умная строка")
-
-        choice = dialogs.dialogList(
-            title="%s ⇨ первое посещение" % flat.number,
-            options=options,
-            form="firstCallMenu"
-        )
-        if choice == None:
-            return
-        elif set.ifInt(choice) == True:
-            result = options[choice]
-        else:
-            return
-
-        if "Отказ" in result:
-            porch.autoreject(flat=flat)
-            io2.save()
-
-        elif "Нет дома" in result:
-            porch.addFlat(input="+%s.нет дома" % flat.number, forceStatusUpdate=True)
-            io2.save()
-
-        elif "Посещение" in result:
-            name = dialogs.dialogText(
-                title="%s Ввод данных о первом посещении" % icon("mic"),
-                message="Имя и (или) описание человека:"
-            )
-            if name == None:
-                return
-            else:
-                flat.updateName(name, forceStatusUpdate=True)
-                io2.save()
-                record = dialogs.dialogText(
-                    title="%s Ввод данных о первом посещении" % icon("mic"),
-                    message="Описание разговора:"
-                )
-                if record==None:
-                    return
-                else:
-                    flat.addRecord(record)
-                    io2.save()
-                    choices = dialogs.dialogChecklist(
-                        title="%s Что еще сделать?" % icon("mic"),
-                        message="Что сделать после посещения?",
-                        negative="ОК",
-                        options=[
-                            icon("interest") + " Установить статус «интерес» ",
-                            icon("placements") + " Добавить публикацию",
-                            icon("video") + " Добавить видео",
-                            icon("phone") + " Записать телефон",
-                            icon("appointment") + " Назначить встречу"
-                        ]
-                    )
-                    if choices!=None:
-                        checked = ' '.join(choices)
-                        if "Установить статус" in checked:  # интерес
-                            flat.status="1"
-                        if "Добавить публикацию" in checked: # публикация
-                            reports.report(choice="==б")
-                        if "Добавить видео" in checked: # видео
-                            reports.report(choice="==в")
-                        if "Записать телефон" in checked:  # телефон
-                            flat.phone = set.setPhone()
-                        if "Назначить встречу" in checked:  # встреча
-                            flat.meeting = set.setMeeting()
-                        io2.save()
-
-        elif "Умная строка" in result:
-            notebookOriginalSize = len(io2.resources[0])
-            input = dialogs.dialogText(
-                title="%s Умная строка" % icon("rocket"),
-                neutral="%s Справка" % icon("help"),
-                message="Нажмите на справку для подсказки по этой функции"
-            )
-            if input==None:
-                pass
-            elif input=="neutral" or input=="\\" or input=="справка" or input=="help":
-                dialogs.dialogInfo(
-                    title="%s Умная строка" % icon("rocket"),
-                    message="«Умная строка» – это самый мощный и быстрый способ добавления нового посещения, а также работы с отчетами!\n\n" +
-                            "Введите любой текст без точки, и он превратится в заметку квартиры.\n\n" + \
-                            "Введите текст с точкой – будет записано имя жильца.\n\n" + \
-                            "Если после точки продолжить ввод текста, к имени жильца будет добавлена запись посещения.\n\n" +
-                            "Если в конце записи (как последний символ) поставить цифру от 0 до 4 – это статус квартиры. 0 – отказ, 1 – интерес, 2 – зеленый, 3 – фиолетовый, 4 – красный.\n\n" + \
-                            "Если в тексте посещения использовать сочетания =б, =в, =ч, =п, =и – в отчет добавится соответственно публикация, видео, час времени, повторное посещение или изучение.\n\n"+ \
-                            "(Для публикации также можно использовать =ж и =к).\n\n"+\
-                            "Если последним символом строки будет плюс (+), то посещение не будет записано, но вместо этого вся строка занесется в блокнот (доступен с главной страницы приложения) с указанием адреса дома и номера квартиры.\n\n"+\
-                            "Если вы не пользуетесь умной строкой, ее можно отключить в настройках.\n\n"+\
-                            "Пример умной строки:\n\n"+\
-                            "Алексей 30. Показали Отк. 21:4, оставили =буклет о Цар. 1"
-
-                )
-            elif "." not in input:
-                flat.note = input
-            elif "." in input:
-                porch.addFlat(
-                    input = "+%s, %s" % (flat.number, input), # классическая нотация
-                    forceStatusUpdate=True
-                )
-            if notebookOriginalSize < len(io2.resources[0]): # определено добавление заметки, добавляем к ней адрес и время
-                createdNote = io2.resources[0][ len(io2.resources[0])-1 ]
-                date = time.strftime("%d", time.localtime())
-                month = reports.monthName()[5]
-                timeCur = time.strftime("%H:%M", time.localtime())
-                io2.resources[0][ len(io2.resources[0])-1 ] = "%s-%s, %s %s %s: %s" % (house.title, flat.number, date, month, timeCur, createdNote)
-            io2.save()
-
-        elif "Детали" in result:
-            if set.flatSettings(flat, house)=="deleted":
-                return "deleted"
-
-    def findFlatByNumber(number):
-        """ Находит и открывает квартиру по номеру квартиры в данном подъезде,
-        иначе возвращает False (кроме случая удаления этой квартиры) """
-        number = number.strip()
-        found=False
-        try:
-            if set.ifInt(number)!=True:
-                number = number[0 : number.index(" ")].strip()
-        except:
-            pass
-        else:
-            for i in range(len(porch.flats)):
-                if number == porch.flats[i].number:
-                    found = True
-                    if len(porch.flats[i].records)==0 and porch.flats[i].getName()=="": # если первый раз, запускаем меню первого посещения
-                        exit = firstCallMenu(porch.flats[i])
-                        if exit == "deleted":
-                            porch.deleteFlat(i)
-                            return "deleted"
-                        break
-                    else: # если есть записи посещений, заходим напрямую
-                        exit = flatView(porch.flats[i], house)
-                        if exit == "deleted":
-                            porch.deleteFlat(i)
-                            return "deleted"
-                        break
-        return found
-
     default = choice = ""
     while 1: # Показываем весь подъезд
 
@@ -291,7 +142,9 @@ def porchView(house, selectedPorch):
                     positive=icon("plus"),
                     neutral=icon("preferences") + " Детали"
                 )
-            if choice==None:
+            if homepage.menuProcess(choice) == True:
+                continue
+            elif choice==None:
                 return
             elif set.ifInt(choice)==True: # определяем, выбран этаж или квартира
                 if "Создайте" in options[choice]:
@@ -301,7 +154,7 @@ def porchView(house, selectedPorch):
                     floorNumber = int(options[choice][0:2])
                     choice = ""
                 else:
-                    findFlatByNumber(options[choice]) # квартира - показываем и повторяем цикл
+                    findFlatByNumber(house, porch, options[choice]) # квартира - показываем и повторяем цикл
                     choice = ""
                     continue
             elif choice=="neutral":
@@ -360,10 +213,12 @@ def porchView(house, selectedPorch):
                     positive=positive,
                     neutral=neutral
                 )
-                if choice==None:
+                if homepage.menuProcess(choice) == True:
+                    continue
+                elif choice==None:
                     break
                 elif set.ifInt(choice) == True: # находим и открываем квартиру
-                    if findFlatByNumber(options[choice])=="deleted":
+                    if findFlatByNumber(house, porch, options[choice])=="deleted":
                         break
                 elif choice == "neutral": # этаж вверх
                     floorNumber += 1
@@ -390,7 +245,7 @@ def porchView(house, selectedPorch):
                 break
             elif len(choice)==0:
                 continue
-            elif choice == "neutral" or choice == "\\":
+            elif choice == "neutral" or choice == "*":
                 choice = default = ""
                 if set.porchSettings(house, selectedPorch) == "deleted":
                     return
@@ -430,7 +285,7 @@ def porchView(house, selectedPorch):
                 io2.save()
                 default = choice = ""
             else:  # go to flat view
-                result = findFlatByNumber(choice)
+                result = findFlatByNumber(house, porch, choice)
                 if result=="deleted":
                     porch.deleteFlat(i)
                     io2.save()
@@ -490,13 +345,13 @@ def flatView(flat, house, virtual=False):
                 positive=icon("plus"),
                 neutral = neutral
             )
-        if choice==None:
+        if homepage.menuProcess(choice) == True:
+            continue
+        elif choice==None:
             break
-
         elif choice=="neutral" or choice=="\\":
             if set.flatSettings(flat, house, virtual)=="deleted":
                 return "deleted"
-
         elif choice=="positive": # new record
             choice2 = dialogs.dialogText(
                 title = icon("mic") + " Новая запись посещения",
@@ -526,6 +381,8 @@ def flatView(flat, house, virtual=False):
                     message="Что делать с записью?",
                     form="noteEdit"
                 )
+                if homepage.menuProcess(choice2)==True:
+                    continue
                 if choice2==None:
                     continue
                 else:
@@ -549,5 +406,166 @@ def flatView(flat, house, virtual=False):
                     flat.deleteRecord(int(choice))
                     io2.save()
 
+            else:
+                homepage.menuProcess(choice)
+                continue
         else:
             continue
+
+def findFlatByNumber(house, porch, number):
+    """ Находит и открывает квартиру по номеру квартиры в данном подъезде,
+    иначе возвращает False (кроме случая удаления этой квартиры) """
+
+    def firstCallMenu(flat):
+        """ Меню, которое выводится при первом заходе в квартиру"""
+
+        options = [
+            icon("mic") + " Посещение",
+            icon("reject") + " Отказ",
+            icon("preferences") + " Детали",
+        ]
+        if settings[0][13] == 1:
+            options.insert(1, icon("lock") + " Нет дома")
+
+        if settings[0][10] == 1:
+            if settings[0][13] == 1:
+                options.insert(3, icon("rocket") + " Умная строка")
+            else:
+                options.insert(2, icon("rocket") + " Умная строка")
+
+        choice = dialogs.dialogList(
+            title="%s ⇨ первое посещение" % flat.number,
+            options=options,
+            form="firstCallMenu"
+        )
+        if homepage.menuProcess(choice) == True:
+            return
+        elif choice == None:
+            return
+        elif set.ifInt(choice) == True:
+            result = options[choice]
+        else:
+            return
+
+        if "Отказ" in result:
+            porch.autoreject(flat=flat)
+            io2.save()
+
+        elif "Нет дома" in result:
+            porch.addFlat(input="+%s.нет дома" % flat.number, forceStatusUpdate=True)
+            io2.save()
+
+        elif "Посещение" in result:
+            name = dialogs.dialogText(
+                title="%s Ввод данных о первом посещении" % icon("mic"),
+                message="Имя и (или) описание человека:"
+            )
+            if name == None:
+                return
+            else:
+                flat.updateName(name, forceStatusUpdate=True)
+                io2.save()
+                record = dialogs.dialogText(
+                    title="%s Ввод данных о первом посещении" % icon("mic"),
+                    message="Описание разговора:"
+                )
+                if record == None:
+                    return
+                else:
+                    flat.addRecord(record)
+                    io2.save()
+                    choices = dialogs.dialogChecklist(
+                        title="%s Что еще сделать?" % icon("mic"),
+                        message="Что сделать после посещения?",
+                        negative="ОК",
+                        options=[
+                            icon("interest") + " Установить статус «интерес» ",
+                            icon("placements") + " Добавить публикацию",
+                            icon("video") + " Добавить видео",
+                            icon("phone") + " Записать телефон",
+                            icon("appointment") + " Назначить встречу"
+                        ]
+                    )
+                    if choices != None:
+                        checked = ' '.join(choices)
+                        if "Установить статус" in checked:  # интерес
+                            flat.status = "1"
+                        if "Добавить публикацию" in checked:  # публикация
+                            reports.report(choice="==б")
+                        if "Добавить видео" in checked:  # видео
+                            reports.report(choice="==в")
+                        if "Записать телефон" in checked:  # телефон
+                            flat.phone = set.setPhone()
+                        if "Назначить встречу" in checked:  # встреча
+                            flat.meeting = set.setMeeting()
+                        io2.save()
+
+        elif "Умная строка" in result:
+            notebookOriginalSize = len(io2.resources[0])
+            input = dialogs.dialogText(
+                title="%s Умная строка" % icon("rocket"),
+                neutral="%s Справка" % icon("help"),
+                message="Нажмите на справку для подсказки по этой функции"
+            )
+            if input == None:
+                pass
+            elif input == "neutral" or input == "\\" or input == "справка" or input == "help":
+                dialogs.dialogInfo(
+                    title="%s Умная строка" % icon("rocket"),
+                    message="«Умная строка» – это самый мощный и быстрый способ добавления нового посещения, а также работы с отчетами!\n\n" +
+                            "Введите любой текст без точки, и он превратится в заметку квартиры.\n\n" + \
+                            "Введите текст с точкой – будет записано имя жильца.\n\n" + \
+                            "Если после точки продолжить ввод текста, к имени жильца будет добавлена запись посещения.\n\n" +
+                            "Если в конце записи (как последний символ) поставить цифру от 0 до 5 – это статус квартиры. 0 – отказ, 1 – интерес, 2 – зеленый, 3 – фиолетовый, 4 – коричневый, 5 – красный.\n\n" + \
+                            "Если в тексте посещения использовать сочетания =б, =в, =ч, =п, =и – в отчет добавится соответственно публикация, видео, час времени, повторное посещение или изучение.\n\n" + \
+                            "(Для публикации также можно использовать =ж и =к).\n\n" + \
+                            "Если последним символом строки будет плюс (+), то посещение не будет записано, но вместо этого вся строка занесется в блокнот (доступен с главной страницы приложения) с указанием адреса дома и номера квартиры.\n\n" + \
+                            "Если вы не пользуетесь умной строкой, ее можно отключить в настройках.\n\n" + \
+                            "Пример умной строки:\n\n" + \
+                            "Алексей 30. Показали Отк. 21:4, оставили =буклет о Цар. 1"
+                )
+            elif "." not in input:
+                flat.note = input
+            elif "." in input:
+                porch.addFlat(
+                    input="+%s, %s" % (flat.number, input),  # классическая нотация
+                    forceStatusUpdate=True
+                )
+            if notebookOriginalSize < len(
+                    io2.resources[0]):  # определено добавление заметки, добавляем к ней адрес и время
+                createdNote = io2.resources[0][len(io2.resources[0]) - 1]
+                date = time.strftime("%d", time.localtime())
+                month = reports.monthName()[5]
+                timeCur = time.strftime("%H:%M", time.localtime())
+                io2.resources[0][len(io2.resources[0]) - 1] = "%s-%s, %s %s %s: %s" % (
+                house.title, flat.number, date, month, timeCur, createdNote)
+            io2.save()
+
+        elif "Детали" in result:
+            if set.flatSettings(flat, house) == "deleted":
+                return "deleted"
+
+    number = number.strip()
+    found=False
+    try:
+        if set.ifInt(number)!=True:
+            number = number[0 : number.index(" ")].strip()
+    except:
+        pass
+    else:
+        for i in range(len(porch.flats)):
+            if number == porch.flats[i].number:
+                found = True
+                if len(porch.flats[i].records)==0 and porch.flats[i].getName()=="": # если первый раз, запускаем меню первого посещения
+                    exit = firstCallMenu(porch.flats[i])
+                    if exit == "deleted":
+                        porch.deleteFlat(i)
+                        return "deleted"
+                    break
+                else: # если есть записи посещений, заходим напрямую
+                    exit = flatView(porch.flats[i], house)
+                    if exit == "deleted":
+                        porch.deleteFlat(i)
+                        return "deleted"
+                    break
+    return found

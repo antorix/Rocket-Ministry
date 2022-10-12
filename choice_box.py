@@ -1,22 +1,15 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-
 import string
-
-try:
-    from . import global_state
-    from .global_state import bindArrows
-except (ValueError, ImportError):
-    import global_state
-    from global_state import bindArrows
-
+import global_state
+from global_state import bindArrows
 import tkinter as tk
 import tkinter.font as tk_Font
 from tkinter import ttk
 
 def choicebox(msg="", title="", choices=[], preselect=0,
-            positive=None, neutral=None, negative="Назад [Escape]", callback=None, run=True):
+            positive=None, neutral=None, negative="Назад", callback=None, run=True):
     """
     Present the user with a list of choices.
     return the choice that he selects.
@@ -37,7 +30,6 @@ def choicebox(msg="", title="", choices=[], preselect=0,
         return reply
     else:
         return mb
-
 
 def multchoicebox(msg="Pick an item", title="", choices=[],
                   preselect=0, callback=None, positive=None, neutral=None, negative=None,
@@ -103,6 +95,21 @@ class ChoiceBox(object):
         elif command == 'neutral':
             self.stop()
             self.choices = 'neutral'
+        elif command == 'settings':
+            self.stop()
+            self.choices = 'settings'
+        elif command == 'file':
+            self.stop()
+            self.choices = 'file'
+        elif command == 'report':
+            self.stop()
+            self.choices = 'report'
+        elif command == 'notebook':
+            self.stop()
+            self.choices = 'notebook'
+        elif command == 'exit':
+            self.stop()
+            self.choices = 'exit'
 
     # methods to change properties --------------
 
@@ -161,7 +168,7 @@ class GUItk(object):
 
         self.negative = negative
 
-        self.padx = self.pady = 5
+        self.padx = self.pady = 3
 
         self.ipady = self.ipadx = 5
 
@@ -178,6 +185,8 @@ class GUItk(object):
         self.boxFont = tk_Font.nametofont("TkTextFont") # getWinFonts()[0] шрифты
 
         self.config_root(title)
+
+        #self.config_menu() # меню
 
         self.set_pos(global_state.window_position)  # GLOBAL POSITION
 
@@ -206,7 +215,6 @@ class GUItk(object):
 
         self.choiceboxWidget.focus_force()
 
-
     # Run and stop methods ---------------------------------------
 
     def run(self):
@@ -229,12 +237,38 @@ class GUItk(object):
 
     def ok_pressed(self, event):
         self.callback(self, command='update', choices=self.get_choices())
-        #self.callback(self, command='positive', choices="positive")
 
     def positive_pressed(self, event):
         self.callback(self, command='update', choices="positive")
 
-    # Methods to change content ---------------------------------------
+    def menu_pressed(self, event, choice):
+        self.callback(self, command=choice, choices=choice)
+
+    def config_menu(self):
+
+        def menuFile():
+            self.callback(self, command="file", choices="file")
+        def menuReport():
+            self.callback(self, command="report", choices="report")
+        def menuSettings():
+            self.callback(self, command="settings", choices="settings")
+        def menuNotebook():
+            self.callback(self, command="notebook", choices="notebook")
+        def menuExit():
+            self.callback(self, command="exit", choices="exit")
+
+        self.menu = tk.Menu(self.boxRoot)
+        self.boxRoot.config(menu=self.menu)
+        self.filemenu = tk.Menu(self.menu)
+        #self.menu.add_cascade(label="Файл", menu=self.filemenu)
+        self.menu.add_command(label="Файл", command=menuFile)
+        self.menu.add_command(label="Настройки", command=menuSettings)
+        self.menu.add_command(label="Отчет", command=menuReport)
+        self.menu.add_command(label="Блокнот", command=menuNotebook)
+        self.menu.add_command(label="Выход", command=menuExit)
+        #self.filemenu.add_command(label="Экспорт", command=menuExport)
+        #self.filemenu.add_separator()
+        #self.filemenu.add_command(label="Exit", command=self.root.quit)
 
     # Methods to change content ---------------------------------------
 
@@ -288,6 +322,9 @@ class GUItk(object):
 
         return selected_choices
 
+    def return_choice(self, choice):
+        return choice
+
     # Auxiliary methods -----------------------------------------------
     def calc_character_width(self):
         char_width = self.boxFont.measure('W')
@@ -297,17 +334,9 @@ class GUItk(object):
 
         #screen_width = self.boxRoot.winfo_screenwidth()
         #screen_height = self.boxRoot.winfo_screenheight()
-        #self.root_width = int((screen_width * 0.8))
-        #root_height = int((screen_height * 0.5))
-
-        screen_width = self.boxRoot.winfo_screenwidth()
-        screen_height = self.boxRoot.winfo_screenheight()
-        root_width = int((screen_width * 5))  # окно списка
-        root_height = int((screen_height * 5))
 
         self.boxRoot.title(title)
         self.boxRoot.expand = tk.YES
-        #self.boxRoot.minsize(width=62 * self.calc_character_width())
 
         self.set_pos()
 
@@ -401,7 +430,11 @@ class GUItk(object):
         # Bind the keyboard events
         self.choiceboxWidget.bind("<Return>", self.ok_pressed)
         self.choiceboxWidget.bind("<Double-Button-1>", self.ok_pressed)
-
+        self.choiceboxWidget.bind("<space>", self.ok_pressed)
+        self.choiceboxWidget.bind("<Insert>", self.positive_pressed)
+        self.choiceboxWidget.bind("<*>", self.neutral_pressed)
+        self.choiceboxWidget.bind("</>", self.positive_pressed)
+        self.choiceboxWidget.bind("<BackSpace>", self.cancel_pressed)
 
     #def create_ok_button(self):
     def create_ok_button(self):
@@ -425,12 +458,18 @@ class GUItk(object):
     def create_positive_button(self):
 
         # put the buttons in the self.buttonsFrame
+        from icons import icon
+        if self.positive=="+": # если плюс, заменяем его на более красивый
+            self.positive = "\u2795 Добавить [Insert]"
+        elif self.positive==icon("down"):
+            self.positive += " [/]"
 
         positiveButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.positive)
 
         bindArrows(positiveButton)
         #positiveButton.pack(expand=tk.YES, fill="x", side=tk.LEFT, padx='2m', pady='2m', ipady=5, ipadx=5)
-        positiveButton.grid(column=0, row=0, padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
+        positiveButton.grid(column=0, row=0,
+                            padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
 
         # for the commandButton, bind activation events
         positiveButton.bind("<Return>", self.positive_pressed)
@@ -442,7 +481,7 @@ class GUItk(object):
 
         # put the buttons in the self.buttonsFrame
 
-        neutralButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.neutral)
+        neutralButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.neutral + " [*]")
 
         bindArrows(neutralButton)
 
@@ -454,12 +493,13 @@ class GUItk(object):
         neutralButton.bind("<space>", self.neutral_pressed)
 
     def create_cancel_button(self):
-        cancelButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.negative)
+        cancelButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.negative + " [Escape]")
         bindArrows(cancelButton)
         cancelButton.grid(column=2, row=0, padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
         cancelButton.bind("<Return>", self.cancel_pressed)
         cancelButton.bind("<Button-1>", self.cancel_pressed)
-        # self.cancelButton.bind("<Escape>", self.cancel_pressed)
+        cancelButton.bind("<space>", self.cancel_pressed)
+        cancelButton.bind("<Escape>", self.cancel_pressed)
         # for the commandButton, bind activation events to the activation event
         # handler
 

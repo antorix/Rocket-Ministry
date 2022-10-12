@@ -14,6 +14,8 @@ import notebook
 import house_op
 import time
 from icons import icon
+from os import system
+import sys
 
 def homepage():
     """ Home page """
@@ -28,7 +30,7 @@ def homepage():
 
             if settings[0][12] == 1:  # проверяем обновления
                 if io2.update() == True:
-                    return
+                    return True
 
             print("Обрабатываем журнал отчета")
             limit = 500
@@ -69,10 +71,9 @@ def homepage():
             # if io2.Mode=="sl4a": # останавливаем заставку
             #    Android().dialogDismiss()
 
-    #territory.porchView(houses[1], 0)
+    #territory.porchView(houses[0], 0)
 
     #if "--textmode" in sys.argv:  # проверяем параметры командной строки
-    #    settings[0][1] = 1
 
     while 1:
 
@@ -84,7 +85,7 @@ def homepage():
             appointment = icon("appointment")
 
         if dailyRoutine() == True:
-            break
+            return
 
         if reports.updateTimer(settings[2][6]) >= 0: # проверка, включен ли таймер
             time2 = reports.updateTimer(settings[2][6])
@@ -144,13 +145,10 @@ def homepage():
             title = "%s Rocket Ministry " % reports.getTimerIcon(settings[2][6])
 
         if io2.Mode == "sl4a": # очистка экрана на всякий случай
-            from os import system
             try:
                 system("clear")
             except:
                 system('cls')
-
-        #io2.save()
 
         # Run home screen
 
@@ -158,14 +156,15 @@ def homepage():
             form = "home",
             title = title,
             options = options,
-            positive = icon("timer") + " Таймер" + timerTime,
-            negative=None,
-            neutral=None
+            positive=None,
+            neutral = icon("timer") + " Таймер" + timerTime,
+            negative=None
         )
-
-        if choice == None and io2.Mode=="easygui" and settings[0][1]==0:
+        if menuProcess(choice)==True:
+            continue
+        elif choice == None and io2.Mode=="easygui" and settings[0][1]==0:
             return
-        elif choice=="positive": # таймер
+        elif choice=="neutral": # таймер
             if settings[2][6] == 0:
                 reports.report(choice="=(")
             else:
@@ -181,9 +180,9 @@ def homepage():
                         negative="Отмена"
                     )
                     if choice2==0:
-                        reports.report(choice="=)") # запись обычного времени
+                        reports.report(choice="=)")
                     elif choice2==1:
-                        reports.report("=$") # запись кредита
+                        reports.report("=$")
             continue
         elif set.ifInt(choice) == True:
             result = options[choice]
@@ -212,36 +211,19 @@ def homepage():
             serviceYear() # service year
 
         elif "Файл" in result:
-            tools() # tools
+            if file()==True:
+                return True
 
         elif "Настройки" in result:
             preferences()
 
         elif "О программе" in result:
-            choice = dialogs.dialogInfo(
-                title=icon("help") + " Rocket Ministry " + reports.getTimerIcon(settings[2][6]),
-                message =   "Универсальный комбайн вашего служения\n\n"+\
-                            "Версия приложения: %s\n\n" % io2.Version +\
-                            "Последнее изменение базы данных: %s\n\n" % io2.getDBCreatedTime() +\
-                            "Официальная страница: github.com/antorix/Rocket-Ministry\n\n"+\
-                            "Официальный Telegram-канал:\nt.me/rocketministry\n\n",
-                positive=None,
-                neutral="Помощь",
-                negative="Назад"
-            )
-            if choice=="neutral" or choice=="Помощь":
-                if io2.Mode=="sl4a":
-                    from androidhelper import Android
-                    Android().view("https://github.com/antorix/Rocket-Ministry#readme")
-                    io2.consoleReturn()
-                else:
-                    from webbrowser import open
-                    open("https://github.com/antorix/Rocket-Ministry#readme")
+            about()
 
         elif "Выход" in result:
             return "quit"
 
-def tools():
+def file():
     """ Program settings on the start screen """
 
     while 1:
@@ -261,13 +243,17 @@ def tools():
             options.append(icon("load") + " Загрузка")
             options.append(icon("save") + " Сохранение")
 
+        #options.append(icon("explosion") + " Бомба")
+
         choice = dialogs.dialogList(  # display list of settings
             form="tools",
             title=icon("file") + " Файловые операции " + reports.getTimerIcon(settings[2][6]),
             message="Выберите действие:",
             options=options
         )
-        if choice == None:
+        if menuProcess(choice)==True:
+            continue
+        elif choice == None:
             break
         else:
             result = options[choice]
@@ -301,12 +287,19 @@ def tools():
         elif "Очистка" in result:
             if dialogs.dialogConfirm(
                 title=icon("clear") + " Очистка",
-                message="Все данные программы будут полностью удалены, включая все резервные копии! Вы уверены, что это нужно сделать?"
+                message="Все пользовательские данные будут полностью удалены, включая все резервные копии! Вы уверены, что это нужно сделать?"
             )==True:
                 io2.clearDB()
                 io2.removeFiles()
                 io2.log("База данных очищена!")
                 io2.save()
+        elif "Бомба" in result:
+            if dialogs.dialogConfirm(
+                title = icon("explosion") + " Бомба",
+                message = "Внимание! Будут удалены ВСЕ пользовательские данные и ВСЕ файлы самой программы, после чего вы больше не сможете ее запустить, пока не установите заново. Вы уверены, что это нужно сделать?"
+            ) == True:
+                io2.removeFiles(totalDestruction=True)
+                return True
         else:
             continue
 
@@ -343,9 +336,9 @@ def preferences():
         else:
             password = "нет"
 
-        options.append(status(settings[0][13]) + "Пункт «нет дома» при первом посещении")
-        options.append(status(settings[0][7])  + "Автоматически записывать повторные посещения")
+        options.append(status(settings[0][13]) + "Пункт «нет дома» в первом посещении")
         options.append(status(settings[0][10]) + "Умная строка в первом посещении")
+        options.append(status(settings[0][7]) + "Автоматически записывать повторные посещения")
         options.append(status(settings[0][2])  + "Кредит часов")
         options.append(status(settings[0][11]) + "Уведомления о встречах на сегодня")
         options.append(status(settings[0][8])  + "Напоминать о сдаче отчета")
@@ -353,10 +346,10 @@ def preferences():
         options.append(status(settings[0][20]) + "Предлагать разбивку по этажам в многоквартирных домах")
         if io2.Mode == "sl4a":
             options.append(status(settings[0][0])+"Бесшумный режим при включенном таймере")
-        options.append(                       "%s Месячная норма часов: %d" % (icon("box"), settings[0][3]))
+        options.append(                       "%s Норма часов в месяц: %d" % (icon("box"), settings[0][3]))
         options.append(status(settings[0][21]) + "Статус обработки подъездов")
         options.append(status(settings[0][9]) + "Последний символ посещения влияет на статус контакта")
-        options.append(                       "%s Число резервных копий: %d" % (icon("box"), settings[0][6]))
+        options.append(                       "%s Резервных копий: %d" % (icon("box"), settings[0][6]))
         if io2.Simplified==0 and io2.Mode!="sl4a":
             options.append(                   "%s Файл импорта базы данных: %s" % (icon("box"), importURL))
         options.append(                       "%s Пароль на вход: %s" % (icon("box"), password))
@@ -376,10 +369,11 @@ def preferences():
             title=icon("preferences") + " Настройки " + reports.getTimerIcon(settings[2][6]),
             options=options,
             positive=None,
-            negative="Ok"
+            negative="Назад"
         )
-
-        if choice==None:
+        if menuProcess(choice)==True:
+            continue
+        elif choice==None:
             break
         elif set.ifInt(choice) == True:
             result = options[choice]
@@ -398,7 +392,7 @@ def preferences():
             settings[0][2] = toggle(settings[0][2])
             io2.save()
 
-        elif "Месячная норма" in result:
+        elif "Норма" in result:
             while 1:
                 choice2 = dialogs.dialogText(
                     title="Месячная норма",
@@ -420,7 +414,7 @@ def preferences():
                 else:
                     break
 
-        elif "Число резервных копий" in result:  # backup copies
+        elif "Резервных копий" in result:  # backup copies
             while 1:
                 choice2 = dialogs.dialogText(
                     title="Число резервных копий",
@@ -456,11 +450,11 @@ def preferences():
             if settings[0][21]==1:
                 dialogs.dialogInfo(
                     title="Статус обработки подъездов",
-                    message="При включении этого параметра вы сможете указывать для каждого подъезда участка, когда вы в нем были:\n\nв будний день в первой половине дня (первый кружок – 🟡);\n\nв будний день вечером (второй кружок – 🟣);\n\nв выходной (третий кружок – 🔴).\n\nЕсли подъезд посещен все три раза, он показан как обработанный в разделе статистики."
+                    message="При включении этого параметра вы сможете указывать для каждого подъезда участка, когда вы в нем были:\n\nв будний день в первой половине дня (первый кружок – 🟡);\n\nв будний день вечером (второй кружок – 🟣);\n\nв выходной (третий кружок – 🔴).\n\nЕсли подъезд посещен все три раза, он учитывается как обработанный в разделе статистики."
                 )
             io2.save()
 
-        elif "Умная строка в первом посещении" in result:
+        elif "Умная строка" in result:
             settings[0][10] = toggle(settings[0][10])
             io2.save()
 
@@ -486,7 +480,8 @@ def preferences():
                 dialogs.dialogInfo(
                     title="Последний символ посещения влияет на статус контакта",
                     message="Внимание, вы входите в зону хардкора! :) При включении этого параметра в конце каждого посещения должна стоять цифра от 0 до 5, определяющая статус (в стиле «умной строки», только во всех посещениях):\n\n0 = %s\n1 = %s\n2 = %s\n3 = %s\n4 = %s\n5 = %s\n\nЭто должен быть строго последний символ строки. При отсутствии такой цифры статус контакта становится неопределенным (%s)." %
-                            ( icon("reject"), icon("interest"), icon("green"), icon("purple"), icon("brown"), icon("danger"), icon("question"))),
+                            ( icon("reject"), icon("interest"), icon("green"), icon("purple"), icon("brown"), icon("danger"), icon("question"))
+                )
             io2.save()
 
         elif "Файл импорта" in result:
@@ -605,8 +600,6 @@ def search(query=""):
                 message="Найдите любую квартиру или контакт:",
                 neutral="Очист."
             )
-            #if io2.Mode == "sl4a" and settings[0][1] == False:
-            #    Android().dialogCreateSpinnerProgress(title="Rocket Ministry", message="Ищем", maximum_progress=100)
 
         elif query == None:
             return
@@ -831,3 +824,45 @@ def serviceYear():
                 io2.save()
             else:
                 continue
+
+def about():
+    choice = dialogs.dialogInfo(
+        title=icon("help") + " Rocket Ministry " + reports.getTimerIcon(settings[2][6]),
+        message =   "Универсальный комбайн вашего служения\n\n"+\
+                    "Версия приложения: %s\n\n" % io2.Version +\
+                    "Последнее изменение базы данных: %s\n\n" % io2.getDBCreatedTime() +\
+                    "Официальная страница: github.com/antorix/Rocket-Ministry\n\n"+\
+                    "Официальный Telegram-канал:\nt.me/rocketministry\n\n",
+        positive=None,
+        neutral="Помощь",
+        negative="Назад"
+    )
+    if choice=="neutral" or choice=="Помощь":
+        if io2.Mode=="sl4a":
+            from androidhelper import Android
+            Android().view("https://github.com/antorix/Rocket-Ministry#readme")
+            io2.consoleReturn()
+        else:
+            from webbrowser import open
+            open("https://github.com/antorix/Rocket-Ministry#readme")
+
+def menuProcess(choice):
+    """ Обрабатывает ввод, если он получен из меню (только в easygui)"""
+    if io2.Mode!="easygui":
+        return False
+    result = False
+    if choice=="report":
+        reports.report()
+        result = True
+    elif choice=="file":
+        file()
+        result = True
+    elif choice=="settings":
+        preferences()
+        result = True
+    elif choice=="notebook":
+        notebook.showNotebook()
+        result = True
+    elif choice=="exit":
+        sys.exit(0)
+    return result

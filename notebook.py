@@ -9,6 +9,7 @@ import set
 from io2 import settings
 from io2 import resources
 from icons import icon
+import homepage
 
 def showNotebook():
     """ Show notebook """
@@ -38,7 +39,9 @@ def showNotebook():
                 neutral = icon("export") + " Экспорт",
                 options = options
             )
-        if choice==None:
+        if homepage.menuProcess(choice)==True:
+            continue
+        elif choice==None:
             break # exit
         elif choice=="neutral": # export
             output = ""
@@ -92,7 +95,9 @@ def showNotebook():
                     message="Выберите действие:",
                     form="noteEdit"
                 )
-                if choice2==0: # правка
+                if homepage.menuProcess(choice2) == True:
+                    continue
+                elif choice2==0: # правка
                     choice3 = dialogs.dialogText(
                         icon("note") + " Правка заметки " + reports.getTimerIcon(settings[2][6]),
                         default = resources[0][result],

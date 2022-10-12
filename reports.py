@@ -3,11 +3,11 @@
 
 import time
 import io2
-import os
 import dialogs
 import set
 import datetime
 from icons import icon
+import homepage
 
 class Report():
 
@@ -79,7 +79,7 @@ class Report():
             self.credit = int(round(self.credit,2)-rolloverCredit)
 
         if io2.settings[0][2]==1:
-            credit = "Кредит: %s\n" % timeFloatToHHMM(self.credit) # whether save credit to file
+            credit = "Кредит: %s\n" % timeFloatToHHMM(self.credit)[0 : timeFloatToHHMM(self.credit).index(":")] # whether save credit to file
         else:
             credit = ""
 
@@ -88,7 +88,7 @@ class Report():
                        (monthName()[3],
                         self.placements,
                         self.videos,
-                        timeFloatToHHMM(self.hours),
+                        timeFloatToHHMM(self.hours)[0 : timeFloatToHHMM(self.hours).index(":")],
                         credit,
                         self.returns,
                         self.studies)
@@ -249,7 +249,9 @@ class Report():
                 options=options,
                 neutral = monthName()[2])
             choice2=""
-            if choice==None:
+            if homepage.menuProcess(choice) == True:
+                continue
+            elif choice==None:
                 break
             elif choice=="neutral": # last month report
                 self.showLastMonthReport()
@@ -461,15 +463,17 @@ class Report():
                         message=""
                         for line in io2.resources[2]:
                             message+=line
-                        dialogs.dialogText(
+                        dialogs.dialogInfo(
                             title=icon("logreport") + " Журнал отчета",
-                            default=message,
+                            #default=message,
                             message=message,
-                            positive=None,
-                            neutral=None,
-                            negative="Назад",
-                            largeText=True
+                            #positive=None,
+                            #neutral=None,
+                            #negative="Назад",
+                            #largeText=True
                         )
+            else:
+                continue
         
         if exit==1:            
             return True

@@ -215,9 +215,13 @@ class GUItk(object):
 
         self.negative = negative
 
-        self.padx = self.pady = 5
+        self.padx = 5
 
-        self.ipady = self.ipadx = 5
+        self.pady = 7
+
+        self.ipady = 5
+
+        self.ipadx = 5
 
         self.boxRoot = tk.Tk()
         self.boxFont = tk_Font.Font(
@@ -233,7 +237,6 @@ class GUItk(object):
             self.width_in_chars = global_state.fixw_font_line_length
 
         # default_font.configure(size=global_state.PROPORTIONAL_FONT_SIZE)
-
 
         self.configure_root(title)
 
@@ -255,6 +258,7 @@ class GUItk(object):
 
         if self.neutral!=None and self.neutral!="Очист.":
             self.create_neutral_button()
+
 
     # Run and stop methods ---------------------------------------
 
@@ -291,7 +295,8 @@ class GUItk(object):
     def set_text(self, text):
         self.textArea.delete(1.0, tk.END)
         self.textArea.insert(tk.END, text, "normal")
-        self.textArea.focus()
+        #self.textArea.focus()
+        self.textArea.focus_force()
 
     def set_pos(self, pos):
         self.boxRoot.geometry(pos)
@@ -387,7 +392,7 @@ class GUItk(object):
             self.textFrame,
             padx=self.padx,#global_state.default_hpad_in_chars * self.calc_character_width(),
             pady=self.pady,#global_state.default_hpad_in_chars * self.calc_character_width(),
-            height=26,  # lines                     # высота текстового окна
+            height=25,  # lines                     # высота текстового окна
             width=50,   # chars of the current font # ширина текстового окна
             takefocus=0
         )
@@ -414,7 +419,7 @@ class GUItk(object):
         self.textArea.configure(yscrollcommand=rightScrollbar.set)
 
         # add a horizontal scrollbar to the frame
-        bottomScrollbar = tk.Scrollbar(
+        bottomScrollbar = ttk.Scrollbar(
             self.textFrame, orient=tk.HORIZONTAL, command=self.textArea.xview)
         self.textArea.configure(xscrollcommand=bottomScrollbar.set)
 
@@ -479,11 +484,6 @@ class GUItk(object):
         # handler
         self.neutralButton.bind("<Return>", self.neutral_button_pressed)
         self.neutralButton.bind("<Button-1>", self.neutral_button_pressed)
-
-
-# ***
-
-
 
 # -------------------------------------------------------------------
 # enterbox

@@ -10,6 +10,7 @@ import reports
 from icons import icon
 from datetime import datetime
 import time
+import homepage
 
 def showHouses():
     """ Show list of all houses (territories)"""
@@ -103,7 +104,9 @@ def pickHouseType(house=None):
             message="",
             options=options
         )
-        if choice == None:
+        if homepage.menuProcess(choice) == True:
+            continue
+        elif choice == None:
             return
         else:
             result = options[choice]
@@ -149,7 +152,10 @@ def terSort():
     choice = dialogs.dialogRadio(
         title=icon("sort") + " Сортировка участков " + reports.getTimerIcon(settings[2][6]),
         selected=selected,
-        options=options)
+        options=options
+    )
+    if homepage.menuProcess(choice) == True:
+        return
     if choice==None:
         return
     elif choice=="По названию":
