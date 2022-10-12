@@ -430,16 +430,15 @@ def update():
                                 "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/fillable_box.py",
                                 "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/text_box.py",
                                 "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/utils.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/Rocket Ministry.vbs",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/main.pyw",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/icon.ico",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/Rocket Ministry.pyw",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/main.py",
                     ]
                 for url in urls:
                     urllib.request.urlretrieve(url, UserPath + url[url.index("master/") + 7:])
             except:
                 dialogs.dialogAlert(icon("lamp") + " Обновление", "Не удалось загрузить обновление. Попробуйте еще раз или, если не помогло, свяжитесь с разработчиком (раздел «О программе»)")
             else:
-                print("Обновление завершено, необходим перезапуск программы. Нажмите Enter, чтобы закрыть консоль.")
+                print("Обновление завершено, необходим перезапуск программы.\nНажмите Enter, чтобы закрыть консоль.")
                 return True
 
 def consoleReturn():
