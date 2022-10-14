@@ -457,7 +457,7 @@ class Report():
                     continue
                 else:
                     self.note = choice2.strip()
-                    self.saveReport(mute=True, save=False)
+                    self.saveReport(self.note, mute=True)
 
             elif "Журнал" in result: # show logReport
                         message=""
