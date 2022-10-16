@@ -5,7 +5,7 @@ Dim baseFolder, linkFile, targetPath
     With WScript.CreateObject("Scripting.FileSystemObject")
         baseFolder = .BuildPath( .GetParentFolderName( WScript.ScriptFullName ), "\")
         linkFile   = .BuildPath( baseFolder, "Rocket Ministry.lnk" )
-        targetPath = .BuildPath( baseFolder, "RocketMinistry.pyw" )
+	targetPath = .BuildPath( baseFolder, "Rocket Ministry.pyw" )
     End With 
 
     With WScript.CreateObject("WScript.Shell").CreateShortcut( linkFile )
