@@ -49,7 +49,7 @@
 
 ## Android
 
-1. Скачайте и установите apk-файл: **[qpython_3s_v3.0.0+rocket_ministry_v1.0.0.apk](https://github.com/antorix/Rocket-Ministry/releases/download/v1.0.0-rc1/qpython_3s_v3.0.0+rocket_ministry_v1.0.0.apk)**.
+1. Скачайте и установите apk-файл: **[qpython_3s_v3.0.0+rocket_ministry_v1.0.2.apk](https://github.com/antorix/Rocket-Ministry/releases/download/v1.0.2/qpython_3s_v3.0.0+rocket_ministry_v1.0.2.apk)**.
 2. Запустите установленное приложение QPython 3S (оно необходимо для работы).
 3. Закройте приложение и снова откройте его.
 4. Нажмите на большую круглую кнопку на главном экране.
@@ -65,15 +65,13 @@
 
 ## Windows
 
-1. Скачайте и установите Python: [python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe](https://www.python.org/ftp/python/3.10.7/python-3.10.7-amd64.exe).
-2. Скачайте и распакуйте архив с Rocket Ministry: [github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip).
+1. Скачайте ZIP-архив: **[rocket_ministry_win_web-based_install.zip](https://github.com/antorix/Rocket-Ministry/releases/download/Windows/rocket_ministry_win_web-based_install.zip)**.
+2. Запустите файл *install-установка.exe*.
 3. Запустите файл *Rocket Ministry.pyw*.
-
-С помощью прилагаемой иконки можно создать ярлык для рабочего стола. Также рекомендую установить шрифт Liberation Mono, если не установлен (лежит в архиве). С ним настольная версия выглядит наиболее красиво.
 
 ## Linux
 
-1. Скачайте архив с Rocket Ministry: [github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip).
+1. Скачайте ZIP-архив: **[github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip)**.
 2. Установите Python 3 средствами ОС. В Ubuntu/Debian можно ввести:
 
 `sudo apt-get install idle3`
