@@ -21,6 +21,43 @@ import sys
 def homepage():
     """ Home page """
 
+    def firstRun():
+        """ Срабатывает при первом запуске программы, определяется по отсутствию settings[1]"""
+
+        if io2.Mode == "easygui": # установка шрифта, если его до сих пор нет
+            if not path.exists(path.expandvars(
+                "%userprofile%") + "/AppData/Local/Microsoft/Windows/Fonts/LiberationMono-Regular.ttf"
+                           ) and \
+                dialogs.dialogConfirm("Установка шрифта",
+                                      "Перед первым запуском рекомендуется установить шрифт Liberation Mono. Сделать это сейчас?"
+                                      ) == True:
+                from os import startfile
+                startfile("fonts_install.vbs")
+                time.sleep(3)
+
+        message = "У вас есть месячная норма часов? Введите ее или оставьте 0, если не нужна:"
+        while 1:
+            hours = dialogs.dialogText(
+                title = icon("timer") + " Норма часов",
+                message=message,
+                default=str(io2.settings[0][3])
+            )
+            try:
+                if hours != None:
+                    if hours == "":
+                        io2.settings[0][3] = 0
+                    else:
+                        io2.settings[0][3] = int(hours)
+                else:
+                    io2.save()
+                    break
+            except:
+                message = "Не удалось изменить, попробуйте еще"
+                continue
+            else:
+                io2.save()
+                break
+
     def dailyRoutine():
         curTime = io2.getCurTime()
 
@@ -91,26 +128,12 @@ def homepage():
 
     # if "--textmode" in sys.argv:  # проверяем параметры командной строки
 
-    if weeklyRoutine() == True:
-        return
-
     if io2.Mode=="easygui": # определение положения окна
         import global_state
         try:
             with open("winpos.ini", "r") as file:
                 line=file.read()
-        except: # определен первый запуск программы, предлагаем установить шрифт
-
-            if not path.exists(path.expandvars(
-                   "%userprofile%") + "/AppData/Local/Microsoft/Windows/Fonts/LiberationMono-Regular.ttf"
-            ) and\
-                dialogs.dialogConfirm("Установка шрифта",
-                "Перед первым запуском рекомендуется установить шрифт Liberation Mono. Сделать это сейчас?"
-            ) == True:
-                from os import startfile
-                startfile("fonts_install.vbs")
-                time.sleep(3)
-
+        except:
             global_state.window_size = "500x500" #
             global_state.window_position = "+500+250"
             with open("winpos.ini", "w") as file:
@@ -120,29 +143,11 @@ def homepage():
             global_state.window_position = '+' + line.split('+', 1)[1]
             global_state.window_size = line[0: line.index("+")]
 
-    if not path.exists(io2.UserPath + "data.jsn"): # при первом запуске, если нет файла data.jsn, спрашиваем норму часов
-        message = "У вас есть месячная норма часов? Введите ее или оставьте 0, если не нужна:"
-        while 1:
-            hours = dialogs.dialogText(
-                title="Норма часов",
-                message=message,
-                default=str(io2.settings[0][3])
-            )
-            try:
-                if hours != None:
-                    if hours == "":
-                        io2.settings[0][3] = 0
-                    else:
-                        io2.settings[0][3] = int(hours)
-                else:
-                    io2.save()
-                    break
-            except:
-                message = "Не удалось изменить, попробуйте еще"
-                continue
-            else:
-                io2.save()
-                break
+    if settings[1]=="":
+        firstRun()
+
+    if weeklyRoutine() == True:
+        return
 
     io2.save(forcedBackup=True)
 
