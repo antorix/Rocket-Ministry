@@ -65,8 +65,9 @@
 ## Windows
 
 1. Скачайте ZIP-архив: **[rocket_ministry_win_web-based_install.zip](https://github.com/antorix/Rocket-Ministry/releases/download/Windows/rocket_ministry_win_web-based_install.zip)**.
-2. Запустите файл *install-установка.exe*.
-3. Запустите файл *Rocket Ministry.pyw*.
+2. Перенесите папку проекта куда-нибудь, например на рабочий стол.
+3. Запустите файл *install-установка.exe*.
+4. Запустите файл *Rocket Ministry.pyw*.
 
 ## Linux
 
