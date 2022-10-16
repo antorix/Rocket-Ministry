@@ -1,18 +1,14 @@
 try:
     from . import utils as ut
     from . import global_state
-    from .global_state import bindArrows
+
 except (ValueError, ImportError):
     import utils as ut
     import global_state
-    from global_state import bindArrows
 
 from tkinter import ttk
 import tkinter as tk  # python 3
 import tkinter.font as tk_Font
-
-
-# TODO: bindArrows seems to be in the wrong place.
 
 
 boxRoot = None
@@ -49,12 +45,20 @@ def __fillablebox(msg, title="", default="", mask=None, image=None, root=None, n
         boxRoot = tk.Tk()
         boxRoot.withdraw()
 
-    boxRoot.protocol('WM_DELETE_WINDOW', __enterboxQuit)
+    #boxRoot.protocol('WM_DELETE_WINDOW', __enterboxQuit)
+    def exit():
+        geom = boxRoot.geometry()
+        global_state.window_position = '+' + geom.split('+', 1)[1]
+        global_state.window_size = geom[0: geom.index("+")]
+        global_state.saveWindowPosition(boxRoot)
+        import sys
+        sys.exit(0)
+    boxRoot.protocol('WM_DELETE_WINDOW', exit)
     boxRoot.title(title)
     #from os import name
     #if name == "nt":
     #    boxRoot.iconbitmap('icon.ico')
-    boxRoot.geometry(global_state.window_position)
+    boxRoot.geometry(global_state.window_size + global_state.window_position)
     boxRoot.bind("<Escape>", __enterboxCancel)
 
     # ------------- define the messageFrame ---------------------------------
@@ -87,15 +91,26 @@ def __fillablebox(msg, title="", default="", mask=None, image=None, root=None, n
     buttonsFrame.pack(side=tk.TOP, fill=tk.BOTH)
 
     # -------------------- the msg widget ----------------------------
-    messageWidget = tk.Message(messageFrame, width="4.5i", text=msg)
-    messageWidget.configure(
-        font=(global_state.PROPORTIONAL_FONT_FAMILY, global_state.PROPORTIONAL_FONT_SIZE))
-    messageWidget.pack(
-        side=tk.RIGHT, expand=1, fill=tk.BOTH, padx='3m', pady='3m')
+    #messageWidget = tk.Message(messageFrame, width="4i", text=msg)
+
+    messageWidget = tk.Text(
+            messageFrame,
+            padx=5,
+            pady=5,
+            height=5,
+            width=200,
+            background=global_state.inactive_background,
+            font=(global_state.PROPORTIONAL_FONT_FAMILY, global_state.PROPORTIONAL_FONT_SIZE),
+            wrap=tk.WORD,
+        )
+    messageWidget.delete(1.0, tk.END)
+    messageWidget.insert(tk.END, msg)
+    messageWidget.config(state=tk.DISABLED)
+    messageWidget.pack(side=tk.TOP, expand=1, fill=tk.BOTH, padx='3m', pady='3m')
 
     # --------- entryWidget ----------------------------------------------
-    entryWidget = ttk.Entry(entryFrame, width=53) # ширина окна текста
-    bindArrows(entryWidget)
+    entryWidget = ttk.Entry(entryFrame, width=500) # ширина окна текста
+
     entryWidget.configure(
         font=(global_state.MONOSPACE_FONT_SIZE, global_state.TEXT_ENTRY_FONT_SIZE))
     if mask:
@@ -113,7 +128,7 @@ def __fillablebox(msg, title="", default="", mask=None, image=None, root=None, n
 
     # ------------------ ok button -------------------------------
     okButton = ttk.Button(buttonsFrame, takefocus=1, text="OK")
-    bindArrows(okButton)
+
     #okButton.grid(column=0, row=0, padx='3m', pady='3m', ipadx='2m', ipady='1m')
     okButton.pack(expand=1, side=tk.LEFT, padx='3m', pady='3m', ipadx='2m', ipady='1m')
 
@@ -124,11 +139,10 @@ def __fillablebox(msg, title="", default="", mask=None, image=None, root=None, n
     for selectionEvent in global_state.STANDARD_SELECTION_EVENTS:
         commandButton.bind("<{}>".format(selectionEvent), handler)
 
-
     # ------------------ neutral button -------------------------------
     if neutral!=None:
         nButton = ttk.Button(buttonsFrame, takefocus=1, text=neutral)
-        bindArrows(nButton)
+
         if neutral!=None and neutral!="Очист.":
             #nButton.grid(column=1, row=0, padx='3m', pady='3m', ipadx='2m', ipady='1m')
             nButton.pack(expand=1, side=tk.LEFT, padx='3m', pady='3m', ipadx='2m', ipady='1m')
@@ -140,10 +154,9 @@ def __fillablebox(msg, title="", default="", mask=None, image=None, root=None, n
         for selectionEvent in global_state.STANDARD_SELECTION_EVENTS:
             commandButton.bind("<{}>".format(selectionEvent), handler)
 
-
     # ------------------ cancel button -------------------------------
     cancelButton = ttk.Button(buttonsFrame, takefocus=1, text="Отмена")
-    bindArrows(cancelButton)
+
     #cancelButton.grid(column=2, row=0, padx='3m', pady='3m', ipadx='2m', ipady='1m')
     cancelButton.pack(expand=1, side=tk.RIGHT, padx='3m', pady='3m', ipadx='2m', ipady='1m')
 
@@ -165,17 +178,21 @@ def __fillablebox(msg, title="", default="", mask=None, image=None, root=None, n
     boxRoot.destroy()  # button_click didn't destroy boxRoot, so we do it now
     return __enterboxText
 
-
 def __enterboxQuit():
+    geom = boxRoot.geometry()
+    global_state.window_position = '+' + geom.split('+', 1)[1]
+    global_state.window_size = geom[0: geom.index("+")]
     return __enterboxCancel(None)
 
 
 def __enterboxCancel(event):
     global __enterboxText
+    geom = boxRoot.geometry()
+    global_state.window_position = '+' + geom.split('+', 1)[1]
+    global_state.window_size = geom[0: geom.index("+")]
 
     __enterboxText = None
     boxRoot.quit()
-
 
 def __enterboxGetText(event):
     global __enterboxText
@@ -188,7 +205,6 @@ def __enterboxNeutral(event):
 
     __enterboxText = "neutral"
     boxRoot.quit()
-
 
 def __enterboxRestore(event):
     global entryWidget

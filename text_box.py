@@ -242,16 +242,13 @@ class GUItk(object):
 
         #self.create_msg_widget(msg)
 
-        self.create_text_area(wrap_text)
-
         self.create_buttons_frame()
 
-        from os import name
-        if name == "nt":
-            self.boxRoot.iconbitmap('icon.ico')
+        self.create_text_area(wrap_text)
 
-        if self.negative != None:
-            self.create_cancel_button()
+        from os import name
+        #if name == "nt":
+        #    self.boxRoot.iconbitmap('icon.ico')
 
         if self.positive != None:
             self.create_ok_button()
@@ -259,6 +256,8 @@ class GUItk(object):
         if self.neutral!=None and self.neutral!="Очист.":
             self.create_neutral_button()
 
+        if self.negative != None:
+            self.create_cancel_button()
 
     # Run and stop methods ---------------------------------------
 
@@ -279,7 +278,7 @@ class GUItk(object):
         self.messageArea.insert(tk.END, msg)
         self.messageArea.config(state=tk.DISABLED)
         # Adjust msg height
-        self.messageArea.update()
+        #self.messageArea.update()
         numlines = self.get_num_lines(self.messageArea)
         self.set_msg_height(numlines)
         self.messageArea.update()
@@ -295,8 +294,10 @@ class GUItk(object):
     def set_text(self, text):
         self.textArea.delete(1.0, tk.END)
         self.textArea.insert(tk.END, text, "normal")
-        #self.textArea.focus()
+        if self.positive==None:
+            self.textArea.config(state=tk.DISABLED, background=global_state.inactive_background)
         self.textArea.focus_force()
+
 
     def set_pos(self, pos):
         self.boxRoot.geometry(pos)
@@ -308,6 +309,7 @@ class GUItk(object):
         # geometry("250x150+300+300")
         geom = self.boxRoot.geometry()  # "628x672+300+200"
         global_state.window_position = '+' + geom.split('+', 1)[1]
+        global_state.window_size = geom[0: geom.index("+")]
 
     def get_text(self):
         return self.textArea.get(0.0, 'end-1c')
@@ -316,11 +318,13 @@ class GUItk(object):
     def x_pressed(self):
         self.callback(self, command='x', text=self.get_text())
 
-    def cancel_pressed(self, event):
-        self.callback(self, command='cancel', text=self.get_text())
-
     def ok_button_pressed(self, event):
         self.callback(self, command='update', text=self.get_text())
+
+    def cancel_pressed(self, event):
+        self.get_pos()
+        global_state.saveWindowPosition(self.boxRoot)
+        self.callback(self, command='cancel', text=self.get_text())
 
     def neutral_button_pressed(self, event):
         self.callback(self, command='neutral', text="neutral")
@@ -337,14 +341,19 @@ class GUItk(object):
 
         self.boxRoot.title(title)
 
-        self.set_pos(global_state.window_position)
+        self.set_pos(global_state.window_size + global_state.window_position)
 
         # Quit when x button pressed
-        self.boxRoot.protocol('WM_DELETE_WINDOW', self.x_pressed)
+        #self.boxRoot.protocol('WM_DELETE_WINDOW', self.x_pressed)
+        def exit():
+            global_state.saveWindowPosition(self.boxRoot)
+            import sys
+            sys.exit(0)
+        self.boxRoot.protocol('WM_DELETE_WINDOW', exit)
         self.boxRoot.bind("<Escape>", self.cancel_pressed)
-        from os import name
-        if name == "nt":
-            self.boxRoot.iconbitmap('icon.ico')
+        #from os import name
+        #if name == "nt":
+        #    self.boxRoot.iconbitmap('icon.ico')
 
     def create_msg_widget(self, msg):
 
@@ -354,24 +363,22 @@ class GUItk(object):
         self.msgFrame = tk.Frame(
             self.boxRoot,
             padx=self.padx * self.calc_character_width(),
-
         )
         self.messageArea = tk.Text(
             self.msgFrame,
-            width=self.width_in_chars,
+            width=10,#self.width_in_chars,
             state=tk.DISABLED,
-            padx=(global_state.default_hpad_in_chars) *
-            self.calc_character_width(),
-            pady=global_state.default_hpad_in_chars *
-            self.calc_character_width(),
-            wrap=tk.WORD,
-
+            padx=self.padx,#(global_state.default_hpad_in_chars) *
+            #self.calc_character_width(),
+            pady=self.padxy,#global_state.default_hpad_in_chars *
+            #self.calc_character_width(),
+            wrap=tk.WORD
         )
-        self.set_msg(msg)
+        #self.set_msg(msg)
 
-        self.msgFrame.pack(side=tk.TOP, expand=1, fill='both')
+        #self.msgFrame.pack(side=tk.TOP, expand=1, fill='both')
 
-        self.messageArea.pack(side=tk.TOP, expand=1, fill='both')
+        #self.messageArea.pack(side=tk.TOP, expand=1, fill='both')
 
     def create_text_area(self, wrap_text):
         """
@@ -381,20 +388,20 @@ class GUItk(object):
 
         self.textFrame = tk.Frame(
             self.boxRoot,
-            padx=10,
-            pady=10
+            padx=self.padx+2,
+            pady=0#self.pady
         )
 
-        self.textFrame.pack(side=tk.TOP)
+        self.textFrame.pack(side=tk.BOTTOM)
         # self.textFrame.grid(row=1, column=0, sticky=tk.EW)
 
         self.textArea = tk.Text(
             self.textFrame,
             padx=self.padx,#global_state.default_hpad_in_chars * self.calc_character_width(),
             pady=self.pady,#global_state.default_hpad_in_chars * self.calc_character_width(),
-            height=25,  # lines                     # высота текстового окна
-            width=50,   # chars of the current font # ширина текстового окна
-            takefocus=0
+            height=500,#global_state.TextBoxHeight,  # lines                     # высота текстового окна
+            width=500,#global_state.TextBoxWidth,   # chars of the current font # ширина текстового окна
+            takefocus=1
         )
 
         self.textArea.configure(wrap=tk.WORD)
@@ -439,38 +446,36 @@ class GUItk(object):
 
     def create_buttons_frame(self):
 
-        self.buttonsFrame = tk.Frame(self.boxRoot, takefocus=1
-                                     # background="green",
-
-                                     )
-        self.buttonsFrame.pack(side=tk.TOP)
-
-    def create_cancel_button(self):
-        # put the buttons in the buttonsFrame
-        self.cancelButton = ttk.Button(self.buttonsFrame, takefocus=1, text=self.negative,)
-        self.cancelButton.pack(
-            expand=tk.NO, side=tk.RIGHT, padx=self.padx, pady=self.pady, ipady=self.ipady,
-            ipadx=self.ipadx)
-
-        # for the commandButton, bind activation events to the activation event
-        # handler
-        self.cancelButton.bind("<Return>", self.cancel_pressed)
-        self.cancelButton.bind("<Button-1>", self.cancel_pressed)
-        self.cancelButton.bind("<Escape>", self.cancel_pressed)
+        self.buttonsFrame = tk.Frame(self.boxRoot, takefocus=1)
+        self.buttonsFrame.pack(side=tk.TOP, expand=tk.YES, fill="both")
 
     def create_ok_button(self):
         # put the buttons in the buttonsFrame
         self.okButton = ttk.Button(
-            self.buttonsFrame, takefocus=1, text=self.positive)
+            self.buttonsFrame, takefocus=tk.YES, text=self.positive)
         self.okButton.pack(
-            expand=tk.NO, side=tk.LEFT, padx=self.padx, pady=self.pady, ipady=self.ipady,
-            ipadx=self.ipadx)
+            expand=tk.YES, fill="both", side=tk.LEFT, padx=self.padx,
+            pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
 
         # for the commandButton, bind activation events to the activation event
         # handler
         self.okButton.bind("<Return>", self.ok_button_pressed)
         self.okButton.bind("<Button-1>", self.ok_button_pressed)
         self.okButton.focus_force()
+
+    def create_cancel_button(self):
+        # put the buttons in the buttonsFrame
+        self.cancelButton = ttk.Button(
+            self.buttonsFrame, takefocus=tk.YES, text=self.negative + " [Escape]")
+        self.cancelButton.pack(
+            expand=tk.YES, fill="both", side=tk.RIGHT, padx=self.padx,
+            pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
+
+        # for the commandButton, bind activation events to the activation event
+        # handler
+        self.cancelButton.bind("<Return>", self.cancel_pressed)
+        self.cancelButton.bind("<Button-1>", self.cancel_pressed)
+        self.cancelButton.bind("<Escape>", self.cancel_pressed)
 
     def create_neutral_button(self):
         # put the buttons in the buttonsFrame

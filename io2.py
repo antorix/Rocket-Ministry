@@ -31,7 +31,7 @@ def initializeDB():
     return [],\
         [
         [1, 0, 0, 0, "с", 0, 50, 1, 1, 0, 1, 1, 1, 1, "", 1, 0, "", 1, "д", 1, 0, 1], # program settings: settings[0][0…], see set.preferences()
-        0,  # не используется!         settings[1]
+        "",# дата последнего обновления settings[1]
         # report:                       settings[2]
         [0.0,       # [0] hours         settings[2][0…]
          0.0,       # [1] credit
@@ -58,14 +58,7 @@ def initializeDB():
 
 houses, settings, resources = initializeDB()
 DBCreatedTime = ""
-Version = "1.0.1"
-
-"""
-* Исправлен баг, из-за которого при копировании квартиры в контакт не сохранялся телефон и дата встречи.
-* Изменен режим домофона, теперь в нем можно входить в квартиру.
-* Более корректно работает выбор статуса квартиры.
-* Мелкие текстовые правки. 
-"""
+Version = "1.0.2"
 
 import dialogs
 import sys
@@ -179,7 +172,7 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
                 with open(AndroidDownloadPath + dataFile, "r") as file:
                     buffer = json.load(file)
             else:
-                dialogAlert(title="Загрузка базы данных",
+                dialogAlert(title = icon("download") + " Импорт из загрузок",
                             message="Файл базы данных data.jsn не найден в папке «Загрузки» либо поврежден!")
                 return
 
@@ -294,18 +287,19 @@ def save(forced=False, silent=True, forcedBackup=False):
 
     curTime = getCurTime()
     if forced==True or forcedBackup==True or (settings[0][6] > 0 and (curTime - LastTimeBackedUp) > 300):
-        if not os.path.exists(BackupFolderLocation):
-            try:
-                os.makedirs(BackupFolderLocation)
-            except IOError:
-                log("Не удалось создать резервную копию!")
-                return
-        savedTime = time.strftime("%Y-%m-%d_%H%M%S", time.localtime())
-        with open(BackupFolderLocation + "data_" + savedTime + ".jsn", "w") as newbkfile:
-            json.dump(output, newbkfile)
-            if silent == False:
-                log("Создана резервная копия")
-            LastTimeBackedUp = curTime
+        if os.path.exists(UserPath + "data.jsn"):
+            if not os.path.exists(BackupFolderLocation):
+                try:
+                    os.makedirs(BackupFolderLocation)
+                except IOError:
+                    log("Не удалось создать резервную копию!")
+                    return
+            savedTime = time.strftime("%Y-%m-%d_%H%M%S", time.localtime())
+            with open(BackupFolderLocation + "data_" + savedTime + ".jsn", "w") as newbkfile:
+                json.dump(output, newbkfile)
+                if silent == False:
+                    log("Создана резервная копия")
+                LastTimeBackedUp = curTime
 
     if forcedBackup==True:
         return
@@ -405,7 +399,7 @@ def update():
     if newVersion > Version:
         choice = dialogs.dialogConfirm(icon("lamp") + " Обновление", "Найдена новая версия %s! Установить?" % newVersion)
         if choice==True:
-            print("Скачиваю…")
+            print("Скачиваем…")
             try:
                 urls = ["https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/console.py",
                         "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/contacts.py",
@@ -429,9 +423,7 @@ def update():
                                 "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/fileopen_box.py",
                                 "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/fillable_box.py",
                                 "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/text_box.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/utils.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/Rocket Ministry.pyw",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/main.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/utils.py"
                     ]
                 for url in urls:
                     urllib.request.urlretrieve(url, UserPath + url[url.index("master/") + 7:])

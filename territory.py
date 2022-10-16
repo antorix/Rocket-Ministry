@@ -39,21 +39,33 @@ def terView():
             house_op.terSort()
         elif choice=="positive": # новый участок
             choice=""
-            while 1:
+            created=False
+            while created!=True:
                 type = house_op.pickHouseType()
                 if type==None:
                     break
                 house_op.addHouse(houses, "", type) # создается временный дом
                 temphouse = houses[len(houses)-1]
-                choice2 = dialogs.dialogText(temphouse.getTipIcon()[1] + " Новый участок", temphouse.getTipIcon()[0])
-                del houses [len(houses)-1] # удаляется временный дом
-                if choice2==None:
-                    continue
-                else:
-                    house_op.addHouse(houses, choice2, type)
-                    io2.log("Создан участок «%s»" % choice2.upper())
-                    io2.save()
-                    break
+                message = temphouse.getTipIcon()[0]
+                while 1:
+                    choice2 = dialogs.dialogText(
+                        title = temphouse.getTipIcon()[1] + " Новый участок",
+                        message = message
+                    )
+                    del houses [len(houses)-1] # удаляется временный дом
+                    if choice2==None:
+                        break
+                    else:
+                        for house in houses:
+                            if choice2.upper().strip() == house.title.upper().strip():
+                                message = "Уже есть участок с таким названием, выберите другое!"
+                                break
+                        else:
+                            house_op.addHouse(houses, choice2, type)
+                            io2.log("Создан участок «%s»" % choice2.upper())
+                            io2.save()
+                            created=True
+                            break
         else:
             continue
 
@@ -102,15 +114,25 @@ def houseView(selectedHouse):
                 message="Введите диапазон номеров, например:\n100–199"
             else:
                 message = "Введите заголовок подъезда (обычно просто номер):"
-            choice2 = dialogs.dialogText(
-                title= house.getPorchType()[1] + " Новый %s" % house.getPorchType()[0],
-                message = message
-            )
-            if choice2 != None:
-                if choice2=="+":
-                    choice2=choice2[1:]
-                house.addPorch(choice2, house.getPorchType()[0])
-                io2.save()
+            while 1:
+                choice2 = dialogs.dialogText(
+                    title= house.getPorchType()[1] + " Новый %s" % house.getPorchType()[0],
+                    message = message
+                )
+                if choice2 == None:
+                    break
+                else:
+                    for porch in house.porches:
+                        if choice2.strip() == porch.title:
+                            message = "Уже есть %s с таким названием, выберите другое!" % house.getPorchType()[0]
+                            break
+                    else:
+                        if choice2 == "+":
+                            choice2 = choice2[1:]
+                        house.addPorch(choice2, house.getPorchType()[0])
+                        io2.save()
+                        break
+
         elif set.ifInt(choice) == True:
             if "Создайте" in house.showPorches()[choice]:
                 choice="positive"
@@ -127,8 +149,8 @@ def porchView(house, selectedPorch):
     messageFailedInput = "Не сработало, попробуйте еще раз"
 
     default = choice = ""
+    selected=0
     while 1: # Показываем весь подъезд
-
         # Стандартный списочный вид
 
         if settings[0][1]==0 and io2.Mode!="text":
@@ -140,7 +162,8 @@ def porchView(house, selectedPorch):
                     options=options,
                     form="porchViewGUIList",
                     positive=icon("plus"),
-                    neutral=icon("preferences") + " Детали"
+                    neutral=icon("preferences") + " Детали",
+                    selected=selected,
                 )
             if homepage.menuProcess(choice) == True:
                 continue
@@ -150,11 +173,19 @@ def porchView(house, selectedPorch):
                 if "Создайте" in options[choice]:
                     choice = "positive"
                     continue
-                elif options[choice][2]=="│": # этаж - выходим из этого цикла и переходим на один ниже
+                elif options[choice][2]=="│": # выбран этаж - выходим из этого цикла и переходим на один ниже
                     floorNumber = int(options[choice][0:2])
+                    for i in range(len(options)):
+                        if str(floorNumber).strip() == options[i][0:2].strip():
+                            selected = i
+                            break
                     choice = ""
                 else:
                     findFlatByNumber(house, porch, options[choice]) # квартира - показываем и повторяем цикл
+                    for i in range(len(options)):
+                        if options[i].strip() == options[choice].strip():
+                            selected = i
+                            break
                     choice = ""
                     continue
             elif choice=="neutral":
@@ -194,6 +225,7 @@ def porchView(house, selectedPorch):
             else:
                 continue
 
+            selected2=0
             while 1: # Показываем этаж
 
                 rows = int(porch.flatsLayout)
@@ -210,6 +242,7 @@ def porchView(house, selectedPorch):
                     title="Этаж %d" % floorNumber,
                     options=options,
                     form="porchViewGUIOneFloor",
+                    selected=selected2,
                     positive=positive,
                     neutral=neutral
                 )
@@ -220,6 +253,10 @@ def porchView(house, selectedPorch):
                 elif set.ifInt(choice) == True: # находим и открываем квартиру
                     if findFlatByNumber(house, porch, options[choice])=="deleted":
                         break
+                    for i in range(len(options)):
+                        if options[i].strip() == options[choice].strip():
+                            selected2 = i
+                            break
                 elif choice == "neutral": # этаж вверх
                     floorNumber += 1
                 elif choice =="positive": # этаж вниз
@@ -511,6 +548,7 @@ def findFlatByNumber(house, porch, number):
                 pass
             elif input == "neutral" or input == "\\" or input == "справка" or input == "help":
                 dialogs.dialogInfo(
+                    largeText=True,
                     title="%s Умная строка" % icon("rocket"),
                     message="«Умная строка» – это самый мощный и быстрый способ добавления нового посещения, а также работы с отчетами!\n\n" +
                             "Введите любой текст без точки, и он превратится в заметку квартиры.\n\n" + \

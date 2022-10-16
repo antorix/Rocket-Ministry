@@ -406,7 +406,7 @@ def dialogAlert(title="Внимание!", message="", neutralButton=False, neut
             tkinter.messagebox.showinfo(title, message)
             #buttonbox(message, title)
         
-def dialogInfo(title="", message="",
+def dialogInfo(title="", message="", largeText=False,
                positive=None,       negative="Назад",    neutral=None):
     """ Help dialog """
     
@@ -442,7 +442,17 @@ def dialogInfo(title="", message="",
             print(message)
             return input()
         else:
-            choice = msgbox(title=title, msg=message, neutral=neutral)#, positive=positive, neutral=neutral, negative=negative)
+            if largeText==False:
+                choice = msgbox(title=title, msg=message, neutral=neutral, negative=negative)#, positive=positive, neutral=neutral, negative=negative)
+            else:
+                choice = textbox(
+                    msg=message,
+                    title=title,
+                    text=message,
+                    positive=positive,
+                    neutral=neutral,
+                    negative=negative
+                )
             if console.process(choice) == True:
                 return ""
             if choice != None:

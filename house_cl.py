@@ -35,11 +35,11 @@ class House():
         """ Выдает подсказку [0] и иконку [1] при создании участка или изменении названия """
 
         if self.type == "private":
-            return "Введите одну или несколько улиц, например:\nЛесная\nЛесная + Радужная", icon("cottage")
+            return "Введите название участка – улицу, квартал и т. д., например:\nЛесная\nЛесная/Радужная/Сосновая", icon("cottage")
         elif self.type == "office":
             return "Введите название либо адрес объекта, например:\nТЦ «Радуга»\nПушкина, 20", icon("office")
         elif self.type == "phone":
-            return "Введите название участка, например список номеров или произвольно, например:\n353-2000 – 353-2200\nМои телефоны", icon("phone2")
+            return "Введите название участка – список номеров или произвольно, например:\n353-2000 – 353-2200\nМои телефоны", icon("phone2")
         else:
             return "Введите улицу и номер дома, например:\nПушкина, 30", icon("house")
 
@@ -229,14 +229,18 @@ class House():
                     for flat in self.flats:  # выводим квартиры
                         options.append(self.flats[i].addFlatTolist())
                         i+=1
-
                     if len(options) == 0:
-                        options.append("Создайте одну или несколько квартир (контактов)")
-
+                        if self.type=="отдел":
+                            options.append("Создайте одного или нескольких сотрудников (с нумерацией)")
+                        elif self.type=="сегмент":
+                            options.append("Создайте один или несколько домов (квартир)")
+                        elif self.type=="диапазон":
+                            options.append("Создайте один или несколько телефонных номеров")
+                        else:
+                            options.append("Создайте одну или несколько квартир")
                     if io2.settings[0][1]==True or io2.Mode == "text":
                         options.append(icon("plus") + " Добавить")
                         options.append(icon("preferences") + " Детали")
-
                 elif floor>0: # выводится список запрошенного этажа
                     rows = int(self.flatsLayout)
                     columns = int(len(self.flats) / rows)

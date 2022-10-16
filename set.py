@@ -295,21 +295,20 @@ def porchSettings(house, selectedPorch):
                     title = icon("intercom") + " %s %s " % (porch.title, reports.getTimerIcon(settings[2][6])),
                     options=list,
                     selected=selected,
-                    positive="Квартира"
+                    positive="Квартира",
+                    negative="Назад"
                 )
                 if homepage.menuProcess(choice) == True:
                     continue
                 elif choice==None:
                     break
                 else:
-                    deleted = territory.findFlatByNumber(house, porch, choice)
+                    territory.findFlatByNumber(house, porch, choice)
                     porch.sortFlats()
                     for i in range(len(list)):
                         if list[i].strip()==choice.strip():
                             selected=i
                             break
-                    #if deleted=="deleted":
-                    #    break
                 porch.sortFlats() # возвращаем исходную сортировку
 
         elif "Маршрут" in result:
@@ -434,7 +433,7 @@ def flatSettings(flat, house, virtual=False):
 
         elif "Встреча" in result:
             flat.meeting = setMeeting(flat.meeting)
-            if flat.meeting!="":
+            if flat.meeting!=None:
                 io2.save()
                 
         elif "Заметка" in result:

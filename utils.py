@@ -45,7 +45,6 @@ except ImportError:
 if tk.TkVersion < 8.0:
     raise ImportError("You must use python-tk (tkinter) version 8.0 or higher")
 
-
 # Try to import the Python Image Library.  If it doesn't exist, only .gif
 # images are supported.
 try:
@@ -106,7 +105,6 @@ def uniquify_list_of_strings(input_list):
 
 import re
 
-
 def parse_hotkey(text):
     """
     Extract a desired hotkey from the text.  The format to enclose
@@ -154,7 +152,6 @@ def parse_hotkey(text):
 
     return ret_val
 
-
 def load_tk_image(filename, tk_master=None):
     """
     Load in an image file and return as a tk Image.
@@ -197,7 +194,6 @@ def load_tk_image(filename, tk_master=None):
                 msg += "\nPIL library isn't installed.  If it isn't installed, only .gif files can be used."
             raise ValueError(msg)
     return tk_image
-
 
 # -------------------------------------------------------------------
 # getFileDialogTitle

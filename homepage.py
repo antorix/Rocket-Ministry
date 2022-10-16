@@ -13,24 +13,19 @@ import set
 import notebook
 import house_op
 import time
+import datetime
 from icons import icon
-from os import system
+from os import system, path
 import sys
 
 def homepage():
     """ Home page """
-
-    io2.save(forcedBackup=True)
 
     def dailyRoutine():
         curTime = io2.getCurTime()
 
         if (curTime - io2.LastTimeDidChecks) > 86400 or (curTime - io2.LastTimeDidChecks) < 3:
             io2.LastTimeDidChecks = curTime
-
-            if settings[0][12] == 1:  # проверяем обновления
-                if io2.update() == True:
-                    return True
 
             print("Обрабатываем журнал отчета")
             limit = 500
@@ -68,24 +63,97 @@ def homepage():
 
             print("Все готово!")
 
-            # if io2.Mode=="sl4a": # останавливаем заставку
-            #    Android().dialogDismiss()
+    def weeklyRoutine():
+
+        try:  # проверяем обновления, если прошло больше недели
+            today = datetime.datetime.strptime(time.strftime('%Y-%m-%d'), "%Y-%m-%d")
+            lastUpdateDate = datetime.datetime.strptime(settings[1], "%Y-%m-%d")
+            diff = str(today.date() - lastUpdateDate.date())
+            if "," in diff:
+                diff = int(diff[0 : diff.index(" ")])
+            else:
+                diff=0
+        except:
+            diff=8
+        if diff>7 and settings[0][12] == 1:
+            today = str(today)
+            today = today[ 0 : today.index(" ")]
+            settings[1] = today
+            io2.save()
+            if io2.update() == True:
+                return True
+
+        #if path.exists('python_distr'): # удаляем папку с установщиком Python, которая осталась после загрузки
+        #    from shutil import rmtree
+        #    rmtree('python_distr')
 
     #territory.porchView(houses[0], 0)
 
-    #if "--textmode" in sys.argv:  # проверяем параметры командной строки
+    # if "--textmode" in sys.argv:  # проверяем параметры командной строки
+
+    if weeklyRoutine() == True:
+        return
+
+    if io2.Mode=="easygui": # определение положения окна
+        import global_state
+        try:
+            with open("winpos.ini", "r") as file:
+                line=file.read()
+        except: # определен первый запуск программы, предлагаем установить шрифт
+
+            if not path.exists(path.expandvars(
+                   "%userprofile%") + "/AppData/Local/Microsoft/Windows/Fonts/LiberationMono-Regular.ttf"
+            ) and\
+                dialogs.dialogConfirm("Установка шрифта",
+                "Перед первым запуском рекомендуется установить шрифт Liberation Mono. Сделать это сейчас?"
+            ) == True:
+                from os import startfile
+                startfile("fonts_install.vbs")
+                time.sleep(3)
+
+            global_state.window_size = "500x500" #
+            global_state.window_position = "+500+250"
+            with open("winpos.ini", "w") as file:
+                file.write(global_state.window_size)
+                file.write(global_state.window_position)
+        else:
+            global_state.window_position = '+' + line.split('+', 1)[1]
+            global_state.window_size = line[0: line.index("+")]
+
+    if not path.exists(io2.UserPath + "data.jsn"): # при первом запуске, если нет файла data.jsn, спрашиваем норму часов
+        message = "У вас есть месячная норма часов? Введите ее или оставьте 0, если не нужна:"
+        while 1:
+            hours = dialogs.dialogText(
+                title="Норма часов",
+                message=message,
+                default=str(io2.settings[0][3])
+            )
+            try:
+                if hours != None:
+                    if hours == "":
+                        io2.settings[0][3] = 0
+                    else:
+                        io2.settings[0][3] = int(hours)
+                else:
+                    io2.save()
+                    break
+            except:
+                message = "Не удалось изменить, попробуйте еще"
+                continue
+            else:
+                io2.save()
+                break
+
+    io2.save(forcedBackup=True)
 
     while 1:
-
-        #weeklyRoutine()
 
         appointment = "" # поиск контактов со встречей на сегодня
         totalContacts, datedFlats = contacts.getContactsAmount(date=1)
         if len(datedFlats)>0:
             appointment = icon("appointment")
 
-        if dailyRoutine() == True:
-            return
+        dailyRoutine()
 
         if reports.updateTimer(settings[2][6]) >= 0: # проверка, включен ли таймер
             time2 = reports.updateTimer(settings[2][6])
@@ -127,22 +195,22 @@ def homepage():
             due = icon("warning")
 
         options = [
-                icon("globe") +   " Участки (%d) %s" % (len(houses), due),
-                icon("contacts")+ " Контакты (%d)  %s" % (totalContacts, appointment),
-                icon("report") +  " Отчет (%s) %s %s" % (reports.timeFloatToHHMM(settings[2][0]), gap_str, remind),
-                icon("notebook")+ " Блокнот (%d)" % len(resources[0]),
-                icon("search")  + " Поиск",
-                icon("stats")   + " Статистика",
-                icon("calendar")+ " Служебный год",
-                icon("file")    + " Файл ",
+                icon("globe") +     " Участки (%d) %s" % (len(houses), due),
+                icon("contacts")+   " Контакты (%d) %s" % (totalContacts, appointment),
+                icon("report") +    " Отчет (%s) %s %s" % (reports.timeFloatToHHMM(settings[2][0]), gap_str, remind),
+                icon("notebook")+   " Блокнот (%d)" % len(resources[0]),
+                icon("search")  +   " Поиск",
+                icon("stats")   +   " Статистика",
+                icon("calendar")+   " Служебный год",
+                icon("file")    +   " Файл",
                 icon("preferences")+" Настройки",
-                icon("help") +    " О программе"
+                icon("help") +      " О программе"
                 ]
 
         if io2.Mode == "sl4a":
             title = "%s Rocket Ministry %s" % ( icon("rocket"), reports.getTimerIcon(settings[2][6]) )
         else:
-            title = "%s Rocket Ministry " % reports.getTimerIcon(settings[2][6])
+            title = "%s Rocket Ministry" % reports.getTimerIcon(settings[2][6])
 
         if io2.Mode == "sl4a": # очистка экрана на всякий случай
             try:
@@ -186,44 +254,44 @@ def homepage():
             continue
         elif set.ifInt(choice) == True:
             result = options[choice]
-        else:
-            continue
+        #else:
+        #    continue
 
-        if "Участки" in result:
-            territory.terView() # territory
+            if "Участки" in result:
+                territory.terView() # territory
 
-        elif "Отчет" in result:
-            reports.report() # report
+            elif "Отчет" in result:
+                reports.report() # report
 
-        elif "Контакты" in result:
-            contacts.showContacts() # contacts
+            elif "Контакты" in result:
+                contacts.showContacts() # contacts
 
-        elif "Блокнот" in result:
-            notebook.showNotebook() # notebook
+            elif "Блокнот" in result:
+                notebook.showNotebook() # notebook
 
-        elif "Поиск" in result:
-            search(query="") # search
+            elif "Поиск" in result:
+                search(query="") # search
 
-        elif "Статистика" in result:
-            stats() # stats
+            elif "Статистика" in result:
+                stats() # stats
 
-        elif "Служебный год" in result:
-            serviceYear() # service year
+            elif "Служебный год" in result:
+                serviceYear() # service year
 
-        elif "Файл" in result:
-            if file()==True:
-                return True
+            elif "Файл" in result:
+                if fileActions()==True:
+                    return True
 
-        elif "Настройки" in result:
-            preferences()
+            elif "Настройки" in result:
+                preferences()
 
-        elif "О программе" in result:
-            about()
+            elif "О программе" in result:
+                about()
 
-        elif "Выход" in result:
-            return "quit"
+            elif "Выход" in result:
+                return "quit"
 
-def file():
+def fileActions():
     """ Program settings on the start screen """
 
     while 1:
@@ -243,7 +311,8 @@ def file():
             options.append(icon("load") + " Загрузка")
             options.append(icon("save") + " Сохранение")
 
-        #options.append(icon("explosion") + " Бомба")
+        if io2.Mode == "sl4a":
+            options.append(icon("explosion") + " Самоуничтожение")
 
         choice = dialogs.dialogList(  # display list of settings
             form="tools",
@@ -293,9 +362,9 @@ def file():
                 io2.removeFiles()
                 io2.log("База данных очищена!")
                 io2.save()
-        elif "Бомба" in result:
+        elif "Самоуничтожение" in result:
             if dialogs.dialogConfirm(
-                title = icon("explosion") + " Бомба",
+                title = icon("explosion") + " Самоуничтожение",
                 message = "Внимание! Будут удалены ВСЕ пользовательские данные и ВСЕ файлы самой программы, после чего вы больше не сможете ее запустить, пока не установите заново. Вы уверены, что это нужно сделать?"
             ) == True:
                 io2.removeFiles(totalDestruction=True)
@@ -341,7 +410,8 @@ def preferences():
         options.append(status(settings[0][7]) +  "Автоматически записывать повторные посещения")
         options.append(                       "%s Норма часов в месяц: %d" % (icon("box"), settings[0][3]))
         options.append(status(settings[0][2])  + "Кредит часов")
-        options.append(status(settings[0][11]) + "Уведомления о встречах на сегодня")
+        if io2.Mode == "sl4a":
+            options.append(status(settings[0][11]) + "Уведомления о встречах на сегодня")
         options.append(status(settings[0][8])  + "Напоминать о сдаче отчета")
         options.append(status(settings[0][15]) + "Переносить минуты отчета на следующий месяц")
         options.append(status(settings[0][20]) + "Предлагать разбивку по этажам в многоквартирных домах")
@@ -393,10 +463,11 @@ def preferences():
             io2.save()
 
         elif "Норма" in result:
+            message = "Введите месячную норму часов для подсчета запаса или отставания от нормы по состоянию на текущий день. Если эта функция не нужна, введите пустую строку или 0:"
             while 1:
                 choice2 = dialogs.dialogText(
                     title="Месячная норма",
-                    message="Введите месячную норму часов для подсчета запаса или отставания от нормы по состоянию на текущий день. Если эта функция не нужна, введите пустую строку или 0:",
+                    message=message,
                     default=str(settings[0][3])
                 )
                 try:
@@ -409,7 +480,7 @@ def preferences():
                     else:
                         break
                 except:
-                    io2.log("Не удалось изменить, попробуйте еще")
+                    message = "Не удалось изменить, попробуйте еще"
                     continue
                 else:
                     break
@@ -543,7 +614,7 @@ def stats():
                     status4 += 1
                 if houses[h].porches[p].flats[f].status == "5":
                     status5 += 1
-                if houses[h].porches[p].flats[f].status == "?":
+                if houses[h].porches[p].flats[f].getStatus()[1] == 4:
                     statusQ += 1
                 if houses[h].porches[p].flats[f].status == "":
                     nostatus += 1
@@ -574,6 +645,7 @@ def stats():
                 "\nВ статусе %s: %s (%d%%)" % (icon("purple"), str(status3), status3 / flats * 100) + \
                  "\nВ статусе %s: %s (%d%%)" % (icon("brown"), str(status4), status4 / flats * 100) + \
                  "\nВ статусе %s: %s (%d%%)" % (icon("danger"), str(status5), status5 / flats * 100) + \
+                 "\nВ статусе %s: %s (%d%%)" % (icon("question"), str(statusQ), statusQ / flats * 100) + \
                  "\n\nБез посещений: %d (%d%%)" % (
                 flats - returns1 - returns2, (flats - returns1 - returns2) / flats * 100) +\
                 "\nС одним посещением: %d (%d%%)" % (returns1, returns1 / flats * 100) +\
@@ -583,7 +655,11 @@ def stats():
         message += "\n\nОбработано подъездов: %d/%d (%d%%)" % \
                         (porchesCompleted, porches, porchesCompleted / porches * 100)
 
-    dialogs.dialogInfo(title=icon("stats") + " Статистика " + reports.getTimerIcon(settings[2][6]), message=message)
+    dialogs.dialogInfo(
+        largeText=True,
+        title=icon("stats") + " Статистика " + reports.getTimerIcon(settings[2][6]),
+        message=message
+    )
 
 def search(query=""):
     """ Search flats/contacts """
@@ -666,7 +742,10 @@ def search(query=""):
 
                 # Show results
 
-                if choice2 == None:
+                if menuProcess(choice2) == True:
+                    continue
+
+                elif choice2 == None:
                     if exit == 1:
                         return
                     else:
@@ -714,7 +793,7 @@ def serviceYear():
                 if settings[4][i] == settings[0][3]:
                     check = icon("mark")
                 elif settings[4][i] < settings[0][3]:
-                    check = icon("fail")
+                    check = icon("cross")
                 elif settings[4][i] > settings[0][3] and settings[0][3] != 0:
                     check = icon("up")
                 else:
@@ -768,6 +847,7 @@ def serviceYear():
             else:
                 average = yearNorm - hourSum
             dialogs.dialogInfo(
+                largeText=True,
                 title="%s Аналитика" % icon("calc"),
                 message="Месяцев введено: %d\n\n" % monthNumber +
                         "Часов введено: %d\n\n" % hourSum +
@@ -777,7 +857,7 @@ def serviceYear():
                         "Среднее за месяц²: %0.f\n\n" % average +
                         "____\n" +
                         "¹ Равна 12 * месячная норма (в настройках).\n\n" +
-                        "² Среднее число часов, которые нужно служить каждый месяц в оставшиеся (не введенные) месяцы.\n\n"
+                        "² Среднее число часов, которые нужно служить каждый месяц в оставшиеся (не введенные) месяцы."
             )
         else:
             if choice < 4:
@@ -855,7 +935,7 @@ def menuProcess(choice):
         reports.report()
         result = True
     elif choice=="file":
-        file()
+        fileActions()
         result = True
     elif choice=="settings":
         preferences()

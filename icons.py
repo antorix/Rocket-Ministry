@@ -15,7 +15,7 @@ def icon(myIcon, forceText=False):
         elif myIcon=="console": return "\ud83d\udcbb"
         elif myIcon=="database": return "\ud83d\uddc4\ufe0f"
         elif myIcon=="file": return "\ud83d\udcbe"
-        elif myIcon=="appointment": return "\ud83d\udcc6"
+        elif myIcon=="appointment": return "📆"# 📅🗓📆
         elif myIcon=="calendar": return "📅" #"\ud83d\udcc5"
         elif myIcon=="preferences": return "⚙️" #"\ud83d\udd27" #"\ud83d\udd28"
         elif myIcon=="plus": return "\u2795"
@@ -26,7 +26,6 @@ def icon(myIcon, forceText=False):
         elif myIcon=="cross": return "❌"
         elif myIcon=="box": return "⬜"
         elif myIcon=="fail": return "\u274c"
-        elif myIcon=="up": return "\u2b06\ufe0f"
         elif myIcon=="pin": return "📌" #"\ud83d\udd8d\ufe0f"
         elif myIcon=="cut": return "🗑"
         elif myIcon=="table": return "\u2702" # new
@@ -148,7 +147,6 @@ def icon(myIcon, forceText=False):
         elif myIcon=="cross": return "×"
         elif myIcon=="box": return "□"
         elif myIcon=="fail": return "˟"
-        elif myIcon=="up": return "↑"
         elif myIcon=="pin": return ">"
         elif myIcon=="cut": return "×"
         elif myIcon=="tablet": return "□"

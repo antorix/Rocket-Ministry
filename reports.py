@@ -464,6 +464,7 @@ class Report():
                         for line in io2.resources[2]:
                             message+=line
                         dialogs.dialogInfo(
+                            largeText=True,
                             title=icon("logreport") + " Журнал отчета",
                             #default=message,
                             message=message,
@@ -474,9 +475,9 @@ class Report():
                         )
             else:
                 continue
-        
-        if exit==1:            
-            return True
+
+        #if exit==1:
+        #    return True
 
     def showLastMonthReport(self):
         """ Показываем отчет прошлого месяца """

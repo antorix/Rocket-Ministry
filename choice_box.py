@@ -3,10 +3,10 @@
 
 import string
 import global_state
-from global_state import bindArrows
 import tkinter as tk
 import tkinter.font as tk_Font
 from tkinter import ttk
+from icons import icon
 
 def choicebox(msg="", title="", choices=[], preselect=0,
             positive=None, neutral=None, negative="Назад", callback=None, run=True):
@@ -31,7 +31,7 @@ def choicebox(msg="", title="", choices=[], preselect=0,
     else:
         return mb
 
-def multchoicebox(msg="Pick an item", title="", choices=[],
+def multchoicebox(msg="", title="", choices=[],
                   preselect=0, callback=None, positive=None, neutral=None, negative=None,
                   run=True):
     """ Same as choicebox, but the user can select many items.
@@ -41,6 +41,7 @@ def multchoicebox(msg="Pick an item", title="", choices=[],
                    multiple_select=True,
                    positive=positive,
                    neutral=neutral,
+                   negative=negative,
                    callback=callback)
     if run:
         reply = mb.run()
@@ -136,9 +137,9 @@ class ChoiceBox(object):
         # we sort the choices, we don't affect the list object that we
         # were given.
         # -------------------------------------------------------------------
-        choices = list(choices)
+        #choices = list(choices)
 
-        choices = [str(c) for c in choices]
+        #choices = [str(c) for c in choices]
 
         #while len(choices) < 2:
         #    choices.append("Add more choices")
@@ -172,7 +173,7 @@ class GUItk(object):
 
         self.ipady = self.ipadx = 5
 
-        self.width_in_chars = global_state.prop_font_line_length
+        #self.width_in_chars = global_state.prop_font_line_length
         # Initialize self.selected_choices
         # This is the value that will be returned if the user clicks the close
         # icon
@@ -181,39 +182,36 @@ class GUItk(object):
         self.multiple_select = multiple_select
 
         self.boxRoot = tk.Tk()
-
+        #from os import name
+        #if name == "nt":
+        #    self.boxRoot.iconbitmap('icon.ico') # иконка плохо работает - окно скачет
+        #self.boxRoot.iconify
+        #photo = tk.PhotoImage(file='icon.png')
+        #self.boxRoot.wm_iconphoto(False, photo)
+        #self.boxRoot.call('wm', 'iconphoto', self.boxRoot._w, photo)
         self.boxFont = tk_Font.nametofont("TkTextFont") # getWinFonts()[0] шрифты
 
         self.config_root(title)
 
-        #self.config_menu() # меню
+        self.config_menu() # меню
 
         self.set_pos(global_state.window_position)  # GLOBAL POSITION
 
-        from os import name
-        if name == "nt":
-            self.boxRoot.iconbitmap('icon.ico')
-
         self.create_msg_widget(msg)
-
-        self.create_choicearea()
 
         self.create_ok_button()
 
-        if self.positive!=None:
-            self.create_positive_button()
+        self.create_buttons_frame()
 
-        if self.neutral!=None:
-            self.create_neutral_button()
+        self.create_choicearea()
 
-        if self.negative!=None:
-            self.create_cancel_button()
-
-        self.create_special_buttons()
+        #self.create_special_buttons()
 
         self.preselect_choice(preselect)
 
         self.choiceboxWidget.focus_force()
+
+        #self.create_grip()
 
     # Run and stop methods ---------------------------------------
 
@@ -230,6 +228,8 @@ class GUItk(object):
         self.callback(self, command='x', choices=self.get_choices())
 
     def cancel_pressed(self, event):
+        self.get_pos()
+        global_state.saveWindowPosition(self.boxRoot)
         self.callback(self, command='cancel', choices=self.get_choices())
 
     def neutral_pressed(self, event):
@@ -254,8 +254,6 @@ class GUItk(object):
             self.callback(self, command="settings", choices="settings")
         def menuNotebook():
             self.callback(self, command="notebook", choices="notebook")
-        def menuExit():
-            self.callback(self, command="exit", choices="exit")
 
         self.menu = tk.Menu(self.boxRoot)
         self.boxRoot.config(menu=self.menu)
@@ -265,7 +263,7 @@ class GUItk(object):
         self.menu.add_command(label="Настройки", command=menuSettings)
         self.menu.add_command(label="Отчет", command=menuReport)
         self.menu.add_command(label="Блокнот", command=menuNotebook)
-        self.menu.add_command(label="Выход", command=menuExit)
+        #self.menu.add_command(label="Выход", command=menuExit)
         #self.filemenu.add_command(label="Экспорт", command=menuExport)
         #self.filemenu.add_separator()
         #self.filemenu.add_command(label="Exit", command=self.root.quit)
@@ -293,8 +291,7 @@ class GUItk(object):
         return int(end_line) + 1  # 5
 
     def set_pos(self, pos=None):
-        if not pos:
-            pos = global_state.window_position
+        pos = global_state.window_size + global_state.window_position
         self.boxRoot.geometry(pos)
 
     def get_pos(self):
@@ -302,7 +299,12 @@ class GUItk(object):
         # the screen. The first two parameters are width and height of
         # the window. The last two parameters are x and y screen coordinates.
         # geometry("250x150+300+300")
-        geom = self.boxRoot.geometry()  # "628x672+300+200"
+        geom = self.boxRoot.geometry()
+        #x_size = int(geom[ 0: geom.index("x") ])
+        #y_size = int(geom[ geom.index("x")+1 : geom.index("+") ])
+        #y_size2= y_size+20 # коррекция высоты окна на 20, потому что оно почему-то самопроизвольно уменьшается
+        #global_state.window_size = "%dx%d" % (x_size, y_size2)
+        global_state.window_size = geom[ 0 : geom.index("+") ]
         global_state.window_position = '+' + geom.split('+', 1)[1]
 
     def preselect_choice(self, preselect):
@@ -335,17 +337,96 @@ class GUItk(object):
         #screen_width = self.boxRoot.winfo_screenwidth()
         #screen_height = self.boxRoot.winfo_screenheight()
 
+
+
         self.boxRoot.title(title)
         self.boxRoot.expand = tk.YES
 
         self.set_pos()
 
-        self.boxRoot.protocol('WM_DELETE_WINDOW', self.x_pressed)
+        #self.boxRoot.protocol('WM_DELETE_WINDOW', self.x_pressed)
+        def exit():
+            self.get_pos()
+            global_state.saveWindowPosition(self.boxRoot)
+            import sys
+            sys.exit(0)
+        self.boxRoot.protocol('WM_DELETE_WINDOW', exit)
         self.boxRoot.bind('<Any-Key>', self.KeyboardListener)
         self.boxRoot.bind("<Escape>", self.cancel_pressed)
 
-        self.buttonsFrame = tk.Frame(self.boxRoot)
-        self.buttonsFrame.pack(side=tk.BOTTOM, expand=tk.YES, pady=self.pady)
+        #self.buttonsFrame2 = ttk.Frame(self.boxRoot)
+        #self.buttonsFrame2.pack(side=tk.BOTTOM, expand=tk.YES, fill="x")
+        #self.text = ttk.Label(self.buttonsFrame2, text="123")
+        #self.text.pack(side=tk.RIGHT, expand=1, fill="y")
+
+    def create_buttons_frame(self):
+        self.buttonsFrame = ttk.Frame(self.boxRoot)
+        self.buttonsFrame.pack(side=tk.BOTTOM, fill="y", pady=self.pady, expand=tk.YES)
+
+        # put the buttons in the self.buttonsFrame
+
+        if self.positive == "+":  # если плюс, заменяем его на более красивый
+            self.positive = "\u2795 Добавить [Insert]"
+        elif self.positive == icon("down"):
+            self.positive += " [/]"
+        if self.positive!=None:
+
+            positiveButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.positive)
+
+            # positiveButton.pack(expand=tk.YES, fill="x", side=tk.LEFT, padx='2m', pady='2m', ipady=5, ipadx=5)
+            positiveButton.grid(column=0, row=0, sticky="we",
+                                padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
+
+            # for the commandButton, bind activation events
+            positiveButton.bind("<Return>", self.positive_pressed)
+            positiveButton.bind("<Button-1>", self.positive_pressed)
+            positiveButton.bind("<space>", self.positive_pressed)
+
+        # put the buttons in the self.buttonsFrame
+
+        if self.neutral != None:
+            neutralButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.neutral + " [*]")
+            neutralButton.grid(column=1, row=0, sticky="we",
+                               padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
+            # for the commandButton, bind activation events
+            neutralButton.bind("<Return>", self.neutral_pressed)
+            neutralButton.bind("<Button-1>", self.neutral_pressed)
+            neutralButton.bind("<space>", self.neutral_pressed)
+
+        if self.negative!=None:
+            cancelButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.negative + " [Escape]")
+
+            cancelButton.grid(column=2, row=0, sticky="we",
+                              padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
+            cancelButton.bind("<Return>", self.cancel_pressed)
+            cancelButton.bind("<Button-1>", self.cancel_pressed)
+            cancelButton.bind("<space>", self.cancel_pressed)
+            cancelButton.bind("<Escape>", self.cancel_pressed)
+            # for the commandButton, bind activation events to the activation event
+            # handler
+
+        # add special buttons for multiple select features
+        if not self.multiple_select:
+            return
+
+        selectAllButton = ttk.Button(self.buttonsFrame, text="Выбрать все")
+        selectAllButton.grid(column=0, row=0, padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
+
+        clearAllButton = ttk.Button(self.buttonsFrame, text="Снять все")
+        clearAllButton.grid(column=1, row=0, padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
+
+        selectAllButton.bind("<Button-1>", self.choiceboxSelectAll)
+
+        clearAllButton.bind("<Button-1>", self.choiceboxClearAll)
+
+    def create_grip(self):
+        pass
+        #self.gridFrame = tk.Frame(self.boxRoot)
+        #self.gridFrame.pack(side=tk.BOTTOM, expand=tk.YES, fill="both")
+        #self.text=ttk.Label(self.buttonsFrame, text="123")
+        #self.text.grid(column=10, row=10, sticky="se")
+        #self.text.pack(fill="both", expand=1, side=tk.RIGHT)
+        #ttk.Sizegrip(self.gridFrame).grid(column=10, row=10, sticky="se")  # grid(column=50, row=50, sticky="se")  # (side=tk.BOTTOM, expand=tk.YES)
 
     def create_msg_widget(self, msg):
 
@@ -354,27 +435,41 @@ class GUItk(object):
 
         self.msgFrame = tk.Frame(
             self.boxRoot,
-            padx=self.padx * self.calc_character_width(),
+            padx=3#self.padx * self.calc_character_width(),
 
         )
         self.messageArea = tk.Text(
             self.msgFrame,
-            width=self.width_in_chars,
+            width=30,#self.width_in_chars,
+            height=5,
             state=tk.DISABLED,
             padx=(global_state.default_hpad_in_chars *
                   self.calc_character_width()),
             pady=(global_state.default_hpad_in_chars *
                   self.calc_character_width()),
             wrap=tk.WORD,
-
         )
         self.set_msg(msg)
 
-        self.msgFrame.pack(side=tk.TOP, expand=1, fill='both')
+        #self.msgFrame.pack(side=tk.TOP, expand=1, fill='both')
 
-        self.msgFrame.config(width=500) # ширина окна списка
+        self.msgFrame.config(width=20, height=5) # ширина окна списка
 
         #self.messageArea.pack(side=tk.TOP, expand=1, fill='both')
+
+    def create_ok_button(self):
+        okButton = ttk.Button(self.boxRoot, takefocus=tk.YES, text="OK [Enter]")
+
+        # okButton.pack(side=tk.TOP, expand=tk.YES, fill=tk.BOTH, padx='1m', pady='1m', ipady=1, ipadx=1)
+        # okButton.pack(side=tk.TOP, expand=1, fill='both')
+
+        okButton.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES,
+                      padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
+
+        # for the commandButton, bind activation events
+        okButton.bind("<Return>", self.ok_pressed)
+        okButton.bind("<Button-1>", self.ok_pressed)
+        okButton.bind("<space>", self.ok_pressed)
 
     def create_choicearea(self):
 
@@ -382,11 +477,11 @@ class GUItk(object):
         self.choiceboxFrame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=tk.YES,
                                  padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
 
-        lines_to_show = min(len(self.choices), 20) # высота окна списка
+        #lines_to_show = min(len(self.choices), 20) # высота окна списка
 
         # --------  put the self.choiceboxWidget in the self.choiceboxFrame ---
         self.choiceboxWidget = tk.Listbox(self.choiceboxFrame,
-                                          height=20,
+                                          height=500,
                                           borderwidth="2m", relief="flat",
                                           bg="white")
 
@@ -430,94 +525,11 @@ class GUItk(object):
         # Bind the keyboard events
         self.choiceboxWidget.bind("<Return>", self.ok_pressed)
         self.choiceboxWidget.bind("<Double-Button-1>", self.ok_pressed)
-        self.choiceboxWidget.bind("<space>", self.ok_pressed)
+        #self.choiceboxWidget.bind("<space>", self.ok_pressed)
         self.choiceboxWidget.bind("<Insert>", self.positive_pressed)
         self.choiceboxWidget.bind("<*>", self.neutral_pressed)
         self.choiceboxWidget.bind("</>", self.positive_pressed)
         self.choiceboxWidget.bind("<BackSpace>", self.cancel_pressed)
-
-    #def create_ok_button(self):
-    def create_ok_button(self):
-        # put the buttons in the self.buttonsFrame
-
-        okButton = ttk.Button(self.boxRoot, takefocus=tk.YES, text="OK [Enter]")
-
-        bindArrows(okButton)
-
-        #okButton.pack(side=tk.TOP, expand=tk.YES, fill=tk.BOTH, padx='1m', pady='1m', ipady=1, ipadx=1)
-        #okButton.pack(side=tk.TOP, expand=1, fill='both')
-
-        okButton.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES,
-                      padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
-
-        # for the commandButton, bind activation events
-        okButton.bind("<Return>", self.ok_pressed)
-        okButton.bind("<Button-1>", self.ok_pressed)
-        okButton.bind("<space>", self.ok_pressed)
-
-    def create_positive_button(self):
-
-        # put the buttons in the self.buttonsFrame
-        from icons import icon
-        if self.positive=="+": # если плюс, заменяем его на более красивый
-            self.positive = "\u2795 Добавить [Insert]"
-        elif self.positive==icon("down"):
-            self.positive += " [/]"
-
-        positiveButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.positive)
-
-        bindArrows(positiveButton)
-        #positiveButton.pack(expand=tk.YES, fill="x", side=tk.LEFT, padx='2m', pady='2m', ipady=5, ipadx=5)
-        positiveButton.grid(column=0, row=0,
-                            padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
-
-        # for the commandButton, bind activation events
-        positiveButton.bind("<Return>", self.positive_pressed)
-        positiveButton.bind("<Button-1>", self.positive_pressed)
-        positiveButton.bind("<space>", self.positive_pressed)
-
-
-    def create_neutral_button(self): # experimental нейтральная кнопка списка
-
-        # put the buttons in the self.buttonsFrame
-
-        neutralButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.neutral + " [*]")
-
-        bindArrows(neutralButton)
-
-        neutralButton.grid(column=1, row=0, padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
-
-        # for the commandButton, bind activation events
-        neutralButton.bind("<Return>", self.neutral_pressed)
-        neutralButton.bind("<Button-1>", self.neutral_pressed)
-        neutralButton.bind("<space>", self.neutral_pressed)
-
-    def create_cancel_button(self):
-        cancelButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.negative + " [Escape]")
-        bindArrows(cancelButton)
-        cancelButton.grid(column=2, row=0, padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
-        cancelButton.bind("<Return>", self.cancel_pressed)
-        cancelButton.bind("<Button-1>", self.cancel_pressed)
-        cancelButton.bind("<space>", self.cancel_pressed)
-        cancelButton.bind("<Escape>", self.cancel_pressed)
-        # for the commandButton, bind activation events to the activation event
-        # handler
-
-    def create_special_buttons(self):
-        # add special buttons for multiple select features
-        if not self.multiple_select:
-            return
-
-        selectAllButton = ttk.Button(self.buttonsFrame, text="Выбрать все")
-        selectAllButton.grid(column=0, row=0, padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
-
-        clearAllButton = ttk.Button(self.buttonsFrame, text="Снять все")
-        clearAllButton.grid(column=1, row=0, padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
-
-        selectAllButton.bind("<Button-1>", self.choiceboxSelectAll)
-        bindArrows(selectAllButton)
-        clearAllButton.bind("<Button-1>", self.choiceboxClearAll)
-        bindArrows(clearAllButton)
 
     def KeyboardListener(self, event):
         key = event.keysym

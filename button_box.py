@@ -25,7 +25,8 @@ def buttonbox(msg="",
               cancel_choice=None,
               callback=None,
               run=True,
-              neutral=None):
+              neutral=None,
+              negative=None):
     """
     Display a msg, a title, an image, and a set of buttons.
     The buttons are defined by the members of the choices global_state.
@@ -51,7 +52,8 @@ def buttonbox(msg="",
         default_choice=default_choice,
         cancel_choice=cancel_choice,
         callback=callback,
-        neutral=neutral)
+        neutral=neutral,
+        negative=negative)
     if not run:
         return bb
     else:
@@ -69,7 +71,7 @@ class ButtonBox(object):
     library can be used (wx, qt) without breaking anything for the user.
     """
 
-    def __init__(self, msg, title, choices, images, default_choice, cancel_choice, callback, neutral):
+    def __init__(self, msg, title, choices, images, default_choice, cancel_choice, callback, neutral, negative):
         """ Create box object
 
         Parameters
@@ -99,7 +101,10 @@ class ButtonBox(object):
 
         self.neutral = neutral
 
-        self.ui = GUItk(msg, title, choices, images, default_choice, cancel_choice, self.callback_ui, self.neutral)
+        self.negative = negative
+
+        self.ui = GUItk(msg, title, choices, images, default_choice, cancel_choice, self.callback_ui,
+                        self.neutral, self.negative)
 
     def run(self):
         """ Start the ui """
@@ -179,7 +184,7 @@ class ButtonBox(object):
 class GUItk(object):
     """ This is the object that contains the tk root object"""
 
-    def __init__(self, msg, title, choices, images, default_choice, cancel_choice, callback, neutral):
+    def __init__(self, msg, title, choices, images, default_choice, cancel_choice, callback, neutral, negative):
         """ Create ui object
 
         Parameters
@@ -236,6 +241,8 @@ class GUItk(object):
 
         self.create_buttons(choices, default_choice)
 
+        self.messageArea.focus_force()
+
     @property
     def choice(self):
         return self._choice_text
@@ -252,7 +259,7 @@ class GUItk(object):
 
     def stop(self):
         # Get the current position before quitting
-        #self.get_pos()
+        self.get_pos()
         self.boxRoot.quit()
 
     # Methods to change content ---------------------------------------
@@ -263,10 +270,10 @@ class GUItk(object):
         self.messageArea.config(state=tk.DISABLED)
         # Adjust msg height
         self.messageArea.update()
-        numlines = 25#self.get_num_lines(self.messageArea) # высота окна текста
+        numlines = 500#self.get_num_lines(self.messageArea) # высота окна текста
         self.set_msg_height(numlines)
         self.messageArea.update()
-        self.messageArea.config(width=57, padx=20, background="grey97")  # ширина окна текста
+        self.messageArea.config(width=200, padx=20, background=global_state.inactive_background)  # ширина окна текста
 
     def set_msg_height(self, numlines):
         self.messageArea.configure(height=numlines)
@@ -286,6 +293,7 @@ class GUItk(object):
         # geometry("250x150+300+300")
         geom = self.boxRoot.geometry()  # "628x672+300+200"
         global_state.window_position = '+' + geom.split('+', 1)[1]
+        global_state.window_size = geom[0: geom.index("+")]
 
     # Methods executing when a key is pressed -------------------------------
     def x_pressed(self):
@@ -293,6 +301,8 @@ class GUItk(object):
         self.callback(self, command='x')
 
     def cancel_pressed(self, event):
+        self.get_pos()
+        global_state.saveWindowPosition(self.boxRoot)
         self._choice_text = self._cancel_choice
         self.callback(self, command='cancel')
 
@@ -341,17 +351,22 @@ class GUItk(object):
     def configure_root(self, title):
         self.boxRoot.title(title)
 
-        self.set_pos(global_state.window_position)
+        self.set_pos(global_state.window_size + global_state.window_position)
 
         # Resize setup
         self.boxRoot.columnconfigure(0, weight=10)
         self.boxRoot.minsize(20, 50)
         # Quit when x button pressed
-        self.boxRoot.protocol('WM_DELETE_WINDOW', self.x_pressed)
+        #self.boxRoot.protocol('WM_DELETE_WINDOW', self.x_pressed)
+        def exit():
+            global_state.saveWindowPosition(self.boxRoot)
+            import sys
+            sys.exit(0)
+        self.boxRoot.protocol('WM_DELETE_WINDOW', exit)
         self.boxRoot.bind("<Escape>", self.cancel_pressed)
-        from os import name
-        if name == "nt":
-            self.boxRoot.iconbitmap('icon.ico')
+        #from os import name
+        #if name == "nt":
+        #    self.boxRoot.iconbitmap('icon.ico')
 
     def create_msg_widget(self, msg):
 
@@ -471,8 +486,8 @@ class GUItk(object):
 # -----------------------------------------------------------------------
 # msgbox
 # -----------------------------------------------------------------------
-def msgbox(msg="(Your message goes here)", title=" ",
-           ok_button="OK", neutral=None, image=None, root=None):
+def msgbox(msg="", title=" ",
+           ok_button=None, neutral=None, negative=None, image=None, root=None):
     """
     Display a message box
 
@@ -483,17 +498,18 @@ def msgbox(msg="(Your message goes here)", title=" ",
     :param tk_widget root: Top-level Tk widget
     :return: the text of the ok_button
     """
-    if not isinstance(ok_button, ut.basestring):
-        raise AssertionError(
-            "The 'ok_button' argument to msgbox must be a string.")
+#    if not isinstance(ok_button, ut.basestring):
+#        raise AssertionError(
+#            "The 'ok_button' argument to msgbox must be a string.")
 
     return buttonbox(msg=msg,
                      title=title,
-                     choices=[neutral, ok_button],
+                     choices=[neutral, negative],
                      image=image,
                      default_choice=ok_button,
                      cancel_choice=ok_button,
-                     neutral=neutral)
+                     neutral=neutral,
+                     negative=negative)
 
 
 def convert_to_type(input_value, new_type, input_value_name=None):
