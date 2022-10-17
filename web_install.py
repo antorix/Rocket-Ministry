@@ -47,7 +47,7 @@ def install():
             import winshell
         desktop = winshell.desktop()
         path = os.path.join(desktop, 'Rocket Ministry.lnk')
-        target = curPath + "/main.py"
+        target = curPath + "/Rocket Ministry.pyw"
         icon =  curPath + "/icon.ico"
         shell = win32com.client.Dispatch("WScript.Shell")
         shortcut = shell.CreateShortCut(path)
