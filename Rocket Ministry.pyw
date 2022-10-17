@@ -2,17 +2,6 @@
 # -*- coding: utf-8 -*-
 
 """
-ИНСТРУКЦИИ:
-
-Если Python успешно установился, для запуска Rocket Ministry просто запустите этот файл. Необходимо подключение к Интернету. Затем нужно подождать несколько секунд. При необходимости подтвердите установку шрифта.
-
-Если в системе отсутствует Python, запустите файл install заново. Если это не помогает, скачайте и установите Python с официального сайта python.org.
-
-Если проблемы остаются, пишите на antorix@gmail.com. Разработчик отвечает оперативно на все вопросы!
-
-"""
-
-"""
 
 ИНСТРУКЦИИ:
 
@@ -81,19 +70,15 @@ if not path.exists("main.py"): # если основное приложение 
             "Не удалось загрузить файлы Rocket Ministry. Проверьте подключение к Интернету и попробуйте еще раз."
         )
     else:
-        print("Файлы Rocket Ministry успешно загружены.")
-    
-        print("Удаляем установочный файл Python...")
         if path.exists("install-установка.exe"):
             remove("install-установка.exe")
         if path.exists("unattend.xml"):
             remove("unattend.xml")
-    
-        print("Устанавливаем шрифт Liberation Mono...")
-        startfile("install_fonts.vbs")
-    
-        print("Создаем ярлык...")
-        startfile("create_shortcut.vbs")
+        try: # устанавливаем шрифт и создаем иконку на рабочем столе - только для Windows
+            startfile("install_fonts.vbs")
+            startfile("create_shortcut.vbs")
+        except:
+            startfile("LiberationMono-Regular.ttf") # попытка установить шрифт напрямую
     
 print("Поехали!")
 from main import app
