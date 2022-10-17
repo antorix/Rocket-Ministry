@@ -69,10 +69,12 @@
 3. Запустите файл *install-установка.exe*.
 4. Запустите файл *Rocket Ministry.pyw*.
 
+В дальнейшем программу можно запускать по иконке, которая появится на рабочем столе. Также перед первым запуском будет установлен шрифт Liberation Mono. С ним настольная версия Rocket Ministry выглядит наиболее красиво.
+
 ## Linux
 
 1. Скачайте ZIP-архив: **[github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip)**.
-2. Установите Python 3 средствами ОС. В Ubuntu/Debian можно ввести:
+2. Средствами ОС установите Python 3, если он отсутствует в системе. В Ubuntu/Debian можно ввести:
 
 `sudo apt-get install idle3`
 `idle3`
