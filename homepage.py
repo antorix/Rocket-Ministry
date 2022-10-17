@@ -18,7 +18,7 @@ from icons import icon
 from os import system, path
 import sys
 
-def homepage():
+def homepage(reply=None):
     """ Home page """
 
     def firstRun():
@@ -35,8 +35,11 @@ def homepage():
                 startfile("fonts_install.vbs")
                 time.sleep(3)
 
-        message = "У вас есть месячная норма часов? Введите ее или оставьте 0, если не нужна:"
-        while 1:
+        if reply==None:
+            message = "У вас есть месячная норма часов? Введите ее или оставьте 0, если не нужна:"
+        elif reply==True:
+            message = "Введите месячную норму:"
+        while reply!=False:
             hours = dialogs.dialogText(
                 title = icon("timer") + " Норма часов",
                 message=message,
