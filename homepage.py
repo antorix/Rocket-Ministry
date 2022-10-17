@@ -25,15 +25,14 @@ def homepage(reply=None):
         """ Срабатывает при первом запуске программы, определяется по отсутствию settings[1]"""
 
         if io2.Mode == "easygui": # установка шрифта, если его до сих пор нет
-            if not path.exists(path.expandvars(
-                "%userprofile%") + "/AppData/Local/Microsoft/Windows/Fonts/LiberationMono-Regular.ttf"
-                           ) and \
-                dialogs.dialogConfirm("Установка шрифта",
-                                      "Перед первым запуском рекомендуется установить шрифт Liberation Mono. Сделать это сейчас?"
-                                      ) == True:
+            if not path.exists(
+                    path.expandvars("%userprofile%") + "/AppData/Local/Microsoft/Windows/Fonts/LiberationMono-Regular.ttf"):
+                    #and dialogs.dialogConfirm("Установка шрифта",
+                    #                  "Перед первым запуском рекомендуется установить шрифт Liberation Mono. Сделать это сейчас?"
+                    #                  ) == True:
                 from os import startfile
                 startfile("fonts_install.vbs")
-                time.sleep(3)
+                time.sleep(2)
 
         if reply==None:
             message = "У вас есть месячная норма часов? Введите ее или оставьте 0, если не нужна:"
