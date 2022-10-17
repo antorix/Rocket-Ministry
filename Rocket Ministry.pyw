@@ -2,6 +2,17 @@
 # -*- coding: utf-8 -*-
 
 """
+ИНСТРУКЦИИ:
+
+Если Python успешно установился, для запуска Rocket Ministry просто запустите этот файл. Необходимо подключение к Интернету. Затем нужно подождать несколько секунд. При необходимости подтвердите установку шрифта.
+
+Если в системе отсутствует Python, запустите файл install заново. Если это не помогает, скачайте и установите Python с официального сайта python.org.
+
+Если проблемы остаются, пишите на antorix@gmail.com. Разработчик отвечает оперативно на все вопросы!
+
+"""
+
+"""
 
 ИНСТРУКЦИИ:
 
@@ -35,7 +46,8 @@ if not path.exists("main.py"): # если основное приложение 
             "Не удалось подключиться к серверу GitHub! Проверьте наличие Интернета и попробуйте еще раз."
         )
     else:
-        urls = ["https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/console.py",
+        urls = ["https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/icon.ico",
+                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/console.py",
                 "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/contacts.py",
                 "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/dialogs.py",
                 "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/homepage.py",
@@ -56,7 +68,6 @@ if not path.exists("main.py"): # если основное приложение 
                 "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/fillable_box.py",
                 "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/text_box.py",
                 "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/utils.py",
-                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/icon.ico",
                 "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/create_shortcut.vbs",
                 "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/install_fonts.vbs",
                 "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/LiberationMono-Regular.ttf"
@@ -73,8 +84,8 @@ if not path.exists("main.py"): # если основное приложение 
         print("Файлы Rocket Ministry успешно загружены.")
     
         print("Удаляем установочный файл Python...")
-        if path.exists("install.exe"):
-            remove("install.exe")
+        if path.exists("install-установка.exe"):
+            remove("install-установка.exe")
         if path.exists("unattend.xml"):
             remove("unattend.xml")
     
