@@ -40,7 +40,8 @@ def install():
 
     try:
         print("Создаем иконку на рабочем столе...\n")
-        try:
+        os.startfile("create_shortcut.vbs")
+        """try:
             import winshell
         except:
             subprocess.check_call([sys.executable, "-m", "pip", "install", "winshell"])
@@ -53,7 +54,7 @@ def install():
         shortcut = shell.CreateShortCut(path)
         shortcut.Targetpath = target
         shortcut.IconLocation = icon
-        shortcut.save()
+        shortcut.save()"""
     except:
         pass
 
