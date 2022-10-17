@@ -59,7 +59,7 @@ def install():
 
     if os.path.exists("install.py"):
         print("Удаляем установочный файл...\n")
-        os.remove("install.py")
+        os.remove("web_install.py")
 
     print("Поехали!\n")
     print("===================================================\n")
