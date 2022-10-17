@@ -34,7 +34,7 @@ def install(targetFolder=None):
 
     try:
         print("Устанавливаем шрифт...\n")
-        #os.startfile("install_fonts.vbs")
+        os.startfile("install_fonts.vbs")
     except:
         os.startfile("LiberationMono-Regular.ttf")  # попытка установить шрифт напрямую
         pass
