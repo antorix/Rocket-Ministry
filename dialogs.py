@@ -185,6 +185,7 @@ def dialogList(
 
             # согласование результатов текстового вывода кнопкам на Android: neutral, positive, None или номер строки:
             if choice==None:                                    return None # exit
+            elif "Таймер" in choice:                            return "neutral"
             elif "Участки" in choice and form!="home":          return "neutral"
             elif "Детали" in choice and form!="firstCallMenu":  return "neutral"
             elif "Контакт" in choice and form=="flatView":      return "neutral"
@@ -198,7 +199,6 @@ def dialogList(
                 and form!="porchSettings":                      return "neutral" # sorting contacts or houses
             elif form=="flatView" and\
                     "Новое посещение" in choice:                return "positive"
-            elif "Таймер" in choice:                            return "positive"
             elif "Новая заметка" in choice:                     return "positive"
             elif "Добавить" in choice:                          return "positive"
             elif "Новый контакт" in choice:                     return "positive"
@@ -235,7 +235,6 @@ def dialogList(
                 for i in range(len(options)):
                     if options[i] == str(choice):
                         return i
-
 
 def dialogChecklist(
         title="",

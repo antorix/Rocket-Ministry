@@ -226,6 +226,8 @@ def homepage(reply=None):
             title = "%s Rocket Ministry %s" % ( icon("rocket"), reports.getTimerIcon(settings[2][6]) )
         else:
             title = "%s Rocket Ministry" % reports.getTimerIcon(settings[2][6])
+            if io2.Mode=="text" or settings[0][1]==1:
+                options.append(icon("timer") + " Таймер" + timerTime)
 
         if io2.Mode == "sl4a": # очистка экрана на всякий случай
             try:
