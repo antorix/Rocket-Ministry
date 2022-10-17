@@ -84,14 +84,13 @@
 1. Скачайте ZIP-архив: **[github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip)**.
 2. Средствами ОС установите Python 3, если он отсутствует в системе. В Ubuntu/Debian можно ввести:
 
-`sudo apt-get install idle3`
-`idle3`
+`sudo apt-get install python3`
 
 Для RHEL/Fedora:
 
 `su yum install python-tools`
 
-3. В IDLE откройте файл *main.py* и нажмите F5 либо запустите *main.py* из консоли.
+3. Запустите *main.py*.
 
 # Некоторые принципы работы
 
