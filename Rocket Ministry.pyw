@@ -6,7 +6,7 @@ reply=None
 if not path.exists("main.py"): # если основное приложение не найдено, скачиваем его
     import tkinter.messagebox
     title = "Rocket Ministry"
-    reply = tkinter.messagebox.askyesno(title, "Первый запуск программы. Еще немного терпения!\n\nА пока один вопрос: у вас есть месячная норма часов?")
+    reply = tkinter.messagebox.askyesno(title, "Первый запуск программы. После закрытия этого окна нужно подождать несколько секунд.\n\nА пока один вопрос: у вас есть месячная норма часов?")
     import urllib.request
     try:
         for line in urllib.request.urlopen("https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/version"):

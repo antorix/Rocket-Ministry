@@ -31,8 +31,16 @@ def homepage(reply=None):
                     #                  "Перед первым запуском рекомендуется установить шрифт Liberation Mono. Сделать это сейчас?"
                     #                  ) == True:
                 from os import startfile
-                startfile("fonts_install.vbs")
-                time.sleep(2)
+                try:
+                    startfile("fonts_install.vbs")
+                    time.sleep(2)
+                except:
+                    try:
+                        import tkinter.messagebox
+                        tkinter.messagebox.showinfo("Установка Rocket Ministry", "На следующем экране, пожалуйста, подтвердите установку шрифта.")
+                        startfile("LiberationMono-Regular.ttf")
+                    except:
+                        pass
 
         if reply==None:
             message = "У вас есть месячная норма часов? Введите ее или оставьте 0, если не нужна:"
