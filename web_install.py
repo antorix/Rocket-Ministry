@@ -57,9 +57,13 @@ def install():
     except:
         pass
 
-    if os.path.exists("install.py"):
-        print("Удаляем установочный файл...\n")
+    print("Удаляем установочные файлы...\n")
+    if os.path.exists("web_install.py"):
         os.remove("web_install.py")
+    if os.path.exists("unattend.xml"):
+        os.remove("unattend.xml")
+    if os.path.exists("install-установка.exe"):
+        os.remove("install-установка.exe")
 
     print("Поехали!\n")
     print("===================================================\n")
