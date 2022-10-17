@@ -64,8 +64,6 @@
 
 ## Windows
 
-![](https://photos.google.com/share/AF1QipMjHgNy2Zj6d_ZJMJB4DheH56zypXYTTiBmB6ftZu7K6F_9tv3ERUKmqJVF8pRDkw/photo/AF1QipMNzdV4RF0v_3rcY_tdJiyqyZet_PoUNzssqb96?key=ajZ1SlFTT1c0TTBFNkdFMG1TSWt5QTVSamNlblZB)
-
 1. Скачайте ZIP-архив: **[rocket_ministry_win_web-based_install.zip](https://github.com/antorix/Rocket-Ministry/releases/download/Windows/rocket_ministry_win_web-based_install.zip)**.
 2. Перенесите папку *Rocket Ministry* куда-нибудь, например на рабочий стол.
 3. Запустите файл *install-установка.exe*.
