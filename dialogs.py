@@ -367,7 +367,8 @@ def dialogConfirm(title="", message="", neutralButton=False, choices=["Да", "�
             except:
                 return result
         
-        result = tkinter.messagebox.askyesno(title, message)
+        else:
+            result = tkinter.messagebox.askyesno(title, message)
             
         if result==choices[0] or result==True:
             return True
