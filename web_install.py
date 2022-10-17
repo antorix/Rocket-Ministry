@@ -61,10 +61,11 @@ def install(targetFolder=None):
     except:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "winshell"])
         import winshell
+    
     desktop = winshell.desktop()
     try:
         os.startfile(desktop + "\Rocket Ministry.lnk")
-    else:
+    except:
         from main import app
         app()
 
