@@ -1,18 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
 """
-
-ИНСТРУКЦИИ:
-
-Если Python успешно установился, для запуска Rocket Ministry просто запустите этот файл. Необходимо подключение к Интернету. Затем нужно подождать несколько секунд. При необходимости подтвердите установку шрифта.
-
-Если в системе отсутствует Python, запустите файл install заново. Если это не помогает, скачайте и установите Python с официального сайта python.org.
-
-Если проблемы остаются, пишите на antorix@gmail.com. Разработчик отвечает оперативно на все вопросы!
-
+Помощь по установке:
+https://github.com/antorix/Rocket-Ministry/blob/master/README.md#возможные-проблемы-при-установке-на-windows
 """
-
 from os import path, remove, startfile
 import tkinter.messagebox
 import urllib.request
