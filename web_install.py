@@ -1,11 +1,13 @@
 import subprocess
 import sys
-import os, win32com.client
+import os
 import urllib.request
 from zipfile import ZipFile
 from shutil import move, rmtree
 
-def install(desktop=True):
+def install(desktop):
+
+    print("Установка Rocket Ministry. Не закрывайте это окно!\n")
 
     if desktop==True:
         try:
@@ -14,21 +16,22 @@ def install(desktop=True):
             subprocess.check_call([sys.executable, "-m", "pip", "install", "winshell"])
             import winshell
         targetFolder = winshell.desktop()
+        print("Создаем папку Rocket Ministry на рабочем столе...\n")
+        targetFolder += "\Rocket Ministry"
+        if not os.path.exists(targetFolder):
+            os.mkdir(targetFolder)
     else:
         targetFolder = os.path.dirname(os.path.abspath(__file__))
 
-    #print(targetFolder)
-
-    print("Установка Rocket Ministry. Не закрывайте это окно!\n")
     try:
         print("Загружаем файлы программы...\n")
         url = "https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip"
-        file="files.zip"
+        file = "files.zip"
         urllib.request.urlretrieve(url, file)
         zip = ZipFile(file, "r")
         zip.extractall("")
         zip.close()
-        downloadedFolder = targetFolder + "\Rocket-Ministry-master"
+        downloadedFolder = "Rocket-Ministry-master"
 
         for file_name in os.listdir(downloadedFolder):
             source = downloadedFolder + "\\" + file_name
@@ -43,33 +46,23 @@ def install(desktop=True):
 
     try:
         print("Устанавливаем шрифт...\n")
-        os.startfile("install_fonts.vbs")
+        #os.startfile(targetFolder + "\install_fonts.vbs")
     except:
-        os.startfile("LiberationMono-Regular.ttf")  # попытка установить шрифт напрямую
-        pass
+        os.startfile(targetFolder + "\LiberationMono-Regular.ttf")  # попытка установить шрифт напрямую
 
     try:
-        print("Создаем иконку на рабочем столе...\n")
-        os.startfile("create_shortcut.vbs")
+        print("Создаем ярлыки на рабочем столе и в списке установленных программ...\n")
+        os.startfile(targetFolder + "\create_shortcut.vbs")
     except:
         pass
 
-    """print("Удаляем установочные файлы...\n")
-    if os.path.exists("web_install.py"):
-        os.remove("web_install.py")
+    if os.path.exists("install-установка.exe"):
+        print("Удаляем установщик Python...\n")
+        os.remove("install-установка.exe")
     if os.path.exists("unattend.xml"):
         os.remove("unattend.xml")
-    if os.path.exists("install-установка.exe"):
-        os.remove("install-установка.exe")"""
 
-    print("Поехали!\n")
-    print("===================================================\n")
+    print("Установка завершена! Кликните по иконке на рабочем столе. Это окно можно закрыть.")
+    input()
 
-
-    try:
-        os.startfile(desktop + "\Rocket Ministry.lnk")
-    except:
-        from main import app
-        app()
-
-install()
+install(desktop=True)
