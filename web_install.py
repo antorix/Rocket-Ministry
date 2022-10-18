@@ -66,4 +66,4 @@ def install(desktop):
     if os.path.exists("unattend.xml"):
         os.remove("unattend.xml")
 
-    print("Установка завершена. Поехали!\n\n=============================\n\n")
+    print("Установка завершена. Поехали!\n\n=============================\n")
