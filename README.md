@@ -75,7 +75,7 @@
 
 ### Способ №2, классический:
 
-1. Установите Python с официального сайта ([прямая ссылка](https://www.python.org/ftp/python/3.10.8/python-3.10.8-amd64.exe)).
+1. Установите Python с официального сайта ([прямая ссылка](https://www.python.org/ftp/python/3.10.8/python-3.10.8-amd64.exe)). Используйте рекомендуемые настройки установки («Install Now»).
 2. Скачайте и запустите веб-установщик **[rocket_ministry_install_script](https://github.com/antorix/Rocket-Ministry/releases/download/Python/rocket_ministry_install_script.py)** и следуйте его подсказкам.
 3. Запустите программу с помощью иконки на рабочем столе.
 
