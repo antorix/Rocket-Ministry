@@ -49,7 +49,7 @@ def install(desktop):
         return
 
     try:
-        print("Устанавливаем шрифт, нужно ваше подтверждение...\n")
+        print("Устанавливаем шрифт, может потребоваться ваше подтверждение...\n")
         os.startfile(targetFolder + "\install_fonts.vbs")
     except:
         os.startfile(targetFolder + "\LiberationMono-Regular.ttf")  # попытка установить шрифт напрямую
