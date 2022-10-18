@@ -29,7 +29,7 @@ def homepage():
             if not path.exists(
                     path.expandvars("%userprofile%") + "/AppData/Local/Microsoft/Windows/Fonts/LiberationMono-Regular.ttf")\
                     and dialogs.dialogConfirm(
-                        "Установка шрифта",
+                        "Установка Rocket Ministry",
                         "Перед первым запуском рекомендуется установить шрифт Liberation Mono. Сделать это сейчас?"
                     ) == True:
                 try:
@@ -38,12 +38,17 @@ def homepage():
                 except:
                     try:
                         import tkinter.messagebox
-                        tkinter.messagebox.showinfo("Установка Rocket Ministry", "На следующем экране, пожалуйста, подтвердите установку шрифта.")
+                        tkinter.messagebox.showinfo(
+                            "Установка Rocket Ministry",
+                            "На следующем экране, пожалуйста, подтвердите установку шрифта.")
                         startfile("LiberationMono-Regular.ttf")
                     except:
                         pass
 
-        startfile("create_shortcuts.vbs") # установка иконок
+        try:
+            startfile("create_shortcuts.vbs") # установка иконок
+        except:
+            pass
 
         message = "У вас есть месячная норма часов? Введите ее или оставьте 0, если не нужна:"
         while 1:
