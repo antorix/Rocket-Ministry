@@ -60,9 +60,9 @@ def install(desktop):
     except:
         pass
 
-    if os.path.exists("install-установка.exe"):
+    if os.path.exists("Установить Rocket Ministry.exe"):
         print("Удаляем установщик Python...\n")
-        os.remove("install-установка.exe")
+        os.remove("Установить Rocket Ministry.exe")
     if os.path.exists("unattend.xml"):
         os.remove("unattend.xml")
 
