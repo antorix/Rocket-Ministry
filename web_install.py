@@ -7,6 +7,8 @@ from shutil import move, rmtree
 
 def install(desktop):
 
+    print("Установка Rocket Ministry. Не закрывайте это окно!\n")
+
     if desktop==True: # пока не работает
         try:
             subprocess.check_call([sys.executable, "-m", "pip", "install", "win32con"])
@@ -47,7 +49,7 @@ def install(desktop):
         return
 
     try:
-        print("Устанавливаем шрифт...\n")
+        print("Устанавливаем шрифт, нужно ваше подтверждение...\n")
         os.startfile(targetFolder + "\install_fonts.vbs")
     except:
         os.startfile(targetFolder + "\LiberationMono-Regular.ttf")  # попытка установить шрифт напрямую
@@ -64,5 +66,4 @@ def install(desktop):
     if os.path.exists("unattend.xml"):
         os.remove("unattend.xml")
 
-    print("Установка завершена! Кликните по иконке на рабочем столе. Это окно можно закрыть.")
-    input()
+    print("Установка завершена. Поехали!\n===================================")
