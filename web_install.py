@@ -5,10 +5,19 @@ import urllib.request
 from zipfile import ZipFile
 from shutil import move, rmtree
 
-def install(targetFolder=None):
+def install(desktop=True):
 
-    if targetFolder==None:
+    if desktop==True:
+        try:
+            import winshell
+        except:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "winshell"])
+            import winshell
+        targetFolder = winshell.desktop()
+    else:
         targetFolder = os.path.dirname(os.path.abspath(__file__))
+
+    #print(targetFolder)
 
     print("Установка Rocket Ministry. Не закрывайте это окно!\n")
     try:
@@ -56,13 +65,7 @@ def install(targetFolder=None):
     print("Поехали!\n")
     print("===================================================\n")
 
-    try:
-        import winshell
-    except:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "winshell"])
-        import winshell
-    
-    desktop = winshell.desktop()
+
     try:
         os.startfile(desktop + "\Rocket Ministry.lnk")
     except:
