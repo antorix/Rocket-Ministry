@@ -18,7 +18,7 @@ from icons import icon
 from os import system, path
 import sys
 
-def homepage(reply=None):
+def homepage():
     """ Home page """
 
     def firstRun():
@@ -42,11 +42,8 @@ def homepage(reply=None):
                     except:
                         pass
 
-        if reply==None:
-            message = "У вас есть месячная норма часов? Введите ее или оставьте 0, если не нужна:"
-        elif reply==True:
-            message = "Введите месячную норму:"
-        while reply!=False:
+        message = "У вас есть месячная норма часов? Введите ее или оставьте 0, если не нужна:"
+        while 1:
             hours = dialogs.dialogText(
                 title = icon("timer") + " Норма часов",
                 message=message,

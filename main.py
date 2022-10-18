@@ -6,7 +6,7 @@ import dialogs
 import homepage as homepage
 from icons import icon
 
-def app(reply=None):
+def app():
     """ Callable program """
 
     load()
@@ -21,7 +21,7 @@ def app(reply=None):
     if password is None:
         return
     elif password==settings[0][17]:
-        homepage.homepage(reply)
+        homepage.homepage()
 
 # Start program app
 
