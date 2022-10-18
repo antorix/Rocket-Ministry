@@ -7,19 +7,20 @@ from shutil import move, rmtree
 
 def install(desktop):
 
-    print("Установка Rocket Ministry. Не закрывайте это окно!\n")
-
-    if desktop==True:
+    if desktop==True: # пока не работает
         try:
-            import winshell
-        except:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "win32con"])
             subprocess.check_call([sys.executable, "-m", "pip", "install", "winshell"])
+            import win32con
             import winshell
-        targetFolder = winshell.desktop()
-        print("Создаем папку Rocket Ministry на рабочем столе...\n")
-        targetFolder += "\Rocket Ministry"
-        if not os.path.exists(targetFolder):
-            os.mkdir(targetFolder)
+            targetFolder = winshell.desktop()
+            print("Создаем папку Rocket Ministry на рабочем столе...\n")
+            targetFolder += "\Rocket Ministry"
+            if not os.path.exists(targetFolder):
+                os.mkdir(targetFolder)
+        except:
+            targetFolder = os.path.dirname(os.path.abspath(__file__))
+
     else:
         targetFolder = os.path.dirname(os.path.abspath(__file__))
 
@@ -47,7 +48,7 @@ def install(desktop):
 
     try:
         print("Устанавливаем шрифт...\n")
-        #os.startfile(targetFolder + "\install_fonts.vbs")
+        os.startfile(targetFolder + "\install_fonts.vbs")
     except:
         os.startfile(targetFolder + "\LiberationMono-Regular.ttf")  # попытка установить шрифт напрямую
 
@@ -65,5 +66,3 @@ def install(desktop):
 
     print("Установка завершена! Кликните по иконке на рабочем столе. Это окно можно закрыть.")
     input()
-
-install(desktop=True)
