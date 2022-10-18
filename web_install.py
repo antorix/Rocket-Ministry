@@ -1,29 +1,23 @@
-import subprocess
-import sys
 import os
 import urllib.request
 from zipfile import ZipFile
 from shutil import move, rmtree
+from tkinter import filedialog
 
 def install(desktop):
 
     print("Установка Rocket Ministry. Не закрывайте это окно!\n")
 
-    if desktop==True: # пока не работает
-        try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "win32con"])
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "winshell"])
-            import win32con
-            import winshell
-            targetFolder = winshell.desktop()
-            print("Создаем папку Rocket Ministry на рабочем столе...\n")
-            targetFolder += "\Rocket Ministry"
-            if not os.path.exists(targetFolder):
-                os.mkdir(targetFolder)
-        except:
-            targetFolder = os.path.dirname(os.path.abspath(__file__))
-
-    else:
+    if desktop==True: # если установщик скачан и запущен отдельно – создаем папку в выбранном месте
+        print("Выберите путь, в котором будет создана папка Rocket Ministry с файлами программы.\n")
+        targetFolder = filedialog.askdirectory()
+        if targetFolder=="": # пользователь не выбрал папку, выходим
+            return
+        targetFolder += "/Rocket Ministry"
+        print("Создаем папку %s...\n" % targetFolder)
+        if not os.path.exists(targetFolder):
+            os.mkdir(targetFolder)
+    else: # если установщик скачан в архиве с дистрибутивом Python – кладем все файлы локально
         targetFolder = os.path.dirname(os.path.abspath(__file__))
 
     try:
@@ -37,8 +31,8 @@ def install(desktop):
         downloadedFolder = "Rocket-Ministry-master"
 
         for file_name in os.listdir(downloadedFolder):
-            source = downloadedFolder + "\\" + file_name
-            destination = targetFolder + "\\" + file_name
+            source = downloadedFolder + "/" + file_name
+            destination = targetFolder + "/" + file_name
             if os.path.isfile(source):
                 move(source, destination)
         os.remove(file)
@@ -50,13 +44,13 @@ def install(desktop):
 
     try:
         print("Устанавливаем шрифт, может потребоваться ваше подтверждение...\n")
-        os.startfile(targetFolder + "\install_fonts.vbs")
+        os.startfile(targetFolder + "/install_fonts.vbs")
     except:
-        os.startfile(targetFolder + "\LiberationMono-Regular.ttf")  # попытка установить шрифт напрямую
+        os.startfile(targetFolder + "/LiberationMono-Regular.ttf")  # попытка установить шрифт напрямую
 
     try:
         print("Создаем ярлыки на рабочем столе и в списке установленных программ...\n")
-        os.startfile(targetFolder + "\create_shortcuts.vbs")
+        os.startfile(targetFolder + "/create_shortcuts.vbs")
     except:
         pass
 
@@ -67,3 +61,6 @@ def install(desktop):
         os.remove("unattend.xml")
 
     print("Установка завершена. Поехали!\n\n=============================\n")
+
+if __name__ == "__main__":
+    install(desktop=True)
