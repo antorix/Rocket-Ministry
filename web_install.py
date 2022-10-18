@@ -56,7 +56,7 @@ def install(desktop):
 
     try:
         print("Создаем ярлыки на рабочем столе и в списке установленных программ...\n")
-        os.startfile(targetFolder + "\create_shortcut.vbs")
+        os.startfile(targetFolder + "\create_shortcuts.vbs")
     except:
         pass
 
