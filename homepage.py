@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+import os
 
 import io2
 from io2 import houses
@@ -15,7 +16,7 @@ import house_op
 import time
 import datetime
 from icons import icon
-from os import system, path
+from os import system, path, startfile
 import sys
 
 def homepage():
@@ -24,13 +25,13 @@ def homepage():
     def firstRun():
         """ Срабатывает при первом запуске программы, определяется по отсутствию settings[1]"""
 
-        if io2.Mode == "easygui": # установка шрифта, если его до сих пор нет
+        if io2.Mode == "easygui": # установка шрифта
             if not path.exists(
-                    path.expandvars("%userprofile%") + "/AppData/Local/Microsoft/Windows/Fonts/LiberationMono-Regular.ttf"):
-                    #and dialogs.dialogConfirm("Установка шрифта",
-                    #                  "Перед первым запуском рекомендуется установить шрифт Liberation Mono. Сделать это сейчас?"
-                    #                  ) == True:
-                from os import startfile
+                    path.expandvars("%userprofile%") + "/AppData/Local/Microsoft/Windows/Fonts/LiberationMono-Regular.ttf")\
+                    and dialogs.dialogConfirm(
+                        "Установка шрифта",
+                        "Перед первым запуском рекомендуется установить шрифт Liberation Mono. Сделать это сейчас?"
+                    ) == True:
                 try:
                     startfile("fonts_install.vbs")
                     time.sleep(2)
@@ -41,6 +42,8 @@ def homepage():
                         startfile("LiberationMono-Regular.ttf")
                     except:
                         pass
+
+        startfile("create_shortcuts.vbs") # установка иконок
 
         message = "У вас есть месячная норма часов? Введите ее или оставьте 0, если не нужна:"
         while 1:
