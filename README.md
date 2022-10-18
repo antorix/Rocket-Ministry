@@ -77,6 +77,7 @@
 
 1. Установите движок Python самым удобным способом для Windows, в магазине Microsoft Store: **[Python 3.7](https://apps.microsoft.com/store/detail/python-37/9NJ46SX7X90P)**.
 2. Скачайте и запустите скрипт-установщик **[rocket_ministry_install_script](https://github.com/antorix/Rocket-Ministry/releases/download/Python/rocket_ministry_install_script.py)** и следуйте его подсказкам.
+3. Запустите программу с помощью иконки на рабочем столе.
 
 ### Возможные проблемы при установке на Windows
 
