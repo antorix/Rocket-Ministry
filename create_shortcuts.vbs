@@ -1,9 +1,13 @@
 Option Explicit
 
-Dim baseFolder, linkFile1, linkFile2, targetPath, objShell1, objShell2, desktopPath, progPath
-
+Dim baseFolder, linkFile1, linkFile2, targetPath, objShell1, objShell2, desktopPath, progPath, oFSO
+	
 	Set objShell1 = Wscript.CreateObject("Wscript.Shell")
 	desktopPath = objShell1.SpecialFolders("Desktop")
+	
+	' Создание папки на рабочем столе
+	'Set oFSO = CreateObject("Scripting.FileSystemObject")	
+	'oFSO.CreateFolder desktopPath & "\Rocket Ministry"	
    
 	Set objShell2 = Wscript.CreateObject("Wscript.Shell")
 	progPath = objShell2.SpecialFolders("Programs")
@@ -31,3 +35,5 @@ Dim baseFolder, linkFile1, linkFile2, targetPath, objShell1, objShell2, desktopP
 		.IconLocation= baseFolder & "icon.ico"
         .Save
     End With
+	
+	
