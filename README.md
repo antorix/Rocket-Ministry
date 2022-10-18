@@ -64,16 +64,19 @@
 
 ## Windows
 
-### Основной способ
+Есть два способа, выберите тот, какой вам больше подходит:
+
+### Cпособ №1 – через распаковку архива:
 
 1. Скачайте ZIP-архив: **[rocket_ministry_win_web_install.zip](https://github.com/antorix/Rocket-Ministry/releases/download/Windows/rocket_ministry_win_web_install.zip)**.
 2. Перенесите папку *Rocket Ministry* куда-нибудь, например на рабочий стол.
 3. Запустите файл *Установка Rocket Ministry*.
 4. Запустите файл *Rocket Ministry*.
 
-### Альтернативный способ
+### Способ №2 – через магазин Microsoft:
 
-Если что-то пошло не так, попробуйте более традиционный метод установки Python-приложения. Скачайте и установите движок Python из [Магазина Microsoft](https://apps.microsoft.com/store/detail/python-37/9NJ46SX7X90P) (рекомендую Python 3.7). Затем скачайте и распакуйте архив с файлами Rocket Ministry: [master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip). Запустите файл *Rocket Ministry.py*. Программа должна запуститься.
+1. Установите движок Python самым удобным способом для Windows, в магазине Microsoft Store: **[Python 3.7](https://apps.microsoft.com/store/detail/python-37/9NJ46SX7X90P)**.
+2. Скачайте и запустите скрипт-установщик **[rocket_ministry_install_script](https://github.com/antorix/Rocket-Ministry/releases/download/Python/rocket_ministry_install_script.py)** и следуйте его подсказкам.
 
 ### Возможные проблемы при установке на Windows
 
