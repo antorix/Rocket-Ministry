@@ -7,7 +7,7 @@ try: # определяем ОС
     from androidhelper import Android
 except:
     try:
-        import tki2nter
+        import tkinter
     except:
         Mode = "text"
         UserPath = ""
