@@ -93,10 +93,11 @@
 
 ## Linux
 
-1. Скачайте ZIP-архив: **[github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip)**.
-2. Средствами ОС установите Python 3, хотя в большинстве случаев он будет уже установлен. В Ubuntu/Debian можно ввести:
+1. Средствами ОС установите Python 3, хотя в большинстве случаев он будет уже установлен. В Ubuntu/Debian можно ввести:
 
 `sudo apt-get install python3`
+
+2. Скачайте и запустите веб-установщик **[rocket_ministry_install_script](https://github.com/antorix/Rocket-Ministry/releases/download/Python/rocket_ministry_install_script.py)** и следуйте его подсказкам.
 
 3. Откройте терминал в папке программы и введите:
 
