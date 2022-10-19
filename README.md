@@ -94,15 +94,13 @@
 ## Linux
 
 1. Скачайте ZIP-архив: **[github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip)**.
-2. Средствами ОС установите Python 3, если он отсутствует в системе. В Ubuntu/Debian можно ввести:
+2. Средствами ОС установите Python 3, если еще не установлен. В Ubuntu/Debian можно ввести:
 
 `sudo apt-get install python3`
 
-Для RHEL/Fedora:
+3. Запустите терминал в папке программы и введите:
 
-`su yum install python-tools`
-
-3. Запустите *main.py*.
+`python3 main.py`
 
 # Некоторые принципы работы
 
