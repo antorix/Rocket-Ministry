@@ -217,9 +217,14 @@ class Report():
                 self.difTime = (self.endTime - self.startTime) / 3600
 
             if io2.settings[0][2] == 1:
-                hoursLine = icon("timer") + " Часы: %s\n     (с кредитом: %s)" % (
-                    timeFloatToHHMM(self.hours), timeFloatToHHMM(self.hours + self.credit)
-                )
+                if io2.Mode=="sl4a":
+                    hoursLine = icon("timer") + " Часы: %s\n     (с кредитом: %s)" % (
+                        timeFloatToHHMM(self.hours), timeFloatToHHMM(self.hours + self.credit)
+                    )
+                else:
+                    hoursLine = icon("timer") + " Часы: %s (с кредитом: %s)" % (
+                        timeFloatToHHMM(self.hours), timeFloatToHHMM(self.hours + self.credit)
+                    )
             else:
                 hoursLine = icon("timer") + " Часы: %s" % timeFloatToHHMM(self.hours)
 
