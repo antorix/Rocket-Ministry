@@ -485,7 +485,7 @@ class House():
                 if io2.Mode == "text" or io2.settings[0][1]==True:
                     options.append(icon("plus") + " Новое посещение")  # positive button on Android
 
-                if io2.Mode == "text":
+                if io2.Mode == "text" or io2.settings[0][1]==True:
                     options.append(icon("preferences") + " Детали")  # positive button on Android
                 neutral = icon("preferences") + " Детали"
 

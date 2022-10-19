@@ -386,7 +386,7 @@ def flatView(flat, house, virtual=False):
             continue
         elif choice==None:
             break
-        elif choice=="neutral" or choice=="\\":
+        elif choice=="neutral" or choice=="*":
             if set.flatSettings(flat, house, virtual)=="deleted":
                 return "deleted"
         elif choice=="positive": # new record
@@ -546,7 +546,7 @@ def findFlatByNumber(house, porch, number):
             )
             if input == None:
                 pass
-            elif input == "neutral" or input == "\\" or input == "справка" or input == "help":
+            elif input == "neutral" or input == "*" or input == "справка" or input == "help":
                 dialogs.dialogInfo(
                     largeText=True,
                     title="%s Умная строка" % icon("rocket"),
