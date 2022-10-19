@@ -97,9 +97,9 @@
 
 `sudo apt-get install python3`
 
-2. Скачайте и запустите веб-установщик **[rocket_ministry_install_script](https://github.com/antorix/Rocket-Ministry/releases/download/Python/rocket_ministry_install_script.py)** и следуйте его подсказкам.
+2. Скачайте и запустите веб-установщик **[rocket_ministry_install_script](https://github.com/antorix/Rocket-Ministry/releases/download/Python/rocket_ministry_install_script.py)** и следуйте его подсказкам. В выбранном вами месте появится папка с файлами Rocket Ministry.
 
-3. Откройте терминал в папке программы и введите:
+3. Откройте терминал в этой папке и введите:
 
 `python3 main.py`
 
