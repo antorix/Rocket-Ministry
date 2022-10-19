@@ -94,11 +94,11 @@
 ## Linux
 
 1. Скачайте ZIP-архив: **[github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip](https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip)**.
-2. Средствами ОС установите Python 3, если еще не установлен. В Ubuntu/Debian можно ввести:
+2. Средствами ОС установите Python 3, хотя в большинстве случаев он будет уже установлен. В Ubuntu/Debian можно ввести:
 
 `sudo apt-get install python3`
 
-3. Запустите терминал в папке программы и введите:
+3. Откройте терминал в папке программы и введите:
 
 `python3 main.py`
 
