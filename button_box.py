@@ -360,6 +360,8 @@ class GUItk(object):
         #self.boxRoot.protocol('WM_DELETE_WINDOW', self.x_pressed)
         def exit():
             global_state.saveWindowPosition(self.boxRoot)
+            self.stop()
+            self.boxRoot.destroy()
             import sys
             sys.exit(0)
         self.boxRoot.protocol('WM_DELETE_WINDOW', exit)

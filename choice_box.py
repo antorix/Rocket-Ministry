@@ -1,12 +1,24 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import string
-import global_state
-import tkinter as tk
-import tkinter.font as tk_Font
 from tkinter import ttk
-from icons import icon
+
+import string
+
+try:
+    from . import global_state
+    
+except (ValueError, ImportError):
+    import global_state
+
+try:
+    import tkinter as tk  # python 3
+    import tkinter.font as tk_Font
+except:
+    import Tkinter as tk  # python 2
+    import tkFont as tk_Font
+
+
 
 def choicebox(msg="", title="", choices=[], preselect=0,
             positive=None, neutral=None, negative="Назад", callback=None, run=True):
@@ -75,7 +87,7 @@ class ChoiceBox(object):
 
     def stop(self):
         """ Stop the ui """
-        self.ui.stop()
+        self.ui.stop()        
 
     def callback_ui(self, ui, command, choices):
         """ This method is executed when ok, cancel, or x is pressed in the ui.
@@ -108,9 +120,6 @@ class ChoiceBox(object):
         elif command == 'notebook':
             self.stop()
             self.choices = 'notebook'
-        elif command == 'exit':
-            self.stop()
-            self.choices = 'exit'
 
     # methods to change properties --------------
 
@@ -263,7 +272,6 @@ class GUItk(object):
         self.menu.add_command(label="Настройки", command=menuSettings)
         self.menu.add_command(label="Отчет", command=menuReport)
         self.menu.add_command(label="Блокнот", command=menuNotebook)
-        #self.menu.add_command(label="Выход", command=menuExit)
         #self.filemenu.add_command(label="Экспорт", command=menuExport)
         #self.filemenu.add_separator()
         #self.filemenu.add_command(label="Exit", command=self.root.quit)
@@ -348,6 +356,8 @@ class GUItk(object):
         def exit():
             self.get_pos()
             global_state.saveWindowPosition(self.boxRoot)
+            self.stop()
+            self.boxRoot.destroy()
             import sys
             sys.exit(0)
         self.boxRoot.protocol('WM_DELETE_WINDOW', exit)
@@ -366,9 +376,9 @@ class GUItk(object):
         # put the buttons in the self.buttonsFrame
 
         if self.positive == "+":  # если плюс, заменяем его на более красивый
-            self.positive = "\u2795 Добавить [Insert]"
-        elif self.positive == icon("down"):
-            self.positive += " [/]"
+            self.positive = "\u2795 Добавить [Ins]"
+        #elif self.positive == icon("down"):
+        #    self.positive += " [/]"
         if self.positive!=None:
 
             positiveButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.positive)
@@ -385,7 +395,7 @@ class GUItk(object):
         # put the buttons in the self.buttonsFrame
 
         if self.neutral != None:
-            neutralButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.neutral + " [*]")
+            neutralButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.neutral)
             neutralButton.grid(column=1, row=0, sticky="we",
                                padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
             # for the commandButton, bind activation events
@@ -394,7 +404,7 @@ class GUItk(object):
             neutralButton.bind("<space>", self.neutral_pressed)
 
         if self.negative!=None:
-            cancelButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.negative + " [Escape]")
+            cancelButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.negative + " [Esc]")
 
             cancelButton.grid(column=2, row=0, sticky="we",
                               padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
@@ -527,8 +537,8 @@ class GUItk(object):
         self.choiceboxWidget.bind("<Double-Button-1>", self.ok_pressed)
         #self.choiceboxWidget.bind("<space>", self.ok_pressed)
         self.choiceboxWidget.bind("<Insert>", self.positive_pressed)
-        self.choiceboxWidget.bind("<*>", self.neutral_pressed)
-        self.choiceboxWidget.bind("</>", self.positive_pressed)
+        #self.choiceboxWidget.bind("<*>", self.neutral_pressed)
+        #self.choiceboxWidget.bind("</>", self.positive_pressed)
         self.choiceboxWidget.bind("<BackSpace>", self.cancel_pressed)
 
     def KeyboardListener(self, event):

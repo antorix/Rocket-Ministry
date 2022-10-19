@@ -16,8 +16,12 @@ import house_op
 import time
 import datetime
 from icons import icon
-from os import system, path, startfile
+from os import system, path, name
 import sys
+try:
+    from os import startfile
+except:
+    pass
 
 def homepage():
     """ Home page """
@@ -26,7 +30,7 @@ def homepage():
         """ Срабатывает при первом запуске программы, определяется по отсутствию settings[1]"""
 
         if io2.Mode == "easygui": # установка шрифта
-            if not path.exists(
+            if name=="nt" and not path.exists(
                     path.expandvars("%userprofile%") + "/AppData/Local/Microsoft/Windows/Fonts/LiberationMono-Regular.ttf")\
                     and dialogs.dialogConfirm(
                         "Установка Rocket Ministry",

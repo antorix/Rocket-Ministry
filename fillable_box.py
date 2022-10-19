@@ -51,6 +51,7 @@ def __fillablebox(msg, title="", default="", mask=None, image=None, root=None, n
         global_state.window_position = '+' + geom.split('+', 1)[1]
         global_state.window_size = geom[0: geom.index("+")]
         global_state.saveWindowPosition(boxRoot)
+        boxRoot.destroy()
         import sys
         sys.exit(0)
     boxRoot.protocol('WM_DELETE_WINDOW', exit)
