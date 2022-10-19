@@ -3,14 +3,16 @@
 import urllib.request
 from os import path
 
-url = "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/web_install.py"
+url = "https://github.com/antorix/Rocket-Ministry/releases/download/Python/rocket_ministry_install_script.py"
+
+installFile = "rm-install.py"
 
 if not path.exists("main.py"):
 
-    if not path.exists("web_install.py"):
-        urllib.request.urlretrieve(url, "web_install.py")
+    if not path.exists(installFile):
+        urllib.request.urlretrieve(url, installFile)
 
-    from web_install import install
+    from rocket_ministry_install_script import install
     install(desktop=False)
 
 from main import app
