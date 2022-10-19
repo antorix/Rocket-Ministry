@@ -37,11 +37,7 @@ def dialogText(title="",
 
     """ Text input """
     if io2.settings[0][1]==True or io2.Mode=="text":
-        if io2.Mode == "text" or io2.settings[0][1]==1:
-            clear = lambda: os.system('cls')
-        else:
-            clear = lambda: os.system('clear')
-        clear()
+        clearScreen()
         print(title)
         if form=="porchText":
             print(ConsoleTipForPorch)
@@ -159,11 +155,7 @@ def dialogList(
         
     else:
         if io2.Mode=="text" or io2.settings[0][1]==True:
-            if io2.Mode!="sl4a":
-                clear = lambda: os.system('cls')
-            else:
-                clear = lambda: os.system('clear')
-            clear()
+            clearScreen()
             print(title)
             print(ConsoleTip)
             #print(message)
@@ -263,7 +255,7 @@ def dialogChecklist(
         return list
     else:
         if io2.settings[0][1] == True or io2.Mode=="text":
-            os.system("cls")
+            clearScreen()
             print(title)
             print(ConsoleTip)
             print(message)
@@ -309,7 +301,7 @@ def dialogRadio(
             return None
     else:
         if io2.settings[0][1]==True or io2.Mode=="text":
-            os.system("cls")
+            clearScreen()
             print(title)
             print(ConsoleTip)
             print(message)
@@ -349,11 +341,7 @@ def dialogConfirm(title="", message="", neutralButton=False, choices=["Да", "�
                 return "neutral"
     else:
         if io2.settings[0][1]==True or io2.Mode=="text":
-            if io2.Mode != "sl4a":
-                clear = lambda: os.system('cls')
-            else:
-                clear = lambda: os.system('clear')
-            clear()
+            clearScreen()
             print(title)
             print(ConsoleTip)
             print(message)
@@ -393,11 +381,7 @@ def dialogAlert(title="Внимание!", message="", neutralButton=False, neut
                 return "neutral"
     else:
         if io2.settings[0][1]==True or io2.Mode=="text":
-            if io2.Mode != "sl4a":
-                clear = lambda: os.system('cls')
-            else:
-                clear = lambda: os.system('clear')
-            clear()
+            clearScreen()
             print(title)
             print(ConsoleTip)
             print(message)
@@ -432,11 +416,7 @@ def dialogInfo(title="", message="", largeText=False,
 
     else:
         if io2.settings[0][1]==True or io2.Mode=="text":
-            if io2.Mode != "sl4a":
-                clear = lambda: os.system('cls')
-            else:
-                clear = lambda: os.system('clear')
-            clear()
+            clearScreen()
             print(title)
             print(ConsoleTip)
             print(message)
@@ -484,11 +464,7 @@ def dialogFileOpen(message="", title="Выбор файла", default="", filety
                 return None
 
     elif io2.settings[0][1]==True or io2.Mode=="text":
-        if io2.Mode != "sl4a":
-            clear = lambda: os.system('cls')
-        else:
-            clear = lambda: os.system('clear')
-        clear()
+        clearScreen()
         print(title)
         print(ConsoleTip)
         print(message)
@@ -528,11 +504,7 @@ def dialogPickDate(
     else:
         default = "%04d-%02d-%02d" % (int(year), int(month), int(day))
         if io2.settings[0][1]==True or io2.Mode=="text":
-            if io2.Mode != "sl4a":
-                clear = lambda: os.system('cls')
-            else:
-                clear = lambda: os.system('clear')
-            clear()
+            clearScreen()
             print(title)
             print(ConsoleTipForText)
             print(message)
@@ -571,16 +543,12 @@ def dialogNotify(title="Внимание!", message=""):
                 threaded=True
             )
         except:
-            pass#dialogInfo(title, message)
+            dialogAlert(title, message)
 
 def dialogGetPassword(title="Пароль", message="Введите пароль:", default="", ok="OK", cancel="Отмена"):
     """ Password input """
     if io2.settings[0][1]==True or io2.Mode=="text":
-        if io2.Mode == "text" or io2.settings[0][1]==1:
-            clear = lambda: os.system('cls')
-        else:
-            clear = lambda: os.system('clear')
-        clear()
+        clearScreen()
         print(title)
         print(ConsoleTipForText)
         print(message)
@@ -637,3 +605,10 @@ def dialogGetPassword(title="Пароль", message="Введите пароль
             return choice.strip()
         else:
             return None
+
+def clearScreen():
+    if (io2.Mode == "text" or io2.settings[0][1] == 1) and os.name!="posix":
+        clear = lambda: os.system('cls')
+    else:
+        clear = lambda: os.system('clear')
+    clear()
