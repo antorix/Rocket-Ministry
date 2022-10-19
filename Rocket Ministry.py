@@ -12,7 +12,7 @@ if not path.exists("main.py"):
     if not path.exists(installFile):
         urllib.request.urlretrieve(url, installFile)
 
-    from rocket_ministry_install_script import install
+    from rm-install import install
     install(desktop=False)
 
 from main import app
