@@ -494,9 +494,9 @@ class House():
             def addRecord(self, input, forceStatusUpdate=False):
                 self.records.insert(0, self.Record())
                 self.records[0].title = input
-                if len(self.records)==1: # если создана первая запись, то вне зависимости от настроек ставится временный статус "?"
+                if len(self.records)==1 and self.number != "virtual": # если создана первая запись, то вне зависимости от настроек ставится временный статус "?", кроме отдельных контактов
                     self.status="?"
-                
+
                 date = time.strftime("%d", time.localtime())
                 month = reports.monthName()[5]
                 timeCur = time.strftime("%H:%M", time.localtime())

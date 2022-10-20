@@ -16,7 +16,7 @@ import house_op
 import time
 import datetime
 from icons import icon
-from os import system, path, name
+from os import path, name
 import sys
 try:
     from os import startfile
@@ -48,7 +48,6 @@ def homepage():
                         startfile("LiberationMono-Regular.ttf")
                     except:
                         pass
-
         try:
             startfile("create_shortcuts.vbs") # установка иконок
         except:
@@ -238,11 +237,11 @@ def homepage():
             if io2.Mode=="text" or settings[0][1]==1:
                 options.append(icon("timer") + " Таймер" + timerTime)
 
-        if io2.Mode == "sl4a": # очистка экрана на всякий случай
-            try:
-                system("clear")
-            except:
-                system('cls')
+        dialogs.clearScreen() # очистка экрана на всякий случай
+            #try:
+            #    system("clear")
+            #except:
+            #    system('cls')
 
         # Run home screen
 
@@ -576,7 +575,7 @@ def preferences():
             if settings[0][9]==1:
                 dialogs.dialogInfo(
                     title="Последний символ посещения влияет на статус контакта",
-                    message="Внимание, вы входите в зону хардкора! :) При включении этого параметра в конце каждого посещения должна стоять цифра от 0 до 5, определяющая статус (в стиле «умной строки», только во всех посещениях):\n\n0 = %s\n1 = %s\n2 = %s\n3 = %s\n4 = %s\n5 = %s\n\nЭто должен быть строго последний символ строки. При отсутствии такой цифры статус контакта становится неопределенным (%s)." %
+                    message="Внимание, вы входите в зону хардкора! :) При включении этого параметра в конце каждого посещения должна стоять цифра от 0 до 5. Она определит статус контакта (в стиле «умной строки», только во всех посещениях):\n\n0 = %s\n1 = %s\n2 = %s\n3 = %s\n4 = %s\n5 = %s\n\nЭто должен быть строго последний символ строки. При отсутствии такой цифры статус контакта становится неопределенным (%s)." %
                             ( icon("reject"), icon("interest"), icon("green"), icon("purple"), icon("brown"), icon("danger"), icon("question"))
                 )
             io2.save()

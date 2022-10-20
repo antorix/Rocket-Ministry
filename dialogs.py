@@ -231,6 +231,7 @@ def dialogList(
 def dialogChecklist(
         title="",
         options=[],
+        selected=[],
         message="",
         positive="OK",
         neutral="",
@@ -239,7 +240,7 @@ def dialogChecklist(
 
     if io2.Mode=="sl4a" and io2.settings[0][1]==False:
         phone.dialogCreateAlert(title, message)
-        phone.dialogSetMultiChoiceItems(options)
+        phone.dialogSetMultiChoiceItems(options, selected)
         if positive!=False:
             phone.dialogSetPositiveButtonText(positive)
         if neutral!=False:
@@ -607,8 +608,9 @@ def dialogGetPassword(title="Пароль", message="Введите пароль
             return None
 
 def clearScreen():
-    if (io2.Mode == "text" or io2.settings[0][1] == 1) and os.name!="posix":
-        clear = lambda: os.system('cls')
-    else:
-        clear = lambda: os.system('clear')
-    clear()
+    if io2.Mode == "text" or io2.settings[0][1] == 1:
+        if os.name!="posix":
+            clear = lambda: os.system('cls')
+        else:
+            clear = lambda: os.system('clear')
+        clear()
