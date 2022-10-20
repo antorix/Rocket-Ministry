@@ -435,8 +435,8 @@ def preferences():
         options.append(status(settings[0][7]) +  "Автоматически записывать повторные посещения")
         options.append(                       "%s Норма часов в месяц: %d" % (icon("box"), settings[0][3]))
         options.append(status(settings[0][2])  + "Кредит часов")
-        if io2.Mode == "sl4a":
-            options.append(status(settings[0][11]) + "Уведомления о встречах на сегодня")
+        #if io2.Mode == "sl4a":
+        options.append(status(settings[0][11]) + "Уведомления о встречах на сегодня")
         options.append(status(settings[0][8])  + "Напоминать о сдаче отчета")
         options.append(status(settings[0][15]) + "Переносить минуты отчета на следующий месяц")
         options.append(status(settings[0][20]) + "Предлагать разбивку по этажам в многоквартирных домах")
