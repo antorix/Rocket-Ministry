@@ -13,7 +13,7 @@ if not path.exists("main.py"):
         urllib.request.urlretrieve(url, installFile)
 
     from rm_install import install
-    install(desktop=False)
+    install(standalone=False)
 
 from main import app
 app()
