@@ -309,7 +309,8 @@ def homepage():
                 preferences()
 
             elif "О программе" in result:
-                about()
+                if about()==True:
+                    return True
 
             elif "Выход" in result:
                 return "quit"
@@ -944,7 +945,8 @@ def about():
             negative="Назад"
         )
         if choice=="positive":
-            io2.update(forced=True)
+            if io2.update() == True:
+                return True
         elif choice=="neutral":
             helpPage = "https://github.com/antorix/Rocket-Ministry/wiki#часто-задаваемые-вопросы"
             if io2.Mode=="sl4a":
