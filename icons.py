@@ -46,12 +46,14 @@ def icon(myIcon, forceText=False):
         elif myIcon=="returns": return "⏩" #"\u23e9"
         elif myIcon=="studies": return "📖" #"\ud83d\udcd6"
         elif myIcon=="mute": return "\ud83d\udd07"
+        elif myIcon=="unreachable": return "🚫"
         elif myIcon=="stats": return "📊"
         elif myIcon=="save": return "\ud83d\udcbe"
         elif myIcon=="load": return "\ud83d\udcc2"
         elif myIcon=="smartphone": return "📲"
         elif myIcon=="restore": return "\ud83d\udce4"
-        elif myIcon=="help": return "\u2139\ufe0f"
+        elif myIcon=="help": return "❓"
+        elif myIcon=="info": return "\u2139\ufe0f"
         elif myIcon=="house": return "🏢" #"\ud83c\udfe2"
         elif myIcon=="cottage": return "🏠" #"\ud83c\udfe0"
         elif myIcon=="office": return "🏫" #"\ud83c\udfeb"
@@ -85,6 +87,7 @@ def icon(myIcon, forceText=False):
         elif myIcon=="phone3": return "📞"
         elif myIcon=="warning": return "❗"
         elif myIcon=="explosion": return "💥"
+        elif myIcon=="update": return "🔄"
 
         elif myIcon=="reject":
             if io2.Simplified==1 and io2.settings[0][16]==0:             # статус 0
@@ -166,12 +169,14 @@ def icon(myIcon, forceText=False):
         elif myIcon=="returns": return "▫" 
         elif myIcon=="studies": return "▫"
         elif myIcon=="mute": return "♪×"
+        elif myIcon=="unreachable": return "○"
         elif myIcon=="stats": return "⅜"
         elif myIcon=="save": return "↓"
         elif myIcon=="load": return "←"
         elif myIcon=="smartphone": return "→"
         elif myIcon=="restore": return "↑"
         elif myIcon=="help": return "?"
+        elif myIcon=="info": return "i"
         elif myIcon=="house": return "▓"
         elif myIcon=="cottage": return "▒"
         elif myIcon=="office": return "░"
@@ -205,6 +210,7 @@ def icon(myIcon, forceText=False):
         elif myIcon=="phone3": return "◊"
         elif myIcon=="warning": return "⚠"
         elif myIcon=="explosion": return "☼"
+        elif myIcon=="update": return "↨"
 
         elif myIcon=="reject": return "×"#○"#x"     # статус 0
         elif myIcon=="interest": return "●"         # статус 1

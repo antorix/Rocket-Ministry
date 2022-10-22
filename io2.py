@@ -30,7 +30,7 @@ def initializeDB():
     import time
     return [],\
         [
-        [1, 0, 0, 0, "с", 0, 50, 1, 1, 0, 1, 1, 1, 1, "", 1, 0, "", 1, "д", 1, 0, 1], # program settings: settings[0][0…], see set.preferences()
+        [1, 0, 0, 0, "с", 0, 50, 1, 1, 0, 1, 1, 1, 1, "", 1, 0, "", 0, "д", 1, 0, 1], # program settings: settings[0][0…], see set.preferences()
         "",# дата последнего обновления settings[1]
         # report:                       settings[2]
         [0.0,       # [0] hours         settings[2][0…]
@@ -58,7 +58,7 @@ def initializeDB():
 
 houses, settings, resources = initializeDB()
 DBCreatedTime = ""
-Version = "1.0.2"
+Version = "1.0.3"
 
 import dialogs
 import sys
@@ -386,18 +386,28 @@ def backupRestore(restore=False, delete=False, silent=False):
             for i in range(extra):
                 os.remove(BackupFolderLocation + files[i])
 
-def update():
+def update(forced=False):
     """ Проверяем новую версию и при наличии обновляем программу с GitHub """
 
     print("Проверяем обновления")
-    try:
+
+    title = icon("update") + " Обновление"
+
+    try: # подключаемся к GitHub
         for line in urllib.request.urlopen("https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/version"):
             newVersion = line.decode('utf-8').strip()
     except:
         print("Не удалось подключиться к серверу")
+        dialogs.dialogAlert(title, "Не удалось подключиться к серверу для проверки обновлений. Проверьте соединение с Интернетом.")
         return
+    else: # успешно подключились, сохраняем сегодняшнюю дату последнего обновления
+        today = str(datetime.datetime.strptime( time.strftime('%Y-%m-%d'), "%Y-%m-%d") )
+        today = today[0: today.index(" ")]
+        settings[1] = today
+        save()
+
     if newVersion > Version:
-        choice = dialogs.dialogConfirm(icon("lamp") + " Обновление", "Найдена новая версия %s! Установить?" % newVersion)
+        choice = dialogs.dialogConfirm(title, "Найдена новая версия %s! Установить?" % newVersion)
         if choice==True:
             print("Скачиваем…")
             try:
@@ -428,12 +438,27 @@ def update():
                 for url in urls:
                     urllib.request.urlretrieve(url, UserPath + url[url.index("master/") + 7:])
             except:
-                dialogs.dialogAlert(icon("lamp") + " Обновление", "Не удалось загрузить обновление. Попробуйте еще раз или, если не помогло, свяжитесь с разработчиком (раздел «О программе»)")
+                dialogs.dialogAlert(title, "Не удалось загрузить обновление. Попробуйте еще раз или, если не помогло, свяжитесь с разработчиком (раздел «О программе»)")
             else:
                 if Mode == "sl4a":
                     Android().dialogDismiss()
-                print("Обновление завершено, необходим перезапуск программы.\nНажмите Enter, чтобы закрыть консоль.")
-                return True
+                    print("Обновление завершено, необходим перезапуск программы.\nНажмите Enter, чтобы закрыть консоль.")
+
+                elif os.name=="nt": # проверка и загрузка модулей для Windows, пользуясь ситуацией
+                    try:
+                        import win10toast
+                    except:
+                        dialogs.dialogAlert(title, "Проверка и загрузка недостающих компонентов Windows...")
+                        from subprocess import check_call
+                        from sys import executable
+                        check_call([executable, '-m', 'pip', 'install', 'win10toast'])
+                    dialogs.dialogAlert(title, "Обновление завершено, необходим перезапуск программы.")
+
+                return True # возвращаем успешный результат обновления (для перезапуска)
+    else:
+        print("Обновлений нет")
+        if forced==True:
+            dialogs.dialogAlert(title, "Проверка показала, что у вас самая последняя версия Rocket Ministry!")
 
 def consoleReturn():
     os.system("clear")

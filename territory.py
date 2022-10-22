@@ -8,6 +8,7 @@ from io2 import houses
 from io2 import settings
 import homepage
 import house_op
+import house_cl
 import dialogs
 import contacts
 import reports
@@ -173,7 +174,7 @@ def porchView(house, selectedPorch):
                 if "Создайте" in options[choice]:
                     choice = "positive"
                     continue
-                elif options[choice][2]=="│": # выбран этаж - выходим из этого цикла и переходим на один ниже
+                elif len(options[choice])>1 and options[choice][2]=="│": # выбран этаж - выходим из этого цикла и переходим на один ниже
                     floorNumber = int(options[choice][0:2])
                     for i in range(len(options)):
                         if str(floorNumber).strip() == options[i][0:2].strip():
@@ -193,10 +194,14 @@ def porchView(house, selectedPorch):
                     return
                 continue
             elif choice=="positive":
+                if set.ifInt(porch.flatsLayout)==True:
+                    message = house_cl.MessageOfProhibitedFlatCreation1 % porch.getPreviouslyDeletedFlats()
+                else:
+                    message = "Введите один номер (напр. 1) или диапазон через дефис или пробел (напр. 1 50):"
                 addFlat = dialogs.dialogText(
                     title=icon("plus") + " Добавление " + house.getPorchType()[2],
                     default=default,
-                    message="Введите один номер (напр. 1) или диапазон через дефис (напр. 1-50)"
+                    message=message
                 )
                 if addFlat == None:  # нажата Отмена/Назад
                     choice = default = ""
@@ -206,15 +211,11 @@ def porchView(house, selectedPorch):
                     continue
                 elif set.ifInt(addFlat) == True and not "-" in addFlat: # добавляем одиночную квартиру, требуется целое число
                     porch.addFlat("+"+addFlat)
-                    if settings[0][20] == True and house.type == "condo":
-                        porch.autoFloorArrange()
                     choice = default = ""
                     io2.save()
                     continue
-                elif set.ifInt(addFlat[0]) == True and "-" in addFlat: # массовое добавление квартир
+                elif set.ifInt(addFlat[0]) == True and ("-" in addFlat or " " in addFlat): # массовое добавление квартир
                     porch.addFlats("+"+addFlat)
-                    if settings[0][20] == True and house.type == "condo":
-                        porch.autoFloorArrange()
                     choice = default = ""
                     io2.save()
                     continue
@@ -250,6 +251,15 @@ def porchView(house, selectedPorch):
                     continue
                 elif choice==None:
                     break
+                elif choice == "neutral" and neutral != None: # этаж вверх
+                    floorNumber += 1
+                elif choice =="positive" and positive != None: # этаж вниз
+                    floorNumber -=1
+                elif int(choice) == len(options)-1: # удаляем первую квартиру на этаже
+                    flatNumber = findFlatByNumber(house, porch, options[0], onlyGetNumber=True)
+                    porch.deleteFlat(flatNumber)
+                    io2.save()
+                    selected2 = int(choice)-1
                 elif set.ifInt(choice) == True: # находим и открываем квартиру
                     if findFlatByNumber(house, porch, options[choice])=="deleted":
                         break
@@ -257,10 +267,6 @@ def porchView(house, selectedPorch):
                         if options[i].strip() == options[choice].strip():
                             selected2 = i
                             break
-                elif choice == "neutral": # этаж вверх
-                    floorNumber += 1
-                elif choice =="positive": # этаж вниз
-                    floorNumber -=1
                 else:
                     continue
 
@@ -299,7 +305,7 @@ def porchView(house, selectedPorch):
                     io2.save()
                     default = choice = ""
             elif choice[0] == "[":
-                porch.flatsLayout = choice[1:]  # change flats layout
+                porch.forceFloors(floors=choice[1:])
                 default = choice = ""
                 io2.save()
             elif choice[0] == "{":
@@ -330,7 +336,7 @@ def porchView(house, selectedPorch):
                     io2.log(messageFailedInput)
                     default=choice
 
-def flatView(flat, house, virtual=False):
+def flatView(flat, house, virtual=False, allowDelete=True):
     """ Flat screen, list (silhouette) """
 
     choice=""
@@ -387,7 +393,7 @@ def flatView(flat, house, virtual=False):
         elif choice==None:
             break
         elif choice=="neutral" or choice=="*":
-            if set.flatSettings(flat, house, virtual)=="deleted":
+            if set.flatSettings(flat, house, virtual, allowDelete=allowDelete)=="deleted":
                 return "deleted"
         elif choice=="positive": # new record
             choice2 = dialogs.dialogText(
@@ -449,29 +455,36 @@ def flatView(flat, house, virtual=False):
         else:
             continue
 
-def findFlatByNumber(house, porch, number):
+def findFlatByNumber(house, porch, number, onlyGetNumber=False):
     """ Находит и открывает квартиру по номеру квартиры в данном подъезде,
     иначе возвращает False (кроме случая удаления этой квартиры) """
+
+    if set.ifInt(porch.flatsLayout)==True:
+        allowDelete = False
+    else:
+        allowDelete = True
 
     def firstCallMenu(flat):
         """ Меню, которое выводится при первом заходе в квартиру"""
 
-        options = [
-            icon("mic") + " Посещение",
-            icon("reject") + " Отказ",
-            icon("preferences") + " Детали",
-        ]
+        options = [icon("mic") +            " Посещение"]
         if settings[0][13] == 1:
-            options.insert(1, icon("lock") + " Нет дома")
-
+            options.append(icon("lock") +   " Нет дома")
+        options.append(icon("reject") +     " Отказ")
+        if settings[0][18] == 1:
+            options.append(icon("unreachable") + " Невозможно попасть")
         if settings[0][10] == 1:
-            if settings[0][13] == 1:
-                options.insert(3, icon("rocket") + " Умная строка")
-            else:
-                options.insert(2, icon("rocket") + " Умная строка")
+            options.append(icon("rocket") + " Умная строка")
+        #options.append(icon("cut") +        " Удалить")
+        options.append(icon("preferences")+ " Детали")
+
+        if (io2.Mode == "text" or io2.settings[0][1]) and flat.note!="":
+            noteForConsole = "(%s)" % flat.note
+        else:
+            noteForConsole=""
 
         choice = dialogs.dialogList(
-            title="%s ⇨ первое посещение" % flat.number,
+            title="%s ⇨ первое посещение %s" % (flat.number, noteForConsole),
             options=options,
             form="firstCallMenu"
         )
@@ -490,6 +503,13 @@ def findFlatByNumber(house, porch, number):
 
         elif "Нет дома" in result:
             porch.addFlat(input="+%s.нет дома" % flat.number, forceStatusUpdate=True)
+            io2.save()
+
+        elif "Невозможно попасть" in result:
+            if flat.note != "":
+                flat.note += "| " + icon("unreachable")
+            else:
+                flat.note = " " + icon("unreachable")
             io2.save()
 
         elif "Посещение" in result:
@@ -511,7 +531,11 @@ def findFlatByNumber(house, porch, number):
                 else:
                     flat.addRecord(record)
                     io2.save()
-                    choices = dialogs.dialogChecklist(
+                    if io2.Mode=="text" or io2.settings[0][1]==1:
+                        flat.status = "1"
+                        io2.save()
+                    else:
+                        choices = dialogs.dialogChecklist(
                         title="%s Что еще сделать?" % icon("mic"),
                         message="Что сделать после посещения?",
                         negative="ОК",
@@ -524,25 +548,25 @@ def findFlatByNumber(house, porch, number):
                         ],
                         selected = [0, 0, 0, 0, 0]
                     )
-                    if choices != None:
-                        checked = ' '.join(choices)
-                        if "Установить статус" in checked:  # интерес
-                            flat.status = "1"
-                        if "Добавить публикацию" in checked:  # публикация
-                            reports.report(choice="==б")
-                        if "Добавить видео" in checked:  # видео
-                            reports.report(choice="==в")
-                        if "Записать телефон" in checked:  # телефон
-                            flat.phone = set.setPhone()
-                        if "Назначить встречу" in checked:  # встреча
-                            flat.meeting = set.setMeeting()
-                        io2.save()
+                        if choices != None:
+                            checked = ' '.join(choices)
+                            if "Установить статус" in checked:  # интерес
+                                flat.status = "1"
+                            if "Добавить публикацию" in checked:  # публикация
+                                reports.report(choice="==б")
+                            if "Добавить видео" in checked:  # видео
+                                reports.report(choice="==в")
+                            if "Записать телефон" in checked:  # телефон
+                                flat.phone = set.setPhone()
+                            if "Назначить встречу" in checked:  # встреча
+                                flat.meeting = set.setMeeting()
+                            io2.save()
 
         elif "Умная строка" in result:
             notebookOriginalSize = len(io2.resources[0])
             input = dialogs.dialogText(
                 title="%s Умная строка" % icon("rocket"),
-                neutral="%s Справка" % icon("help"),
+                neutral="%s Справка" % icon("info"),
                 message="Нажмите на справку для подсказки по этой функции"
             )
             if input == None:
@@ -551,7 +575,7 @@ def findFlatByNumber(house, porch, number):
                 dialogs.dialogInfo(
                     largeText=True,
                     title="%s Умная строка" % icon("rocket"),
-                    message="«Умная строка» – это самый мощный и быстрый способ добавления нового посещения, а также работы с отчетами!\n\n" +
+                    message="«Умная строка» – это самый мощный и быстрый способ добавления нового посещения, а также ввода данных в отчет!\n\n" +
                             "Введите любой текст без точки, и он превратится в заметку квартиры.\n\n" + \
                             "Введите текст с точкой – будет записано имя жильца.\n\n" + \
                             "Если после точки продолжить ввод текста, к имени жильца будет добавлена запись посещения.\n\n" +
@@ -562,7 +586,7 @@ def findFlatByNumber(house, porch, number):
                             "Если вы не пользуетесь умной строкой, ее можно отключить в настройках.\n\n" + \
                             "Примеры умной строки:\n\n" + \
                             "Алексей 30. Показали Отк. 21:4, оставили =буклет о Цар. 2\n\n" + \
-                            "ж60. Показали =видео, начато =из. 1"
+                            "ж60. Показали =в, начато =и 1"
                 )
             elif "." not in input:
                 flat.note = input
@@ -582,8 +606,11 @@ def findFlatByNumber(house, porch, number):
             io2.save()
 
         elif "Детали" in result:
-            if set.flatSettings(flat, house) == "deleted":
+            if set.flatSettings(flat, house, allowDelete=allowDelete) == "deleted":
                 return "deleted"
+
+        elif "Удалить" in result:
+            return "deleted"
 
     number = number.strip()
     found=False
@@ -596,16 +623,21 @@ def findFlatByNumber(house, porch, number):
         for i in range(len(porch.flats)):
             if number == porch.flats[i].number:
                 found = True
+                if onlyGetNumber == True:
+                    return i # только возвращаем номер и выходим
+
                 if len(porch.flats[i].records)==0 and porch.flats[i].getName()=="": # если первый раз, запускаем меню первого посещения
                     exit = firstCallMenu(porch.flats[i])
                     if exit == "deleted":
                         porch.deleteFlat(i)
+                        io2.save()
                         return "deleted"
                     break
                 else: # если есть записи посещений, заходим напрямую
-                    exit = flatView(porch.flats[i], house)
+                    exit = flatView(porch.flats[i], house, allowDelete=allowDelete)
                     if exit == "deleted":
                         porch.deleteFlat(i)
+                        io2.save()
                         return "deleted"
                     break
     return found

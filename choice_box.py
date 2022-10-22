@@ -4,6 +4,8 @@
 from tkinter import ttk
 
 import string
+from icons import icon
+from os import name
 
 try:
     from . import global_state
@@ -377,8 +379,8 @@ class GUItk(object):
 
         if self.positive == "+":  # если плюс, заменяем его на более красивый
             self.positive = "\u2795 Добавить [Ins]"
-        #elif self.positive == icon("down"):
-        #    self.positive += " [/]"
+        elif name=="nt" and self.positive == icon("down"):
+            self.positive += " [/]"
         if self.positive!=None:
 
             positiveButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.positive)
@@ -395,6 +397,8 @@ class GUItk(object):
         # put the buttons in the self.buttonsFrame
 
         if self.neutral != None:
+            if name == "nt":
+                self.neutral += " [*]"
             neutralButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.neutral)
             neutralButton.grid(column=1, row=0, sticky="we",
                                padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
@@ -537,8 +541,8 @@ class GUItk(object):
         self.choiceboxWidget.bind("<Double-Button-1>", self.ok_pressed)
         #self.choiceboxWidget.bind("<space>", self.ok_pressed)
         self.choiceboxWidget.bind("<Insert>", self.positive_pressed)
-        #self.choiceboxWidget.bind("<*>", self.neutral_pressed)
-        #self.choiceboxWidget.bind("</>", self.positive_pressed)
+        self.choiceboxWidget.bind("*", self.neutral_pressed)
+        self.choiceboxWidget.bind("/", self.positive_pressed)
         self.choiceboxWidget.bind("<BackSpace>", self.cancel_pressed)
 
     def KeyboardListener(self, event):

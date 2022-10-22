@@ -25,6 +25,7 @@ def buttonbox(msg="",
               cancel_choice=None,
               callback=None,
               run=True,
+              positive=None,
               neutral=None,
               negative=None):
     """
@@ -52,6 +53,7 @@ def buttonbox(msg="",
         default_choice=default_choice,
         cancel_choice=cancel_choice,
         callback=callback,
+        positive=positive,
         neutral=neutral,
         negative=negative)
     if not run:
@@ -71,7 +73,7 @@ class ButtonBox(object):
     library can be used (wx, qt) without breaking anything for the user.
     """
 
-    def __init__(self, msg, title, choices, images, default_choice, cancel_choice, callback, neutral, negative):
+    def __init__(self, msg, title, choices, images, default_choice, cancel_choice, callback, positive, neutral, negative):
         """ Create box object
 
         Parameters
@@ -99,12 +101,14 @@ class ButtonBox(object):
 
         self.callback = callback
 
+        self.positive = positive
+
         self.neutral = neutral
 
         self.negative = negative
 
         self.ui = GUItk(msg, title, choices, images, default_choice, cancel_choice, self.callback_ui,
-                        self.neutral, self.negative)
+                        self.positive, self.neutral, self.negative)
 
     def run(self):
         """ Start the ui """
@@ -121,7 +125,14 @@ class ButtonBox(object):
         """ This method is executed when buttons or x is pressed in the ui.
         """
         if command == 'update':  # Any button was pressed
-            self._text = ui.choice
+            if "Обнов" in ui.choice: # адаптация вывода кнопок под вывод SL4A
+                self._text = "positive"
+            elif "Помощь" in ui.choice:
+                self._text = "neutral"
+            elif "Назад" in ui.choice:
+                self._text = "negative"
+            else:
+                self._text = ui.choice
             self._choice_rc = ui.choice_rc
             if self.callback:
                 # If a callback was set, call main process
@@ -184,7 +195,7 @@ class ButtonBox(object):
 class GUItk(object):
     """ This is the object that contains the tk root object"""
 
-    def __init__(self, msg, title, choices, images, default_choice, cancel_choice, callback, neutral, negative):
+    def __init__(self, msg, title, choices, images, default_choice, cancel_choice, callback, positive, neutral, negative):
         """ Create ui object
 
         Parameters
@@ -215,6 +226,7 @@ class GUItk(object):
         self._choices = choices
         self._default_choice = default_choice
         self._cancel_choice = cancel_choice
+        self.positive = positive
         self.neutral = neutral
         self.callback = callback
         self._choice_text = None
@@ -489,7 +501,7 @@ class GUItk(object):
 # msgbox
 # -----------------------------------------------------------------------
 def msgbox(msg="", title=" ",
-           ok_button=None, neutral=None, negative=None, image=None, root=None):
+           ok_button=None, positive=None, neutral=None, negative=None, image=None, root=None):
     """
     Display a message box
 
@@ -506,7 +518,7 @@ def msgbox(msg="", title=" ",
 
     return buttonbox(msg=msg,
                      title=title,
-                     choices=[neutral, negative],
+                     choices=[positive, neutral, negative],
                      image=image,
                      default_choice=ok_button,
                      cancel_choice=ok_button,

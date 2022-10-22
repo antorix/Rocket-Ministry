@@ -287,7 +287,7 @@ class Report():
                                     self.placements += 1
                                     self.saveReport("В отчет добавлена 1 публикация")
                                     break
-                                message="Требуется целое число, можно с минусом"
+                                message="Требуется целое число, можно с минусом."
                             continue
                         else:
                             self.saveReport("В отчет добавлено: %d пуб." % int(choice2))
@@ -314,7 +314,7 @@ class Report():
                                     self.videos += 1
                                     self.saveReport("В отчет добавлено 1 видео")
                                     break
-                                message="Требуется целое число, можно с минусом"
+                                message="Требуется целое число, можно с минусом."
                             continue
                         else:
                             self.saveReport("В отчет добавлено: %d вид." % int(choice2))
@@ -353,7 +353,7 @@ class Report():
                                     self.hours += 1
                                     self.saveReport("В отчет добавлен 1 час")
                                     break
-                                message="Требуется формат Ч или Ч:ММ, можно с минусом"
+                                message="Требуется формат Ч или Ч:ММ, можно с минусом."
                             continue
                         else:
                             self.saveReport("В отчет добавлено: %s ч." % choice2)
@@ -392,7 +392,7 @@ class Report():
                                     self.credit += 1
                                     self.saveReport("В отчет добавлен 1 час кредита")
                                     break
-                                message="Требуется формат Ч или Ч:ММ, можно с минусом"
+                                message="Требуется формат Ч или Ч:ММ, можно с минусом."
                             continue
                         else:
                             self.saveReport("В отчет добавлено: %s ч. кредита" % choice2)
@@ -419,7 +419,7 @@ class Report():
                                     self.returns += 1
                                     self.saveReport("В отчет добавлено 1 повт. посещение")
                                     break
-                                message="Требуется целое число, можно с минусом"
+                                message="Требуется целое число, можно с минусом."
                             continue
                         else:
                             self.saveReport("В отчет добавлено: %d ПП" % int(choice2))
@@ -446,7 +446,7 @@ class Report():
                                     self.studies += 1
                                     self.saveReport("В отчет добавлено 1 изучение")
                                     break
-                                message="Требуется целое число, можно с минусом"
+                                message="Требуется целое число, можно с минусом."
                             continue
                         else:
                             self.saveReport("В отчет добавлено: %d ИБ" % int(choice2))

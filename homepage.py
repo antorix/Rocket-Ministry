@@ -131,10 +131,6 @@ def homepage():
         except:
             diff=8
         if diff>7 and settings[0][12] == 1:
-            today = str(today)
-            today = today[ 0 : today.index(" ")]
-            settings[1] = today
-            io2.save()
             if io2.update() == True:
                 return True
 
@@ -142,9 +138,9 @@ def homepage():
         #    from shutil import rmtree
         #    rmtree('python_distr')
 
-    #territory.porchView(houses[0], 0)
-
-    # if "--textmode" in sys.argv:  # проверяем параметры командной строки
+    if "--capmode" in sys.argv:  # проверяем параметры командной строки
+        io2.simplified=0
+        settings[0][1]=1
 
     if io2.Mode=="easygui": # определение положения окна
         import global_state
@@ -168,6 +164,8 @@ def homepage():
         return
 
     io2.save(forcedBackup=True)
+
+    #territory.porchView(houses[2], 3)
 
     while 1:
 
@@ -227,7 +225,7 @@ def homepage():
                 icon("calendar")+   " Служебный год",
                 icon("file")    +   " Файл",
                 icon("preferences")+" Настройки",
-                icon("help") +      " О программе"
+                icon("info") +      " О программе"
                 ]
 
         if io2.Mode == "sl4a":
@@ -431,6 +429,7 @@ def preferences():
             password = "нет"
 
         options.append(status(settings[0][13]) + "Пункт «нет дома» в первом посещении")
+        options.append(status(settings[0][18]) + "Пункт «невозможно попасть» в первом посещении")
         options.append(status(settings[0][10]) + "Умная строка в первом посещении")
         options.append(status(settings[0][7]) +  "Автоматически записывать повторные посещения")
         options.append(                       "%s Норма часов в месяц: %d" % (icon("box"), settings[0][3]))
@@ -439,7 +438,7 @@ def preferences():
         options.append(status(settings[0][11]) + "Уведомления о встречах на сегодня")
         options.append(status(settings[0][8])  + "Напоминать о сдаче отчета")
         options.append(status(settings[0][15]) + "Переносить минуты отчета на следующий месяц")
-        options.append(status(settings[0][20]) + "Предлагать разбивку по этажам в многоквартирных домах")
+        #options.append(status(settings[0][20]) + "Предлагать разбивку по этажам в многоквартирных домах")
         if io2.Mode == "sl4a":
             options.append(status(settings[0][0])+"Бесшумный режим при включенном таймере")
         options.append(status(settings[0][21]) + "Статус обработки подъездов")
@@ -458,6 +457,7 @@ def preferences():
 
         # Свободные настройки:
         # settings[0][18]
+        # settings[0][20]
 
         choice = dialogs.dialogList(  # display list of settings
             form="preferences",
@@ -558,8 +558,8 @@ def preferences():
             settings[0][8] = toggle(settings[0][8])
             io2.save()
 
-        elif "Предлагать разбивку" in result:
-            settings[0][20] = toggle(settings[0][20])
+        elif "невозможно попасть" in result:
+            settings[0][18] = toggle(settings[0][18])
             io2.save()
 
         elif "Уведомления о встречах" in result:
@@ -931,25 +931,31 @@ def serviceYear():
                 continue
 
 def about():
-    choice = dialogs.dialogInfo(
-        title=icon("help") + " Rocket Ministry " + reports.getTimerIcon(settings[2][6]),
-        message =   "Универсальный комбайн вашего служения\n\n"+\
-                    "Версия приложения: %s\n\n" % io2.Version +\
-                    "Последнее изменение базы данных: %s\n\n" % io2.getDBCreatedTime() +\
-                    "Официальная страница: github.com/antorix/Rocket-Ministry\n\n"+\
-                    "Официальный Telegram-канал:\nt.me/rocketministry\n\n",
-        positive=None,
-        neutral="Помощь",
-        negative="Назад"
-    )
-    if choice=="neutral" or choice=="Помощь":
-        if io2.Mode=="sl4a":
-            from androidhelper import Android
-            Android().view("https://github.com/antorix/Rocket-Ministry/blob/master/README.md#часто-задаваемые-вопросы")
-            io2.consoleReturn()
+    while 1:
+        choice = dialogs.dialogInfo(
+            title=icon("info") + " Rocket Ministry " + reports.getTimerIcon(settings[2][6]),
+            message =   "Универсальный комбайн вашего служения\n\n"+\
+                        "Версия приложения: %s\n\n" % io2.Version +\
+                        "Последнее изменение базы данных: %s\n\n" % io2.getDBCreatedTime() +\
+                        "Официальная страница: github.com/antorix/Rocket-Ministry\n\n"+\
+                        "Официальный Telegram-канал:\nt.me/rocketministry\n\n",
+            positive = icon("update") + " Обновл.",
+            neutral = icon("help") + " Помощь",
+            negative="Назад"
+        )
+        if choice=="positive":
+            io2.update(forced=True)
+        elif choice=="neutral":
+            helpPage = "https://github.com/antorix/Rocket-Ministry/wiki#часто-задаваемые-вопросы"
+            if io2.Mode=="sl4a":
+                from androidhelper import Android
+                Android().view(helpPage)
+                io2.consoleReturn()
+            else:
+                from webbrowser import open
+                open(helpPage)
         else:
-            from webbrowser import open
-            open("https://github.com/antorix/Rocket-Ministry/blob/master/README.md#часто-задаваемые-вопросы")
+            break
 
 def menuProcess(choice):
     """ Обрабатывает ввод, если он получен из меню (только в easygui)"""

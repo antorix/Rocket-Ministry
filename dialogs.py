@@ -10,8 +10,8 @@ import set
 from icons import icon
 import io2
 
-ConsoleTip        = "\nВведите номер пункта и нажмите Enter.\nШаг назад – Enter в пустой строке."
-ConsoleTipForText = "\nВведите текст запроса и нажмите Enter.\nШаг назад – Enter в пустой строке."
+ConsoleTip        = "\nВведите номер пункта и нажмите Enter.\nШаг назад – Enter в пустой строке.\n"
+ConsoleTipForText = "\nВведите текст запроса и нажмите Enter.\nШаг назад – Enter в пустой строке.\n"
 ConsoleTipForPorch= "\nВведите номер квартиры и нажмите Enter.\nШаг назад – Enter в пустой строке."
 
 if io2.Mode=="sl4a":
@@ -27,7 +27,6 @@ elif io2.Mode=="easygui":
 def dialogText(title="",
                message="",
                default="",
-               ok="Ввод",
                form="",
                positive="OK",
                negative="Назад",
@@ -43,7 +42,7 @@ def dialogText(title="",
             print(ConsoleTipForPorch)
         else:
             print(ConsoleTipForText)
-        print(message)
+        print(message+"\n")
         if default!="":
             print("(Значение по умолчанию: «%s». Введите «!» для его подтверждения или любое другое значение.)" % default)
         choice = input()
@@ -177,6 +176,7 @@ def dialogList(
 
             # согласование результатов текстового вывода кнопкам на Android: neutral, positive, None или номер строки:
             if choice==None:                                    return None # exit
+            #elif "Удалить квартиру" in choice:                  return "neutral"
             elif "Таймер" in choice:                            return "neutral"
             elif "Участки" in choice and form!="home":          return "neutral"
             elif "Детали" in choice and form!="firstCallMenu":  return "neutral"
@@ -345,7 +345,7 @@ def dialogConfirm(title="", message="", neutralButton=False, choices=["Да", "�
             clearScreen()
             print(title)
             print(ConsoleTip)
-            print(message)
+            print(message+"\n")
             for i in range(len(choices)):
                 if choices[i]!="":
                     print("%-2d│ %s" % (i+1, choices[i])) # +1 - чтобы в консоли нумерация начиналась с 1, а не 0 (для удобства)
@@ -398,7 +398,7 @@ def dialogInfo(title="", message="", largeText=False,
     if io2.Mode=="sl4a" and io2.settings[0][1]==False:
         phone.dialogCreateAlert(title, message)
         if positive!=None:
-            phone.dialogSetNeutralButtonText(positive)
+            phone.dialogSetPositiveButtonText(positive)
         if neutral!=None:
             phone.dialogSetNeutralButtonText(neutral)
         if negative!=None:
@@ -424,7 +424,7 @@ def dialogInfo(title="", message="", largeText=False,
             return input()
         else:
             if largeText==False:
-                choice = msgbox(title=title, msg=message, neutral=neutral, negative=negative)#, positive=positive, neutral=neutral, negative=negative)
+                choice = msgbox(title=title, msg=message, positive=positive, neutral=neutral, negative=negative)#, positive=positive, neutral=neutral, negative=negative)
             else:
                 choice = textbox(
                     msg=message,
@@ -437,9 +437,8 @@ def dialogInfo(title="", message="", largeText=False,
             if console.process(choice) == True:
                 return ""
             if choice != None:
-                return choice.strip()
-            else:
-                return None
+                choice = choice.strip()
+            return choice
 
 def dialogFileOpen(message="", title="Выбор файла", default="", filetypes= "\*.jsn"):
     if io2.Mode == "sl4a" and io2.settings[0][1] == False:
