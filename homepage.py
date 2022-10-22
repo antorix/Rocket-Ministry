@@ -945,7 +945,7 @@ def about():
             negative="Назад"
         )
         if choice=="positive":
-            if io2.update() == True:
+            if io2.update(forced=True) == True:
                 return True
         elif choice=="neutral":
             helpPage = "https://github.com/antorix/Rocket-Ministry/wiki#часто-задаваемые-вопросы"
