@@ -440,7 +440,7 @@ def flatSettings(flat, house, virtual=False, allowDelete=True):
                     if status == options[i]:
                         flat.status=str(i)
             elif "Не были" in status:
-                if dialogs.dialogConfirm("Статус контакта", "При установке этого статуса будут удалены все записи посещений и имя жильца (если есть). Продолжать?")\
+                if dialogs.dialogConfirm("Статус контакта", "При установке этого статуса в квартире будут удалены все данные. Продолжать?")\
                     ==True:
                     flat.wipe()
             io2.save()
@@ -485,8 +485,8 @@ def flatSettings(flat, house, virtual=False, allowDelete=True):
                     io2.save()
                     changed=True
                 break
-                if changed==True:
-                    break
+            if changed==True:
+                break
                 
         elif "В отдельный контакт" in result:
             name = flat.copyToStandalone(house.title)

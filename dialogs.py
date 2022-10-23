@@ -176,7 +176,6 @@ def dialogList(
 
             # согласование результатов текстового вывода кнопкам на Android: neutral, positive, None или номер строки:
             if choice==None:                                    return None # exit
-            #elif "Удалить квартиру" in choice:                  return "neutral"
             elif "Таймер" in choice:                            return "neutral"
             elif "Участки" in choice and form!="home":          return "neutral"
             elif "Детали" in choice and form!="firstCallMenu":  return "neutral"

@@ -167,6 +167,10 @@ def homepage():
 
     #territory.porchView(houses[2], 3)
 
+    if "--capmode" in sys.argv:  # проверяем параметры командной строки
+        io2.Simplified=0
+        settings[0][1]=1
+
     while 1:
 
         appointment = "" # поиск контактов со встречей на сегодня

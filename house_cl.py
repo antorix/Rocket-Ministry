@@ -167,7 +167,6 @@ class House():
 
             deletedFlat = self.flats[ind]
             result = None
-            print(restore)
 
             flatsLayoutOriginal = self.flatsLayout # определяем, нет ли в конце списка квартиры с записями, которую нельзя сдвигать
             self.flatsLayout = "о"
