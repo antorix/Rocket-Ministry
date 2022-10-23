@@ -279,7 +279,7 @@ class House():
                     if fnumber % i == 0:
                         options.append(str(i))
                 del options[len(options)-1]
-                options.append("Другое")
+                options.append("Свой вариант")
                 choice=dialogs.dialogList(
                     title="Сколько этажей в подъезде?",
                     positive=None,
@@ -296,7 +296,7 @@ class House():
                 elif set.ifInt(choice) == True:
                     try:
                         result = int(options[int(choice)])
-                    except: # выбрано "Другое"
+                    except: # выбран свой вариант
                         self.forceFloors()
                     else:
                         self.flatsLayout = result

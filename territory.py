@@ -229,7 +229,11 @@ def porchView(house, selectedPorch):
             selected2=0
             while 1: # Показываем этаж
 
-                rows = int(porch.flatsLayout)
+                try:
+                    rows = int(porch.flatsLayout)
+                except:
+                    porch.flatsLayout="н"
+                    break
                 if (floorNumber - porch.floor1 + 1) < rows:
                     neutral = "↑"
                 else:
