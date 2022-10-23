@@ -132,22 +132,27 @@ class House():
 
         def deleteFlat(self, ind):
             answer=True
-            if len(self.flats[ind].records)!=0 or self.flats[ind].getName()!="": # проверка, что квартира не пустая
-                answer = dialogs.dialogConfirm(
-                    title=icon(
-                        "cut") + " Удалить «%s»?" % self.flats[ind].number,
-                        message="Внутри есть данные! Вы уверены?"
-                    )
+            restore=False
+            if len(self.flats[ind].records)!=0 or self.flats[ind].getName()!="" or\
+                    self.flats[ind].note!="": # проверка, что квартира не пустая
+                if set.ifInt(self.flatsLayout) == False:
+                    answer = dialogs.dialogConfirm(
+                        title=icon(
+                            "cut") + " Удалить «%s»?" % self.flats[ind].number,
+                            message="Внутри есть данные! Вы уверены?"
+                        )
+                else: # выбрано удаление квартиры с записями в поэтажной раскладке:
+                    restore=True
             if answer==True:
                 if "." in self.flats[ind].number:
                     number = self.flats[ind].number[0: self.flats[ind].number.index(".")]
                 else:
                     number = self.flats[ind].number
                 if set.ifInt(self.flatsLayout)==True:
-                    result = self.shift(ind)#, forced=forced)
-                    if result == "deleted":
-                        io2.log("«%s» удален" % number)
-                    elif result == "disableFloors":
+                    result = self.shift(ind, restore=restore)
+                    #if result == "deleted":
+                    #    io2.log("«%s» удален" % number)
+                    if result == "disableFloors":
                         del self.flats[ind]
                         io2.log("«%s» удален" % number)
                         self.flatsLayout="н"
@@ -157,11 +162,12 @@ class House():
                     io2.log("«%s» удален" % number)
                 return "deleted"
 
-        def shift(self, ind):
+        def shift(self, ind, restore=False):
             """Сдвиг квартир вниз после удаления из этажной раскладки"""
 
             deletedFlat = self.flats[ind]
             result = None
+            print(restore)
 
             flatsLayoutOriginal = self.flatsLayout # определяем, нет ли в конце списка квартиры с записями, которую нельзя сдвигать
             self.flatsLayout = "о"
@@ -183,6 +189,9 @@ class House():
                     result = "disableFloors"
 
             else:
+                if restore == True:
+                    deletedFlatClone = self.Flat()
+                    deletedFlatClone.clone(deletedFlat)
                 deletedFlat.hide()  # скрываем удаленную квартиру
                 result = "deleted"
 
@@ -209,6 +218,11 @@ class House():
                     for flat2 in porch2:
                         if flat1.number == flat2.number and flat2.status!="":
                             flat1.clone(flat2)
+
+                if restore==True: # если была удалена квартира с содержимым, восстанавливаем ее на новом месте
+                    for flat in self.flats:
+                        if flat.number == deletedFlatClone.number:
+                            flat.clone(deletedFlatClone)
 
                 self.flatsLayout = flatsLayoutOriginal # возвращаем исходную сортировку
                 self.sortFlats()
@@ -702,6 +716,7 @@ class House():
                 self.phone = copy(flat2.phone)
                 self.meeting = copy(flat2.meeting)
                 self.status = copy(flat2.status)
+                self.note = copy(flat2.note)
                 for record in flat2.records:
                     self.records.append(copy(record))
 
