@@ -399,7 +399,7 @@ def update(forced=False):
     except:
         print("Не удалось подключиться к серверу")
         dialogs.dialogAlert(title, "Не удалось подключиться к серверу для проверки обновлений. Проверьте соединение с Интернетом.")
-        return
+        return False
     else: # успешно подключились, сохраняем сегодняшнюю дату последнего обновления
         today = str(datetime.datetime.strptime( time.strftime('%Y-%m-%d'), "%Y-%m-%d") )
         today = today[0: today.index(" ")]
