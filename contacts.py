@@ -81,7 +81,8 @@ def getContactsAmount(date=0):
                     if dateApp!=999999 and dateApp == today:
                         datedFlats.append(dateApp) # check if matches with today's date
                 if houses[h].porches[p].flats[f].status != "" and houses[h].porches[p].flats[f].status != "0"\
-                        and houses[h].porches[p].flats[f].getStatus()[1] != 4: # значит статус "?"
+                        and houses[h].porches[p].flats[f].getStatus()[1] != 4 \
+                        and not "." in houses[h].porches[p].flats[f].number:
                     c+=1
 
     for h in range(len(resources[1])):
@@ -147,11 +148,13 @@ def getContacts(forSearch=False):
             for f in range(len(houses[h].porches[p].flats)):
                 if forSearch==False: # поиск для списка контактов - только актуальные жильцы
                     if houses[h].porches[p].flats[f].status != "" and houses[h].porches[p].flats[f].status != "0"\
-                            and houses[h].porches[p].flats[f].getStatus()[1] != 4: # значит статус "?"
+                            and houses[h].porches[p].flats[f].getStatus()[1] != 4 \
+                            and not "." in houses[h].porches[p].flats[f].number:
                         retrieve(houses, h, p, f, contacts)
                         #print(houses[h].porches[p].flats[f].status)
                 else: # поиск для поиска - все контакты вне зависимости от статуса
-                    retrieve(houses, h, p, f, contacts)
+                    if not "." in houses[h].porches[p].flats[f].number:
+                        retrieve(houses, h, p, f, contacts)
 
     for h in range(len(resources[1])):
         retrieve(resources[1], h, 0, 0, contacts) # отдельные контакты - все
