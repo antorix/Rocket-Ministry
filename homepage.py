@@ -630,29 +630,31 @@ def stats():
                 if houses[h].porches[p].status == "🟡🟣🔴":  # сколько подъездов обработано
                     porchesCompleted += 1
 
-            for f in range(len(houses[h].porches[p].flats)):
+            for flat in houses[h].porches[p].flats:
+                if "." in flat.number:
+                    continue
                 flats += 1
-                if houses[h].porches[p].flats[f].status == "0":  # сколько квартир в разных статусах
+                if flat.status == "0":  # сколько квартир в разных статусах
                     status0 += 1
-                if houses[h].porches[p].flats[f].status == "1":
+                if flat.status == "1":
                     status1 += 1
-                if houses[h].porches[p].flats[f].status == "2":
+                if flat.status == "2":
                     status2 += 1
-                if houses[h].porches[p].flats[f].status == "3":
+                if flat.status == "3":
                     status3 += 1
-                if houses[h].porches[p].flats[f].status == "4":
+                if flat.status == "4":
                     status4 += 1
-                if houses[h].porches[p].flats[f].status == "5":
+                if flat.status == "5":
                     status5 += 1
-                if houses[h].porches[p].flats[f].getStatus()[1] == 4:
+                if flat.getStatus()[1] == 4:
                     statusQ += 1
-                if houses[h].porches[p].flats[f].status == "":
+                if flat.status == "":
                     nostatus += 1
-                if len(houses[h].porches[p].flats[f].records) > 1:  # квартир с более чем одной записью
+                if len(flat.records) > 1:  # квартир с более чем одной записью
                     returns += 1
-                if len(houses[h].porches[p].flats[f].records) == 1:  # квартир с одной записью
+                if len(flat.records) == 1:  # квартир с одной записью
                     returns1 += 1
-                if len(houses[h].porches[p].flats[f].records) >= 2:  # квартир с более чем двумя записями
+                if len(flat.records) >= 2:  # квартир с более чем двумя записями
                     returns2 += 1
 
     if housesDue == 0:
