@@ -30,7 +30,7 @@ def initializeDB():
     import time
     return [],\
         [
-        [1, 0, 0, 0, "с", 0, 50, 1, 1, 0, 1, 1, 1, 1, "", 1, 0, "", 0, "д", 1, 0, 1], # program settings: settings[0][0…], see set.preferences()
+        [1, 0, 0, 0, "с", 0, 50, 1, 1, 0, 1, 1, 1, 1, "", 1, 0, "", 1, "д", 1, 0, 1], # program settings: settings[0][0…], see set.preferences()
         "",# дата последнего обновления settings[1]
         # report:                       settings[2]
         [0.0,       # [0] hours         settings[2][0…]
