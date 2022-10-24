@@ -557,7 +557,7 @@ class House():
                     else:
                         if forcedDelete==True:
                             delete=True
-                        elif dialogs.dialogConfirm(
+                        elif set.ifInt(self.flatsLayout)==False and dialogs.dialogConfirm(
                             icon("cut") + " Перезапись «%s»" % self.flats[i].number, "Внутри есть данные! Точно перезаписать?"
                         ) == True:
                             delete=True # user approves deletion
