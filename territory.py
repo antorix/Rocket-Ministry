@@ -241,11 +241,11 @@ def porchView(house, selectedPorch):
                     porch.flatsLayout="н"
                     break
                 if (floorNumber - porch.floor1 + 1) < rows:
-                    neutral = icon("up")#"↑"
+                    neutral = "↑"
                 else:
                     neutral = None
                 if (floorNumber - porch.floor1 + 1) > 1:
-                    positive = icon("down")#"↓"
+                    positive = "↓"
                 else:
                     positive = None
                 options = porch.showFlats(floor=floorNumber - porch.floor1 + 1)

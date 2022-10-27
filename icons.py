@@ -79,8 +79,8 @@ def icon(myIcon, forceText=False, simplified=True):
         elif myIcon=="mic": return "💬" #💭🗨
         elif myIcon=="intercom": return "📟"  #
         elif myIcon=="prevmonth": return "📋" # new
-        elif myIcon=="up": return "↑"#⬆
-        elif myIcon=="down": return "↓"#⬇
+        elif myIcon=="up": return "⬆️"#
+        elif myIcon=="down": return "⬇️"#
         elif myIcon=="phone": return "📱" # телефон в настройках контакта
         elif myIcon=="phone2": return "☎" # иконка телефонного участка и режима справочной
         elif myIcon=="phone3": return "📱" # используется для показа в списке жильцов, заменяется на "т."
