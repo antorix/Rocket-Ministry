@@ -10,7 +10,7 @@ def icon(myIcon, forceText=False, simplified=True):
         if myIcon=="globe": return "🗺"
         elif myIcon=="map": return "🧭"
         elif myIcon=="rocket": return "🚀"
-        elif myIcon=="timer": return "⌚"
+        elif myIcon=="timer": return "⏱️"#⌚
         elif myIcon=="report": return "🗒"
         elif myIcon=="contacts": return "👥"
         elif myIcon=="notebook": return "📗"
@@ -43,7 +43,7 @@ def icon(myIcon, forceText=False, simplified=True):
         elif myIcon=="placements": return "📚"
         elif myIcon=="video": return "🎞"
         elif myIcon=="credit": return "🖥️"
-        elif myIcon=="returns": return "⏩"
+        elif myIcon=="returns": return "↩️"#⏩
         elif myIcon=="studies": return "📖"
         elif myIcon=="mute": return "🔇"
         elif myIcon=="unreachable": return "🚫"
