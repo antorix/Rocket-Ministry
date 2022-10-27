@@ -79,9 +79,9 @@ def getContactsAmount(date=0):
                 if date==1: # check appointment date
                     dateApp = checkDate(houses[h].porches[p].flats[f])[1]
                     if dateApp!=999999 and dateApp == today:
-                        datedFlats.append(dateApp) # check if matches with today's date
+                        #datedFlats.append(dateApp) # check if matches with today's date
+                        datedFlats.append(houses[h].porches[p].flats[f])  # check if matches with today's date
                 if houses[h].porches[p].flats[f].status != "" and houses[h].porches[p].flats[f].status != "0"\
-                        and houses[h].porches[p].flats[f].getStatus()[1] != 4 \
                         and not "." in houses[h].porches[p].flats[f].number:
                     c+=1
 
@@ -90,7 +90,8 @@ def getContactsAmount(date=0):
         if date==1: # check appointment date
             dateApp = checkDate(resources[1][h].porches[0].flats[0])[1]
             if dateApp!=999999 and dateApp == today:
-                datedFlats.append(dateApp) # check if matches with today's date
+                #datedFlats.append(dateApp) # check if matches with today's date
+                datedFlats.append(houses[h].porches[p].flats[f])  # check if matches with today's date
             
     return c, datedFlats
     
@@ -147,11 +148,9 @@ def getContacts(forSearch=False):
         for p in range(len(houses[h].porches)):
             for f in range(len(houses[h].porches[p].flats)):
                 if forSearch==False: # поиск для списка контактов - только актуальные жильцы
-                    if houses[h].porches[p].flats[f].status != "" and houses[h].porches[p].flats[f].status != "0"\
-                            and houses[h].porches[p].flats[f].getStatus()[1] != 4 \
+                    if houses[h].porches[p].flats[f].status != "" and houses[h].porches[p].flats[f].status != "0" \
                             and not "." in houses[h].porches[p].flats[f].number:
                         retrieve(houses, h, p, f, contacts)
-                        #print(houses[h].porches[p].flats[f].status)
                 else: # поиск для поиска - все контакты вне зависимости от статуса
                     if not "." in houses[h].porches[p].flats[f].number:
                         retrieve(houses, h, p, f, contacts)
@@ -190,18 +189,6 @@ def showContacts():
 
         for i in range(len(contacts)):
 
-            if contacts[i][5] != "":
-                appointment = "%s%s" % (icon("appointment"), contacts[i][5][0:5]) # appointment
-            else:
-                appointment=""
-            if contacts[i][9] != "":
-                phone = "%s%s" % (icon("phone"), contacts[i][9]) # phone
-            else:
-                phone=""
-            if contacts[i][14] != "zzz":
-                email = "%s%s" % (icon("export"), contacts[i][14]) # email
-            else:
-                email=""
             if contacts[i][15]=="office":
                 porch = contacts[i][8] + ", "
             else:
@@ -219,24 +206,35 @@ def showContacts():
             else:
                 myicon=icon("star")
 
+            if contacts[i][5] != "":
+                appointment = "%s%s " % (icon("appointment", simplified=False), contacts[i][5][0:5]) # appointment
+            else:
+                appointment=""
+            if contacts[i][9] != "":
+                phone = "%s%s " % ("т.", contacts[i][9]) # phone
+            else:
+                phone=""
             if contacts[i][8]=="virtual" or contacts[i][15]=="office":
                 hyphen=""
             else:
                 hyphen="-"
             if contacts[i][2]!="":
-                address = "(%s%s%s%s)" % (contacts[i][2], porch, hyphen, contacts[i][3])
+                address = "(%s%s%s%s) " % (contacts[i][2], porch, hyphen, contacts[i][3])
             else:
                 address=""
+            if contacts[i][11]!="":
+                note = icon("pin", simplified=False) + contacts[i][11]
+            else:
+                note = ""
 
             options.append(
-                myicon + " %s %s %s %s %s %s %s" % (
+                myicon + " %s %s %s%s%s%s" % (
                     contacts[i][1],
                     contacts[i][0],
                     address,
                     appointment,
                     phone,
-                    email,
-                    contacts[i][11],
+                    note,
                 )
             )
 
@@ -244,20 +242,16 @@ def showContacts():
             options.append(
                 "Здесь будут отображаться жильцы со всех участков и отдельные контакты, созданные вами")
 
-        if settings[0][1] == True or io2.Mode == "text":
-            options.append(icon("plus") + " Новый контакт")  # positive button
-            options.append(icon("sort") + " Сортировка") # neutral button
-
         # Display dialog
 
         if choice!="positive":
             choice = dialogs.dialogList(
                 form = "showContacts",
                 title = icon("contacts") + " Контакты " + reports.getTimerIcon(settings[2][6]),
-                message = "Выберите контакт:",
+                message = "Список контактов:",
                 options = options,
-                positive=icon("plus"),
-                neutral = icon("sort") + " Сорт."
+                positive=icon("plus", simplified=False),
+                neutral = icon("sort", simplified=False) + " Сорт."
             )
         if homepage.menuProcess(choice)==True:
             continue
@@ -270,9 +264,7 @@ def showContacts():
                 "По статусу",
                 "По адресу",
                 "По дате последнего посещения",
-                "По номеру телефона",
-                # "По email"
-                # "По email"
+                "По номеру телефона"
             ]
             if settings[0][4] == "и":
                 selected = 1
@@ -290,7 +282,7 @@ def showContacts():
                 selected = 0
 
             choice2 = dialogs.dialogRadio(
-                title=icon("sort") + " Сортировка контактов",
+                title=icon("sort", simplified=False) + " Сортировка контактов",
                 options=options,
                 selected=selected
             )
@@ -334,7 +326,11 @@ def showContacts():
                 p = contacts[choice][7][1]
                 f = contacts[choice][7][2]
                 if contacts[choice][8] != "virtual":  # смотрим контакт на участке
-                    exit = territory.flatView(flat=houses[h].porches[p].flats[f], house=houses[h])
+                    if set.ifInt(houses[h].porches[p].flatsLayout)==True:
+                        allowDelete = False # нельзя удалить контакт, если он в доме с поэтажной сортировкой
+                    else:
+                        allowDelete = True
+                    exit = territory.flatView(flat=houses[h].porches[p].flats[f], house=houses[h], allowDelete=allowDelete)
                     if exit == "deleted":
                         houses[h].porches[p].deleteFlat(f)
                         io2.save()

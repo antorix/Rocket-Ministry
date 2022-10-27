@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import house_cl
+from house_cl import House
 import io2
 from io2 import houses
 from io2 import settings
@@ -31,7 +31,7 @@ def showHouses():
 
     for house in houses:  # check houses statistics
         if house.getHouseStats()[0] > 0:
-            visited = "%s%d" % (icon("mark"), house.getHouseStats()[0])
+            visited = "%s%d" % (icon("mark", simplified=False), house.getHouseStats()[0])
         else:
             visited = ""
         if house.getHouseStats()[1] > 0:
@@ -39,31 +39,27 @@ def showHouses():
         else:
             interested = ""
         if house.note != "":
-            note = "%s%s" % (icon("pin"), house.note)
+            note = "%s%s" % (icon("pin", simplified=False), house.note)
         else:
             note = ""
         if days_between(house.date, time.strftime("%Y-%m-%d", time.localtime())) > 180:
-            houseDue = icon("warning")
+            houseDue = icon("warning") + " "
         else:
             houseDue=""
 
-        housesList.append("%s %s %s (%s) %s %s %s" %
+        housesList.append("%s %s %s(%s) %s %s %s" %
                 (house.getTipIcon()[1], house.title, houseDue, shortenDate(house.date), visited, interested, note)
         )
 
     if len(housesList)==0:
         housesList.append("Создайте свой первый участок")
 
-    if settings[0][1]==True or io2.Mode == "text":
-        housesList.append(icon("plus") + " Новый участок")  # neutral button on Android
-        housesList.append(icon("sort") + " Сортировка")  # neutral button on Android
-
     return housesList
 
 def addHouse(houses, input, type):
     """ Adding new house """
     
-    houses.append(house_cl.House())
+    houses.append(House())
     newHouse=len(houses)-1
     houses[newHouse].title = (input.strip()).upper()
     houses[newHouse].type = type
@@ -94,8 +90,8 @@ def pickHouseType(house=None):
         title = house.title
     while 1:
         options = [
-            icon("house") + " Многоквартирный дом",
-            icon("cottage") + " Частный сектор",
+            icon("house")  + " Многоквартирный дом",
+            icon("cottage")+ " Частный сектор",
             icon("office") + " Деловая территория",
             icon("phone2") + " Телефонный участок",
         ]
@@ -150,7 +146,7 @@ def terSort():
         selected = 0
 
     choice = dialogs.dialogRadio(
-        title=icon("sort") + " Сортировка участков " + reports.getTimerIcon(settings[2][6]),
+        title=icon("sort", simplified=False) + " Сортировка участков " + reports.getTimerIcon(settings[2][6]),
         selected=selected,
         options=options
     )

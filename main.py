@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
+import io2
 from io2 import load, settings
 import dialogs
 import homepage as homepage
@@ -10,6 +10,10 @@ def app():
     """ Callable program """
 
     load()
+    if io2.Mode=="text":
+        io2.settings[0][1] = 1
+    else:
+        io2.settings[0][1] = 0
 
     if settings[0][17]!="":
         password=dialogs.dialogGetPassword(

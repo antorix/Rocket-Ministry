@@ -5,6 +5,7 @@ import reports
 import time
 import console
 import os
+from glob import glob
 import house_op
 import set
 from icons import icon
@@ -12,17 +13,59 @@ import io2
 
 ConsoleTip        = "\nВведите номер пункта и нажмите Enter.\nШаг назад – Enter в пустой строке.\n"
 ConsoleTipForText = "\nВведите текст запроса и нажмите Enter.\nШаг назад – Enter в пустой строке.\n"
-ConsoleTipForPorch= "\nВведите номер квартиры и нажмите Enter.\nШаг назад – Enter в пустой строке."
+ConsoleTipForPorch= "\nВведите номер квартиры и нажмите Enter.\nШаг назад – Enter в пустой строке.\n" +\
+                      "+1 – добавить один номер.\n+1-50 – добавить диапазон номеров."
+DefaultText = "(Введите «!», чтобы подтвердить «%s»)"
 
 if io2.Mode=="sl4a":
     from androidhelper import Android
     phone = Android()
+
 elif io2.Mode=="easygui":
-    import tkinter.messagebox
-    from choice_box import choicebox, multchoicebox
-    from text_box import textbox, enterbox, passwordbox
-    from fileopen_box import fileopenbox
-    from button_box import msgbox
+
+    # глобальные параметры окон и шрифты
+    window_size = ""
+    window_position = ""
+
+    PROPORTIONAL_FONT_FAMILY = ("Calibri", "Arial", "MS", "Sans", "Serif")
+    try:
+        MONOSPACE_FONT_FAMILY = "Liberation Mono"  # "DejaVu Sans Mono", "Cousine", "Lucida Console", "PT Mono", "Fira Mono", "Ubuntu Mono", "Courier New"
+    except:
+        MONOSPACE_FONT_FAMILY = ""
+
+    PROPORTIONAL_FONT_SIZE = MONOSPACE_FONT_SIZE = TEXT_ENTRY_FONT_SIZE = 11
+
+    STANDARD_SELECTION_EVENTS = ["Return", "Button-1", "space"]
+
+    prop_font_line_length = 62
+    fixw_font_line_length = 80
+    num_lines_displayed = 50
+    default_hpad_in_chars = 40
+
+    inactive_background = "grey98"
+
+    try:
+        from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
+    except: # нет desktop - старая версия, догружаем и удаляем ненужные файлы
+        import urllib.request
+        urllib.request.urlretrieve(
+            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/desktop.py",
+            "desktop.py"
+        )
+        from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
+        filesToDelete = [
+            "global_state.py",
+            "choice_box.py",
+            "button_box.py",
+            "fileboxsetup.py",
+            "fileopen_box.py",
+            "fillable_box.py",
+            "text_box.py",
+            "utils.py"
+        ]
+        for file in filesToDelete:
+            if os.path.exists(file):
+                os.remove(file)
 
 def dialogText(title="",
                message="",
@@ -34,22 +77,33 @@ def dialogText(title="",
                neutral="Очист.",
                autoplus=False):
 
+    if autoplus == True:
+        neutral = "+1"
+
     """ Text input """
     if io2.settings[0][1]==True or io2.Mode=="text":
         clearScreen()
         print(title)
         if form=="porchText":
             print(ConsoleTipForPorch)
+            if set.PhoneMode == True:
+                print("\n   <Включен режим справочной>  ")
         else:
             print(ConsoleTipForText)
-        print(message+"\n")
+        print(message)
+        if neutral != "Очист." and neutral != "+1":
+            print("[0] %s" % neutral)
+
+        #    print("\n[+1] Добавить новую квартиру.\n[+1-50] Добавить диапазон квартир\n")
         if default!="":
-            print("(Значение по умолчанию: «%s». Введите «!» для его подтверждения или любое другое значение.)" % default)
-        choice = input()
+            print(DefaultText % default)
+        choice = input().strip()
         if choice==None or choice=="":
             result = None
         elif default!="" and choice=="!":
             result = default
+        elif choice=="0" and form == "porchText":
+            result = "neutral"
         else:
             result = choice
         if console.process(choice) == True:
@@ -69,7 +123,6 @@ def dialogText(title="",
                 phone.dialogSetNeutralButtonText(neutral)
             phone.dialogShow()
             resp = phone.dialogGetResponse()[1]
-            #phone.dialogDismiss()
             default=""
             if "canceled" in resp and resp["value"]=="":
                 return None
@@ -82,17 +135,17 @@ def dialogText(title="",
                 resp["value"]=""
                 continue
             elif "neutral" in resp["which"]:
-                return"neutral"
+                return "neutral"
             elif "positive" in resp["which"]:
                 if console.process(resp["value"].strip())==True:
                     return ""
                 return resp["value"].strip()
-            else:
+            elif "negative" in resp["which"]:
                 return None
+            #else:
+            #    return None
 
     else:
-        if autoplus==True:
-            neutral="+1"
         if largeText==False:
             choice = enterbox(
                 msg=message,
@@ -140,7 +193,6 @@ def dialogList(
             phone.dialogSetNegativeButtonText(negative)
         phone.dialogShow()
         resp = phone.dialogGetResponse()[1]
-        #phone.dialogDismiss()
         if "canceled" in resp:
             return None
         elif "item" in resp:
@@ -149,17 +201,32 @@ def dialogList(
             return "positive"
         elif "neutral" in resp["which"]:
             return "neutral"
-        else:
+        elif "negative" in resp["which"]:
             return None
+        else:
+            return ""
         
     else:
         if io2.Mode=="text" or io2.settings[0][1]==True:
             clearScreen()
             print(title)
             print(ConsoleTip)
-            #print(message)
+            print(message)
             for i in range(len(options)):
                 print("[%2d] %s" % (i+1, options[i])) # +1 - чтобы в консоли нумерация начиналась с 1, а не 0 (для удобства)
+            if positive!=None:
+                i+=1
+                if positive=="+":
+                    extra = "Добавить"
+                else:
+                    extra = ""
+                print("[%2d] %s %s" % (i+1, positive, extra))
+                positive = i+1 # positive переопределяется из строки в число!
+            if neutral != None:
+                i += 1
+                print("[%2d] %s" % (i+1, neutral))
+                neutral = i + 1  # neutral переопределяется из строки в число!
+
             result=input().strip()
             if console.process(result)==True:
                 return ""
@@ -167,42 +234,18 @@ def dialogList(
                 choice=None # ввод пустой строки аналогичен отмене и шагу назад
             else:
                 if set.ifInt(result)==True:
-                    try:
-                        choice=options[int(result)-1] # -1 - чтобы компенсировать сдвиг на +1 выше
-                    except:
-                        choice=result
+                    if int(result)==positive:
+                        choice = "positive"
+                    elif int(result)==neutral:
+                        choice = "neutral"
+                    else:
+                        if int(result) <= len(options):
+                            choice = int(result)-1
+                        else:
+                            choice = None
                 else:
-                    choice=result
-
-            # согласование результатов текстового вывода кнопкам на Android: neutral, positive, None или номер строки:
-            if choice==None:                                    return None # exit
-            elif "Таймер" in choice:                            return "neutral"
-            elif "Участки" in choice and form!="home":          return "neutral"
-            elif "Детали" in choice and form!="firstCallMenu":  return "neutral"
-            elif "Контакт" in choice and form=="flatView":      return "neutral"
-            elif "Аналитика" in choice:                         return "neutral"
-            elif "Справка" in choice:                           return "neutral"
-            elif "Запись" in choice:                            return "neutral"
-            elif reports.monthName()[2] in choice\
-                and form!="serviceYear":                        return "neutral" # last month in report
-            elif "Экспорт" in choice and form=="showNotebook":  return "neutral"
-            elif "Сортировка" in choice\
-                and form!="porchSettings":                      return "neutral" # sorting contacts or houses
-            elif form=="flatView" and\
-                    "Новое посещение" in choice:                return "positive"
-            elif "Новая заметка" in choice:                     return "positive"
-            elif "Добавить" in choice:                          return "positive"
-            elif "Новый контакт" in choice:                     return "positive"
-            elif form=="terView" and "Новый" in choice:         return "positive"
-            elif form=="houseView" and "Новый" in choice:       return "positive"
-            elif form=="porchViewGUIOneFloor" and\
-                    "Вниз" in choice:                           return "positive"
-            elif form == "porchViewGUIOneFloor" and\
-                    "Вверх" in choice:                          return "neutral"
-            else:
-                for i in range(len(options)):
-                    if options[i]==str(choice):                 return i
-                else:                                           return choice
+                    choice=None
+            return choice
 
         else:
             if positive=="OK":
@@ -220,7 +263,7 @@ def dialogList(
                 return None
             elif choice=="positive" or choice=="neutral" or choice=="settings"\
                     or choice=="report" or choice=="file" or choice=="notebook"\
-                    or choice=="exit":
+                    or choice=="phone" or choice=="exit":
                 return choice
             else:
                 for i in range(len(options)):
@@ -233,18 +276,18 @@ def dialogChecklist(
         selected=[],
         message="",
         positive="OK",
-        neutral="",
-        negative="Отмена"):
+        neutral=None,
+        negative=None):
     """ Checkboxes"""
 
     if io2.Mode=="sl4a" and io2.settings[0][1]==False:
         phone.dialogCreateAlert(title, message)
         phone.dialogSetMultiChoiceItems(options, selected)
-        if positive!=False:
+        if positive!=None:
             phone.dialogSetPositiveButtonText(positive)
-        if neutral!=False:
-            phone.dialogSetPositiveButtonText(neutral)
-        if negative!=False:
+        if neutral!=None:
+            phone.dialogSetNeutralButtonText(neutral)
+        if negative!=None:
             phone.dialogSetNegativeButtonText(negative)
         phone.dialogShow()
         phone.dialogGetResponse()
@@ -260,8 +303,7 @@ def dialogChecklist(
             print(ConsoleTip)
             print(message)
             for i in range(len(options)):
-                print("%-2d %s" % (
-                i + 1, options[i]))  # +1 - чтобы в консоли нумерация начиналась с 1, а не 0 (для удобства)
+                print("[%2d] %s" % (i + 1, options[i]))  # +1 - чтобы в консоли нумерация начиналась с 1, а не 0 (для удобства)
             result = input()
             if console.process(result) == True:
                 return ""
@@ -277,8 +319,10 @@ def dialogRadio(
         title="",
         options=[],
         selected=0,
+        form="",
         message="",
         positive="OK",
+        neutral=None,
         negative="Отмена"):
     """ Radio buttons """
 
@@ -287,14 +331,17 @@ def dialogRadio(
         phone.dialogSetSingleChoiceItems(options, selected)
         if positive!=None:
             phone.dialogSetPositiveButtonText(positive)
+        if neutral!=None:
+            phone.dialogSetNeutralButtonText(neutral)
         if negative!=None:
             phone.dialogSetNegativeButtonText(negative)
         phone.dialogShow()
         resp = phone.dialogGetResponse()[1]
         resp2 = phone.dialogGetSelectedItems()[1]
-        #phone.dialogDismiss()
         if "canceled" in resp:
             return None
+        elif "neutral" in resp["which"]:
+            return "neutral"
         elif "positive" in resp["which"]:
             return options[resp2[0]].strip()
         else:
@@ -304,34 +351,53 @@ def dialogRadio(
             clearScreen()
             print(title)
             print(ConsoleTip)
-            print(message)
+            if form == "statusSelection":
+                k=0
+            else:
+                k=1
             for i in range(len(options)):
-                print("%-2d %s" % (i+1, options[i]))  # +1 - чтобы в консоли нумерация начиналась с 1, а не 0 (для удобства)
+                print("[%2d] %s" % (i+k, options[i]))  # +1 - чтобы в консоли нумерация начиналась с 1, а не 0 (для удобства)
+            if neutral != None:
+                print(message + "[ *]  %s" % neutral)
             result=input()
             if console.process(result) == True:
                 return ""
-            try:
-                choice=options[int(result)-1].strip()
-            except:
-                choice=result
+            if result == "":
+                choice = None
+            elif result == "*":
+                choice = "neutral"
+            else:
+                try:
+                    choice = options[int(result)-k].strip()
+                except:
+                    choice = None#result
         else:
-            choice = choicebox(title=title, msg=message, choices=options, preselect=selected)
+            if positive=="Квартира":
+                positive=None
+            choice = choicebox(
+                title=title,
+                msg=message,
+                choices=options,
+                preselect=selected,
+                positive=positive,
+                neutral=neutral,
+                negative=negative)
+
         return choice
 
-def dialogConfirm(title="", message="", neutralButton=False, choices=["Да", "Нет"]):
+def dialogConfirm(title="", message="", positive="Да", neutral=None, negative="Нет", choices=[]):
     """ Yes or no """
+
+    choices = [positive, negative]
 
     if io2.Mode=="sl4a" and io2.settings[0][1]==False:
         phone.dialogCreateAlert(title, message)
-        phone.dialogSetPositiveButtonText(choices[0])
-        if neutralButton == True:
-            phone.dialogSetNeutralButtonText(choices[1])
-            phone.dialogSetNegativeButtonText(choices[2])            
-        else:
-            phone.dialogSetNegativeButtonText(choices[1])
+        phone.dialogSetPositiveButtonText(positive)
+        if neutral != None:
+            phone.dialogSetNeutralButtonText(neutral)
+        phone.dialogSetNegativeButtonText(negative)
         phone.dialogShow()
         response=phone.dialogGetResponse().result
-        #phone.dialogDismiss()
         if "which" in response:
             if response["which"]=="positive":
                 return True
@@ -347,33 +413,36 @@ def dialogConfirm(title="", message="", neutralButton=False, choices=["Да", "�
             print(message+"\n")
             for i in range(len(choices)):
                 if choices[i]!="":
-                    print("%-2d│ %s" % (i+1, choices[i])) # +1 - чтобы в консоли нумерация начиналась с 1, а не 0 (для удобства)
+                    print("[%2d] %s" % (i+1, choices[i])) # +1 - чтобы в консоли нумерация начиналась с 1, а не 0 (для удобства)
             result=input()
-            try:
-                result=choices[int(result)-1]
-            except:
-                return result
+            if result.strip()=="1":
+                return True
+            else:
+                return False
         
         else:
-            result = tkinter.messagebox.askyesno(title, message)
-            
-        if result==choices[0] or result==True:
+            result = msgbox(title=title, msg=message, positive=positive, neutral=neutral, negative=negative)
+
+        if result=="positive":
             return True
-        if result==choices[1]:
+        elif result=="neutral":
             return "neutral"
-        else: return False        
+        else:
+            return False
         
-def dialogAlert(title="Внимание!", message="", neutralButton=False, neutral="", no="Оk"):
+def dialogAlert(title="Внимание!", message="", positive="OK", neutral=None, negative=None):
     """ Simple information windows """
     
     if io2.Mode=="sl4a" and io2.settings[0][1]==False:
         phone.dialogCreateAlert(title, message)
-        if neutralButton == True:
+        if positive != None:
+            phone.dialogSetPositiveButtonText(positive)
+        if neutral != None:
             phone.dialogSetNeutralButtonText(neutral)
-        phone.dialogSetNegativeButtonText(no)
+        if negative != None:
+            phone.dialogSetNegativeButtonText(negative)
         phone.dialogShow()
         response = phone.dialogGetResponse().result
-        #phone.dialogDismiss()
         if "which" in response:
             if response["which"]=="negative":
                 return False
@@ -387,8 +456,8 @@ def dialogAlert(title="Внимание!", message="", neutralButton=False, neut
             print(message)
             return input().strip()
         else:
-            tkinter.messagebox.showinfo(title, message)
-            #buttonbox(message, title)
+            #tkinter.messagebox.showinfo(title, message)
+            msgbox(title=title, msg=message, positive=positive, neutral=neutral, negative=negative)
         
 def dialogInfo(title="", message="", largeText=False,
                positive=None,       negative="Назад",    neutral=None):
@@ -404,7 +473,6 @@ def dialogInfo(title="", message="", largeText=False,
             phone.dialogSetNegativeButtonText(negative)
         phone.dialogShow()
         resp = phone.dialogGetResponse()[1]
-        #phone.dialogDismiss()
         if "canceled" in resp:
             return None
         elif "positive" in resp["which"]:
@@ -419,8 +487,32 @@ def dialogInfo(title="", message="", largeText=False,
             clearScreen()
             print(title)
             print(ConsoleTip)
-            print(message)
-            return input()
+            print(message+"\n")
+
+            i=0
+            if positive!=None:
+                i+=1
+                print("[%2d] %s" % (i+1, positive))
+                positive = i+1 # positive переопределяется из строки в число!
+            if neutral != None:
+                i += 1
+                print("[%2d] %s" % (i+1, neutral))
+                neutral = i + 1  # neutral переопределяется из строки в число!
+
+            result = input().strip()
+
+            if set.ifInt(result) == True:
+                if int(result) == positive:
+                    choice = "positive"
+                elif int(result) == neutral:
+                    choice = "neutral"
+                else:
+                    choice = None
+            else:
+                choice = None
+
+            return choice
+
         else:
             if largeText==False:
                 choice = msgbox(title=title, msg=message, positive=positive, neutral=neutral, negative=negative)#, positive=positive, neutral=neutral, negative=negative)
@@ -439,28 +531,41 @@ def dialogInfo(title="", message="", largeText=False,
                 choice = choice.strip()
             return choice
 
-def dialogFileOpen(message="", title="Выбор файла", default="", filetypes= "\*.jsn"):
+def dialogFileOpen(message="", title="", default="", folder='.', filetypes= "\*.jsn"):
+
+    def _dialog(title, flist):
+        '''display dialog with list of files/folders title
+        allowing user to select any item or click Cancel
+        get user input and return selected index or None
+        '''
+        droid = Android()
+        droid.dialogCreateAlert(title, message)
+        droid.dialogSetItems(flist)
+        droid.dialogSetNegativeButtonText('Отмена')
+        droid.dialogShow()
+        resp = droid.dialogGetResponse()[1]
+        if "canceled" in resp:
+            return None
+        elif "item" in resp:
+            return resp["item"]
+        else:
+            return None
+
     if io2.Mode == "sl4a" and io2.settings[0][1] == False:
-        while 1:
-            phone.dialogCreateInput(title, message, default)
-            phone.dialogSetPositiveButtonText("OK")
-            phone.dialogSetNegativeButtonText("Отмена")
-            phone.dialogShow()
-            resp = phone.dialogGetResponse()[1]
-            #phone.dialogDismiss()
-            if "canceled" in resp and resp["value"] == "":
+
+        d = folder
+        while True:
+            flist = [os.path.split(fn)[1] for fn in glob(os.path.join(d, '*'))]
+            if d != '/':  # if it is not root
+                flist.insert(0, '..')  # add parent
+
+            selected = _dialog(title, flist)
+            if selected is None:  # user cancelled
                 return None
-            elif "canceled" in resp and resp["value"] != "":
-                default = resp["value"]
-                continue
-            elif "canceled" in resp and resp["value"] != "":
-                return "cancelled!" + resp["value"]
-            elif "neutral" in resp["which"]:
-                return "neutral"
-            elif "positive" in resp["which"]:
-                return resp["value"].strip()
-            else:
-                return None
+
+            d = os.path.abspath(os.path.join(d, flist[selected]))
+            if not os.path.isdir(d):
+                return d
 
     elif io2.settings[0][1]==True or io2.Mode=="text":
         clearScreen()
@@ -468,11 +573,11 @@ def dialogFileOpen(message="", title="Выбор файла", default="", filety
         print(ConsoleTip)
         print(message)
         if default!="":
-            print("(Значение по умолчанию: «%s». Введите знак = для его подтверждения или любое другое значение.)" % default)
+            print(DefaultText % default)
         choice=input().strip()
         if choice=="" or choice==None:
             return None
-        elif default!="" and choice=="=":
+        elif default!="" and choice=="!":
             return default
         elif "Новый" in choice:
             return "positive"
@@ -494,7 +599,6 @@ def dialogPickDate(
         phone.dialogSetNegativeButtonText("Отмена")
         phone.dialogShow()
         response = phone.dialogGetResponse()[1]
-        #phone.dialogDismiss()
         os.system("clear")
         if "positive" in response["which"]:
             return "%s-%02d-%02d" % (str(response["year"]), response["month"], response["day"])
@@ -507,9 +611,9 @@ def dialogPickDate(
             print(title)
             print(ConsoleTipForText)
             print(message)
-            print("(Значение по умолчанию: «%s». Введите знак = для его подтверждения или любое другое значение.)" % default)
+            print(DefaultText % default)
             response=input()
-            if response=="=":
+            if response=="!":
                 response=default
 
         else:
@@ -520,12 +624,11 @@ def dialogPickDate(
             )
         
         if house_op.shortenDate(response)!=None:
-            return response
+            return response.strip()
         else:
             return None
 
-
-def dialogNotify(title="Внимание!", message=""):
+def dialogNotify(title="Rocket Ministry", message=""):
     """ Системное уведомление """
     if io2.Mode == "sl4a":
         from androidhelper import Android
@@ -552,7 +655,7 @@ def dialogGetPassword(title="Пароль", message="Введите пароль
         print(ConsoleTipForText)
         print(message)
         if default!="":
-            print("(Значение по умолчанию: «%s». Введите 1 для его подтверждения или любое другое значение.)" % default)
+            print(DefaultText % default)
         choice = input()
         if console.process(choice) == True:
             return ""
@@ -570,7 +673,6 @@ def dialogGetPassword(title="Пароль", message="Введите пароль
         phone.dialogSetNegativeButtonText(cancel)
         phone.dialogShow()
         resp = phone.dialogGetPassword()[1]
-        #phone.dialogDismiss()
 
         return resp
         """
@@ -612,3 +714,11 @@ def clearScreen():
         else:
             clear = lambda: os.system('clear')
         clear()
+
+def saveWindowPosition(box):
+    with open("winpos.ini", "w") as file:
+        geom = box.geometry()
+        window_position = '+' + geom.split('+', 1)[1]
+        window_size = geom[0: geom.index("+")]
+        file.write(window_size)
+        file.write(window_position)

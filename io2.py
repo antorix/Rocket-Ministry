@@ -1,5 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+import io2
+
 Simplified=1
 
 try: # определяем ОС
@@ -30,7 +32,7 @@ def initializeDB():
     import time
     return [],\
         [
-        [1, 0, 0, 0, "с", 0, 50, 1, 1, 0, 1, 1, 1, 1, "", 1, 0, "", 1, "д", 1, 0, 1], # program settings: settings[0][0…], see set.preferences()
+        [1, 0, 0, 0, "с", 0, 50, 1, 1, 0, 1, 1, 1, 1, "", 1, 0, "", 1, "д", 0, 0, 1], # program settings: settings[0][0…], see set.preferences()
         "",# дата последнего обновления settings[1]
         # report:                       settings[2]
         [0.0,       # [0] hours         settings[2][0…]
@@ -58,7 +60,7 @@ def initializeDB():
 
 houses, settings, resources = initializeDB()
 DBCreatedTime = ""
-Version = "1.0.3"
+Version = "1.0.3" # не забыть убрать territory.porchView из homepage!!!
 
 import dialogs
 import sys
@@ -172,8 +174,21 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
                 with open(AndroidDownloadPath + dataFile, "r") as file:
                     buffer = json.load(file)
             else:
-                dialogAlert(title = icon("download") + " Импорт из загрузок",
+                dialogAlert(title = icon("smartphone") + " Импорт из загрузок",
                             message="Файл базы данных data.jsn не найден в папке «Загрузки» либо поврежден!")
+                return
+
+        elif dataFile==None: # загрузка произвольного файла на телефоне (открываем диалог выбора файлов)
+            from dialogs import dialogFileOpen
+            dataFile = dialogFileOpen(title = icon("download") + " Выберите файл:")
+            if dataFile==None:
+                return
+            try:
+                with open(dataFile, "r") as file:
+                    buffer = json.load(file)
+            except:
+                dialogAlert(title = icon("download") + " Импорт из файла",
+                            message="Файл базы данных data.jsn не найден в указанном местоположении либо поврежден!")
                 return
 
         elif os.path.exists(UserPath + dataFile): # обычная загрузка
@@ -217,7 +232,7 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
         elif forced == True:
             log("База успешно загружена")
             save()
-            if delete==True:
+            if delete==True and download==True:
                 if Mode=="sl4a":
                     os.remove(AndroidDownloadPath + dataFile) # на телефоне файл удаляется, чтобы при последующем сохранении на телефоне у него не изменилось название
             #    else:
@@ -229,7 +244,6 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
         clearDB()
         loadOutput(temp[1:])
     #save()
-
 
 def houseRetrieve(containers, housesNumber, h, silent=False):
     """ Retrieves houses from JSON buffer into objects """
@@ -411,34 +425,36 @@ def update(forced=False):
         if choice==True:
             print("Скачиваем…")
             try:
-                urls = ["https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/console.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/contacts.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/dialogs.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/homepage.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_cl.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_op.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/icons.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/io2.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/main.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/notebook.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/reports.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/set.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/territory.py"
-                        ]
-                if Mode=="easy_gui":
-                    urls += [   "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/global_state.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/choice_box.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/button_box.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/fileboxsetup.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/fileopen_box.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/fillable_box.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/text_box.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/utils.py"
+                if io2.Mode=="sl4a":
+                    urls = ["https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/console.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/contacts.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/dialogs.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/homepage.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_cl.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_op.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/icons.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/io2.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/main.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/notebook.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/reports.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/set.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/territory.py"
                     ]
-                for url in urls:
-                    urllib.request.urlretrieve(url, UserPath + url[url.index("master/") + 7:])
+                    for url in urls:
+                        urllib.request.urlretrieve(url, UserPath + url[url.index("master/") + 7:])
+                else:
+                    file = "files.zip"
+                    urllib.request.urlretrieve(
+                        "https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip",
+                        file
+                    )
+                    from zipfile import ZipFile
+                    zip = ZipFile(file, "r")
+                    zip.extractall("")
+                    zip.close()
+                    os.remove(file)
             except:
-                dialogs.dialogAlert(title, "Не удалось загрузить обновление. Попробуйте еще раз или, если не помогло, свяжитесь с разработчиком (раздел «О программе»)")
+                dialogs.dialogAlert(title, "Не удалось загрузить обновление. Попробуйте еще раз или, если не помогло, напишите в техподдержку (раздел «О программе»)")
             else:
                 if Mode == "sl4a":
                     Android().dialogDismiss()

@@ -4,6 +4,7 @@
 import io2
 from io2 import settings
 from io2 import resources
+from os import remove
 import dialogs
 import reports
 import contacts
@@ -100,6 +101,12 @@ def process(input):
         result = io2.load(dataFile=settings[0][14], forced=True, delete=True)
         if result != "fail":
             io2.save()
+            try:
+                remove(settings[0][14])
+            except:
+                print("Не получилось удалить импортированный файл")
+            else:
+                print("Импортированный файл удален")
         else:
             io2.load()
         success = True
@@ -138,9 +145,15 @@ def process(input):
         io2.save()
         success = True
 
+    if input=="help":
+        from webbrowser import open
+        open("https://github.com/antorix/Rocket-Ministry/wiki#консольный-режим")
+
     if input=="capmode":
         io2.Simplified=0
         io2.log("Вы играетесь с огнем, кэп")
         success = True
+
+
 
     return success # если запрос корректно обработан, вызывающая функция возвращает пустую строку

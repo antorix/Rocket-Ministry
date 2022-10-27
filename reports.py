@@ -228,7 +228,7 @@ class Report():
             else:
                 hoursLine = icon("timer") + " Часы: %s" % timeFloatToHHMM(self.hours)
 
-            message = "Ваш отчет"
+            message = "Выберите действие:"
             options = [
                 icon("placements") + " Публикации: %d" % self.placements,
                 icon("video") + " Видео: %d" % self.videos,
@@ -243,9 +243,6 @@ class Report():
             options.append(icon("studies")  + " Изучения: %d" % self.studies)
             options.append(icon("pin") + " Примечание: %s" % self.note)
             options.append(icon("logreport")+ " Журнал")
-
-            if io2.Mode == "text":
-                options.append(icon("prevmonth") + " " + monthName()[2]) # neutral button on Android
 
             choice = dialogs.dialogList(
                 title=title,
@@ -454,7 +451,7 @@ class Report():
               
             elif "Примечание" in result: # note
                 choice2 = dialogs.dialogText(
-                    title=icon("pin") + " Примечание " + getTimerIcon(self.startTime),
+                    title=icon("pin", simplified=False) + " Примечание " + getTimerIcon(self.startTime),
                     message="Примечание для себя и для отчета:",
                     default=self.note
                 )
@@ -493,6 +490,7 @@ class Report():
         answer = dialogs.dialogInfo(
             title=icon("report") + " Отчет прошлого месяца ",
             message=io2.settings[2][12],
+            positive = None,
             neutral = icon("export") + exportButton,
             negative = "Назад"
         )

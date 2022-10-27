@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import os
 
 import io2
 from io2 import houses
@@ -94,8 +93,13 @@ def homepage():
 
             if settings[0][11] == 1:
                 print("Выясняем встречи на сегодня")
-                if len(datedFlats) > 0:
-                    dialogs.dialogNotify("Внимание", "Сегодня у вас встреча!")
+                if len(datedFlats) == 1:
+                    dialogs.dialogNotify(message="Сегодня у вас запланирована встреча! Вас ждет %s." % datedFlats[0].getName())
+                    territory.flatView(datedFlats[0])
+                elif len(datedFlats) > 1:
+                    dialogs.dialogNotify("Внимание", "Сегодня у вас запланированы %d встречи!" % len(datedFlats))
+                    settings[0][4] = "в"
+                    contacts.showContacts()
 
             print("Определяем начало нового месяца")
             savedMonth = settings[3]
@@ -134,28 +138,23 @@ def homepage():
             if io2.update() == True:
                 return True
 
-        #if path.exists('python_distr'): # удаляем папку с установщиком Python, которая осталась после загрузки
-        #    from shutil import rmtree
-        #    rmtree('python_distr')
-
     if "--capmode" in sys.argv:  # проверяем параметры командной строки
         io2.simplified=0
         settings[0][1]=1
 
     if io2.Mode=="easygui": # определение положения окна
-        import global_state
         try:
             with open("winpos.ini", "r") as file:
                 line=file.read()
         except:
-            global_state.window_size = "500x500" #
-            global_state.window_position = "+500+250"
+            dialogs.window_size = "500x500" #
+            dialogs.window_position = "+500+250"
             with open("winpos.ini", "w") as file:
-                file.write(global_state.window_size)
-                file.write(global_state.window_position)
+                file.write(dialogs.window_size)
+                file.write(dialogs.window_position)
         else:
-            global_state.window_position = '+' + line.split('+', 1)[1]
-            global_state.window_size = line[0: line.index("+")]
+            dialogs.window_position = '+' + line.split('+', 1)[1]
+            dialogs.window_size = line[0: line.index("+")]
 
     if settings[1]=="":
         firstRun()
@@ -165,11 +164,11 @@ def homepage():
 
     io2.save(forcedBackup=True)
 
-    #territory.porchView(houses[2], 3)
-
     if "--capmode" in sys.argv:  # проверяем параметры командной строки
         io2.Simplified=0
         settings[0][1]=1
+
+    #territory.porchView(houses[0], 0)
 
     while 1:
 
@@ -203,7 +202,7 @@ def homepage():
             if gap >= 0:
                 gap_str = icon("extra")
             else:
-                gap_str = icon("slippage")
+                gap_str = icon("slippage", simplified=False)
         else:
             gap_str = ""
 
@@ -232,23 +231,19 @@ def homepage():
                 icon("info") +      " О программе"
                 ]
 
-        if io2.Mode == "sl4a":
-            title = "%s Rocket Ministry %s" % ( icon("rocket"), reports.getTimerIcon(settings[2][6]) )
+        if io2.Mode=="text" or io2.settings[0][1]==1:
+            title = "Добро пожаловать в Rocket Ministry! Введите help, %s\n" % reports.getTimerIcon(settings[2][6]) + \
+                    "если нужна помощь по работе в консольном режиме."
         else:
-            title = "%s Rocket Ministry" % reports.getTimerIcon(settings[2][6])
-            if io2.Mode=="text" or settings[0][1]==1:
-                options.append(icon("timer") + " Таймер" + timerTime)
+            title = "🚀 Rocket Ministry " + reports.getTimerIcon(settings[2][6])
 
         dialogs.clearScreen() # очистка экрана на всякий случай
-            #try:
-            #    system("clear")
-            #except:
-            #    system('cls')
 
         # Run home screen
 
         choice = dialogs.dialogList(
             form = "home",
+            message = "Главная страница, список действий:",
             title = title,
             options = options,
             positive=None,
@@ -257,8 +252,8 @@ def homepage():
         )
         if menuProcess(choice)==True:
             continue
-        elif choice == None and io2.Mode=="easygui" and settings[0][1]==0:
-            return
+        #elif choice == None and io2.Mode=="easygui" and settings[0][1]==0:
+        #    return
         elif choice=="neutral": # таймер
             if settings[2][6] == 0:
                 reports.report(choice="=(")
@@ -325,15 +320,14 @@ def fileActions():
     while 1:
 
         options = [
+            icon("download") + " Импорт из файла",
             icon("restore") + " Восстановление резервной копии",
             icon("export") + " Экспорт",
             icon("clear") + " Очистка"
         ]
 
         if io2.Mode == "sl4a":
-            options.insert(0, icon("download") + " Импорт из загрузок")
-        else:
-            options.insert(0, icon("import") + " Импорт из файла")
+            options.insert(1, icon("smartphone") + " Импорт из загрузок")
 
         if io2.Simplified == False:
             options.append(icon("load") + " Загрузка")
@@ -371,7 +365,7 @@ def fileActions():
             io2.share()  # export
 
         elif "Импорт из загрузок" in result: # для Android
-            io2.load(download=True, delete=True, forced=True)
+            io2.load(download=True, forced=True, delete=True)
 
         elif "Импорт из файла" in result: # для Windows
             io2.load(dataFile=None, forced=True, delete=True)
@@ -408,9 +402,9 @@ def preferences():
     def status(setting):
         """ Переключение настройки """
         if setting == 0 or set.ifInt(setting) == False:
-            return icon("cross") + " "
+            return icon("cross", simplified=False) + " "
         else:
-            return icon("mark") + " "
+            return icon("mark", simplified=False) + " "
 
     def toggle(setting):
         if set.ifInt(setting) == False:
@@ -437,32 +431,26 @@ def preferences():
         options.append(status(settings[0][18]) + "Пункт «невозможно попасть» в первом посещении")
         options.append(status(settings[0][10]) + "Умная строка в первом посещении")
         options.append(status(settings[0][7]) +  "Автоматически записывать повторные посещения")
-        options.append(                       "%s Норма часов в месяц: %d" % (icon("box"), settings[0][3]))
+        options.append(                       "%s Норма часов в месяц: %d" % (icon("box", simplified=False), settings[0][3]))
         options.append(status(settings[0][2])  + "Кредит часов")
-        #if io2.Mode == "sl4a":
         options.append(status(settings[0][11]) + "Уведомления о встречах на сегодня")
         options.append(status(settings[0][8])  + "Напоминать о сдаче отчета")
         options.append(status(settings[0][15]) + "Переносить минуты отчета на следующий месяц")
-        #options.append(status(settings[0][20]) + "Предлагать разбивку по этажам в многоквартирных домах")
         if io2.Mode == "sl4a":
             options.append(status(settings[0][0])+"Бесшумный режим при включенном таймере")
         options.append(status(settings[0][21]) + "Статус обработки подъездов")
+        options.append(status(settings[0][20]) + "Режим справочной")
         options.append(status(settings[0][9]) +  "Последний символ посещения влияет на статус контакта")
-        options.append(                       "%s Резервных копий: %d" % (icon("box"), settings[0][6]))
+        options.append(                       "%s Резервных копий: %d" % (icon("box", simplified=False), settings[0][6]))
         if io2.Simplified==0 and io2.Mode!="sl4a":
-            options.append(                   "%s Файл импорта базы данных: %s" % (icon("box"), importURL))
-        options.append(                       "%s Пароль на вход: %s" % (icon("box"), password))
+            options.append(                   "%s Файл импорта базы данных: %s" % (icon("box", simplified=False), importURL))
+        options.append(                       "%s Пароль на вход: %s" % (icon("box", simplified=False), password))
         options.append(status(settings[0][16]) + "Режим смайликов")
         options.append(status(settings[0][12]) + "Проверять обновления")
-        if io2.Simplified==0 and io2.Mode != "text":
-            options.append(status(settings[0][1])+"Консольный режим")
+        options.append(status(settings[0][1])  + "Консольный режим")
 
         # settings[0][4] - занято под сортировку контактов!
         # settings[0][19] - занято под сортировку участков!
-
-        # Свободные настройки:
-        # settings[0][18]
-        # settings[0][20]
 
         choice = dialogs.dialogList(  # display list of settings
             form="preferences",
@@ -551,8 +539,12 @@ def preferences():
             if settings[0][21]==1:
                 dialogs.dialogInfo(
                     title="Статус обработки подъездов",
-                    message="При включении этого параметра вы сможете указывать для каждого подъезда участка, когда вы в нем были:\n\nв будний день в первой половине дня (первый кружок – 🟡);\n\nв будний день вечером (второй кружок – 🟣);\n\nв выходной (третий кружок – 🔴).\n\nЕсли подъезд посещен все три раза, он учитывается как обработанный в разделе статистики."
+                    message="При включении этого параметра вы сможете указывать для каждого подъезда участка, когда вы в нем были:\n\nв будний день в первой половине дня (первый кружок – %s)\n\nв будний день вечером (второй кружок – %s)\n\nв выходной (третий кружок – %s)\n\nЕсли подъезд посещен все три раза, он учитывается как обработанный в разделе статистики." % (icon("porchCircle1"), icon("porchCircle2"), icon("porchCircle3"))
                 )
+            io2.save()
+
+        elif "Режим справочной" in result:
+            settings[0][20] = toggle(settings[0][20])
             io2.save()
 
         elif "Умная строка" in result:
@@ -580,8 +572,10 @@ def preferences():
             if settings[0][9]==1:
                 dialogs.dialogInfo(
                     title="Последний символ посещения влияет на статус контакта",
-                    message="Внимание, вы входите в зону хардкора! :) При включении этого параметра в конце каждого посещения должна стоять цифра от 0 до 5. Она определит статус контакта (в стиле «умной строки», только во всех посещениях):\n\n0 = %s\n1 = %s\n2 = %s\n3 = %s\n4 = %s\n5 = %s\n\nЭто должен быть строго последний символ строки. При отсутствии такой цифры статус контакта становится неопределенным (%s)." %
-                            ( icon("reject"), icon("interest"), icon("green"), icon("purple"), icon("brown"), icon("danger"), icon("question"))
+                    message="Внимание, вы входите в зону хардкора! :) При включении этого параметра в конце каждого посещения должна стоять цифра от 0 до 5. Она определит статус контакта (в стиле «умной строки», только во всех посещениях):\n\n0 = %s\n1 = %s\n2 = %s\n3 = %s\n4 = %s\n5 = %s\n\nЭто должен быть строго последний символ строки. При отсутствии такой цифры статус контакта становится неопределенным (%s).\n\nДанный параметр отменяет ручной выбор статуса после каждого создания нового посещения." %
+                            ( icon("reject"), icon("interest"), icon("green"), icon("purple"), icon("brown"), icon("danger"), icon("question")),
+                    positive="OK",
+                    negative=None
                 )
             io2.save()
 
@@ -597,6 +591,8 @@ def preferences():
 
         elif "Консольный режим" in result:
             settings[0][1] = toggle(settings[0][1])
+            if io2.Mode=="text":
+                settings[0][1]=1
             io2.save()
 
         elif "Пароль на вход" in result:
@@ -606,7 +602,7 @@ def preferences():
                 default=str(settings[0][17])
             )
             if choice2 != None:
-                settings[0][17] = choice2
+                settings[0][17] = choice2.strip()
                 io2.save()
 
     if exit == 1:
@@ -616,21 +612,18 @@ def stats():
     status0 = status1 = status2 = status3 = status4 = status5 = nostatus = statusQ = returns = returns1 = returns2 = housesDue = porches = porchesCompleted = 0
     flats = records = 0.0
 
-    # while 1:
-    # Counting everything
     for h in range(len(houses)):
         d1 = houses[h].date
         d2 = time.strftime("%Y-%m-%d", time.localtime())
         if house_op.days_between(d1, d2) > 122:  # сколько просроченных домов
             housesDue += 1
 
-        for p in range(len(houses[h].porches)):
+        for porch in houses[h].porches:
             porches += 1
-            if io2.Simplified==False:
-                if houses[h].porches[p].status == "🟡🟣🔴":  # сколько подъездов обработано
-                    porchesCompleted += 1
+            if porch.status == "🟡🟣🔴" or porch.status == "●●●":  # сколько подъездов обработано
+                porchesCompleted += 1
 
-            for flat in houses[h].porches[p].flats:
+            for flat in porch.flats:
                 if "." in flat.number:
                     continue
                 flats += 1
@@ -944,8 +937,8 @@ def about():
             message =   "Универсальный комбайн вашего служения\n\n"+\
                         "Версия приложения: %s\n\n" % io2.Version +\
                         "Последнее изменение базы данных: %s\n\n" % io2.getDBCreatedTime() +\
-                        "Официальная страница: github.com/antorix/Rocket-Ministry\n\n"+\
-                        "Официальный Telegram-канал:\nt.me/rocketministry\n\n",
+                        "Официальная страница:\ngithub.com/antorix/Rocket-Ministry\n\n"+\
+                        "Официальный Telegram-канал:\nt.me/rocketministry",
             positive = icon("update") + " Обновл.",
             neutral = icon("help") + " Помощь",
             negative="Назад"

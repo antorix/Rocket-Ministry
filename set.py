@@ -6,12 +6,15 @@ import dialogs
 import webbrowser
 import time
 import house_op
+import set
 import territory
 from icons import icon
 import io2
 from io2 import houses, settings
 import homepage
 import reports
+
+PhoneMode = False
 
 def houseSettings(selectedHouse):
     """ House settings """
@@ -29,7 +32,7 @@ def houseSettings(selectedHouse):
         ]
         choice = dialogs.dialogList(
             title = house.title,
-            message = "Выберите настройку:",
+            message = "Выберите действие с участком:",
             options = options,
             form="houseSettings",
             negative = "Назад")
@@ -55,7 +58,7 @@ def houseSettings(selectedHouse):
 
         elif "Заметка" in result: # house note
             choice2 = dialogs.dialogText(
-                icon("pin") + " Заметка участка",
+                title = icon("pin", simplified=False) + " Заметка участка",
                 default=house.note
             )
             if choice2 != None:
@@ -81,7 +84,7 @@ def houseSettings(selectedHouse):
                 if len(interest)>0:
                     for int in interest:
                         flat = house.porches[int[0]].flats[int[1]]
-                        flat.copyToStandalone(house.title)
+                        flat.clone(toStandalone=True, title=house.title)
                 del houses[selectedHouse]
                 io2.save()
                 return "deleted"
@@ -108,41 +111,52 @@ def houseSettings(selectedHouse):
 
     return "" # exit
 
-def porchSettings(house, selectedPorch):
+def porchSettings(house, selectedPorch, jumpToPhone=False):
     """ Porch settings """
 
     porch = house.porches[selectedPorch]
+
+    global PhoneMode
     
     while 1:
         options = [
             icon("baloon") + " Название %sа" % porch.type,
             icon("sort") + " Сортировка " + house.getPorchType()[2],
             icon("pin") + " Заметка %sа" % porch.type,
-            icon("map") + " Маршрут",
-            icon("cut") + " Удалить %s" % porch.type,
         ]
 
         if settings[0][21]==1:
-            options.insert(2, icon("status") + " Статус обработки")
+            options.append(icon("status") + " Статус обработки")
 
         if ifInt(porch.flatsLayout)==True:
-            options.insert(2, icon("porch") + " Номер первого этажа")
+            options.append(icon("porch") + " Номер первого этажа")
 
         if porch.type=="подъезд":
-            options.insert(4, icon("intercom") + " Режим домофона")
-        
-        choice = dialogs.dialogList(
-            title = porch.title,
-            message = "Выберите настройку:",
-            form = "porchSettings",
-            options = options)
+            options.append(icon("intercom") + " Режим домофона")
 
-        if homepage.menuProcess(choice) == True:
-            continue
-        elif choice == None:
-            break
+        if settings[0][20]==1 and porch.type=="подъезд":
+            options.append(icon("phone2") + " Режим справочной")
+
+        options.append(icon("map") + " Маршрут")
+        options.append(icon("cut") + " Удалить %s" % porch.type)
+        
+        if jumpToPhone==False:
+            choice = dialogs.dialogList(
+                title = porch.title,
+                message = "Выберите действие с %sом:" % house.getPorchType()[0],
+                form = "porchSettings",
+                options = options
+            )
+
+            if homepage.menuProcess(choice) == True:
+                continue
+            elif choice == None:
+                break
+            else:
+                result = options[choice]
+
         else:
-            result = options[choice]
+            result = "Режим справочной"
         
         if "Название" in result: # edit porch title
         
@@ -209,7 +223,8 @@ def porchSettings(house, selectedPorch):
                 "По номеру",
                 "По номеру обратная",
                 "По статусу",
-                "По телефону"
+                "По телефону",
+                "По заметке"
             ]
 
             if porch.type == "подъезд":
@@ -225,6 +240,8 @@ def porchSettings(house, selectedPorch):
                 selected=3
             elif porch.flatsLayout=="т":
                 selected=4
+            elif porch.flatsLayout=="з":
+                selected=5
             else:
                 selected=0
 
@@ -258,10 +275,14 @@ def porchSettings(house, selectedPorch):
                 porch.flatsLayout="т"
                 io2.save()
                 break
+            elif choice3=="По заметке":
+                porch.flatsLayout="з"
+                io2.save()
+                break
             
         elif "Заметка" in result: # porch note
             choice2 = dialogs.dialogText(
-                icon("pin") + " Заметка %sа" % porch.type,
+                title = icon("pin", simplified=False) + " Заметка %sа" % porch.type,
                 default=porch.note
             )
             if choice2 != None:
@@ -307,23 +328,34 @@ def porchSettings(house, selectedPorch):
 
         elif "Режим домофона" in result:
             selected=0
+            neutral = icon("pin") + " Сорт."
             while 1:
+                porch.flats.sort(key=lambda x: float(x.number))
+                if icon("pin") in neutral:
+                    porch.flats.sort(key=lambda x: x.note, reverse=True)
                 list=[]
-                porch.sortFlats(forceNumerical=True) # временно сортируем по номеру
                 for flat in porch.flats:
-                    if flat.addFlatTolist() != "":
-                        list.append(flat.addFlatTolist())
+                    line = flat.addFlatTolist()
+                    if line != "":
+                        list.append(line)
                 choice = dialogs.dialogRadio(
                     title = icon("intercom") + " %s %s " % (porch.title, reports.getTimerIcon(settings[2][6])),
                     options=list,
                     selected=selected,
                     positive="Квартира",
+                    neutral=neutral,
                     negative="Назад"
                 )
                 if homepage.menuProcess(choice) == True:
                     continue
                 elif choice==None:
                     break
+                elif choice=="neutral":
+                    if icon("numbers") in neutral:
+                        neutral = icon("pin") + " Сорт."
+                    else:
+                        neutral = icon("numbers") + " Сорт."
+                    continue
                 else:
                     territory.findFlatByNumber(house, porch, choice)
                     porch.sortFlats()
@@ -331,13 +363,58 @@ def porchSettings(house, selectedPorch):
                         if list[i].strip()==choice.strip():
                             selected=i
                             break
-                porch.sortFlats() # возвращаем исходную сортировку
+            break
+
+        elif "Режим справочной" in result:
+            if PhoneMode == True:
+                PhoneMode = False
+            else:
+                PhoneMode = True
+            if io2.Mode == "text" or io2.settings[0][1] == 1:  # в классическом режиме подъезда ничего не делаем, просто выходим
+                return
+            selected = 1
+            neutral = icon("phone2") + " Сорт."
+            while 1:
+                porch.flats.sort(key=lambda x: float(x.number))
+                if icon("phone2") in neutral:
+                    porch.flats.sort(key=lambda x: x.phone, reverse=True)
+                list = []
+                for flat in porch.flats:
+                    line = flat.addFlatTolist()
+                    if line != "":
+                        list.append(line)
+                choice = dialogs.dialogRadio(
+                    title=icon("porch") + " %s %s " % (porch.title, reports.getTimerIcon(settings[2][6])),
+                    options=list,
+                    selected=selected,
+                    positive="Квартира",
+                    neutral=neutral,
+                    negative="Назад"
+                )
+                if homepage.menuProcess(choice) == True:
+                    continue
+                elif choice == None:
+                    break
+                elif choice == "neutral":
+                    if icon("numbers") in neutral:
+                        neutral = icon("phone2") + " Сорт."
+                    else:
+                        neutral = icon("numbers") + " Сорт."
+                    continue
+                else:
+                    territory.findFlatByNumber(house, porch, choice)
+                    porch.sortFlats()
+                    for i in range(len(list)):
+                        if list[i].strip() == choice.strip():
+                            selected = i
+                            break
+            PhoneMode = False
             break
 
         elif "Маршрут" in result:
             map(house.title) # map
 
-def flatSettings(flat, house, virtual=False, allowDelete=True):
+def flatSettings(flat, house=None, virtual=False, allowDelete=True, jumpToStatus=False):
 
     while 1:
 
@@ -348,10 +425,11 @@ def flatSettings(flat, house, virtual=False, allowDelete=True):
             icon("pin") + " Заметка",
             icon("appointment") + " Встреча"
         ]
-        if virtual==True:
-            options.insert(1, icon("house") + " Адрес")
-        else:
-            options.append(icon("star") + " В отдельный контакт")
+        if house != None:
+            if virtual==True:
+                options.insert(1, icon("house") + " Адрес")
+            else:
+                options.append(icon("star") + " В отдельный контакт")
         
         phone = flat.phone
         if io2.Mode=="sl4a":
@@ -362,8 +440,14 @@ def flatSettings(flat, house, virtual=False, allowDelete=True):
                     options.insert(4, icon("smartphone") + " Вызов")
                 #options.insert(5, icon("phone") + " SMS")
                 #options.append(icon("mail") + " Сообщение")
+        else:
+            if phone != "":
+                if virtual==False:
+                    options.insert(3, icon("smartphone") + " Скопировать номер")
+                else:
+                    options.insert(4, icon("smartphone") + " Скопировать номер")
         options.append(icon("map") + " Маршрут")
-        if allowDelete==True:
+        if allowDelete==True and house != None:
             options.append(icon("cut") + " Удалить")
 
         if flat.number == "virtual":  # прячем номера отдельных контактов
@@ -371,18 +455,28 @@ def flatSettings(flat, house, virtual=False, allowDelete=True):
         else:
             number = flat.number
 
-        choice = dialogs.dialogList(
-            title = "%s %s" % (number, flat.getName()),
-            message = "Выберите действие:",
-            form = "flatSettings",
-            options = options)
-
-        if homepage.menuProcess(choice) == True:
-            continue
-        elif choice == None:
-            break
+        if jumpToStatus==False:
+            choice = dialogs.dialogList(
+                title = "%s %s" % (number, flat.getName()),
+                message = "Выберите действие:",
+                form = "flatSettings",
+                options = options
+            )
+            if homepage.menuProcess(choice) == True:
+                continue
+            elif choice == None:
+                break
+            elif set.ifInt(choice)==True:
+                result = options[choice]
+            negative = "Назад"
         else:
-            result = options[choice]
+            result = "Статус"
+            negative = None
+            if len(flat.records[0].title.strip()) <= 1:
+                flat.status = "0"
+            #else:
+            #    flat.status = "1"
+            #jumpToStatus = False
 
         if "Имя" in result: # edit
             mychoice = dialogs.dialogText(
@@ -419,7 +513,7 @@ def flatSettings(flat, house, virtual=False, allowDelete=True):
             elif flat.status=="":
                 selected=6
             else:
-                selected=7
+                selected=1
 
             options=[
                 icon("reject") + " Отказ",
@@ -430,7 +524,13 @@ def flatSettings(flat, house, virtual=False, allowDelete=True):
                 icon("danger") + " Красный",
                 icon("void") + " «Не были»"
             ]
-            status = dialogs.dialogRadio(title="Статус контакта", options=options, selected=selected)
+            status = dialogs.dialogRadio(
+                title= flat.getStatus()[0] + " Статус",
+                form = "statusSelection",
+                options=options,
+                selected=selected,
+                negative=negative
+            )
             if homepage.menuProcess(status) == True:
                 continue
             elif status==None:
@@ -440,8 +540,10 @@ def flatSettings(flat, house, virtual=False, allowDelete=True):
                     if status == options[i]:
                         flat.status=str(i)
             elif "Не были" in status:
-                if dialogs.dialogConfirm("Статус контакта", "При установке этого статуса в квартире будут удалены все данные. Продолжать?")\
-                    ==True:
+                if dialogs.dialogConfirm(
+                        title = flat.getStatus()[0] + " Статус",
+                        message = "При установке этого статуса вся информация контакта будет удалена. Продолжать?"
+                ) ==True:
                     flat.wipe()
             io2.save()
             break
@@ -453,6 +555,12 @@ def flatSettings(flat, house, virtual=False, allowDelete=True):
                 io2.save()
                 break
 
+        elif "Скопировать номер" in result:
+            import subprocess
+            cmd='echo '+flat.phone.strip()+'|clip'
+            subprocess.check_call(cmd, shell=True)
+            io2.log("Номер %s скопирован в буфер обмена" % flat.phone)
+
         elif "Встреча" in result:
             flat.meeting = setMeeting(flat.meeting)
             if flat.meeting!=None:
@@ -461,7 +569,7 @@ def flatSettings(flat, house, virtual=False, allowDelete=True):
                 
         elif "Заметка" in result:
             choice2 = dialogs.dialogText(
-                icon("pin") + " Заметка контакта",
+                title = icon("pin", simplified=False) + " Заметка контакта",
                 default = flat.note
             )
             if choice2 != None:
@@ -470,7 +578,7 @@ def flatSettings(flat, house, virtual=False, allowDelete=True):
                 break
                 
         elif "Удалить" in result:
-            return "deleted" # if "deleted" from settings menu, exit to porch
+            return "deleted"
                 
         elif "Адрес" in result: # edit address of standalone contact
             changed=False
@@ -489,7 +597,7 @@ def flatSettings(flat, house, virtual=False, allowDelete=True):
                 break
                 
         elif "В отдельный контакт" in result:
-            name = flat.copyToStandalone(house.title)
+            name = flat.clone(toStandalone=True, title=house.title)
             io2.save()
             io2.log("Создан отдельный контакт %s" % name)
             break
@@ -520,7 +628,7 @@ def flatSettings(flat, house, virtual=False, allowDelete=True):
             if io2.Mode=="sl4a":
                 text = dialogs.dialogText(
                     title=icon("call") + " SMS на %s" % phone,
-                    message="Введите текст SMS"
+                    message="Введите текст SMS:"
                 )
                 if text==None or "cancelled" in text:
                     continue
@@ -562,8 +670,11 @@ def map(houseTitle=""):
     else:
         webbrowser.open("https://yandex.ru/maps/?text=%s" % houseTitle)
 
-def setPhone(phone=""):
-    message="Введите номер"
+def setPhone(phone="", flatNumber=""):
+    if flatNumber=="":
+        message="Введите номер:"
+    else:
+        message = "Квартира № %s – введите номер телефона:" % flatNumber
     default=phone
     phone = dialogs.dialogText(
         title=icon("phone") + " Номер телефона",
@@ -595,6 +706,7 @@ def setMeeting(meeting=""):
         day=day
     )
     if date == None or date.strip()=="":
+        io2.log("Встреча не запланирована")
         return ""
     else:
         io2.log("Назначена встреча на %s!" % house_op.shortenDate(date))

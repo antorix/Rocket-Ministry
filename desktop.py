@@ -381,7 +381,6 @@ class GUItk(object):
             self.textArea.config(state=tk.DISABLED, background=dialogs.inactive_background)
         self.textArea.focus_force()
 
-
     def set_pos(self, pos):
         self.boxRoot.geometry(pos)
 
@@ -438,6 +437,9 @@ class GUItk(object):
         #from os import name
         #if name == "nt":
         #    self.boxRoot.iconbitmap('icon.ico')
+
+        self.boxRoot.bind_class("Entry", "<3>", self.contextMenu)
+        self.boxRoot.bind_class("Text", "<3>", self.contextMenu)
 
     def create_msg_widget(self, msg):
 
@@ -576,6 +578,17 @@ class GUItk(object):
         # handler
         self.neutralButton.bind("<Return>", self.neutral_button_pressed)
         self.neutralButton.bind("<Button-1>", self.neutral_button_pressed)
+
+    def contextMenu(self, e=None):
+        """Context menu on fields"""
+        menu = tk.Menu(self.boxRoot, tearoff=0)
+        menu.add_command(label="Вырезать", command=lambda: e.widget.event_generate("<<Cut>>"))
+        menu.add_command(label="Копировать", command=lambda: e.widget.event_generate("<<Copy>>"))
+        menu.add_command(label="Вставить", command=lambda: e.widget.event_generate("<<Paste>>"))
+        menu.add_command(label="Удалить", command=lambda: e.widget.event_generate("<<Clear>>"))
+        menu.add_separator()
+        menu.add_command(label="Выделить все", command=lambda: e.widget.event_generate("<<SelectAll>>"))
+        menu.tk.call("tk_popup", menu, e.x_root, e.y_root)
 
 
 # -------------------------------------------------------------------
@@ -1313,7 +1326,7 @@ class GUItk3(object):
 
         self.choiceboxWidget.focus_force()
 
-        self.create_grip()
+        #self.create_grip()
 
     # Run and stop methods ---------------------------------------
 
@@ -1484,7 +1497,7 @@ class GUItk3(object):
 
         if self.neutral != None:
             #if name == "nt":
-                #self.neutral += " [*]"
+                #self.neutral += " [/]
             self.neutral += " [Ctrl-Ins]"
             neutralButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.neutral)
             neutralButton.grid(column=1, row=0, sticky="we",

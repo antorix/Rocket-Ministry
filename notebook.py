@@ -23,19 +23,15 @@ def showNotebook():
 
         if len(options)==0:
             options.append("Пишите любые заметки прямо здесь")
-        
-        if settings[0][1]==True or io2.Mode == "text":
-            options.append(icon("plus") + " Новая заметка")  # positive button
-            options.append(icon("export") + " Экспорт") # neutral button on Android
-        
+
         # Display dialog
 
         if choice!="positive":
             choice = dialogs.dialogList(
                 title = icon("notebook") + " Блокнот " + reports.getTimerIcon(settings[2][6]),
-                message = "Выберите заметку:",
+                message = "Список заметок:",
                 form = "showNotebook",
-                positive=icon("plus"),
+                positive=icon("plus", simplified=False),
                 neutral = icon("export") + " Экспорт",
                 options = options
             )
