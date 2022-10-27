@@ -60,7 +60,7 @@ def initializeDB():
 
 houses, settings, resources = initializeDB()
 DBCreatedTime = ""
-Version = "1.0.3" # не забыть убрать territory.porchView из homepage!!!
+Version = "1.0.4" # не забыть убрать territory.porchView из homepage!!!
 
 import dialogs
 import sys

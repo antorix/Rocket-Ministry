@@ -334,13 +334,17 @@ def showContacts():
                     if exit == "deleted":
                         houses[h].porches[p].deleteFlat(f)
                         io2.save()
-                        continue
+                    elif exit == "createdRecord" and io2.settings[0][9] == 0:
+                        set.flatSettings(flat=houses[h].porches[p].flats[f], house=houses[h], jumpToStatus=True)
+                    continue
                 else:
                     exit = territory.flatView(flat=resources[1][h].porches[0].flats[0], house=resources[1][h], virtual=True)
                     if exit == "deleted":
                         del resources[1][h]
                         io2.save()
-                        continue
+                    elif exit == "createdRecord" and io2.settings[0][9] == 0:
+                        set.flatSettings(flat=resources[1][h].porches[0].flats[0], house=resources[1][h], jumpToStatus=True)
+                    continue
 
         else:
             continue

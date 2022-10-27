@@ -788,21 +788,27 @@ def search(query=""):
                     p = list[choice2][0][1]
                     f = list[choice2][0][2]
                     if list[choice2][1] != "virtual":  # regular contacts
-                        delete = territory.flatView(flat=houses[h].porches[p].flats[f], house=houses[h])
-                        if delete=="deleted":
+                        exit = territory.flatView(flat=houses[h].porches[p].flats[f], house=houses[h])
+                        if exit =="deleted":
                             houses[h].porches[p].deleteFlat(f)
                             io2.save()
                             query == None
                             break
+                        elif exit == "createdRecord" and io2.settings[0][9] == 0:
+                            set.flatSettings(flat=houses[h].porches[p].flats[f], house=houses[h], jumpToStatus=True)
+                            continue
 
                     else:  # standalone contacts
-                        delete = territory.flatView(flat=resources[1][h].porches[0].flats[0], house=resources[1][h], virtual=True)
-                        if delete == "deleted":
+                        exit = territory.flatView(flat=resources[1][h].porches[0].flats[0], house=resources[1][h], virtual=True)
+                        if exit == "deleted":
                             io2.log("«%s» удален" % resources[1][h].porches[0].flats[0].getName())
                             del resources[1][h]
                             io2.save()
                             query == None
                             break
+                        elif exit == "createdRecord" and io2.settings[0][9] == 0:
+                            set.flatSettings(flat=resources[1][h].porches[0].flats[0], house=resources[1][h], jumpToStatus=True)
+                            continue
 
 def serviceYear():
     while 1:

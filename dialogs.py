@@ -139,7 +139,10 @@ def dialogText(title="",
             elif "positive" in resp["which"]:
                 if console.process(resp["value"].strip())==True:
                     return ""
-                return resp["value"].strip()
+                if resp["value"].strip()!="":
+                    return resp["value"].strip()
+                else:
+                    return None
             elif "negative" in resp["which"]:
                 return None
             #else:
@@ -165,11 +168,10 @@ def dialogText(title="",
 
         if console.process(choice)==True:
             return ""
-
-        if choice!=None:
-            return choice.strip()
-        else:
+        elif choice==None or choice.strip()=="":
             return None
+        else:
+            return choice.strip()
 
 def dialogList(
         title="",

@@ -414,7 +414,7 @@ def flatView(flat, house=None, virtual=False, allowDelete=True):
                 positive="Сохранить",
                 negative="Отмена"
             )
-            if choice2 == None:
+            if choice2 == None or choice2=="":
                 choice = ""
                 continue
             else:
@@ -439,7 +439,7 @@ def flatView(flat, house=None, virtual=False, allowDelete=True):
                 )
                 if homepage.menuProcess(choice2)==True:
                     continue
-                if choice2==None:
+                if choice2==None or choice2=="":
                     continue
                 else:
                     result2=options2[choice2]
