@@ -46,26 +46,13 @@ elif io2.Mode=="easygui":
 
     try:
         from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
-    except: # нет desktop - старая версия, догружаем и удаляем ненужные файлы
+    except: # нет desktop - старая версия, догружаем
         import urllib.request
         urllib.request.urlretrieve(
             "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/desktop.py",
             "desktop.py"
         )
         from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
-        filesToDelete = [
-            "global_state.py",
-            "choice_box.py",
-            "button_box.py",
-            "fileboxsetup.py",
-            "fileopen_box.py",
-            "fillable_box.py",
-            "text_box.py",
-            "utils.py"
-        ]
-        for file in filesToDelete:
-            if os.path.exists(file):
-                os.remove(file)
 
 def dialogText(title="",
                message="",

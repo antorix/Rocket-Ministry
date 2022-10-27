@@ -453,6 +453,21 @@ def update(forced=False):
                     zip.extractall("")
                     zip.close()
                     os.remove(file)
+
+                    filesToDelete = [ # удаляем файлы Easy_GUI от предыдущей версии
+                        "global_state.py",
+                        "choice_box.py",
+                        "button_box.py",
+                        "fileboxsetup.py",
+                        "fileopen_box.py",
+                        "fillable_box.py",
+                        "text_box.py",
+                        "utils.py"
+                    ]
+                    for file in filesToDelete:
+                        if os.path.exists(file):
+                            os.remove(file)
+
             except:
                 dialogs.dialogAlert(title, "Не удалось загрузить обновление. Попробуйте еще раз или, если не помогло, напишите в техподдержку (раздел «О программе»)")
             else:
