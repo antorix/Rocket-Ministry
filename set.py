@@ -648,27 +648,24 @@ def flatSettings(flat, house=None, virtual=False, allowDelete=True, jumpToStatus
                     io2.consoleReturn()
    
         elif "Маршрут" in result:
-            map(flat.title) # map
+            if io2.Mode == "sl4a":
+                try:
+                    from androidhelper import Android
+                    phone = Android()
+                    phone.viewMap(house.title)
+                    os.system("clear")
+                except:
+                    io2.log("Не удалось выполнить поиск на карте")
+                else:
+                    io2.consoleReturn()
+            else:
+                webbrowser.open("https://yandex.ru/maps/?text=%s" % house.title)
 
 def ifInt(char):
     """ Checks if value is integer """
     try: int(char) + 1
     except: return False
     else: return True
-
-def map(houseTitle=""):
-    if io2.Mode == "sl4a":
-        try:
-            from androidhelper import Android
-            phone = Android()
-            phone.viewMap(houseTitle)
-            os.system("clear")
-        except:
-            io2.log("Не удалось выполнить поиск на карте")
-        else:
-            io2.consoleReturn()
-    else:
-        webbrowser.open("https://yandex.ru/maps/?text=%s" % houseTitle)
 
 def setPhone(phone="", flatNumber=""):
     if flatNumber=="":

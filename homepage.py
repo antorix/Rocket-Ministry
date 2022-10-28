@@ -94,10 +94,16 @@ def homepage():
             if settings[0][11] == 1:
                 print("Выясняем встречи на сегодня")
                 if len(datedFlats) == 1:
-                    dialogs.dialogNotify(message="Сегодня у вас запланирована встреча! Вас ждет %s." % datedFlats[0].getName())
+                    dialogs.dialogInfo(
+                        title = icon("appointment") + " Встречи на сегодня",
+                        message = "Сегодня у вас запланирована встреча! Вас ждет %s." % datedFlats[0].getName()
+                    )
                     territory.flatView(datedFlats[0])
                 elif len(datedFlats) > 1:
-                    dialogs.dialogNotify("Внимание", "Сегодня у вас запланированы %d встречи!" % len(datedFlats))
+                    dialogs.dialogInfo(
+                        title = icon("appointment") + " Встречи на сегодня",
+                        message = "Сегодня у вас запланированы %d встречи!" % len(datedFlats)
+                    )
                     settings[0][4] = "в"
                     contacts.showContacts()
 

@@ -91,7 +91,7 @@ def getContactsAmount(date=0):
             dateApp = checkDate(resources[1][h].porches[0].flats[0])[1]
             if dateApp!=999999 and dateApp == today:
                 #datedFlats.append(dateApp) # check if matches with today's date
-                datedFlats.append(houses[h].porches[p].flats[f])  # check if matches with today's date
+                datedFlats.append(resources[1][h].porches[0].flats[0])  # check if matches with today's date
             
     return c, datedFlats
     
