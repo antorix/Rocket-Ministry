@@ -96,13 +96,18 @@ def homepage():
                 if len(datedFlats) == 1:
                     dialogs.dialogInfo(
                         title = icon("appointment") + " Встречи на сегодня",
-                        message = "Сегодня у вас запланирована встреча! Вас ждет %s." % datedFlats[0].getName()
+                        message = "Сегодня у вас запланирована встреча! Вас ждет %s." % datedFlats[0].getName(),
+                        positive="OK",
+                        negative=None
+
                     )
                     territory.flatView(datedFlats[0])
                 elif len(datedFlats) > 1:
                     dialogs.dialogInfo(
                         title = icon("appointment") + " Встречи на сегодня",
-                        message = "Сегодня у вас запланированы %d встречи!" % len(datedFlats)
+                        message = "Сегодня у вас запланированы %d встречи!" % len(datedFlats),
+                        positive="OK",
+                        negative=None
                     )
                     settings[0][4] = "в"
                     contacts.showContacts()
