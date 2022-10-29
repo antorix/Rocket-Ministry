@@ -621,15 +621,17 @@ def preferences():
 
 def stats():
     status0 = status1 = status2 = status3 = status4 = status5 = nostatus = statusQ = returns = returns1 = returns2 = housesDue = porches = porchesCompleted = 0
-    flats = records = 0.0
+    flats = records = percentage = worked = 0.0
 
-    for h in range(len(houses)):
-        d1 = houses[h].date
+    for house in houses:
+        d1 = house.date
         d2 = time.strftime("%Y-%m-%d", time.localtime())
         if house_op.days_between(d1, d2) > 122:  # сколько просроченных домов
             housesDue += 1
+        percentage += house.getProgress()[0]
+        worked += house.getProgress()[1]
 
-        for porch in houses[h].porches:
+        for porch in house.porches:
             porches += 1
             if porch.status == "🟡🟣🔴" or porch.status == "●●●":  # сколько подъездов обработано
                 porchesCompleted += 1
@@ -661,6 +663,11 @@ def stats():
                 if len(flat.records) >= 2:  # квартир с более чем двумя записями
                     returns2 += 1
 
+    if len(houses)>0:
+        percentage = int( percentage / len(houses) * 100 )
+    else:
+        percentage = 0
+
     if housesDue == 0:
         due = ""
     else:
@@ -674,18 +681,17 @@ def stats():
 
     message =    "Участков: " + str(len(houses)) +\
                 "\nПросрочено: %d %s" % (housesDue, due) +\
-                "\n\nВсего квартир: %d" % flats +\
+                "\n\nУровень обработки: %d/%d (%d%%)" % (worked, flats, percentage) +\
                 "\n\nВ статусе %s: %s (%d%%)" % (icon("reject"), str(status0), status0 / flats * 100) +\
                 "\nВ статусе %s: %s (%d%%)" % (icon("interest"), str(status1), status1 / flats * 100) + \
                 "\nВ статусе %s: %s (%d%%)" % (icon("green"), str(status2), status2 / flats * 100) + \
                 "\nВ статусе %s: %s (%d%%)" % (icon("purple"), str(status3), status3 / flats * 100) + \
                  "\nВ статусе %s: %s (%d%%)" % (icon("brown"), str(status4), status4 / flats * 100) + \
                  "\nВ статусе %s: %s (%d%%)" % (icon("danger"), str(status5), status5 / flats * 100) + \
-                 "\nВ статусе %s: %s (%d%%)" % (icon("question"), str(statusQ), statusQ / flats * 100) + \
-                 "\n\nБез посещений: %d (%d%%)" % (
-                flats - returns1 - returns2, (flats - returns1 - returns2) / flats * 100) +\
-                "\nС одним посещением: %d (%d%%)" % (returns1, returns1 / flats * 100) +\
-                "\nС повт. посещениями: %d (%d%%)" % (returns2, returns2 / flats * 100)
+                 "\nВ статусе %s: %s (%d%%)" % (icon("question"), str(statusQ), statusQ / flats * 100)# + \
+                 #"\n\nБез посещений: %d (%d%%)" % (flats - worked, (flats - worked) / flats * 100) +\
+                #"\nС одним посещением: %d (%d%%)" % (returns1, returns1 / flats * 100) +\
+                #"\nС повт. посещениями: %d (%d%%)" % (returns2, returns2 / flats * 100)
 
     if settings[0][21]==1:
         message += "\n\nОбработано подъездов: %d/%d (%d%%)" % \

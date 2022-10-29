@@ -30,25 +30,26 @@ def showHouses():
     housesList = []
 
     for house in houses:  # check houses statistics
-        if house.getHouseStats()[0] > 0:
-            visited = "%s%d" % (icon("mark", simplified=False), house.getHouseStats()[0])
-        else:
-            visited = ""
+        #if house.getHouseStats()[0] > 0:
+        #    visited = " %s%d " % (icon("mark", simplified=False), house.getHouseStats()[0])
+        #else:
+        #    visited = " "
         if house.getHouseStats()[1] > 0:
-            interested = "%s%d" % (icon("interest"), house.getHouseStats()[1])
+            interested = " %s%d " % (icon("interest"), house.getHouseStats()[1])
         else:
-            interested = ""
+            interested = " "
         if house.note != "":
-            note = "%s%s" % (icon("pin", simplified=False), house.note)
+            note = " %s%s" % (icon("pin", simplified=False), house.note)
         else:
-            note = ""
+            note = " "
         if days_between(house.date, time.strftime("%Y-%m-%d", time.localtime())) > 180:
             houseDue = icon("warning") + " "
         else:
             houseDue=""
 
-        housesList.append("%s %s %s(%s) %s %s %s" %
-                (house.getTipIcon()[1], house.title, houseDue, shortenDate(house.date), visited, interested, note)
+        housesList.append("%s %s%s (%s) %s%d%%%s%s" %
+                (house.getTipIcon()[1], house.title, houseDue, shortenDate(house.date),
+                 icon("mark"), int(house.getProgress()[0]*100), interested, note)
         )
 
     if len(housesList)==0:

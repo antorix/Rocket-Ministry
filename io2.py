@@ -173,6 +173,9 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
             if os.path.exists(AndroidDownloadPath + dataFile):
                 with open(AndroidDownloadPath + dataFile, "r") as file:
                     buffer = json.load(file)
+            elif os.path.exists(AndroidDownloadPath + dataFile+".txt"):
+                with open(AndroidDownloadPath + dataFile+".txt", "r") as file:
+                    buffer = json.load(file)
             else:
                 dialogAlert(title = icon("smartphone") + " Импорт из загрузок",
                             message="Файл базы данных data.jsn не найден в папке «Загрузки» либо поврежден!")
@@ -233,11 +236,11 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
             log("База успешно загружена")
             save()
             if delete==True and download==True:
-                if Mode=="sl4a":
-                    os.remove(AndroidDownloadPath + dataFile) # на телефоне файл удаляется, чтобы при последующем сохранении на телефоне у него не изменилось название
-            #    else:
-            #        os.remove(dataFile)  # файл на компьютере удаляется, поскольку с телефона может не получиться перезаписать существующий файл
-
+                if Mode=="sl4a":  # на телефоне файл удаляется, чтобы при последующем сохранении на телефоне у него не изменилось название
+                    if os.path.exists(AndroidDownloadPath + dataFile):
+                        os.remove(AndroidDownloadPath + dataFile)
+                    elif os.path.exists(AndroidDownloadPath + dataFile+".txt"):
+                        os.remove(AndroidDownloadPath + dataFile+".txt")
 
     else:
         dialogAlert(title="Загрузка базы данных", message="Файл базы данных поврежден, создаю новый.")

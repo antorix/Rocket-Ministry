@@ -69,6 +69,7 @@ class House():
             self.porches.sort(key=lambda x: x.title, reverse=False)
 
     def showPorches(self):
+
         list = []
 
         self.sortPorches()
@@ -92,6 +93,19 @@ class House():
         
     def rename(self, input):
         self.title = input[3:].upper()
+
+    def getProgress(self):
+        """ Выдает показатель обработки участка в виде доли от 0 до 1 [0] и только обработанные квартиры [1]"""
+        totalFlats = workedFlats = 0
+        for porch in self.porches:
+            for flat in porch.flats:
+                totalFlats +=1
+                if flat.getStatus()[1] != 4 and flat.getStatus()[1] != 5:
+                    workedFlats += 1
+        if totalFlats != 0:
+            return workedFlats / totalFlats, workedFlats
+        else:
+            return 0, 0
         
     def export(self):
         return [
