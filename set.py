@@ -107,7 +107,7 @@ def houseSettings(selectedHouse):
             break
 
         elif "Маршрут" in result:
-            map(house.title) # map
+            navigate(house.title) # map
 
     return "" # exit
 
@@ -412,7 +412,7 @@ def porchSettings(house, selectedPorch, jumpToPhone=False):
             break
 
         elif "Маршрут" in result:
-            map(house.title) # map
+            navigate(house.title) # map
 
 def flatSettings(flat, house=None, virtual=False, allowDelete=True, jumpToStatus=False):
 
@@ -648,18 +648,21 @@ def flatSettings(flat, house=None, virtual=False, allowDelete=True, jumpToStatus
                     io2.consoleReturn()
    
         elif "Маршрут" in result:
-            if io2.Mode == "sl4a":
-                try:
-                    from androidhelper import Android
-                    phone = Android()
-                    phone.viewMap(house.title)
-                    os.system("clear")
-                except:
-                    io2.log("Не удалось выполнить поиск на карте")
-                else:
-                    io2.consoleReturn()
-            else:
-                webbrowser.open("https://yandex.ru/maps/?text=%s" % house.title)
+            navigate(house.title)
+
+def navigate(address):
+    if io2.Mode == "sl4a":
+        try:
+            from androidhelper import Android
+            phone = Android()
+            phone.viewMap(address)
+            os.system("clear")
+        except:
+            io2.log("Не удалось выполнить поиск на карте")
+        else:
+            io2.consoleReturn()
+    else:
+        webbrowser.open("https://yandex.ru/maps/?text=%s" % address)
 
 def ifInt(char):
     """ Checks if value is integer """
