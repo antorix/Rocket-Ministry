@@ -43,7 +43,7 @@ elif io2.Mode=="easygui":
 
     inactive_background = "grey95"
 
-    from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
+    #from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
 
     # База картинок
 
@@ -75,8 +75,7 @@ elif io2.Mode=="easygui":
         , "calendar.png"     # 24
         , "log.png"          # 25
     ]
-
-    """
+    
     try:
         from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
     except: # нет desktop - старая версия, догружаем
@@ -85,8 +84,7 @@ elif io2.Mode=="easygui":
             "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/desktop.py",
             "desktop.py"
         )
-        from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
-    """
+        from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox  
 
 def dialogText(title="",
                 message="",
