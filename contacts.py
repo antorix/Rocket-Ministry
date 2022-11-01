@@ -82,7 +82,7 @@ def getContactsAmount(date=0):
                         #datedFlats.append(dateApp) # check if matches with today's date
                         datedFlats.append(houses[h].porches[p].flats[f])  # check if matches with today's date
                 if houses[h].porches[p].flats[f].status != "" and houses[h].porches[p].flats[f].status != "0"\
-                        and not "." in houses[h].porches[p].flats[f].number:
+                        and houses[h].porches[p].flats[f].getName()!="" and not "." in houses[h].porches[p].flats[f].number:
                     c+=1
 
     for h in range(len(resources[1])):
@@ -149,7 +149,7 @@ def getContacts(forSearch=False):
             for f in range(len(houses[h].porches[p].flats)):
                 if forSearch==False: # поиск для списка контактов - только актуальные жильцы
                     if houses[h].porches[p].flats[f].status != "" and houses[h].porches[p].flats[f].status != "0" \
-                            and not "." in houses[h].porches[p].flats[f].number:
+                            and houses[h].porches[p].flats[f].getName()!="" and not "." in houses[h].porches[p].flats[f].number:
                         retrieve(houses, h, p, f, contacts)
                 else: # поиск для поиска - все контакты вне зависимости от статуса
                     if not "." in houses[h].porches[p].flats[f].number:

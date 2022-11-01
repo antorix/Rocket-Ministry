@@ -16,10 +16,7 @@ def app():
         io2.settings[0][1] = 0
 
     if settings[0][17]!="":
-        password=dialogs.dialogGetPassword(
-            title = icon("lock") + " Введите пароль",
-            cancel="Выход"
-        )
+        password=dialogs.dialogGetPassword(title="Rocket Ministry")
     else:
         password=settings[0][17]
     if password is None:

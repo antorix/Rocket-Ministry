@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 import io2
 
-Simplified=1
+Simplified=1 # !!!
+Version = "1.0.5"
 
 try: # определяем ОС
     print("Загружаем графическую библиотеку")
@@ -60,7 +61,7 @@ def initializeDB():
 
 houses, settings, resources = initializeDB()
 DBCreatedTime = ""
-Version = "1.0.4" # не забыть убрать territory.porchView из homepage!!!
+LastSystemMessage = ["", 0]
 
 import dialogs
 import sys
@@ -80,12 +81,17 @@ LastTimeDidChecks = LastTimeBackedUp = int(time.strftime("%H", time.localtime())
 def log(message):
     """ Displaying and logging to file important system messages """
 
+    global LastSystemMessage
+
     if Mode == "sl4a":
         phone.makeToast(message)
     else:
         print("%s" % message)
         if settings[0][1]==True or "--textconsole" in sys.argv:
             time.sleep(0.5)
+
+    LastSystemMessage[0] += message + "\n"
+    LastSystemMessage[1] = 0
 
 def clearDB():
     """ Очистка базы данных """
@@ -246,7 +252,6 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
         dialogAlert(title="Загрузка базы данных", message="Файл базы данных поврежден, создаю новый.")
         clearDB()
         loadOutput(temp[1:])
-    #save()
 
 def houseRetrieve(containers, housesNumber, h, silent=False):
     """ Retrieves houses from JSON buffer into objects """
@@ -345,7 +350,7 @@ def share():
         except IOError:
             log("Не удалось отправить базу!")
         else:
-            consoleReturn()
+            consoleReturn(pause=True)
     else:
         from webbrowser import open
         open("data.jsn")
@@ -371,8 +376,7 @@ def backupRestore(restore=False, delete=False, silent=False):
         from dialogs import dialogList
         from icons import icon
         choice2 = dialogList(
-            title=icon(
-                "restore") + " Восстановление",
+            title=icon("restore") + " Выберите копию:",
             message="Выберите дату и время резервной копии базы данных, которую нужно восстановить:",
             options=fileDates,
             form="restore"
@@ -494,10 +498,17 @@ def update(forced=False):
         if forced==True:
             dialogs.dialogAlert(title, "Проверка показала, что у вас самая последняя версия Rocket Ministry!")
 
-def consoleReturn():
+def consoleReturn(pause=False):
     os.system("clear")
-    input("\nНажмите Enter для возврата")
-    os.system("clear")
+    if pause==True:
+        input("Нажмите Enter для возврата")
+        os.system("clear")
+    print       ("\n═══════ Внимание! ════════\n\n" +\
+                   "Если вы видите этот экран при\n" +\
+                   "запущенном приложении, нажмите\n" +\
+                   "на кнопку «Назад» 2-3 раза до\n" +\
+                   "выхода на рабочий стол, затем\n" +\
+                   "запустите QPython заново.")
 
 def getCurTime():
     return int(time.strftime("%H", time.localtime())) * 3600 \

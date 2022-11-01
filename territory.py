@@ -10,14 +10,16 @@ import homepage
 import house_op
 import house_cl
 import dialogs
-import contacts
 import reports
+
+GridMode = 0
 
 def terView():
     """ Список участков """
 
     choice=""
     while 1:
+
         if choice!="positive":
             choice = dialogs.dialogList( # display list of houses and options
                 title = icon("globe") + " Участки " + reports.getTimerIcon(settings[2][6]), # houses sorting type, timer icon
@@ -88,6 +90,7 @@ def houseView(selectedHouse):
             houseIcon = icon("house")
 
         if choice!="positive":
+
             choice = dialogs.dialogList(
                 form = "houseView",
                 title = houseIcon + " %s ⇨ %sы %s" % (house.title, house.getPorchType()[0], reports.getTimerIcon(settings[2][6])),
@@ -156,7 +159,7 @@ def porchView(house, selectedPorch):
     while 1: # Показываем весь подъезд
         # Стандартный списочный вид
 
-        if settings[0][1]==0 and io2.Mode!="text":
+        if settings[0][1]==0 and io2.Mode!="text" and GridMode==0:
 
             if choice!="positive":
                 options = porch.showFlats()
@@ -260,6 +263,8 @@ def porchView(house, selectedPorch):
                 )
                 if homepage.menuProcess(choice) == True:
                     continue
+                elif choice=="x":
+                    continue
                 elif choice==None:
                     break
                 elif choice == "neutral" and neutral != None: # этаж вверх
@@ -267,10 +272,13 @@ def porchView(house, selectedPorch):
                 elif choice =="positive" and positive != None: # этаж вниз
                     floorNumber -=1
                 elif choice!="neutral" and choice!="positive" and int(choice) == len(options)-1: # удаляем первую квартиру на этаже
-                    flatNumber = findFlatByNumber(house, porch, options[0], onlyGetNumber=True)
-                    porch.deleteFlat(flatNumber)
-                    io2.save()
-                    selected2 = int(choice)-1
+                    try:
+                        flatNumber = findFlatByNumber(house, porch, options[0], onlyGetNumber=True)
+                        porch.deleteFlat(flatNumber)
+                        io2.save()
+                        selected2 = int(choice)-1
+                    except:
+                        continue
                 elif set.ifInt(choice) == True: # находим и открываем квартиру
                     if findFlatByNumber(house, porch, options[choice])=="deleted":
                         break
@@ -290,8 +298,10 @@ def porchView(house, selectedPorch):
                                                      house.title,
                                                      house.note,
                                                      reports.getTimerIcon(settings[2][6])),
-                message = porchMessage + porch.showFlats(),
+                message = porch.showFlats(), # ***
                 form="porchText",
+                height=porch.showFlats(countFloors=True),
+                mono=True,
                 default=default,
                 neutral=icon("preferences", simplified=False) + " Детали"
             )
@@ -375,6 +385,10 @@ def flatView(flat, house=None, virtual=False, allowDelete=True):
 
         neutral, options = flat.showRecords()
 
+        if io2.Mode=="easygui" and settings[0][1]==0: # убираем иконки на ПК
+            for i in range(len(options)):
+                options[i] = options[i][2:]
+
         # Display dialog
 
         if flat.number=="virtual": # прячем номера отдельных контактов
@@ -431,6 +445,9 @@ def flatView(flat, house=None, virtual=False, allowDelete=True):
                 continue
             elif int(choice) <= len(flat.records): # edit record
                 options2 = [icon("edit") + " Править", icon("cut") + " Удалить"]
+                if io2.Mode == "easygui" and settings[0][1] == 0:  # убираем иконки на ПК
+                    for i in range(len(options2)):
+                        options2[i] = options2[i][2:]
                 choice2 = dialogs.dialogList(
                     title=icon("mic", simplified=False) + " Запись посещения",
                     options=options2,
@@ -439,7 +456,9 @@ def flatView(flat, house=None, virtual=False, allowDelete=True):
                 )
                 if homepage.menuProcess(choice2)==True:
                     continue
-                if choice2==None or choice2=="":
+                if choice2=="x":
+                    continue
+                elif choice2==None or choice2=="":
                     continue
                 else:
                     result2=options2[choice2]

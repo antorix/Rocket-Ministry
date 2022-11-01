@@ -29,7 +29,6 @@ class Report():
 
     def saveReport(self, message="", mute=False, save=True, backup=False):
         """ Выгрузка данных из класса в настройки, сохранение и оповещение """
-
         io2.settings[2] = [
             self.hours,
             self.credit,
@@ -57,7 +56,6 @@ class Report():
 
     def saveLastMonth(self):
         """ Save last month report to file """
-        
         rolloverHours = rolloverCredit = 0.0
                 
         """
@@ -95,7 +93,8 @@ class Report():
                  )
         if self.note!="":
             self.lastMonth += "\nПримечание: " + self.note
-            self.saveReport()
+
+        self.saveReport()
         
         # Clear service year in October        
         if int(time.strftime("%m", time.localtime())) == 10: 
@@ -163,7 +162,7 @@ class Report():
                 self.saveReport(mute=True, backup=True)
 
         elif "р" in input or "ж" in input or "ч" in input or "б" in input or "в" in input or "п" in input or "и" in input or "к" in input:
-            message="В отчет добавлено:"
+            message="В отчет добавлено: "
             for i in range(len(input)):
                 if input[i]=="=" and input[i+1]=="ч":
                     self.hours += 1
@@ -242,22 +241,38 @@ class Report():
             options.append(icon("returns")  + " Повторные: %d" % self.returns)
             options.append(icon("studies")  + " Изучения: %d" % self.studies)
             options.append(icon("pin") + " Примечание: %s" % self.note)
-            options.append(icon("logreport")+ " Журнал")
+
+            if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
+                for i in range(len(options)):
+                    options[i] = options[i][2:]
 
             choice = dialogs.dialogList(
                 title=title,
                 form = "display",
                 message=message,
                 options=options,
-                neutral = monthName()[2])
+                positive = monthName()[2],
+                neutral = icon("logreport") + " Журнал"
+            )
+
             choice2=""
             if homepage.menuProcess(choice) == True:
                 continue
             elif choice==None:
                 break
-            elif choice=="neutral": # last month report
+            elif choice=="positive": # last month report
                 self.showLastMonthReport()
                 continue
+            elif choice=="neutral": # show logReport
+                    message=""
+                    for line in io2.resources[2]:
+                        message+=line
+                    dialogs.dialogInfo(
+                        largeText=True,
+                        title=icon("logreport") + " Журнал отчета",
+                        message=message
+                    )
+                    continue
             elif set.ifInt(choice)==True:
                 result = options[choice]
             else:
@@ -461,20 +476,6 @@ class Report():
                     self.note = choice2.strip()
                     self.saveReport(self.note, mute=True)
 
-            elif "Журнал" in result: # show logReport
-                        message=""
-                        for line in io2.resources[2]:
-                            message+=line
-                        dialogs.dialogInfo(
-                            largeText=True,
-                            title=icon("logreport") + " Журнал отчета",
-                            #default=message,
-                            message=message,
-                            #positive=None,
-                            #neutral=None,
-                            #negative="Назад",
-                            #largeText=True
-                        )
             else:
                 continue
 
@@ -494,7 +495,7 @@ class Report():
             neutral = icon("export") + exportButton,
             negative = "Назад"
         )
-        if answer == None:
+        if answer == None:#123
             return
         elif "neutral" or icon("export") in answer:  # export last month report
             if io2.Mode == "sl4a":
@@ -524,7 +525,10 @@ def getTimerIcon(startTime):
     """ Returns timer and ringer icon, if active, and add silent icon on Android """
 
     if startTime > 0:
-        output = " " + icon("timer")
+        if io2.Mode != "easygui" and io2.settings[0][1] == 0:
+            output = " " + icon("timer")
+        else:
+            output = ""
         if io2.Mode == "sl4a":
             if io2.settings[0][0] == 1:
         #        output += " " + icon("mute")
@@ -797,13 +801,13 @@ def report(choice="", stop=False, newMonthDetected=False, disableNotification=Fa
         rolloverHours, rolloverCredit = report.saveLastMonth()
         report.clear(rolloverHours, rolloverCredit)
         report.reminder=1 # включить напоминание сдать отчет
-        report.saveReport()
+        report.saveReport(mute=True)
         dialogs.dialogNotify("Начался новый месяц, не забудьте сдать отчет!")
         stop=True
 
     if disableNotification==True:
         report.reminder = 0
-        report.saveReport()
+        report.saveReport(mute=True)
         stop=True
 
     if showLastMonth==True:
@@ -823,3 +827,23 @@ def report(choice="", stop=False, newMonthDetected=False, disableNotification=Fa
 
     if exit==1:
         return True
+
+def toggleTimer():
+    if io2.settings[2][6] == 0:
+        report(choice="=(")
+    else:
+        if io2.settings[0][2] == False:
+            report(choice="=)")  # запись обычного времени
+        else:  # если в настройках включен кредит, спрашиваем:
+            choice2 = dialogs.dialogList(
+                title="Запись времени",
+                options=[
+                    icon("timer") + " Служение",
+                    icon("credit") + " Кредит"
+                ],
+                negative="Отмена"
+            )
+            if choice2 == 0:
+                report(choice="=)")
+            elif choice2 == 1:
+                report("=$")

@@ -23,10 +23,14 @@ def showHouses():
         for i in range(len(houses)):
             houses[i].interest = houses[i].getHouseStats()[1]
         houses.sort(key=lambda x: x.interest, reverse=True)
-    elif settings[0][19] == "п":  # by number of visited persons
+    elif settings[0][19] == "п":  # by progress
         for i in range(len(houses)):
-            houses[i].visited = houses[i].getHouseStats()[0]
-        houses.sort(key=lambda x: x.visited, reverse=False)
+            houses[i].progress = houses[i].getProgress()[0]
+        houses.sort(key=lambda x: x.progress, reverse=False)
+    elif settings[0][19] == "о":  # by progress reversed
+        for i in range(len(houses)):
+            houses[i].progress = houses[i].getProgress()[0]
+        houses.sort(key=lambda x: x.progress, reverse=True)
     housesList = []
 
     for house in houses:  # check houses statistics
@@ -51,6 +55,9 @@ def showHouses():
                 (house.getTipIcon()[1], house.title, houseDue, shortenDate(house.date),
                  icon("mark"), int(house.getProgress()[0]*100), interested, note)
         )
+    if io2.Mode == "easygui" and settings[0][1] == 0:  # убираем иконки на ПК
+        for i in range(len(housesList)):
+            housesList[i] = housesList[i][2:]
 
     if len(housesList)==0:
         housesList.append("Создайте свой первый участок")
@@ -137,12 +144,14 @@ def terSort():
         "По названию",
         "По дате взятия",
         "По числу интересующихся",
-        "По числу посещений"
+        "По уровню обработки",
+        "По уровню обработки обратная"
     ]
 
     if    settings[0][19]=="д": selected=1
     elif    settings[0][19]=="и": selected=2
     elif    settings[0][19]=="п": selected=3
+    elif    settings[0][19]=="о": selected=4
     else:
         selected = 0
 
@@ -161,8 +170,10 @@ def terSort():
         settings[0][19] = "д"
     elif choice=="По числу интересующихся":
         settings[0][19] = "и"
-    elif choice=="По числу посещений":
+    elif choice=="По уровню обработки":
         settings[0][19] = "п"
+    elif choice=="По уровню обработки обратная":
+        settings[0][19] = "о"
     else:
         settings[0][19] = "н"
 
@@ -177,4 +188,17 @@ def getPorchStatuses():
         ["⚪⚪⚪", "🟡⚪⚪", "⚪🟣⚪", "⚪⚪🔴", "🟡🟣⚪", "⚪🟣🔴", "🟡⚪🔴", "🟡🟣🔴"],
         ["○○○", "●○○", "○●○", "○○●", "●●○", "○●●", "●○●", "●●●"]
     ]
-#○
+
+def countTotalProgress():
+    """ Подсчитывает общий уровень обработки всех участков"""
+    percentage = 0.0
+    for house in houses:
+        percentage += house.getProgress()[0]
+        #worked += house.getProgress()[1]
+
+    if len(houses)>0:
+        percentage = int( percentage / len(houses) * 100 )
+    else:
+        percentage = 0
+
+    return percentage

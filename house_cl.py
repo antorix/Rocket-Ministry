@@ -9,6 +9,7 @@ import reports
 import house_op
 from icons import icon
 import homepage
+from territory import GridMode
 from random import random
 from copy import deepcopy
 
@@ -80,6 +81,10 @@ class House():
             else:
                 note = ""
             list.append(self.getPorchType()[1] + " %s%s %s %s" % (self.porches[i].title, self.porches[i].getFlatsRange(), self.porches[i].showStatus(), note))
+
+        if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
+            for i in range(len(list)):
+                list[i] = list[i][2:]
 
         if len(list) == 0:
             list.append("Создайте %s внутри участка" % self.getPorchType()[0])
@@ -390,7 +395,7 @@ class House():
                             success = True
                             break
 
-        def showFlats(self, floor=0):
+        def showFlats(self, floor=0, countFloors=False):
             """ Вывод квартир для вида подъезда """
 
             def showGrid():
@@ -483,11 +488,14 @@ class House():
                 rows = int(self.flatsLayout)
                 columns = int(len(self.flats) / rows)
 
+            if countFloors==True:
+                return rows
+
             # Вывод квартир - определяем режим, затем вызываем соответствующую функцию
 
             forceText = False
 
-            if io2.settings[0][1]==1 or io2.Mode=="text":  # показываем подъезд в режиме сетки
+            if io2.settings[0][1]==1 or io2.Mode=="text" or GridMode==1:  # показываем подъезд в классическом режиме
                 return showGrid()
 
             if floor!=0: # если получен конкретный этаж, функция вывода списка всего подъезда выдает список только одного этажа

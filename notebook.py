@@ -21,6 +21,10 @@ def showNotebook():
         for i in range(len(resources[0])):
             options.append(icon("note") + " " + resources[0][i])
 
+        if io2.Mode=="easygui" and settings[0][1]==0: # убираем иконки на ПК
+            for i in range(len(options)):
+                options[i] = options[i][2:]
+
         if len(options)==0:
             options.append("Пишите любые заметки прямо здесь")
 
@@ -85,6 +89,11 @@ def showNotebook():
                     icon("cut") +       " Удалить "
                     #icon("clipboard") +   " В буфер обмена "
                     ]
+
+                if io2.Mode == "easygui" and settings[0][1] == 0:  # убираем иконки на ПК
+                    for i in range(len(options2)):
+                        options2[i] = options2[i][2:]
+
                 choice2 = dialogs.dialogList(
                     title = icon("note") + " Заметка «%s» " % resources[0][result] + reports.getTimerIcon(settings[2][6]),
                     options=options2,

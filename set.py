@@ -30,6 +30,11 @@ def houseSettings(selectedHouse):
             icon("map") + " Маршрут",
             icon("cut") + " Удалить участок",
         ]
+
+        if io2.Mode=="easygui" and settings[0][1]==0: # убираем иконки на ПК
+            for i in range(len(options)):
+                options[i] = options[i][2:]
+
         choice = dialogs.dialogList(
             title = house.title,
             message = "Выберите действие с участком:",
@@ -38,6 +43,8 @@ def houseSettings(selectedHouse):
             negative = "Назад")
 
         if homepage.menuProcess(choice) == True:
+            continue
+        if choice=="x":
             continue
         elif choice==None:
             break
@@ -134,12 +141,16 @@ def porchSettings(house, selectedPorch, jumpToPhone=False):
         if porch.type=="подъезд":
             options.append(icon("intercom") + " Режим домофона")
 
-        if settings[0][20]==1 and porch.type=="подъезд":
+        if (settings[0][20]==1 or io2.Mode == "easygui") and porch.type=="подъезд":
             options.append(icon("phone2") + " Режим справочной")
 
         options.append(icon("map") + " Маршрут")
         options.append(icon("cut") + " Удалить %s" % porch.type)
-        
+
+        if io2.Mode=="easygui" and settings[0][1]==0: # убираем иконки на ПК
+            for i in range(len(options)):
+                options[i] = options[i][2:]
+
         if jumpToPhone==False:
             choice = dialogs.dialogList(
                 title = porch.title,
@@ -149,6 +160,8 @@ def porchSettings(house, selectedPorch, jumpToPhone=False):
             )
 
             if homepage.menuProcess(choice) == True:
+                continue
+            if choice == "x":
                 continue
             elif choice == None:
                 break
@@ -425,6 +438,7 @@ def flatSettings(flat, house=None, virtual=False, allowDelete=True, jumpToStatus
             icon("pin") + " Заметка",
             icon("appointment") + " Встреча"
         ]
+
         if house != None:
             if virtual==True:
                 options.insert(1, icon("house") + " Адрес")
@@ -455,6 +469,10 @@ def flatSettings(flat, house=None, virtual=False, allowDelete=True, jumpToStatus
         else:
             number = flat.number
 
+        if io2.Mode=="easygui" and settings[0][1]==0: # убираем иконки на ПК
+            for i in range(len(options)):
+                options[i] = options[i][2:]
+
         if jumpToStatus==False:
             choice = dialogs.dialogList(
                 title = "%s %s" % (number, flat.getName()),
@@ -463,6 +481,8 @@ def flatSettings(flat, house=None, virtual=False, allowDelete=True, jumpToStatus
                 options = options
             )
             if homepage.menuProcess(choice) == True:
+                continue
+            if choice=="x":
                 continue
             elif choice == None:
                 break

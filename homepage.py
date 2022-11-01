@@ -125,7 +125,7 @@ def homepage():
                 print("Проверяем сдачу отчета")
                 answer = dialogs.dialogConfirm(
                     title=icon("warning") + " Отчет",
-                    message=" Вы уже сдали отчет?"
+                    message="Вы уже сдали отчет?"
                 )
                 if answer == True:
                     reports.report(disableNotification=True)
@@ -159,7 +159,7 @@ def homepage():
             with open("winpos.ini", "r") as file:
                 line=file.read()
         except:
-            dialogs.window_size = "500x500" #
+            dialogs.window_size = "400x500" #
             dialogs.window_position = "+500+250"
             with open("winpos.ini", "w") as file:
                 file.write(dialogs.window_size)
@@ -180,7 +180,9 @@ def homepage():
         io2.Simplified=0
         settings[0][1]=1
 
-    #territory.porchView(houses[0], 0)
+    if io2.Simplified==0:
+        #territory.porchView(houses[1], 2)
+        pass
 
     while 1:
 
@@ -196,9 +198,15 @@ def homepage():
         else:
             time2 = reports.updateTimer(settings[2][6]) + 24
         if settings[2][6] > 0:
-            timerTime = " \u2b1b %s" % reports.timeFloatToHHMM(time2)
+            if io2.Mode != "easygui":
+                timerTime = " \u2b1b %s" % reports.timeFloatToHHMM(time2)
+            else:
+                timerTime = " " + reports.timeFloatToHHMM(time2)
         else:
-            timerTime = " \u25b6"
+            if io2.Mode != "easygui":
+                timerTime = " \u25b6"
+            else:
+                timerTime = " "
 
         if settings[2][11]==1:
             remind = icon("warning")
@@ -236,20 +244,32 @@ def homepage():
                 icon("report") +    " Отчет (%s) %s %s" % (reports.timeFloatToHHMM(settings[2][0]), gap_str, remind),
                 icon("notebook")+   " Блокнот (%d)" % len(resources[0]),
                 icon("search")  +   " Поиск",
-                icon("stats")   +   " Статистика",
+                icon("stats")   +   " Статистика (%s%%)" % house_op.countTotalProgress(),
                 icon("calendar")+   " Служебный год",
                 icon("file")    +   " Файл",
                 icon("preferences")+" Настройки",
                 icon("info") +      " О программе"
                 ]
 
+        if io2.Mode=="easygui" and settings[0][1]==0: # убираем иконки на ПК
+            for i in range(len(options)):
+                options[i] = options[i][2:]
+
         if io2.Mode=="text" or io2.settings[0][1]==1:
-            title = "Добро пожаловать в Rocket Ministry! Введите help, %s\n" % reports.getTimerIcon(settings[2][6]) + \
-                    "если нужна помощь по работе в консольном режиме."
+            title = "Добро пожаловать в Rocket Ministry! Введите help, если нужна помощь по работе в консольном режиме. %s" % reports.getTimerIcon(settings[2][6])
         else:
             title = "🚀 Rocket Ministry " + reports.getTimerIcon(settings[2][6])
+            
+        if io2.Simplified == 0:
+            negative = "Выход"
+        else:
+            negative=None
 
-        dialogs.clearScreen() # очистка экрана на всякий случай
+        if io2.Mode == "sl4a":
+            dialogs.clearScreen()
+            io2.consoleReturn(pause=False)
+        elif io2.Mode == "easygui":
+            territory.terView()
 
         # Run home screen
 
@@ -260,32 +280,15 @@ def homepage():
             options = options,
             positive=None,
             neutral = icon("timer") + " Таймер" + timerTime,
-            negative=None
+            negative=negative
         )
         if menuProcess(choice)==True:
             continue
-        #elif choice == None and io2.Mode=="easygui" and settings[0][1]==0:
-        #    return
         elif choice=="neutral": # таймер
-            if settings[2][6] == 0:
-                reports.report(choice="=(")
-            else:
-                if settings[0][2]==False:
-                    reports.report(choice="=)")  # запись обычного времени
-                else: # если в настройках включен кредит, спрашиваем:
-                    choice2=dialogs.dialogList(
-                        title="Запись времени",
-                        options=[
-                            icon("timer") + " Обычное время",
-                            icon("credit") + " Кредит"
-                        ],
-                        negative="Отмена"
-                    )
-                    if choice2==0:
-                        reports.report(choice="=)")
-                    elif choice2==1:
-                        reports.report("=$")
+            reports.toggleTimer()
             continue
+        elif choice==None and negative!=None:
+            return "quit"
         elif set.ifInt(choice) == True:
             result = options[choice]
         #else:
@@ -323,8 +326,8 @@ def homepage():
                 if about()==True:
                     return True
 
-            elif "Выход" in result:
-                return "quit"
+            #elif "Выход" in result:
+            #    return "quit"
 
 def fileActions():
     """ Program settings on the start screen """
@@ -347,6 +350,10 @@ def fileActions():
 
         if io2.Mode == "sl4a":
             options.append(icon("explosion") + " Самоуничтожение")
+
+        if io2.Mode=="easygui" and settings[0][1]==0: # убираем иконки на ПК
+            for i in range(len(options)):
+                options[i] = options[i][2:]
 
         choice = dialogs.dialogList(  # display list of settings
             form="tools",
@@ -379,13 +386,11 @@ def fileActions():
         elif "Импорт из загрузок" in result: # для Android
             io2.load(download=True, forced=True, delete=True)
 
-        elif "Импорт из файла" in result: # для Windows
+        elif "Импорт из файла" in result:
             io2.load(dataFile=None, forced=True, delete=True)
 
         elif "Восстановление" in result:  # restore backup
-            #io2.save(forced=True, silent=True)
             io2.backupRestore(restore=True)
-            #io2.save()
 
         elif "Очистка" in result:
             if dialogs.dialogConfirm(
@@ -444,6 +449,8 @@ def preferences():
         options.append(status(settings[0][10]) + "Умная строка в первом посещении")
         options.append(status(settings[0][7]) +  "Автоматически записывать повторные посещения")
         options.append(                       "%s Норма часов в месяц: %d" % (icon("box", simplified=False), settings[0][3]))
+        if io2.Mode != "easygui":
+            options.append(status(settings[0][20]) + "Режим справочной")
         options.append(status(settings[0][2])  + "Кредит часов")
         options.append(status(settings[0][11]) + "Уведомления о встречах на сегодня")
         options.append(status(settings[0][8])  + "Напоминать о сдаче отчета")
@@ -451,7 +458,6 @@ def preferences():
         if io2.Mode == "sl4a":
             options.append(status(settings[0][0])+"Бесшумный режим при включенном таймере")
         options.append(status(settings[0][21]) + "Статус обработки подъездов")
-        options.append(status(settings[0][20]) + "Режим справочной")
         options.append(status(settings[0][9]) +  "Последний символ посещения влияет на статус контакта")
         options.append(                       "%s Резервных копий: %d" % (icon("box", simplified=False), settings[0][6]))
         if io2.Simplified==0 and io2.Mode!="sl4a":
@@ -460,6 +466,9 @@ def preferences():
         options.append(status(settings[0][16]) + "Режим смайликов")
         options.append(status(settings[0][12]) + "Проверять обновления")
         options.append(status(settings[0][1])  + "Консольный режим")
+
+        if io2.Simplified == 0:
+            options.append(status(territory.GridMode) + "Классический вид подъезда")
 
         # settings[0][4] - занято под сортировку контактов!
         # settings[0][19] - занято под сортировку участков!
@@ -615,7 +624,12 @@ def preferences():
             )
             if choice2 != None:
                 settings[0][17] = choice2.strip()
-                io2.save()
+            else:
+                settings[0][17] = ""
+            io2.save()
+
+        elif "Классический вид" in result:
+            territory.GridMode = toggle(territory.GridMode)
 
     if exit == 1:
         return True
@@ -763,18 +777,23 @@ def search(query=""):
 
                 options2 = []
                 for i in range(len(list)):  # save results
+                    if io2.Mode == "text" or settings[0][1] == 1:
+                        number = ""
+                    else:
+                        number = "%d) " % (i+1)
                     if list[i][1] != "virtual":  # for regular flats
-                        options2.append("%d) %s-%s" % (i + 1, houses[list[i][0][0]].title,
+                        options2.append("%s%s-%s" % (number, houses[list[i][0][0]].title,
                                                        houses[list[i][0][0]].porches[list[i][0][1]].flats[
                                                            list[i][0][2]].title))
                     else:  # for standalone contacts
-                        options2.append("%d) %s, %s" % (
-                            i + 1, resources[1][list[i][0][0]].title,
-                            resources[1][list[i][0][0]].porches[0].flats[0].title)
-                                        )
+                        options2.append("%s%s, %s" % (
+                            number, resources[1][list[i][0][0]].title,
+                            resources[1][list[i][0][0]].porches[0].flats[0].title))
 
                 if len(options2) == 0:
                     options2.append("Ничего не найдено")
+
+                # Show results
 
                 choice2 = dialogs.dialogList(
                     form="search",
@@ -782,8 +801,6 @@ def search(query=""):
                     message="Результаты:",
                     options=options2
                 )
-
-                # Show results
 
                 if menuProcess(choice2) == True:
                     continue
@@ -806,29 +823,29 @@ def search(query=""):
                     p = list[choice2][0][1]
                     f = list[choice2][0][2]
                     if list[choice2][1] != "virtual":  # regular contacts
-                        exit = territory.flatView(flat=houses[h].porches[p].flats[f], house=houses[h])
-                        if exit =="deleted":
+                        result = territory.flatView(flat=houses[h].porches[p].flats[f], house=houses[h])
+                        if result =="deleted":
                             houses[h].porches[p].deleteFlat(f)
                             io2.save()
-                            query == None
+                            #query = None
                             break
-                        elif exit == "createdRecord" and io2.settings[0][9] == 0:
+                        elif result == "createdRecord" and io2.settings[0][9] == 0:
                             set.flatSettings(flat=houses[h].porches[p].flats[f], house=houses[h], jumpToStatus=True)
                             continue
 
                     else:  # standalone contacts
-                        exit = territory.flatView(flat=resources[1][h].porches[0].flats[0], house=resources[1][h], virtual=True)
-                        if exit == "deleted":
+                        result = territory.flatView(flat=resources[1][h].porches[0].flats[0], house=resources[1][h], virtual=True)
+                        if result == "deleted":
                             io2.log("«%s» удален" % resources[1][h].porches[0].flats[0].getName())
                             del resources[1][h]
                             io2.save()
-                            query == None
+                            #query = None
                             break
-                        elif exit == "createdRecord" and io2.settings[0][9] == 0:
+                        elif result == "createdRecord" and io2.settings[0][9] == 0:
                             set.flatSettings(flat=resources[1][h].porches[0].flats[0], house=resources[1][h], jumpToStatus=True)
                             continue
 
-def serviceYear():
+def serviceYear(count=False):
     while 1:
         options = []
         for i in range(12):  # filling options by months
@@ -862,6 +879,8 @@ def serviceYear():
                 monthNumber += 1
         yearNorm = float(settings[0][3]) * 12  # other stats
         gap = (12 - monthNumber) * float(settings[0][3]) - (yearNorm - hourSum)
+        if count==True:
+            return gap
         if gap >= 0:
             gapEmo = icon("extra")
             gapWord = "Запас"
@@ -886,8 +905,14 @@ def serviceYear():
             neutral=icon("calc") + " Аналитика",
             options=options)
 
-        if choice == None:
+        if menuProcess(choice)==True:
+            continue
+
+        elif choice == None:
             break
+
+        elif choice == "x":
+            continue
 
         elif choice == "neutral":  # calc
 
@@ -913,7 +938,6 @@ def serviceYear():
                 monthNum = choice + 9
             else:
                 monthNum = choice - 3
-
             if settings[4][choice]!=None:
                 options2 = [icon("edit") + " Править ", icon("cut") + " Очистить "]
                 choice2 = dialogs.dialogList(
@@ -998,6 +1022,24 @@ def menuProcess(choice):
         result = True
     elif choice=="notebook":
         notebook.showNotebook()
+        result = True
+    elif choice=="home":
+        territory.terView()
+        result = True
+    elif choice=="about":
+        about()
+        result = True
+    elif choice=="timer":
+        reports.toggleTimer()
+        result = True
+    elif choice=="contacts":
+        contacts.showContacts()
+        result = True
+    elif choice=="statistics":
+        stats()
+        result = True
+    elif choice=="serviceyear":
+        serviceYear()
         result = True
     elif choice=="exit":
         sys.exit(0)

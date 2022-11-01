@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import reports
 import time
 import console
 import os
@@ -14,7 +13,7 @@ import io2
 ConsoleTip        = "\nВведите номер пункта и нажмите Enter.\nШаг назад – Enter в пустой строке.\n"
 ConsoleTipForText = "\nВведите текст запроса и нажмите Enter.\nШаг назад – Enter в пустой строке.\n"
 ConsoleTipForPorch= "\nВведите номер квартиры и нажмите Enter.\nШаг назад – Enter в пустой строке.\n" +\
-                      "+1 – добавить один номер.\n+1-50 – добавить диапазон номеров."
+                      "+1 – добавить один номер.\n+1-50 – добавить диапазон номеров.\n"
 DefaultText = "(Введите «!», чтобы подтвердить «%s»)"
 
 if io2.Mode=="sl4a":
@@ -42,8 +41,42 @@ elif io2.Mode=="easygui":
     num_lines_displayed = 50
     default_hpad_in_chars = 40
 
-    inactive_background = "grey98"
+    inactive_background = "grey95"
 
+    from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
+
+    # База картинок
+
+    ImgList = [
+          "timer1.png"       # 0
+        , "timer2.png"       # 1
+        , "plus.png"         # 2
+        , "sort.png"         # 3
+        , "details.png"      # 4
+        , "update.png"       # 5
+        , "telephone.png"    # 6
+        , "sort_numbers.png" # 7
+        , "pin.png"          # 8
+        , "save.png"         # 9
+        , "update.png"       # 10
+        , "help.png"         # 11
+        , "cancel.png"       # 12
+        , "send.png"         # 13
+        , "mark.png"         # 14
+        , "calc.png"         # 15
+        , "search.png"       # 16
+        , "arrow_up.png"     # 17
+        , "arrow_down.png"   # 18
+        , "timer.png"        # 19
+        , "user.png"         # 20
+        , "house.png"        # 21
+        , "report.png"       # 22
+        , "statistics.png"   # 23
+        , "calendar.png"     # 24
+        , "log.png"          # 25
+    ]
+
+    """
     try:
         from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
     except: # нет desktop - старая версия, догружаем
@@ -53,19 +86,23 @@ elif io2.Mode=="easygui":
             "desktop.py"
         )
         from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
+    """
 
 def dialogText(title="",
-               message="",
-               default="",
-               form="",
-               positive="OK",
-               negative="Назад",
-               largeText=False,
-               neutral="Очист.",
-               autoplus=False):
+                message="",
+                default="",
+                form="",
+                largeText=False,
+                positive="OK",
+                negative="Назад",
+                neutral="Очист.",
+                height=5,
+                mono=False,
+                autoplus=False):
 
     if autoplus == True:
         neutral = "+1"
+    from territory import GridMode
 
     """ Text input """
     if io2.settings[0][1]==True or io2.Mode=="text":
@@ -74,13 +111,12 @@ def dialogText(title="",
         if form=="porchText":
             print(ConsoleTipForPorch)
             if set.PhoneMode == True:
-                print("\n   <Включен режим справочной>  ")
+                print("   <Включен режим справочной>\n")
         else:
             print(ConsoleTipForText)
         print(message)
         if neutral != "Очист." and neutral != "+1":
             print("[0] %s" % neutral)
-
         #    print("\n[+1] Добавить новую квартиру.\n[+1-50] Добавить диапазон квартир\n")
         if default!="":
             print(DefaultText % default)
@@ -97,16 +133,16 @@ def dialogText(title="",
             result = ""
         return result
 
-    elif io2.Mode == "sl4a" and io2.settings[0][1]==False:
+    elif io2.Mode == "sl4a" and (io2.settings[0][1]==False or GridMode==1):
         while 1:
             phone.dialogCreateInput(title, message, default)
-            if positive!=None:
+            if positive != None:
                 phone.dialogSetPositiveButtonText(positive)
             if negative != None:
                 phone.dialogSetNegativeButtonText(negative)
-            if autoplus==True:
-                neutral="+1"
-            if neutral!=None:
+            #if autoplus==True:
+            #    neutral="+1"
+            if neutral != None:
                 phone.dialogSetNeutralButtonText(neutral)
             phone.dialogShow()
             resp = phone.dialogGetResponse()[1]
@@ -141,6 +177,8 @@ def dialogText(title="",
                 msg=message,
                 title=title,
                 default=default,
+                height=height,
+                mono=mono,
                 neutral=neutral
             )
         else:
@@ -240,6 +278,7 @@ def dialogList(
             if positive=="OK":
                 positive=None # чтобы на Windows не было двух кнопок ОК
             choice = choicebox(
+                form=form,
                 msg=message,
                 title=title,
                 choices=options,
@@ -250,9 +289,15 @@ def dialogList(
             )
             if choice==None:
                 return None
-            elif choice=="positive" or choice=="neutral" or choice=="settings"\
-                    or choice=="report" or choice=="file" or choice=="notebook"\
-                    or choice=="phone" or choice=="exit":
+            if "[search]" in choice:
+                from homepage import search
+                search(choice[8:])
+                return "x"
+
+            elif choice=="positive" or choice=="neutral" or choice=="settings" or choice=="about"\
+                    or choice=="report" or choice=="file" or choice=="notebook" or choice=="contacts"\
+                    or choice=="phone" or choice=="exit" or choice=="home" or choice=="statistics"\
+                    or choice=="timer" or choice=="serviceyear" or choice=="serviceyear":
                 return choice
             else:
                 for i in range(len(options)):
@@ -368,7 +413,7 @@ def dialogRadio(
                 msg=message,
                 choices=options,
                 preselect=selected,
-                positive=positive,
+                positive=None,
                 neutral=neutral,
                 negative=negative)
 
@@ -629,7 +674,7 @@ def dialogNotify(title="Rocket Ministry", message=""):
             toast.show_toast(
                 title,
                 message,
-                duration=30,
+                duration=5,
                 icon_path="icon.ico",
                 threaded=True
             )
@@ -697,7 +742,7 @@ def dialogGetPassword(title="Пароль", message="Введите пароль
             return None
 
 def clearScreen():
-    if io2.Mode == "text" or io2.settings[0][1] == 1:
+    if 1:#io2.Mode == "text" or io2.settings[0][1] == 1:
         if os.name!="posix":
             clear = lambda: os.system('cls')
         else:
