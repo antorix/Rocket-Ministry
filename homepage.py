@@ -268,7 +268,7 @@ def homepage():
         if io2.Mode == "sl4a":
             dialogs.clearScreen()
             io2.consoleReturn(pause=False)
-        elif io2.Mode == "easygui":
+        elif io2.Mode == "easygui" and settings[0][1]==0:
             territory.terView()
 
         # Run home screen
