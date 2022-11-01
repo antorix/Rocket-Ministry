@@ -418,7 +418,7 @@ def backupRestore(restore=False, delete=False, silent=False):
         from dialogs import dialogList
         from icons import icon
         choice2 = dialogList(
-            title=icon("restore") + " Выберите копию:",
+            title=icon("restore") + " Выберите резервную копию:",
             message="Выберите дату и время резервной копии базы данных, которую нужно восстановить:",
             options=fileDates,
             form="restore"
