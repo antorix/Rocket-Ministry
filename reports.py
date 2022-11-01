@@ -802,7 +802,7 @@ def report(choice="", stop=False, newMonthDetected=False, disableNotification=Fa
         report.clear(rolloverHours, rolloverCredit)
         report.reminder=1 # включить напоминание сдать отчет
         report.saveReport(mute=True)
-        dialogs.dialogNotify("Начался новый месяц, не забудьте сдать отчет!")
+        io2.log("Начался новый месяц, не забудьте сдать отчет!")
         stop=True
 
     if disableNotification==True:
