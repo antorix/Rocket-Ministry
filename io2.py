@@ -92,13 +92,40 @@ def log(message):
     LastSystemMessage[0] += message + "\n"
     LastSystemMessage[1] = 0
 
-def clearDB():
+def clearDB(silent=True):
     """ Очистка базы данных """
+
+    answer=False
+    if silent==False:
+        answer = dialogs.dialogConfirm(
+            title=icon("clear") + " Очистка",
+            message="Все пользовательские данные будут полностью удалены, включая все резервные копии! Вы уверены, что это нужно сделать?"
+        )
+        print(answer)
+        if answer != True:
+            log("Очистка отменена") # пользователь отменил
+            return
+
     houses.clear()
     settings.clear()
     resources.clear()
     settings[:] = initializeDB()[1][:]
     resources[:] = initializeDB()[2][:]
+
+    if answer==True:
+        removeFiles()
+        log("База данных очищена!")
+        save()
+
+def wipe():
+    if dialogs.dialogConfirm(
+            title=icon("clear") + " Очистка",
+            message="Все пользовательские данные будут полностью удалены, включая все резервные копии! Вы уверены, что это нужно сделать?"
+    ) == True:
+        clearDB()
+        removeFiles()
+        log("База данных очищена!")
+        save()
 
 def removeFiles(totalDestruction=False):
     """ Удаление базы данных и резервной папки"""
@@ -190,6 +217,7 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
             from dialogs import dialogFileOpen
             dataFile = dialogFileOpen(title = icon("download") + " Выберите файл:")
             if dataFile==None:
+                log("Импорт отменен")
                 return
             try:
                 with open(dataFile, "r") as file:
@@ -209,6 +237,7 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
                 from dialogs import dialogFileOpen
                 dataFile = dialogFileOpen()
                 if dataFile==".":
+                    log("Импорт отменен")
                     return
             else:
                 print("Загружаем из настроек, кэп")
@@ -364,7 +393,7 @@ def share(silent=False):
     try:
         copy("data.jsn", targetFolder)
     except:
-        log("Не удалось скопировать файл!")
+        log("Экспорт отменен")
     else:
         log("Файл успешно экспортирован в %s" % targetFolder)
 
@@ -396,6 +425,7 @@ def backupRestore(restore=False, delete=False, silent=False):
         )  # choose file
 
         if choice2 == None:
+            log("Восстановление отменено")
             return
         elif choice2 == "":
             if settings[0][1] == True:

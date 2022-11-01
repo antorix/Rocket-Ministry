@@ -336,8 +336,8 @@ def fileActions():
 
         options = [
             icon("download") + " Импорт из файла",
-            icon("restore") + " Восстановление резервной копии",
             icon("export") + " Экспорт",
+            icon("restore") + " Восстановление",
             icon("clear") + " Очистка"
         ]
 
@@ -393,14 +393,8 @@ def fileActions():
             io2.backupRestore(restore=True)
 
         elif "Очистка" in result:
-            if dialogs.dialogConfirm(
-                title=icon("clear") + " Очистка",
-                message="Все пользовательские данные будут полностью удалены, включая все резервные копии! Вы уверены, что это нужно сделать?"
-            )==True:
-                io2.clearDB()
-                io2.removeFiles()
-                io2.log("База данных очищена!")
-                io2.save()
+            io2.clearDB(silent=False)
+
         elif "Самоуничтожение" in result:
             if dialogs.dialogConfirm(
                 title = icon("explosion") + " Самоуничтожение",
@@ -1046,6 +1040,14 @@ def menuProcess(choice):
     elif choice=="serviceyear":
         serviceYear()
         result = True
+    elif choice == "import":
+        io2.load(dataFile=None, forced=True, delete=True)
+    elif choice == "export":
+        io2.share()
+    elif choice == "restore":
+        io2.backupRestore(restore=True)
+    elif choice == "wipe":
+        io2.clearDB(silent=False)
     elif choice=="exit":
         sys.exit(0)
     return result

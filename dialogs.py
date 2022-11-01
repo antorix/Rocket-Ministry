@@ -74,6 +74,10 @@ elif io2.Mode=="easygui":
         , "statistics.png"   # 23
         , "calendar.png"     # 24
         , "log.png"          # 25
+        , "export.png"       # 26
+        , "import.png"       # 27
+        , "restore.png"      # 28
+        , "clear.png"        # 29
     ]
 
     try:
@@ -303,7 +307,8 @@ def dialogList(
             elif choice=="positive" or choice=="neutral" or choice=="settings" or choice=="about"\
                     or choice=="report" or choice=="file" or choice=="notebook" or choice=="contacts"\
                     or choice=="phone" or choice=="exit" or choice=="home" or choice=="statistics"\
-                    or choice=="timer" or choice=="serviceyear" or choice=="serviceyear":
+                    or choice=="timer" or choice=="serviceyear" or choice=="serviceyear"\
+                    or choice=="import" or choice=="export" or choice=="wipe" or choice=="restore":
                 return choice
             else:
                 for i in range(len(options)):

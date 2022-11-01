@@ -92,6 +92,7 @@ def houseSettings(selectedHouse):
                     for int in interest:
                         flat = house.porches[int[0]].flats[int[1]]
                         flat.clone(toStandalone=True, title=house.title)
+                io2.log("Участок %s удален" % houses[selectedHouse].title)
                 del houses[selectedHouse]
                 io2.save()
                 return "deleted"

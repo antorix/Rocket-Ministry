@@ -1495,19 +1495,29 @@ class GUItk3(object):
         self.callback(self, command="notebook", choices="notebook")
     def menuAbout(self):
         self.callback(self, command="about", choices="about")
+    def fileImport(self):
+        self.callback(self, command="import", choices="import")
+    def fileRestore(self):
+        self.callback(self, command="restore", choices="restore")
+    def fileExport(self):
+        self.callback(self, command="export", choices="export")
+    def fileWipe(self):
+        self.callback(self, command="wipe", choices="wipe")
 
     def config_menu(self):
-        self.menu = tk.Menu(self.boxRoot)
+        self.menu = tk.Menu(self.boxRoot, tearoff=0)
         self.boxRoot.config(menu=self.menu)
-        self.filemenu = tk.Menu(self.menu)
-        #self.menu.add_cascade(label="Файл", menu=self.filemenu)
-        self.menu.add_command(label="Файл", command=self.menuFile)
+        self.filemenu = tk.Menu(self.menu, tearoff=0)
+        self.menu.add_cascade(label="Файл", menu=self.filemenu)
+        #self.menu.add_command(label="Файл", command=self.menuFile)
         self.menu.add_command(label="Настройки", command=self.menuSettings)
         self.menu.add_command(label="Отчет", command=self.menuReport)
         self.menu.add_command(label="Блокнот", command=self.menuNotebook)
         self.menu.add_command(label="О программе", command=self.menuAbout)
-        #self.menu.add_command(label="Телефон", command=menuPhone)
-        #self.filemenu.add_command(label="Экспорт", command=menuExport)
+        self.filemenu.add_command(label="Импорт", compound="left", image=self.img[27], command=self.fileImport)
+        self.filemenu.add_command(label="Экспорт", compound="left", image=self.img[26], command=self.fileExport)
+        self.filemenu.add_command(label="Восстановление", compound="left", image=self.img[28], command=self.fileRestore)
+        self.filemenu.add_command(label="Очистка", compound="left", image=self.img[29], command=self.fileWipe)
         #self.filemenu.add_separator()
         #self.filemenu.add_command(label="Exit", command=self.root.quit)
 
