@@ -470,7 +470,10 @@ class Report():
                     message="Примечание для себя и для отчета:",
                     default=self.note
                 )
-                if choice2==None or "cancelled!" in choice2:
+                if choice2 == None:
+                    self.note = ""
+                    self.saveReport(self.note, mute=True)
+                elif "cancelled!" in choice2:
                     continue
                 else:
                     self.note = choice2.strip()
@@ -505,7 +508,7 @@ class Report():
                 except IOError:
                     io2.log("Экспорт отчета не удался!")
                 else:
-                    io2.consoleReturn()
+                    io2.consoleReturn(pause=True)
 
             else:
                 from tkinter import Tk

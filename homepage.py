@@ -468,7 +468,7 @@ def preferences():
         options.append(status(settings[0][1])  + "Консольный режим")
 
         if io2.Simplified == 0:
-            options.append(status(territory.GridMode) + "Классический вид подъезда")
+            options.append(status(territory.GridMode) + "Консольный вид подъезда")
 
         # settings[0][4] - занято под сортировку контактов!
         # settings[0][19] - занято под сортировку участков!
@@ -624,11 +624,13 @@ def preferences():
             )
             if choice2 != None:
                 settings[0][17] = choice2.strip()
+                io2.log("Пароль установлен")
             else:
                 settings[0][17] = ""
+                io2.log("Пароль не установлен")
             io2.save()
 
-        elif "Классический вид" in result:
+        elif "Консольный вид" in result:
             territory.GridMode = toggle(territory.GridMode)
 
     if exit == 1:
