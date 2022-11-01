@@ -101,9 +101,7 @@ def clearDB(silent=True):
             title=icon("clear") + " Очистка",
             message="Все пользовательские данные будут полностью удалены, включая все резервные копии! Вы уверены, что это нужно сделать?"
         )
-        print(answer)
         if answer != True:
-            log("Очистка отменена") # пользователь отменил
             return
 
     houses.clear()
@@ -390,12 +388,13 @@ def share(silent=False):
         except:
             log("Не удалось получить путь экспорта, проверьте файл export.ini")
 
-    try:
-        copy("data.jsn", targetFolder)
-    except:
-        log("Экспорт отменен")
-    else:
-        log("Файл успешно экспортирован в %s" % targetFolder)
+    if Mode != "sl4a":
+        try:
+            copy("data.jsn", targetFolder)
+        except:
+            log("Экспорт отменен")
+        else:
+            log("Файл успешно экспортирован в %s" % targetFolder)
 
 def backupRestore(restore=False, delete=False, silent=False):
     """ Восстановление файла из резервной копии """
