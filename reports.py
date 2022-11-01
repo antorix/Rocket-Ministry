@@ -509,14 +509,18 @@ class Report():
                     io2.log("Экспорт отчета не удался!")
                 else:
                     io2.consoleReturn(pause=True)
-
             else:
-                from tkinter import Tk
-                r = Tk()
-                r.withdraw()
-                r.clipboard_clear()
-                r.clipboard_append(self.lastMonth)
-                r.destroy()
+                try:
+                    from tkinter import Tk
+                    r = Tk()
+                    r.withdraw()
+                    r.clipboard_clear()
+                    r.clipboard_append(self.lastMonth)
+                    r.destroy()
+                except:
+                    io2.log("Не удалось скопировать отчет в буфер обмена")
+                else:
+                    io2.log("Отчет скопирован в буфер обмена")
 
 def updateTimer(startTime):
     """ Returns current endTime to anyone """
@@ -844,6 +848,7 @@ def toggleTimer():
                     icon("timer") + " Служение",
                     icon("credit") + " Кредит"
                 ],
+                selected=1,
                 negative="Отмена"
             )
             if choice2 == 0:
