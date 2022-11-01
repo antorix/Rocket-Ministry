@@ -940,6 +940,9 @@ def serviceYear(count=False):
                 monthNum = choice - 3
             if settings[4][choice]!=None:
                 options2 = [icon("edit") + " Править ", icon("cut") + " Очистить "]
+                if io2.Mode == "easygui" and settings[0][1] == 0:  # убираем иконки на ПК
+                    for i in range(len(options2)):
+                        options2[i] = options2[i][2:]
                 choice2 = dialogs.dialogList(
                     title=icon("report") + " %s" % reports.monthName(monthNum=monthNum)[0],
                     options=options2,
