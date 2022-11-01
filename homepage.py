@@ -119,6 +119,7 @@ def homepage():
                 reports.report(newMonthDetected=True)
                 settings[3] = time.strftime("%b", time.localtime())
                 settings[2][11] = 1
+                io2.save()
 
             if settings[2][11] == 1:
                 print("Проверяем сдачу отчета")
