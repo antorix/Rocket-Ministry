@@ -71,7 +71,7 @@ import urllib.request
 from copy import deepcopy
 from house_op import addHouse
 from icons import icon
-from shutil import move, rmtree
+from shutil import move, rmtree, copy
 
 LastTimeDidChecks = LastTimeBackedUp = int(time.strftime("%H", time.localtime())) * 3600 \
                 + int(time.strftime("%M", time.localtime())) * 60 \
@@ -350,9 +350,16 @@ def share():
             log("Не удалось отправить базу!")
         else:
             consoleReturn(pause=True)
+    elif Mode == "easygui":
+        targetFolder = tkinter.filedialog.askdirectory(title="Выберите папку для записи файла базы данных data.jsn:")
     else:
-        from webbrowser import open
-        open("data.jsn")
+        targetFolder = input("Введите путь к папке, в которую будет записан файл базы данных data.jsn:\n")
+    try:
+        copy("data.jsn", targetFolder)
+    except:
+        log("Не удалось скопировать файл!")
+    else:
+        log("Файл успешно экспортирован в %s" % targetFolder)
 
 def backupRestore(restore=False, delete=False, silent=False):
     """ Восстановление файла из резервной копии """
