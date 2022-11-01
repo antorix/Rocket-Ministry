@@ -521,6 +521,10 @@ def findFlatByNumber(house, porch, number, onlyGetNumber=False):
         else:
             noteForConsole=""
 
+        if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
+            for i in range(len(options)):
+                options[i] = options[i][2:]
+
         if set.PhoneMode==False or flat.phone!="":
             choice = dialogs.dialogList(
                 title="%s ⇨ первое посещение %s" % (flat.number, noteForConsole),
@@ -587,16 +591,20 @@ def findFlatByNumber(house, porch, number, onlyGetNumber=False):
                         flat.status = "1"
                         io2.save()
                     else:
-                        choices = dialogs.dialogChecklist(
-                        title="%s Что еще сделать?" % icon("mic", simplified=False),
-                        message="Что сделать после посещения?",
-                        options=[
+                        options = [
                             icon("interest") + " Установить статус «интерес» ",
                             icon("placements") + " Добавить публикацию",
                             icon("video") + " Добавить видео",
                             icon("phone") + " Записать телефон",
                             icon("appointment") + " Назначить встречу"
-                        ],
+                        ]
+                        if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
+                            for i in range(len(options)):
+                                options[i] = options[i][2:]
+                        choices = dialogs.dialogChecklist(
+                        title="%s Что еще сделать?" % icon("mic", simplified=False),
+                        message="Что сделать после посещения?",
+                        options=options,
                         selected = [0, 0, 0, 0, 0],
                         negative=None
                     )

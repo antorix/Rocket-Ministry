@@ -84,6 +84,8 @@ def getButton(text="", img=[]):#123
         image = img[18]
     elif "Журнал" in text:
         image = img[25]
+    elif "Справка" in text:
+        image = img[30]
     else:
         text2 = text
 
@@ -175,7 +177,7 @@ def getFileDialogTitle(msg, title):
 
 
 def textbox(msg="", title=" ", text="",
-            codebox=False, callback=None, run=True, positive=None, neutral=None, negative=None):
+            codebox=False, callback=None, run=True, mono=False, positive=None, neutral=None, negative=None):
     """ Display a message and a text to edit
 
     Parameters
@@ -202,7 +204,7 @@ def textbox(msg="", title=" ", text="",
 
     """
 
-    tb = TextBox(msg=msg, title=title, text=text,
+    tb = TextBox(msg=msg, title=title, text=text, mono=mono,
                  codebox=codebox, callback=callback, positive=positive, neutral=neutral, negative=negative)
     if not run:
         return tb
@@ -222,7 +224,7 @@ class TextBox(object):
     library can be used (wx, qt) without breaking anything for the user.
     """
 
-    def __init__(self, msg, title, text, codebox, callback, positive, neutral, negative):
+    def __init__(self, msg, title, text, codebox, callback, mono, positive, neutral, negative):
         """ Create box object
 
         Parameters
@@ -247,7 +249,7 @@ class TextBox(object):
         self.neutral = neutral
         self.negative = negative
         self.callback = callback
-        self.ui = GUItk(msg, title, text, codebox, self.callback_ui, positive=positive, neutral=neutral, negative=negative)
+        self.ui = GUItk(msg, title, text, codebox, self.callback_ui, mono, positive=positive, neutral=neutral, negative=negative)
         self.text = text
 
         #self.padx = self.pady = 5
@@ -335,7 +337,7 @@ class GUItk(object):
 
     """ This is the object that contains the tk root object"""
 
-    def __init__(self, msg, title, text, codebox, callback, positive, neutral, negative):
+    def __init__(self, msg, title, text, codebox, callback, mono, positive, neutral, negative):
 
         """ Create ui object
 
@@ -373,6 +375,8 @@ class GUItk(object):
         self.ipady = 5
 
         self.ipadx = 5
+
+        self.mono = mono
 
         self.boxRoot = tk.Tk()
 
@@ -569,9 +573,14 @@ class GUItk(object):
         )
 
         self.textArea.configure(wrap=tk.WORD)
-        self.textArea.configure(
-            font=(dialogs.MONOSPACE_FONT_FAMILY, dialogs.MONOSPACE_FONT_SIZE)
-        )
+        if self.mono == True:
+            self.textArea.configure(
+                font=(dialogs.MONOSPACE_FONT_FAMILY, dialogs.MONOSPACE_FONT_SIZE)
+            )
+        else:
+            self.textArea.configure(
+                font=(dialogs.PROPORTIONAL_FONT_FAMILY, dialogs.PROPORTIONAL_FONT_SIZE)
+            )
 
         # some simple keybindings for scrolling
         self.boxRoot.bind("<Next>", self.textArea.yview_scroll(1, tk.PAGES))
@@ -1851,9 +1860,13 @@ class GUItk3(object):
         self.choiceboxWidget = tk.Listbox(self.choiceboxFrame,
                                           height=500,
                                           borderwidth="2m", relief="flat",
-                                          bg="white",
-                                          font=(dialogs.MONOSPACE_FONT_FAMILY, dialogs.MONOSPACE_FONT_SIZE)
+                                          bg="white"
         )
+
+        if 1:#self.form == "porchViewGUIList" or self.form == "porchViewGUIOneFloor" or self.form == "porchText":
+            self.choiceboxWidget.config( font = (dialogs.MONOSPACE_FONT_FAMILY, dialogs.MONOSPACE_FONT_SIZE) )
+        else:
+            self.choiceboxWidget.config(font=(dialogs.PROPORTIONAL_FONT_FAMILY, dialogs.PROPORTIONAL_FONT_SIZE))
 
         for choice in self.choices:
             self.choiceboxWidget.insert(tk.END, choice)
@@ -2077,7 +2090,8 @@ def __fillablebox(msg, title="", default="", mask=None, root=None, mono=False, h
 
     # ------------------ neutral button -------------------------------
     if neutral!=None:
-        nButton = ttk.Button(buttonsFrame, takefocus=1, compound="left", text=neutral)#getButton(neutral, img)[0], image=getButton(neutral, img)[1])
+        nButton = ttk.Button(buttonsFrame, takefocus=1, compound="left",
+                             text=getButton(neutral, img)[0], image=getButton(neutral, img)[1])
 
         if neutral!=None and neutral!="Очист.":
             #nButton.grid(column=1, row=0, padx='3m', pady='3m', ipadx='2m', ipady='1m')

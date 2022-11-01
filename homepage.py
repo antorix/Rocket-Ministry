@@ -710,6 +710,7 @@ def stats():
 
     dialogs.dialogInfo(
         largeText=True,
+        mono=False,
         title=icon("stats") + " Статистика " + reports.getTimerIcon(settings[2][6]),
         message=message
     )

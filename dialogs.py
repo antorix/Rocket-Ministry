@@ -27,12 +27,15 @@ elif io2.Mode=="easygui":
     window_position = ""
 
     PROPORTIONAL_FONT_FAMILY = ("Calibri", "Arial", "MS", "Sans", "Serif")
-    try:
-        MONOSPACE_FONT_FAMILY = "Liberation Mono"  # "DejaVu Sans Mono", "Cousine", "Lucida Console", "PT Mono", "Fira Mono", "Ubuntu Mono", "Courier New"
-    except:
-        MONOSPACE_FONT_FAMILY = ""
 
-    PROPORTIONAL_FONT_SIZE = MONOSPACE_FONT_SIZE = TEXT_ENTRY_FONT_SIZE = 11
+    try:
+        MONOSPACE_FONT_FAMILY = ("Liberation Mono")#, "DejaVu Sans Mono", "Cousine", "Lucida Console", "PT Mono", "Fira Mono", "Ubuntu Mono", "Courier New")
+    except:
+        MONOSPACE_FONT_FAMILY = PROPORTIONAL_FONT_FAMILY
+
+    PROPORTIONAL_FONT_SIZE = 11
+
+    MONOSPACE_FONT_SIZE = TEXT_ENTRY_FONT_SIZE = 11
 
     STANDARD_SELECTION_EVENTS = ["Return", "Button-1", "space"]
 
@@ -42,8 +45,6 @@ elif io2.Mode=="easygui":
     default_hpad_in_chars = 40
 
     inactive_background = "grey95"
-
-    #from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
 
     # База картинок
 
@@ -78,7 +79,10 @@ elif io2.Mode=="easygui":
         , "import.png"       # 27
         , "restore.png"      # 28
         , "clear.png"        # 29
+        , "info.png"         # 30
     ]
+
+    #from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
 
     try:
         from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
@@ -504,7 +508,7 @@ def dialogAlert(title="Внимание!", message="", positive="OK", neutral=No
             #tkinter.messagebox.showinfo(title, message)
             msgbox(title=title, msg=message, positive=positive, neutral=neutral, negative=negative)
 
-def dialogInfo(title="", message="", largeText=False,
+def dialogInfo(title="", message="", largeText=False,   mono=False,
                positive=None,       negative="Назад",    neutral=None):
     """ Help dialog """
 
@@ -566,6 +570,7 @@ def dialogInfo(title="", message="", largeText=False,
                     msg=message,
                     title=title,
                     text=message,
+                    mono=mono,
                     positive=positive,
                     neutral=neutral,
                     negative=negative

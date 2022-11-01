@@ -203,7 +203,7 @@ def icon(myIcon, forceText=False, simplified=True):
         elif myIcon=="mail": return "@"
         elif myIcon=="download": return "▼"
         elif myIcon=="export": return "▲"
-        elif myIcon=="edit": return "✶"
+        elif myIcon=="edit": return "*" #✶
         elif myIcon=="extra": return "☺"
         elif myIcon=="extra2": return "↑"
         elif myIcon=="slippage":
@@ -229,10 +229,10 @@ def icon(myIcon, forceText=False, simplified=True):
         elif myIcon=="restore": return "↑"
         elif myIcon=="help": return "?"
         elif myIcon=="info": return "i"
-        elif myIcon=="house": return "⌂"
-        elif myIcon=="cottage": return "⌂"
-        elif myIcon=="office": return "⌂"
-        elif myIcon=="porch": return "⌂"  # small house
+        elif myIcon=="house": return "▫"#□
+        elif myIcon=="cottage": return "▫"
+        elif myIcon=="office": return "▫"
+        elif myIcon=="porch": return "▫"  # small house
         elif myIcon=="door": return "⌂" # the same as porch
         elif myIcon=="baloon": return "«" # quote
         elif myIcon=="date": return "√"
@@ -240,7 +240,7 @@ def icon(myIcon, forceText=False, simplified=True):
         elif myIcon=="lamp": return "☼"
         elif myIcon=="bullet": return "◦"
         elif myIcon=="arrow": return "↑"
-        elif myIcon=="star": return "✶"
+        elif myIcon=="star": return "*" #✶
         elif myIcon=="search": return "?"
         elif myIcon=="flag": return "╒" # the same as porch
         elif myIcon=="calc": return "▪"
@@ -257,7 +257,7 @@ def icon(myIcon, forceText=False, simplified=True):
             else:
                 return "≈"#«
         elif myIcon=="intercom": return "◘"
-        elif myIcon=="prevmonth": return "←"
+        elif myIcon=="prevmonth": return "←"#
         elif myIcon=="up": return "↑"
         elif myIcon=="down": return "↓"
         elif myIcon=="phone": return "§"#
