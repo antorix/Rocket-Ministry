@@ -434,7 +434,8 @@ def update(forced=False):
         "fileopen_box.py",
         "fillable_box.py",
         "text_box.py",
-        "utils.py"
+        "utils.py",
+        "easygui_mod.py"
     ]
     for file in filesToDelete:
         print("Удаляем ненужный файл предыдущей версии")

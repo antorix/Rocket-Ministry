@@ -80,10 +80,11 @@ elif io2.Mode=="easygui":
         from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
     except: # нет desktop - старая версия, догружаем
         from tkinter import messagebox
-        messagebox.showerror(title="Rocket Ministry", message="Ошибка импорта графической библиотеки в файле dialogs, работа приложения прекращена. Обратитесь в техподдержку.")
-        from sys import exit
-        exit(0)
-        import urllib.request
+        if io2.Simplified==0:
+            messagebox.showerror(title="Rocket Ministry", message="Ошибка импорта графической библиотеки в файле dialogs, работа приложения прекращена. Обратитесь в техподдержку.")
+            from sys import exit
+            exit(0)
+        import urllib.rrequest
         urllib.request.urlretrieve(
             "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/desktop.py",
             "desktop.py"
