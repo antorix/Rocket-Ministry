@@ -229,9 +229,9 @@ def icon(myIcon, forceText=False, simplified=True):
         elif myIcon=="restore": return "↑"
         elif myIcon=="help": return "?"
         elif myIcon=="info": return "i"
-        elif myIcon=="house": return "▓"
-        elif myIcon=="cottage": return "▒"
-        elif myIcon=="office": return "░"
+        elif myIcon=="house": return "⌂"
+        elif myIcon=="cottage": return "⌂"
+        elif myIcon=="office": return "⌂"
         elif myIcon=="porch": return "⌂"  # small house
         elif myIcon=="door": return "⌂" # the same as porch
         elif myIcon=="baloon": return "«" # quote
@@ -261,7 +261,7 @@ def icon(myIcon, forceText=False, simplified=True):
         elif myIcon=="up": return "↑"
         elif myIcon=="down": return "↓"
         elif myIcon=="phone": return "§"#
-        elif myIcon=="phone2": return "▲"#◊
+        elif myIcon=="phone2": return "⌂"#◊
         elif myIcon=="phone3": return "т."
         elif myIcon=="phone4": return "§"
         elif myIcon=="warning": return "⚠"

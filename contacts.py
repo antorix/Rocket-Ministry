@@ -238,10 +238,6 @@ def showContacts():
                 )
             )
 
-        if io2.Mode == "easygui" and settings[0][1] == 0:  # убираем иконки на ПК
-            for i in range(len(options)):
-                options[i] = options[i][2:]
-
         if len(options) == 0:
             options.append("Здесь будут отображаться жильцы со всех участков и отдельные контакты, созданные вами")
 
