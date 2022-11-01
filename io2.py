@@ -246,7 +246,6 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
                         os.remove(AndroidDownloadPath + dataFile)
                     elif os.path.exists(AndroidDownloadPath + dataFile+".txt"):
                         os.remove(AndroidDownloadPath + dataFile+".txt")
-
     else:
         dialogAlert(title="Загрузка базы данных", message="Файл базы данных поврежден, создаю новый.")
         clearDB()
@@ -336,24 +335,32 @@ def save(forced=False, silent=True, forcedBackup=False):
         if silent == False:
             log("База успешно сохранена")
 
-def share():
+def share(silent=False):
     """ Sharing database """
 
     output = getOutput()
 
     buffer = json.dumps(output)
 
-    if Mode == "sl4a": # Sharing to cloud if on Android
-        try:
-            phone.sendEmail("Введите email","data.jsn",buffer,attachmentUri=None)
-        except IOError:
-            log("Не удалось отправить базу!")
+    if silent==False: # путь неизвестен, указываем
+        if Mode == "sl4a": # Sharing to cloud if on Android
+            try:
+                phone.sendEmail("Введите email","data.jsn",buffer,attachmentUri=None)
+            except IOError:
+                log("Не удалось отправить базу!")
+            else:
+                consoleReturn(pause=True)
+        elif Mode == "easygui":
+            targetFolder = tkinter.filedialog.askdirectory(title="Выберите папку для записи файла базы данных data.jsn:")
         else:
-            consoleReturn(pause=True)
-    elif Mode == "easygui":
-        targetFolder = tkinter.filedialog.askdirectory(title="Выберите папку для записи файла базы данных data.jsn:")
-    else:
-        targetFolder = input("Введите путь к папке, в которую будет записан файл базы данных data.jsn:\n")
+            targetFolder = input("Введите путь к папке, в которую будет записан файл базы данных data.jsn:\n")
+    else: # выполняется из консоли, путь прописан в файле export.ini
+        try:
+            with open("export.ini", mode="r") as f:
+                targetFolder = f.read()
+        except:
+            log("Не удалось получить путь экспорта, проверьте файл export.ini")
+
     try:
         copy("data.jsn", targetFolder)
     except:

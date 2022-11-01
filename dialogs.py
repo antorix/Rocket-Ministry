@@ -293,9 +293,12 @@ def dialogList(
             if choice==None:
                 return None
             if "[search]" in choice:
-                from homepage import search
-                search(choice[8:])
-                return "x"
+                if console.process(choice[8:]) == True:
+                    return "x"
+                else:
+                    from homepage import search
+                    search(choice[8:])
+                    return "x"
 
             elif choice=="positive" or choice=="neutral" or choice=="settings" or choice=="about"\
                     or choice=="report" or choice=="file" or choice=="notebook" or choice=="contacts"\

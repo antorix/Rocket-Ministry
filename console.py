@@ -86,7 +86,7 @@ def process(input):
         success = True
         
     if "export" in input[:6] or "^" in input[0]: # export/share
-        io2.share()
+        io2.share(silent=True)
         success = True
     
     if "set" in input[:3] or "~" in input[0]: # settings
