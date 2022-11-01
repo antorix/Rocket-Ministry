@@ -229,10 +229,10 @@ def icon(myIcon, forceText=False, simplified=True):
         elif myIcon=="restore": return "↑"
         elif myIcon=="help": return "?"
         elif myIcon=="info": return "i"
-        elif myIcon=="house": return "▫"#□
-        elif myIcon=="cottage": return "▫"
-        elif myIcon=="office": return "▫"
-        elif myIcon=="porch": return "▫"  # small house
+        elif myIcon=="house": return "⌂"#□
+        elif myIcon=="cottage": return "⌂"
+        elif myIcon=="office": return "⌂"
+        elif myIcon=="porch": return "⌂"  # small house
         elif myIcon=="door": return "⌂" # the same as porch
         elif myIcon=="baloon": return "«" # quote
         elif myIcon=="date": return "√"
@@ -240,7 +240,7 @@ def icon(myIcon, forceText=False, simplified=True):
         elif myIcon=="lamp": return "☼"
         elif myIcon=="bullet": return "◦"
         elif myIcon=="arrow": return "↑"
-        elif myIcon=="star": return "*" #✶
+        elif myIcon=="star": return "✶" #✶*
         elif myIcon=="search": return "?"
         elif myIcon=="flag": return "╒" # the same as porch
         elif myIcon=="calc": return "▪"
