@@ -75,7 +75,7 @@ elif io2.Mode=="easygui":
         , "calendar.png"     # 24
         , "log.png"          # 25
     ]
-    
+
     try:
         from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
     except: # нет desktop - старая версия, догружаем
@@ -84,7 +84,7 @@ elif io2.Mode=="easygui":
             "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/desktop.py",
             "desktop.py"
         )
-        from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox  
+        from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
 
 def dialogText(title="",
                 message="",
@@ -149,7 +149,7 @@ def dialogText(title="",
                 return None
             elif "canceled" in resp and resp["value"]!="":
                 default=resp["value"]
-                continue            
+                continue
             elif "canceled" in resp and resp["value"]!="":
                 return "cancelled!" + resp["value"]
             elif neutral=="Очист." and "neutral" in resp["which"]:
@@ -206,7 +206,7 @@ def dialogList(
         selected=0,
         form=""):
     """ List """
-    
+
     if io2.Mode=="sl4a" and io2.settings[0][1]==False:# and form!="home":
         phone.dialogCreateAlert(title, message)
         phone.dialogSetItems(options)
@@ -230,7 +230,7 @@ def dialogList(
             return None
         else:
             return ""
-        
+
     else:
         if io2.Mode=="text" or io2.settings[0][1]==True:
             clearScreen()
@@ -451,7 +451,7 @@ def dialogConfirm(title="", message="", positive="Да", neutral=None, negative=
                 return True
             else:
                 return False
-        
+
         else:
             result = msgbox(title=title, msg=message, positive=positive, neutral=neutral, negative=negative)
 
@@ -461,10 +461,10 @@ def dialogConfirm(title="", message="", positive="Да", neutral=None, negative=
             return "neutral"
         else:
             return False
-        
+
 def dialogAlert(title="Внимание!", message="", positive="OK", neutral=None, negative=None):
     """ Simple information windows """
-    
+
     if io2.Mode=="sl4a" and io2.settings[0][1]==False:
         phone.dialogCreateAlert(title, message)
         if positive != None:
@@ -490,11 +490,11 @@ def dialogAlert(title="Внимание!", message="", positive="OK", neutral=No
         else:
             #tkinter.messagebox.showinfo(title, message)
             msgbox(title=title, msg=message, positive=positive, neutral=neutral, negative=negative)
-        
+
 def dialogInfo(title="", message="", largeText=False,
                positive=None,       negative="Назад",    neutral=None):
     """ Help dialog """
-    
+
     if io2.Mode=="sl4a" and io2.settings[0][1]==False:
         phone.dialogCreateAlert(title, message)
         if positive!=None:
@@ -635,7 +635,7 @@ def dialogPickDate(
         if "positive" in response["which"]:
             return "%s-%02d-%02d" % (str(response["year"]), response["month"], response["day"])
         else: return None
-        
+
     else:
         default = "%04d-%02d-%02d" % (int(year), int(month), int(day))
         if io2.settings[0][1]==True or io2.Mode=="text":
@@ -654,7 +654,7 @@ def dialogPickDate(
                 title = title,
                 default=default
             )
-        
+
         if house_op.shortenDate(response)!=None:
             return response.strip()
         else:
