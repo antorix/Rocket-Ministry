@@ -430,58 +430,58 @@ def update(forced=False):
         choice = dialogs.dialogConfirm(title, "Найдена новая версия %s! Установить?" % newVersion)
         if choice==True:
             print("Скачиваем…")
-            #try:
-            if Mode=="sl4a":
-                urls = ["https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/console.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/contacts.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/dialogs.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/homepage.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_cl.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_op.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/icons.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/io2.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/main.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/notebook.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/reports.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/set.py",
-                        "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/territory.py"
-                ]
-                for url in urls:
-                    urllib.request.urlretrieve(url, UserPath + url[url.index("master/") + 7:])
-            else:
-                file = "files.zip"
-                urllib.request.urlretrieve(
-                    "https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip",
-                    file
-                )
-                from zipfile import ZipFile
-                zip = ZipFile(file, "r")
-                zip.extractall("")
-                zip.close()
-                downloadedFolder = "Rocket-Ministry-master"
-                for file_name in os.listdir(downloadedFolder):
-                    source = downloadedFolder + "/" + file_name
-                    destination = file_name
-                    if os.path.isfile(source):
-                        move(source, destination)
-                os.remove(file)
-                rmtree(downloadedFolder)
+            try:
+                if Mode=="sl4a":
+                    urls = ["https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/console.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/contacts.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/dialogs.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/homepage.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_cl.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_op.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/icons.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/io2.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/main.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/notebook.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/reports.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/set.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/territory.py"
+                    ]
+                    for url in urls:
+                        urllib.request.urlretrieve(url, UserPath + url[url.index("master/") + 7:])
+                else:
+                    file = "files.zip"
+                    urllib.request.urlretrieve(
+                        "https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip",
+                        file
+                    )
+                    from zipfile import ZipFile
+                    zip = ZipFile(file, "r")
+                    zip.extractall("")
+                    zip.close()
+                    downloadedFolder = "Rocket-Ministry-master"
+                    for file_name in os.listdir(downloadedFolder):
+                        source = downloadedFolder + "/" + file_name
+                        destination = file_name
+                        if os.path.isfile(source):
+                            move(source, destination)
+                    os.remove(file)
+                    rmtree(downloadedFolder)
 
-                filesToDelete = [ # удаляем файлы Easy_GUI от предыдущей версии
-                    "global_state.py",
-                    "choice_box.py",
-                    "button_box.py",
-                    "fileboxsetup.py",
-                    "fileopen_box.py",
-                    "fillable_box.py",
-                    "text_box.py",
-                    "utils.py"
-                ]
-                for file in filesToDelete:
-                    if os.path.exists(file):
-                        os.remove(file)
+                    filesToDelete = [ # удаляем файлы Easy_GUI от предыдущей версии
+                        "global_state.py",
+                        "choice_box.py",
+                        "button_box.py",
+                        "fileboxsetup.py",
+                        "fileopen_box.py",
+                        "fillable_box.py",
+                        "text_box.py",
+                        "utils.py"
+                    ]
+                    for file in filesToDelete:
+                        if os.path.exists(file):
+                            os.remove(file)
 
-            """except:
+            except:
                 dialogs.dialogAlert(title, "Не удалось загрузить обновление. Попробуйте еще раз или, если не помогло, напишите в техподдержку (раздел «О программе»)")
             else:
                 if Mode == "sl4a":
@@ -496,9 +496,8 @@ def update(forced=False):
                         from subprocess import check_call
                         from sys import executable
                         check_call([executable, '-m', 'pip', 'install', 'win10toast'])
-                    dialogs.dialogAlert(title, "Обновление завершено, необходим перезапуск программы.")"""
-
-                return True # возвращаем успешный результат обновления (для перезапуска)
+                    dialogs.dialogAlert(title, "Обновление завершено, необходим перезапуск программы.")
+                    return True # возвращаем успешный результат обновления (для перезапуска)
     else:
         print("Обновлений нет")
         if forced==True:

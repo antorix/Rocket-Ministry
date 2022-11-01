@@ -17,29 +17,6 @@ GridMode = 0
 def terView():
     """ Список участков """
 
-    """
-    import urllib.request
-    from shutil import move, rmtree
-    import os
-    file = "files.zip"
-    urllib.request.urlretrieve(
-        "https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip",
-        file
-    )
-    from zipfile import ZipFile
-    zip = ZipFile(file, "r")
-    zip.extractall("")
-    zip.close()
-    downloadedFolder = "Rocket-Ministry-master"
-    for file_name in os.listdir(downloadedFolder):
-        source = downloadedFolder + "/" + file_name
-        destination = file_name
-        if os.path.isfile(source):
-            move(source, destination)
-    os.remove(file)
-    rmtree(downloadedFolder)
-    """
-
     choice=""
     while 1:
 

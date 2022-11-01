@@ -62,15 +62,14 @@ def getButton(text="", img=[]):#123
         image = img[3]
     elif "Детали" in text:
         image = img[4]
+    elif "Обновл." in text:
+        image = img[10]
     elif "Обнов" in text:
         image = img[5]
     elif "OK [Enter]" in text:
         image = img[14]
     elif "Сохранить" in text:
         image = img[9]
-    elif "Обновл." in text:
-        image = img[10]
-        text2 = "Обновление"
     elif "Помощь" in text:
         image = img[11]
     elif "Отмена [Escape]" in text:
@@ -1165,8 +1164,8 @@ class GUItk2(object):
             #button_image = getButton(button_text, button_text)[1]
 
             this_button = dict()
-            if button_text != None and "Обновл." in button_text:
-                button_text = "  Обновление"
+            #if button_text != None and "Обновл." in button_text:
+            #    button_text = "  Обновление"
             this_button['original_text'] = button_text
             this_button['clean_text'], this_button['hotkey'], hotkey_position = parse_hotkey(button_text)
             this_button['widget'] = ttk.Button(
