@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-
 """
 EasyGUI
 .. moduleauthor:: easygui developers and Stephen Raymond Ferg
@@ -1176,11 +1175,15 @@ class GUItk2(object):
             #    button_text = "  Обновление"
             this_button['original_text'] = button_text
             this_button['clean_text'], this_button['hotkey'], hotkey_position = parse_hotkey(button_text)
+            if this_button['clean_text'] != "Назад":
+                text = getButton(this_button['clean_text'], self.img)[0]
+            else:
+                text = "Назад"
             this_button['widget'] = ttk.Button(
                     self.buttonsFrame,
                     takefocus=1,
                     compound="left",
-                    text = getButton(this_button['clean_text'], self.img)[0],
+                    text = text,
                     image = getButton(this_button['clean_text'], self.img)[1],
                     underline=hotkey_position)
             fn = lambda text=button_text, row=row, column=0: self.button_pressed(text, (row, column))
@@ -1766,15 +1769,15 @@ class GUItk3(object):
             neutralButton.bind("<Button-1>", self.neutral_pressed)
             neutralButton.bind("<space>", self.neutral_pressed)
 
-        if self.negative!=None and self.form != "terView":
+        """if self.negative!=None and self.form != "terView":
             cancelButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.negative + " [Esc]")
-            #cancelButton.grid(column=2, row=1, sticky="we", padx=self.padx, ipady=self.ipady, ipadx=self.ipadx)
+            cancelButton.grid(column=2, row=1, sticky="we", padx=self.padx, ipady=self.ipady, ipadx=self.ipadx)
             cancelButton.bind("<Return>", self.cancel_pressed)
             cancelButton.bind("<Button-1>", self.cancel_pressed)
             cancelButton.bind("<space>", self.cancel_pressed)
             cancelButton.bind("<Escape>", self.cancel_pressed)
             # for the commandButton, bind activation events to the activation event
-            # handler
+            # handler"""
 
         # add special buttons for multiple select features
         if not self.multiple_select:
