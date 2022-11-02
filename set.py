@@ -56,6 +56,7 @@ def houseSettings(selectedHouse):
             choice2 = dialogs.dialogText(
                 title=icon("baloon") + " Название участка",
                 message=house.getTipIcon()[0],
+                height = 5,
                 default = house.title
             )
             if choice2 != None:
@@ -66,6 +67,7 @@ def houseSettings(selectedHouse):
         elif "Заметка" in result: # house note
             choice2 = dialogs.dialogText(
                 title = icon("pin", simplified=False) + " Заметка участка",
+                message = "Любая произвольная информация:",
                 default=house.note
             )
             if choice2 != None:
@@ -186,7 +188,8 @@ def porchSettings(house, selectedPorch, jumpToPhone=False):
             choice2 = dialogs.dialogText(
                 title = icon("baloon") + " Название %sа" % porch.type,
                 message=message,
-                default = porch.title
+                default = porch.title,
+                height=5
             )
             if choice2 != None:
                 porch.title = choice2.strip()
@@ -297,6 +300,7 @@ def porchSettings(house, selectedPorch, jumpToPhone=False):
         elif "Заметка" in result: # porch note
             choice2 = dialogs.dialogText(
                 title = icon("pin", simplified=False) + " Заметка %sа" % porch.type,
+                message="Любая произвольная информация:",
                 default=porch.note
             )
             if choice2 != None:
@@ -591,6 +595,7 @@ def flatSettings(flat, house=None, virtual=False, allowDelete=True, jumpToStatus
         elif "Заметка" in result:
             choice2 = dialogs.dialogText(
                 title = icon("pin", simplified=False) + " Заметка контакта",
+                message="Любая произвольная информация:",
                 default = flat.note
             )
             if choice2 != None:

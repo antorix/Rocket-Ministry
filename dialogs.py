@@ -33,9 +33,9 @@ elif io2.Mode=="easygui":
     except:
         MONOSPACE_FONT_FAMILY = PROPORTIONAL_FONT_FAMILY
 
-    PROPORTIONAL_FONT_SIZE = 11
+    PROPORTIONAL_FONT_SIZE = TEXT_ENTRY_FONT_SIZE = 10
 
-    MONOSPACE_FONT_SIZE = TEXT_ENTRY_FONT_SIZE = 11
+    MONOSPACE_FONT_SIZE = 11
 
     STANDARD_SELECTION_EVENTS = ["Return", "Button-1", "space"]
 
@@ -80,6 +80,7 @@ elif io2.Mode=="easygui":
         , "restore.png"      # 28
         , "clear.png"        # 29
         , "info.png"         # 30
+        , "arrow_left.png"   # 31
     ]
 
     #from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
@@ -107,7 +108,7 @@ def dialogText(title="",
                 positive="OK",
                 negative="Назад",
                 neutral="Очист.",
-                height=5,
+                height=3,
                 mono=False,
                 autoplus=False):
 

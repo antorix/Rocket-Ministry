@@ -269,14 +269,14 @@ def showContacts():
                 selected = 1
             elif settings[0][4] == "с":
                 selected = 2
-            elif settings[0][4] == "п":
-                selected = 3
             elif settings[0][4] == "а":
+                selected = 3
+            elif settings[0][4] == "п":
                 selected = 4
             elif settings[0][4] == "т":
                 selected = 5
-            elif settings[0][4] == "э":
-                selected = 6
+            #elif settings[0][4] == "э":
+            #    selected = 6
             else:
                 selected = 0
 

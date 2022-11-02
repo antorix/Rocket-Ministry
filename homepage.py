@@ -81,13 +81,6 @@ def homepage():
         if (curTime - io2.LastTimeDidChecks) > 86400 or (curTime - io2.LastTimeDidChecks) < 3:
             io2.LastTimeDidChecks = curTime
 
-            print("Обрабатываем журнал отчета")
-            limit = 500
-            if len(resources[2]) > limit:
-                extra = len(resources[2]) - limit
-                for i in range(extra):
-                    del resources[2][len(resources[2]) - 1]
-
             if settings[0][6] > 0:  # проверяем лишние резервные копии
                 io2.backupRestore(delete=True, silent=True)
 
@@ -150,6 +143,13 @@ def homepage():
             if io2.update() == True:
                 return True
 
+        print("Оптимизируем размер журнала отчета")
+        limit = 500
+        if len(resources[2]) > limit:
+            extra = len(resources[2]) - limit
+            for i in range(extra):
+                del resources[2][len(resources[2]) - 1]
+
     if "--capmode" in sys.argv:  # проверяем параметры командной строки
         io2.simplified=0
         settings[0][1]=1
@@ -159,7 +159,7 @@ def homepage():
             with open("winpos.ini", "r") as file:
                 line=file.read()
         except:
-            dialogs.window_size = "400x500" #
+            dialogs.window_size = "395x500" #
             dialogs.window_position = "+500+250"
             with open("winpos.ini", "w") as file:
                 file.write(dialogs.window_size)

@@ -17,6 +17,10 @@ GridMode = 0
 def terView():
     """ Список участков """
 
+    if io2.Simplified==0:
+        #print(len(io2.resources[2]))
+        pass
+
     choice=""
     while 1:
 
@@ -54,7 +58,8 @@ def terView():
                 while 1:
                     choice2 = dialogs.dialogText(
                         title = temphouse.getTipIcon()[1] + " Новый участок",
-                        message = message
+                        message = message,
+                        height = 5
                     )
                     del houses [len(houses)-1] # удаляется временный дом
                     if choice2==None:
@@ -113,17 +118,18 @@ def houseView(selectedHouse):
         elif choice=="positive": # новый подъезд
             choice=""
             if house.type=="private":
-                message="Введите название сегмента внутри участка. Это может быть группа домов, часть квартала, четная/нечетная сторона улицы и т. п:"
+                message="Введите название сегмента внутри участка. Это может быть улица, группа домов, часть квартала или просто номер:"
             elif house.type=="office":
                 message="Введите название отдела внутри организации, например:\nТорговый зал\nАдминистрация\nОхрана"
             elif house.type=="phone":
-                message="Введите диапазон номеров, например:\n100–199"
+                message="Введите диапазон номеров, например «100–199». Можно не создавать диапазоны и сделать единственный раздел под цифрой 1."
             else:
                 message = "Введите заголовок подъезда (обычно просто номер):"
             while 1:
                 choice2 = dialogs.dialogText(
                     title= house.getPorchType()[1] + " Новый %s" % house.getPorchType()[0],
-                    message = message
+                    message = message,
+                    height = 5
                 )
                 if choice2 == None:
                     break
@@ -480,7 +486,6 @@ def flatView(flat, house=None, virtual=False, allowDelete=True):
                 elif "Удалить" in result2: # delete record
                     flat.deleteRecord(int(choice))
                     io2.save()
-
             else:
                 homepage.menuProcess(choice)
                 continue

@@ -86,6 +86,8 @@ def getButton(text="", img=[]):#123
         image = img[25]
     elif "Справка" in text:
         image = img[30]
+    elif "Назад" in text:
+        image = img[31]
     else:
         text2 = text
 
@@ -211,7 +213,6 @@ def textbox(msg="", title=" ", text="",
     else:
         reply = tb.run()
         return reply
-
 
 class TextBox(object):
 
@@ -401,8 +402,6 @@ class GUItk(object):
         else:
             self.configure_root(title)
 
-
-
         #self.create_msg_widget(msg)
 
         create_footer(self.boxRoot)
@@ -441,7 +440,7 @@ class GUItk(object):
         self.messageArea.config(state=tk.NORMAL)
         self.messageArea.delete(1.0, tk.END)
         self.messageArea.insert(tk.END, msg)
-        self.messageArea.config(state=tk.DISABLED)
+        #self.messageArea.config(state=tk.DISABLED)
         # Adjust msg height
         #self.messageArea.update()
         numlines = self.get_num_lines(self.messageArea)
@@ -538,7 +537,7 @@ class GUItk(object):
             state=tk.DISABLED,
             padx=self.padx,#(default_hpad_in_chars) *
             #self.calc_character_width(),
-            pady=self.padxy,#default_hpad_in_chars *
+            pady=self.pady,#default_hpad_in_chars *
             #self.calc_character_width(),
             wrap=tk.WORD
         )
@@ -1425,9 +1424,9 @@ class GUItk3(object):
 
         self.create_search_widget()
 
-        #self.create_msg_widget(msg)
-
         self.create_ok_button()
+
+        #self.create_msg_widget(msg = self.form[8:])
 
         create_footer(self.boxRoot)
 
@@ -1493,6 +1492,9 @@ class GUItk3(object):
 
     def serviceyear_pressed(self, choice):
         self.callback(self, command='serviceyear', choices="serviceyear")
+
+    def home_pressed(self, choice):
+        self.callback(self, command='home', choices="home")
 
     def menuFile(self):
         self.callback(self, command="file", choices="file")
@@ -1575,7 +1577,6 @@ class GUItk3(object):
             #self.choiceboxWidget.selection_set(preselect)
             self.choiceboxWidget.activate(preselect)
 
-
     def get_choices(self):
         choices_index = self.choiceboxWidget.curselection()
         if not choices_index:
@@ -1636,7 +1637,7 @@ class GUItk3(object):
 
         #self.display = tk.Entry(self.searchFrame, width=50, font=("arial", 8), fg="green", state="readonly")
         self.display = ScrolledText(self.searchFrame, width=30, font=("Arial", 8), fg="green", bg=dialogs.inactive_background, height=2, state="disabled")
-        self.display.pack(side=tk.LEFT, padx=1)
+        self.display.pack(side=tk.LEFT, padx=1, pady=3)
 
         if LastSystemMessage[0] != "":
             if LastSystemMessage[1] < 1:
@@ -1685,11 +1686,7 @@ class GUItk3(object):
             self.startmenu.grid(column=0, row=0, columnspan=3, sticky="nsew",
                                 padx=self.padx, ipady=self.ipady, ipadx=self.ipadx)#pack(side=tk.BOTTOM, padx=self.padx, pady=self.pady, expand=tk.YES, fill=tk.BOTH)
 
-            ipadxButton = 10
-            ipadyButton = 10
-            fill="x"
-            expand=tk.YES
-            side = tk.LEFT
+            ipadxButton = ipadyButton = 10
 
             self.terButton = ttk.Button(self.startmenu, text="Новый участок", compound="top", image=self.img[21])
             self.terButton.grid(row=0, column=0, padx=self.padx, pady=self.pady, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
@@ -1771,8 +1768,7 @@ class GUItk3(object):
 
         if self.negative!=None and self.form != "terView":
             cancelButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.negative + " [Esc]")
-            cancelButton.grid(column=2, row=1, sticky="we",
-                              padx=self.padx, ipady=self.ipady, ipadx=self.ipadx)
+            #cancelButton.grid(column=2, row=1, sticky="we", padx=self.padx, ipady=self.ipady, ipadx=self.ipadx)
             cancelButton.bind("<Return>", self.cancel_pressed)
             cancelButton.bind("<Button-1>", self.cancel_pressed)
             cancelButton.bind("<space>", self.cancel_pressed)
@@ -1801,13 +1797,12 @@ class GUItk3(object):
 
         self.msgFrame = tk.Frame(
             self.boxRoot,
-            padx=3#self.padx * self.calc_character_width(),
-
+            padx=0#self.padx * self.calc_character_width(),
         )
-        self.messageArea = tk.Label(
+        self.messageArea = tk.Label(# ***
             self.msgFrame,
-            #width=30,#self.width_in_chars,
-            #height=5,
+            width=30,#self.width_in_chars,
+            height=5
             #state=tk.DISABLED,
             #padx=10,#(dialogs.default_hpad_in_chars * self.calc_character_width()),
             #pady=10,#(dialogs.default_hpad_in_chars * self.calc_character_width()),
@@ -1815,13 +1810,24 @@ class GUItk3(object):
         )
         self.set_msg(msg)
 
-        self.msgFrame.pack(side=tk.TOP, expand=1, fill='both')
+        self.msgFrame.pack(side=tk.TOP, expand=0, fill='y')
 
-        self.msgFrame.config(width=20, height=5) # ширина окна списка
+        self.msgFrame.config(width=20, height=0)
 
-        self.messageArea.pack(side=tk.TOP, expand=1, fill='both')
+        self.messageArea.pack(side=tk.TOP, expand=0, fill='y')
 
     def create_ok_button(self):
+
+        okButtonFrame = tk.Frame(self.boxRoot)
+        okButtonFrame.pack(side=tk.TOP, fill="both", expand=tk.YES)
+
+        backButton = ttk.Button(okButtonFrame, takefocus=tk.YES, compound="left",  # кнопка назад
+                                text=getButton("  Назад [Esc]", self.img)[0],
+                                image=getButton("  Назад [Esc]", self.img)[1])
+        backButton.bind("<Return>", self.cancel_pressed)
+        backButton.bind("<Button-1>", self.cancel_pressed)
+        backButton.bind("<space>", self.cancel_pressed)
+        backButton.bind("<Escape>", self.cancel_pressed)
 
         if settings[2][6] > 0 and updateTimer(settings[2][6]) >= 0: # время в служении
             self.timerFrame = ttk.Frame(self.boxRoot)
@@ -1831,30 +1837,34 @@ class GUItk3(object):
             self.timer2.grid(row=0, column=0, sticky="w", padx=2)
             self.timer2.bind("<1>", self.go_home)
 
-        okButtonFrame = tk.Frame(self.boxRoot)
-        okButtonFrame.pack(side=tk.TOP, fill="both", expand=tk.YES)
-
         okButton = ttk.Button(okButtonFrame, takefocus=tk.YES, compound="left", # кнопка OK в списке
                               text=getButton("  OK [Enter]", self.img)[0],
                               image=getButton("  OK [Enter]", self.img)[1])
-        okButton.pack(side=tk.LEFT, fill="x", expand=tk.YES, padx=self.padx, pady=0, ipady=self.ipady, ipadx=self.ipadx)
         okButton.bind("<Return>", self.ok_pressed)
         okButton.bind("<Button-1>", self.ok_pressed)
         okButton.bind("<space>", self.ok_pressed)
 
+        sortButton = ttk.Button(okButtonFrame, takefocus=tk.YES, compound="left",  # кнопка сортировка участков
+                                text=getButton("  Сорт.", self.img)[0],
+                                image=getButton("  Сорт.", self.img)[1])
+        sortButton.bind("<Return>", self.neutral_pressed)
+        sortButton.bind("<Button-1>", self.neutral_pressed)
+        sortButton.bind("<space>", self.neutral_pressed)
+
         if self.form == "terView":
-            sortButton = ttk.Button(okButtonFrame, takefocus=tk.YES, compound="left", # кнопка сортировка участков
-                              text=getButton("  Сорт.", self.img)[0],
-                              image=getButton("  Сорт.", self.img)[1])
+            okButton.pack(side=tk.LEFT, fill="x", expand=tk.YES, padx=self.padx, pady=0, ipady=self.ipady,
+                          ipadx=self.ipadx)
             sortButton.pack(side=tk.RIGHT, padx=self.padx, pady=0, ipady=self.ipady, ipadx=self.ipadx)
-            sortButton.bind("<Return>", self.neutral_pressed)
-            sortButton.bind("<Button-1>", self.neutral_pressed)
-            sortButton.bind("<space>", self.neutral_pressed)
+        else:
+            if self.negative != None:
+                backButton.pack(side=tk.LEFT, padx=self.padx, pady=0, ipady=self.ipady, ipadx=self.ipadx)
+            okButton.pack(side=tk.RIGHT, fill="x", expand=tk.YES, padx=self.padx, pady=0, ipady=self.ipady,
+                          ipadx=self.ipadx)
 
     def create_choicearea(self):
 
         self.choiceboxFrame = ttk.Frame(master=self.boxRoot)
-        self.choiceboxFrame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=tk.YES, padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
+        self.choiceboxFrame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=tk.YES, padx=1, ipady=self.ipady, ipadx=self.ipadx)
 
         # --------  put the self.choiceboxWidget in the self.choiceboxFrame ---
         self.choiceboxWidget = tk.Listbox(self.choiceboxFrame,
@@ -1901,7 +1911,12 @@ class GUItk3(object):
         self.choiceboxWidget.bind("<Insert>", self.positive_pressed)
         self.choiceboxWidget.bind("<Control-Insert>", self.neutral_pressed)
         self.choiceboxWidget.bind("<BackSpace>", self.cancel_pressed)
-        # self.choiceboxWidget.bind("<Control-F>", self.focus_search)
+        self.choiceboxWidget.bind("<Alt-2>", self.contacts_pressed)
+
+        self.choiceboxWidget.bind("<F1>", self.home_pressed)
+        def focus_search(event):
+            self.search.focus()
+        self.choiceboxWidget.bind("<F3>", focus_search)
 
     def KeyboardListener(self, event):
         key = event.keysym
