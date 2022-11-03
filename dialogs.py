@@ -84,7 +84,7 @@ elif io2.Mode=="easygui":
         , "home.png"         # 32
     ]
 
-    #from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
+    from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
 
     try:
         from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox

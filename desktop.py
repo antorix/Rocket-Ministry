@@ -93,22 +93,26 @@ def getButton(text="", img=[]):
 
     return text2, image
 
+def getMenu(box, e):
+    menu = tk.Menu(box, tearoff=0)
+    menu.add_command(label="Вырезать", command=lambda: e.widget.event_generate("<<Cut>>"))
+    menu.add_command(label="Копировать", command=lambda: e.widget.event_generate("<<Copy>>"))
+    menu.add_command(label="Вставить", command=lambda: e.widget.event_generate("<<Paste>>"))
+    menu.add_command(label="Удалить", command=lambda: e.widget.event_generate("<<Clear>>"))
+    menu.add_separator()
+    menu.add_command(label="Выделить все", command=lambda: e.widget.event_generate("<<SelectAll>>"))
+    menu.tk.call("tk_popup", menu, e.x_root, e.y_root)
+
 def create_footer(box, grid=False):
     footerFrame = tk.Frame(box)
     if grid==False:
         footerFrame.pack(side=tk.BOTTOM, fill="both", expand=tk.YES)
-        #ttk.Label(master=footerFrame).pack(side=tk.TOP, expand=True)
     else:
-        footerFrame.grid(row=99, column=0, sticky="nesw")#pack(side=tk.BOTTOM, fill="x", expand=tk.YES)
-
+        footerFrame.grid(row=99, column=0, sticky="nesw")
     if io2.settings[2][6] > 0 and updateTimer(io2.settings[2][6]) >= 0:  # время в служении
-        #timerFrame = ttk.Frame(footerFrame)  #
-        #timerFrame.pack(side=tk.TOP, fill="both", expand=tk.YES)
         ministry_time = "В служении: " + timeFloatToHHMM(updateTimer(io2.settings[2][6]))
-        timer2 = tk.Label(footerFrame, fg="royalblue", font=("Arial", 8), text=ministry_time, cursor="tcross")
-        timer2.pack(side=tk.LEFT, padx=1)#(row=0, column=0, sticky="w", padx=2)
-        #timer2.bind("<1>", self.go_home)
-
+        timer2 = tk.Label(footerFrame, fg="royalblue", font=("Arial", 8), text=ministry_time)
+        timer2.pack(side=tk.LEFT, padx=1)
     ttk.Sizegrip(footerFrame).pack(side=tk.RIGHT)
 
 def exception_format():
@@ -422,7 +426,7 @@ class GUItk(object):
 
         self.create_text_area(wrap_text)
 
-        from os import name
+        #from os import name
         #if name == "nt":
         #    self.boxRoot.iconbitmap('icon.ico')
 
@@ -531,7 +535,6 @@ class GUItk(object):
         #if name == "nt":
         #    self.boxRoot.iconbitmap('icon.ico')
 
-        self.boxRoot.bind_class("Entry", "<3>", self.contextMenu)
         self.boxRoot.bind_class("Text", "<3>", self.contextMenu)
 
     def create_msg_widget(self, msg):
@@ -684,16 +687,8 @@ class GUItk(object):
         self.neutralButton.bind("<Button-1>", self.neutral_button_pressed)
 
     def contextMenu(self, e=None):
-        """Context menu on fields"""
-        menu = tk.Menu(self.boxRoot, tearoff=0)
-        menu.add_command(label="Вырезать", command=lambda: e.widget.event_generate("<<Cut>>"))
-        menu.add_command(label="Копировать", command=lambda: e.widget.event_generate("<<Copy>>"))
-        menu.add_command(label="Вставить", command=lambda: e.widget.event_generate("<<Paste>>"))
-        menu.add_command(label="Удалить", command=lambda: e.widget.event_generate("<<Clear>>"))
-        menu.add_separator()
-        menu.add_command(label="Выделить все", command=lambda: e.widget.event_generate("<<SelectAll>>"))
-        menu.tk.call("tk_popup", menu, e.x_root, e.y_root)
-
+        """ Контекстное меню. Создается из внешней функции getMenu, универсальной для всех виджетов """
+        getMenu(box=self.boxRoot, e=e)
 
 # -------------------------------------------------------------------
 # enterbox
@@ -1157,6 +1152,12 @@ class GUItk2(object):
         self.messageArea.grid(row=0)
         self.boxRoot.rowconfigure(0, weight=10, minsize='10m')
 
+        self.boxRoot.bind_class("Text", "<3>", self.contextMenu)
+
+    def contextMenu(self, e=None):
+        """ Контекстное меню. Создается из внешней функции getMenu, универсальной для всех виджетов """
+        getMenu(box=self.boxRoot, e=e)
+
     def create_images_frame(self):
         self.imagesFrame = tk.Frame(self.boxRoot)
         row = 1
@@ -1469,7 +1470,7 @@ class GUItk3(object):
     def x_pressed(self):
         self.callback(self, command='x', choices=self.get_choices())
 
-    def cancel_pressed(self, event):
+    def cancel_pressed(self, event=None):
         if self.form != "terView":
             self.get_pos()
             try:
@@ -1478,41 +1479,40 @@ class GUItk3(object):
                 pass
             self.callback(self, command='cancel', choices=self.get_choices())
 
-    def neutral_pressed(self, event):
-        self.callback(self, command='neutral', choices="neutral")
+    def neutral_pressed(self, event=None):
+        if self.neutral != None:
+            self.callback(self, command='neutral', choices="neutral")
 
-    def ok_pressed(self, event):
+    def ok_pressed(self, event=None):
         self.callback(self, command='update', choices=self.get_choices())
 
-    def positive_pressed(self, event):
-        self.callback(self, command='update', choices="positive")
+    def positive_pressed(self, event=None):
+        if self.positive != None:
+            self.callback(self, command='update', choices="positive")
 
-    def menu_pressed(self, event, choice):
+    def menu_pressed(self, choice, event=None):
         self.callback(self, command=choice, choices=choice)
 
-    def search_requested(self, choice):
+    def search_requested(self, choice, event=None):
         self.callback(self, command=choice, choices=choice)
 
-    def go_home(self, choice):
+    def go_home(self, event=None):
         self.callback(self, command="home", choices="home")
 
-    def contacts_pressed(self, choice):
+    def contacts_pressed(self, event=None):
         self.callback(self, command='contacts', choices="contacts")
 
-    def report_pressed(self, choice):
+    def report_pressed(self, event=None):
         self.callback(self, command='report', choices="report")
 
-    def stat_pressed(self, choice):
+    def stat_pressed(self, event=None):
         self.callback(self, command='statistics', choices="statistics")
 
-    def timer_pressed(self, choice):
+    def timer_pressed(self, event=None):
         self.callback(self, command='timer', choices="timer")
 
-    def serviceyear_pressed(self, choice):
+    def serviceyear_pressed(self, event=None):
         self.callback(self, command='serviceyear', choices="serviceyear")
-
-    def home_pressed(self, choice):
-        self.callback(self, command='home', choices="home")
 
     def menuFile(self):
         self.callback(self, command="file", choices="file")
@@ -1532,6 +1532,8 @@ class GUItk3(object):
         self.callback(self, command="export", choices="export")
     def fileWipe(self):
         self.callback(self, command="wipe", choices="wipe")
+    def fileExit(self):
+        self.callback(self, command="exit", choices="exit")
 
     def config_menu(self):
         self.menu = tk.Menu(self.boxRoot, tearoff=0)
@@ -1547,8 +1549,8 @@ class GUItk3(object):
         self.filemenu.add_command(label="Экспорт", compound="left", image=self.img[26], command=self.fileExport)
         self.filemenu.add_command(label="Восстановление", compound="left", image=self.img[28], command=self.fileRestore)
         self.filemenu.add_command(label="Очистка", compound="left", image=self.img[29], command=self.fileWipe)
-        #self.filemenu.add_separator()
-        #self.filemenu.add_command(label="Exit", command=self.root.quit)
+        self.filemenu.add_separator()
+        self.filemenu.add_command(label="Выход с экспортом", command=self.fileExit)
 
     # Methods to change content ---------------------------------------
 
@@ -1686,16 +1688,10 @@ class GUItk3(object):
             self.search.delete(0, "end")
         self.search.bind("<FocusIn>", temp_text)
 
-    def contextMenu(self, e=None):
-        """Context menu on fields"""
-        menu = tk.Menu(self.boxRoot, tearoff=0)
-        menu.add_command(label="Вырезать", command=lambda: e.widget.event_generate("<<Cut>>"))
-        menu.add_command(label="Копировать", command=lambda: e.widget.event_generate("<<Copy>>"))
-        menu.add_command(label="Вставить", command=lambda: e.widget.event_generate("<<Paste>>"))
-        menu.add_command(label="Удалить", command=lambda: e.widget.event_generate("<<Clear>>"))
-        menu.add_separator()
-        menu.add_command(label="Выделить все", command=lambda: e.widget.event_generate("<<SelectAll>>"))
-        menu.tk.call("tk_popup", menu, e.x_root, e.y_root)
+        def contextMenu(e=None):
+            """ Контекстное меню. Создается из внешней функции getMenu, универсальной для всех виджетов """
+            getMenu(box=boxRoot, e=e)
+        self.search.bind("<3>", contextMenu)
 
     def create_buttons_frame(self):
         self.buttonsFrame = ttk.Frame(self.boxRoot)
@@ -1793,16 +1789,6 @@ class GUItk3(object):
             neutralButton.bind("<Button-1>", self.neutral_pressed)
             neutralButton.bind("<space>", self.neutral_pressed)
 
-        """if self.negative!=None and self.form != "terView":
-            cancelButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, text=self.negative + " [Esc]")
-            cancelButton.grid(column=2, row=1, sticky="we", padx=self.padx, ipady=self.ipady, ipadx=self.ipadx)
-            cancelButton.bind("<Return>", self.cancel_pressed)
-            cancelButton.bind("<Button-1>", self.cancel_pressed)
-            cancelButton.bind("<space>", self.cancel_pressed)
-            cancelButton.bind("<Escape>", self.cancel_pressed)
-            # for the commandButton, bind activation events to the activation event
-            # handler"""
-
         # add special buttons for multiple select features
         if not self.multiple_select:
             return
@@ -1859,13 +1845,16 @@ class GUItk3(object):
 
         if self.form == "terView":
             okButton.pack(side=tk.LEFT, fill="x", expand=tk.YES, padx=self.padx, pady=0, ipady=self.ipady)
-            sortButton = ttk.Button(okButtonFrame, takefocus=0, compound="left",  # кнопка сортировка участков
-                                    text=getButton("  Сорт.", self.img)[0],
-                                    image=getButton("  Сорт.", self.img)[1])
-            sortButton.bind("<Return>", self.neutral_pressed)
-            sortButton.bind("<Button-1>", self.neutral_pressed)
-            sortButton.bind("<space>", self.neutral_pressed)
-            sortButton.pack(side=tk.LEFT, padx=self.padx, pady=0, ipadx=sideButtonIpadX, ipady=self.ipady)
+
+            if self.neutral != None:
+                neutralButton = ttk.Button(okButtonFrame, takefocus=0, compound="left",  # кнопка сортировка участков
+                                    text=getButton(self.neutral, self.img)[0],
+                                    image=getButton(self.neutral, self.img)[1])
+                neutralButton.bind("<Return>", self.neutral_pressed)
+                neutralButton.bind("<Button-1>", self.neutral_pressed)
+                neutralButton.bind("<space>", self.neutral_pressed)
+                neutralButton.pack(side=tk.LEFT, padx=self.padx, pady=0, ipadx=sideButtonIpadX, ipady=self.ipady)
+
         else:
             if self.negative != None:
                 backButton = ttk.Button(okButtonFrame, takefocus=0, compound="left",  # кнопка назад
@@ -1882,9 +1871,9 @@ class GUItk3(object):
                 homeButton = ttk.Button(okButtonFrame, takefocus=0, compound="left",   # кнопка возврата на главную
                                         text=getButton("  [F1]", self.img)[0],
                                         image=getButton("  [F1]", self.img)[1])
-                homeButton.bind("<Return>", self.home_pressed)
-                homeButton.bind("<Button-1>", self.home_pressed)
-                homeButton.bind("<space>", self.home_pressed)
+                homeButton.bind("<Return>", self.go_home)
+                homeButton.bind("<Button-1>", self.go_home)
+                homeButton.bind("<space>", self.go_home)
                 homeButton.pack(side=tk.LEFT, padx=self.padx, pady=0, ipadx=sideButtonIpadX, ipady=self.ipady)
 
     def create_choicearea(self):
@@ -1937,11 +1926,38 @@ class GUItk3(object):
         self.choiceboxWidget.bind("<Insert>", self.positive_pressed)
         self.choiceboxWidget.bind("<Control-Insert>", self.neutral_pressed)
         self.choiceboxWidget.bind("<BackSpace>", self.cancel_pressed)
+        self.choiceboxWidget.bind("<F1>", self.go_home)
+        self.choiceboxWidget.bind("<3>", self.listContextMenu)
 
-        self.choiceboxWidget.bind("<F1>", self.home_pressed)
         def focus_search(event):
             self.search.focus()
         self.choiceboxWidget.bind("<F3>", focus_search)
+
+    def listContextMenu(self, e=None): # контекстное меню списка ***
+        menu = tk.Menu(self.boxRoot, tearoff=0)
+        menu.add_command(
+            label=getButton("  OK [Enter]", self.img)[0],
+            image=getButton("  OK [Enter]", self.img)[1],
+            compound="left",
+            command=self.ok_pressed
+        )
+        if self.positive != None:
+            menu.add_command(
+                label=getButton(self.positive, self.img)[0],
+                image=getButton(self.positive, self.img)[1],
+                compound="left",
+                command=self.positive_pressed
+            )
+        if self.neutral != None:
+            menu.add_command(
+                label=getButton(self.neutral, self.img)[0],
+                image=getButton(self.neutral, self.img)[1],
+                compound="left",
+                command=self.neutral_pressed
+            )
+        menu.add_separator()
+        menu.add_command(label="Копировать", command=lambda: e.widget.event_generate("<<Copy>>"))
+        menu.tk.call("tk_popup", menu, e.x_root, e.y_root)
 
     def KeyboardListener(self, event):
         key = event.keysym
@@ -2111,12 +2127,17 @@ def __fillablebox(msg, title="", default="", mask=None, root=None, mono=False, h
     if mask:
         entryWidget.configure(show=mask)
 
+    def contextMenu(e=None):
+        """ Контекстное меню. Создается из внешней функции getMenu, универсальной для всех виджетов """
+        getMenu(box=boxRoot, e=e)
+
     entryWidget.pack(side=tk.LEFT, padx="5m")
     entryWidget.bind("<Return>", __enterboxGetText)
     entryWidget.bind("<Escape>", __enterboxCancel)
     entryWidget.bind("<Control-Insert>", __enterboxNeutral)
     # put text into the entryWidget
     entryWidget.insert(0, __enterboxDefaultText)
+    entryWidget.bind_class("TEntry", "<3>", contextMenu)
 
     img = initialize_images()
 

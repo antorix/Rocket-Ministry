@@ -144,7 +144,7 @@ def homepage():
                 return True
 
         print("Оптимизируем размер журнала отчета")
-        limit = 500
+        limit = 300
         if len(resources[2]) > limit:
             extra = len(resources[2]) - limit
             for i in range(extra):
@@ -1053,5 +1053,6 @@ def menuProcess(choice):
     elif choice == "wipe":
         io2.clearDB(silent=False)
     elif choice=="exit":
+        io2.share(silent=True)
         sys.exit(0)
     return result
