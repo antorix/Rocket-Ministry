@@ -1549,8 +1549,9 @@ class GUItk3(object):
         self.filemenu.add_command(label="Экспорт", compound="left", image=self.img[26], command=self.fileExport)
         self.filemenu.add_command(label="Восстановление", compound="left", image=self.img[28], command=self.fileRestore)
         self.filemenu.add_command(label="Очистка", compound="left", image=self.img[29], command=self.fileWipe)
-        self.filemenu.add_separator()
-        self.filemenu.add_command(label="Выход с экспортом", command=self.fileExit)
+        if io2.Simplified == 0:
+            self.filemenu.add_separator()
+            self.filemenu.add_command(label="Выход с экспортом", command=self.fileExit)
 
     # Methods to change content ---------------------------------------
 
