@@ -799,6 +799,7 @@ class House():
                     newContact.status = deepcopy(self.status)
                     newContact.phone = deepcopy(self.phone)
                     newContact.meeting = deepcopy(self.meeting)
+                    io2.log("Создан контакт %s" % newContact.getName())
                     return newContact.getName()
 
             def output(self):
@@ -820,6 +821,8 @@ class House():
 
                 if len(self.records)==0:
                     options.append("Создайте первую запись в журнале посещений")
+                    if io2.Mode == "easygui":
+                        options[0] = "  " + options[0]
                 else:
                     for i in range(len(self.records)): # добавляем записи разговоров
                         options.append(icon("mic", simplified=False) + " %s: %s" % (self.records[i].date, self.records[i].title))

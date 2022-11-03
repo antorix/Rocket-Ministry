@@ -159,8 +159,6 @@ def homepage():
             with open("winpos.ini", "r") as file:
                 line=file.read()
         except:
-            dialogs.window_size = "395x500" #
-            dialogs.window_position = "+500+250"
             with open("winpos.ini", "w") as file:
                 file.write(dialogs.window_size)
                 file.write(dialogs.window_position)
@@ -218,7 +216,7 @@ def homepage():
                 credit = settings[2][1]
             else:
                 credit = 0
-            gap = float((settings[2][0] + credit) - int(time.strftime("%d", time.localtime())) * settings[0][3] / reports.days())
+            gap = reports.getCurrentHours()[1]
             if gap >= 0:
                 gap_str = icon("extra")
             else:
@@ -241,7 +239,7 @@ def homepage():
         options = [
                 icon("globe") +     " Участки (%d) %s" % (len(houses), due),
                 icon("contacts")+   " Контакты (%d) %s" % (totalContacts, appointment),
-                icon("report") +    " Отчет (%s) %s %s" % (reports.timeFloatToHHMM(settings[2][0]), gap_str, remind),
+                icon("report") +    " Отчет (%s) %s %s" % (reports.getCurrentHours()[0], gap_str, remind),
                 icon("notebook")+   " Блокнот (%d)" % len(resources[0]),
                 icon("search")  +   " Поиск",
                 icon("stats")   +   " Статистика (%s%%)" % house_op.countTotalProgress(),
@@ -269,7 +267,7 @@ def homepage():
             dialogs.clearScreen()
             io2.consoleReturn(pause=False)
         elif io2.Mode == "easygui" and settings[0][1]==0:
-            territory.terView()
+            territory.terView(start=True)
 
         # Run home screen
 

@@ -23,8 +23,8 @@ if io2.Mode=="sl4a":
 elif io2.Mode=="easygui":
 
     # глобальные параметры окон и шрифты
-    window_size = ""
-    window_position = ""
+    window_size = "400x450"  #
+    window_position = "+500+250"
 
     PROPORTIONAL_FONT_FAMILY = ("Calibri", "Arial", "MS", "Sans", "Serif")
 
@@ -81,6 +81,7 @@ elif io2.Mode=="easygui":
         , "clear.png"        # 29
         , "info.png"         # 30
         , "arrow_left.png"   # 31
+        , "home.png"         # 32
     ]
 
     #from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox

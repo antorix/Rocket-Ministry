@@ -19,7 +19,7 @@ import string
 from icons import icon
 from os import path
 from reports import updateTimer, timeFloatToHHMM
-from io2 import settings, LastSystemMessage
+import io2
 import traceback
 import dialogs
 import reports
@@ -36,13 +36,12 @@ def initialize_images():
         images.append(tk.PhotoImage(file=image))
     return images
 
-def getButton(text="", img=[]):#123
-
+def getButton(text="", img=[]):
+    """ Выдает по запросу обработанный текст и картинку """
     if text!=None:
         text2 = text[2:]
     else:
         return None, None
-
     image = None
     if "Таймер" in text:
         if ":" in text:
@@ -71,7 +70,7 @@ def getButton(text="", img=[]):#123
         image = img[9]
     elif "Помощь" in text:
         image = img[11]
-    elif "Отмена [Escape]" in text:
+    elif "Отмена [Esc]" in text:
         image = img[12]
     elif icon("export") in text:
         image = img[13]
@@ -87,15 +86,29 @@ def getButton(text="", img=[]):#123
         image = img[30]
     elif "Назад" in text:
         image = img[31]
+    elif "Главная" in text:
+        image = img[32]
     else:
         text2 = text
 
     return text2, image
 
-def create_footer(box):
+def create_footer(box, grid=False):
     footerFrame = tk.Frame(box)
-    footerFrame.pack(side=tk.BOTTOM, fill="x", expand=tk.YES)
-    #ttk.Label(master=footerFrame).pack(side=tk.TOP, expand=True)
+    if grid==False:
+        footerFrame.pack(side=tk.BOTTOM, fill="both", expand=tk.YES)
+        #ttk.Label(master=footerFrame).pack(side=tk.TOP, expand=True)
+    else:
+        footerFrame.grid(row=99, column=0, sticky="nesw")#pack(side=tk.BOTTOM, fill="x", expand=tk.YES)
+
+    if io2.settings[2][6] > 0 and updateTimer(io2.settings[2][6]) >= 0:  # время в служении
+        #timerFrame = ttk.Frame(footerFrame)  #
+        #timerFrame.pack(side=tk.TOP, fill="both", expand=tk.YES)
+        ministry_time = "В служении: " + timeFloatToHHMM(updateTimer(io2.settings[2][6]))
+        timer2 = tk.Label(footerFrame, fg="royalblue", font=("Arial", 8), text=ministry_time, cursor="tcross")
+        timer2.pack(side=tk.LEFT, padx=1)#(row=0, column=0, sticky="w", padx=2)
+        #timer2.bind("<1>", self.go_home)
+
     ttk.Sizegrip(footerFrame).pack(side=tk.RIGHT)
 
 def exception_format():
@@ -644,8 +657,8 @@ class GUItk(object):
         # put the buttons in the buttonsFrame
         self.cancelButton = ttk.Button(
             self.buttonsFrame, takefocus=tk.YES, compound="left",
-            text=getButton("  " + self.negative + " [Escape]", self.img)[0],
-            image=getButton(self.negative + " [Escape]", self.img)[1]
+            text=getButton("  " + self.negative + " [Esc]", self.img)[0],
+            image=getButton(self.negative + " [Esc]", self.img)[1]
         )
         self.cancelButton.pack(
             expand=tk.YES, side=tk.RIGHT, padx=self.padx,
@@ -981,7 +994,7 @@ class GUItk2(object):
 
         self.create_images_frame()
 
-        #create_footer(self.boxRoot)
+        create_footer(self.boxRoot, grid=True)
 
         #self.create_images(images)
 
@@ -1239,7 +1252,6 @@ def msgbox(msg="", title=" ",
                      neutral=neutral,
                      negative=negative)
 
-
 def convert_to_type(input_value, new_type, input_value_name=None):
     """
     Attempts to convert input_value to type new_type and throws error if it can't.
@@ -1268,7 +1280,7 @@ def convert_to_type(input_value, new_type, input_value_name=None):
 # -------------------------------------------------------------------
 
 
-def choicebox(msg="", title="", form="", choices=[], preselect=0,
+def choicebox(msg="", title="Окно", form="", choices=[], preselect=0,
             positive=None, neutral=None, negative="Назад", callback=None, run=True):
     """
     Present the user with a list of choices.
@@ -1285,6 +1297,7 @@ def choicebox(msg="", title="", form="", choices=[], preselect=0,
                    neutral=neutral,
                    negative=negative,
                    callback=callback)
+
     if run:
         reply = mb.run()
         return reply
@@ -1294,9 +1307,8 @@ def choicebox(msg="", title="", form="", choices=[], preselect=0,
 def multchoicebox(msg="", title="", form="", choices=[],
                   preselect=0, callback=None, positive=None, neutral=None, negative=None,
                   run=True):
-    """ Same as choicebox, but the user can select many items.
+    """ Same as choicebox, but the user can select many items. """
 
-    """
     mb = ChoiceBox(msg, title, form, choices, preselect=preselect,
                    multiple_select=True,
                    positive=positive,
@@ -1383,7 +1395,7 @@ class GUItk3(object):
         It also accepts commands from Multibox to change its message.
     """
 
-    def __init__(self, msg, title, form, choices, preselect, multiple_select, callback, positive, neutral, negative):
+    def __init__(self, msg="", title="Участки", form="terView", choices=[], preselect=0, multiple_select=1, callback=1, positive=None, neutral=None, negative="Назад"):
 
         self.callback = callback
 
@@ -1460,7 +1472,10 @@ class GUItk3(object):
     def cancel_pressed(self, event):
         if self.form != "terView":
             self.get_pos()
-            dialogs.saveWindowPosition(self.boxRoot)
+            try:
+                dialogs.saveWindowPosition(self.boxRoot)
+            except:
+                pass
             self.callback(self, command='cancel', choices=self.get_choices())
 
     def neutral_pressed(self, event):
@@ -1620,7 +1635,10 @@ class GUItk3(object):
         #self.boxRoot.protocol('WM_DELETE_WINDOW', self.x_pressed)
         def exit():
             self.get_pos()
-            dialogs.saveWindowPosition(self.boxRoot)
+            try:
+                dialogs.saveWindowPosition(self.boxRoot)
+            except:
+                pass
             self.stop()
             self.boxRoot.destroy()
             sys.exit(0)
@@ -1642,15 +1660,15 @@ class GUItk3(object):
         self.display = ScrolledText(self.searchFrame, width=30, font=("Arial", 8), fg="green", bg=dialogs.inactive_background, height=2, state="disabled")
         self.display.pack(side=tk.LEFT, padx=1, pady=3)
 
-        if LastSystemMessage[0] != "":
-            if LastSystemMessage[1] < 1:
+        if io2.LastSystemMessage[0] != "":
+            if io2.LastSystemMessage[1] < 1:
                 self.display.config(state="normal")
-                self.display.insert(tk.INSERT, LastSystemMessage[0])
+                self.display.insert(tk.INSERT, io2.LastSystemMessage[0])
                 self.display.config(state="disabled")
-                LastSystemMessage[1] += 1
+                io2.LastSystemMessage[1] += 1
             else:
-                LastSystemMessage[1] = 0
-                LastSystemMessage[0] = ""
+                io2.LastSystemMessage[1] = 0
+                io2.LastSystemMessage[0] = ""
 
         self.icon = ttk.Button(self.searchFrame, image=self.img[16]) # кнопка с лупой
         self.icon.pack(side=tk.RIGHT, padx=1, pady=1)
@@ -1689,10 +1707,11 @@ class GUItk3(object):
             self.startmenu.grid(column=0, row=0, columnspan=3, sticky="nsew",
                                 padx=self.padx, ipady=self.ipady, ipadx=self.ipadx)#pack(side=tk.BOTTOM, padx=self.padx, pady=self.pady, expand=tk.YES, fill=tk.BOTH)
 
-            ipadxButton = ipadyButton = 10
+            ipadxButton = ipadyButton = 5
+            padx2 = pady2 = 3
 
             self.terButton = ttk.Button(self.startmenu, text="Новый участок", compound="top", image=self.img[21])
-            self.terButton.grid(row=0, column=0, padx=self.padx, pady=self.pady, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
+            self.terButton.grid(row=0, column=0, padx=padx2, pady=pady2, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
             self.terButton.bind("<Return>", self.positive_pressed)
             self.terButton.bind("<Button-1>", self.positive_pressed)
             self.terButton.bind("<space>", self.positive_pressed)
@@ -1700,42 +1719,47 @@ class GUItk3(object):
             from contacts import getContactsAmount
             con = getContactsAmount(date=1)[0]
             self.conButton = ttk.Button(self.startmenu, text="Контакты (%d)" % con, compound="top", image=self.img[20])
-            self.conButton.grid(row=0, column=1, padx=self.padx, pady=self.pady, ipadx=ipadxButton+13, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
+            self.conButton.grid(row=0, column=1, padx=padx2, pady=pady2, ipadx=ipadxButton+10, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
             self.conButton.bind("<Return>", self.contacts_pressed)
             self.conButton.bind("<Button-1>", self.contacts_pressed)
             self.conButton.bind("<space>", self.contacts_pressed)
 
-            rep = reports.timeFloatToHHMM(settings[2][0])
-            self.repButton = ttk.Button(self.startmenu, text="Отчет (%s)" % rep, compound="top", image=self.img[22])
-            self.repButton.grid(row=0, column=2, padx=self.padx, pady=self.pady, ipadx=ipadxButton+13, ipady=ipadyButton,
-                                sticky="nesw")  # pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
+            rep, gap = reports.getCurrentHours()
+            if gap >= 0:
+                gap_str = "↑"
+            else:
+                gap_str = "↓"
+            if io2.settings[0][3]==0:
+                gap_str = ""
+            self.repButton = ttk.Button(self.startmenu, text="Отчет (%s%s)" % (rep, gap_str), compound="top", image=self.img[22])
+            self.repButton.grid(row=0, column=2, padx=padx2, pady=pady2, ipadx=ipadxButton+10, ipady=ipadyButton, sticky="nesw")  # pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
             self.repButton.bind("<Return>", self.report_pressed)
             self.repButton.bind("<Button-1>", self.report_pressed)
             self.repButton.bind("<space>", self.report_pressed)
 
             from house_op import countTotalProgress
             self.staButton = ttk.Button(self.startmenu, text="Статистика (%s%%)" % countTotalProgress(), compound="top", image=self.img[23])
-            self.staButton.grid(row=1, column=0, padx=self.padx, pady=self.pady, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
+            self.staButton.grid(row=1, column=0, padx=padx2, pady=pady2, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
             self.staButton.bind("<Return>", self.stat_pressed)
             self.staButton.bind("<Button-1>", self.stat_pressed)
             self.staButton.bind("<space>", self.stat_pressed)
 
-            if reports.updateTimer(settings[2][6]) >= 0:  # проверка, включен ли таймер
-                time2 = reports.updateTimer(settings[2][6])
+            if reports.updateTimer(io2.settings[2][6]) >= 0:  # проверка, включен ли таймер
+                time2 = reports.updateTimer(io2.settings[2][6])
             else:
-                time2 = reports.updateTimer(settings[2][6]) + 24
-            if settings[2][6] > 0:
+                time2 = reports.updateTimer(io2.settings[2][6]) + 24
+            if io2.settings[2][6] > 0:
                 timerTime = reports.timeFloatToHHMM(time2)
             else:
                 timerTime = ""
             self.timButton = ttk.Button(self.startmenu, text="Таймер %s" % timerTime, compound="top", image=getButton("Таймер %s" % timerTime, self.img)[1])
-            self.timButton.grid(row=1, column=1, padx=self.padx, pady=self.pady, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
+            self.timButton.grid(row=1, column=1, padx=padx2, pady=pady2, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
             self.timButton.bind("<Return>", self.timer_pressed)
             self.timButton.bind("<Button-1>", self.timer_pressed)
             self.timButton.bind("<space>", self.timer_pressed)
 
             self.serButton = ttk.Button(self.startmenu, text="Служебный год", compound="top", image=self.img[24])
-            self.serButton.grid(row=1, column=2, padx=self.padx, pady=self.pady, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
+            self.serButton.grid(row=1, column=2, padx=padx2, pady=pady2, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
             self.serButton.bind("<Return>", self.serviceyear_pressed)
             self.serButton.bind("<Button-1>", self.serviceyear_pressed)
             self.serButton.bind("<space>", self.serviceyear_pressed)
@@ -1802,7 +1826,7 @@ class GUItk3(object):
             self.boxRoot,
             padx=0#self.padx * self.calc_character_width(),
         )
-        self.messageArea = tk.Label(# ***
+        self.messageArea = tk.Label(
             self.msgFrame,
             width=30,#self.width_in_chars,
             height=5
@@ -1824,45 +1848,43 @@ class GUItk3(object):
         okButtonFrame = tk.Frame(self.boxRoot)
         okButtonFrame.pack(side=tk.TOP, fill="both", expand=tk.YES)
 
-        backButton = ttk.Button(okButtonFrame, takefocus=tk.YES, compound="left",  # кнопка назад
-                                text=getButton("  Назад [Esc]", self.img)[0],
-                                image=getButton("  Назад [Esc]", self.img)[1])
-        backButton.bind("<Return>", self.cancel_pressed)
-        backButton.bind("<Button-1>", self.cancel_pressed)
-        backButton.bind("<space>", self.cancel_pressed)
-        backButton.bind("<Escape>", self.cancel_pressed)
-
-        if settings[2][6] > 0 and updateTimer(settings[2][6]) >= 0: # время в служении
-            self.timerFrame = ttk.Frame(self.boxRoot)
-            self.timerFrame.pack(side=tk.TOP, fill="both", expand=tk.YES)
-            ministry_time = "В служении: " + timeFloatToHHMM(updateTimer(settings[2][6]))
-            self.timer2 = tk.Label(self.timerFrame, fg="royalblue", text=ministry_time, cursor="tcross")
-            self.timer2.grid(row=0, column=0, sticky="w", padx=2)
-            self.timer2.bind("<1>", self.go_home)
-
-        okButton = ttk.Button(okButtonFrame, takefocus=tk.YES, compound="left", # кнопка OK в списке
+        okButton = ttk.Button(okButtonFrame, takefocus=tk.YES, compound="left",  # кнопка OK в списке
                               text=getButton("  OK [Enter]", self.img)[0],
                               image=getButton("  OK [Enter]", self.img)[1])
         okButton.bind("<Return>", self.ok_pressed)
         okButton.bind("<Button-1>", self.ok_pressed)
         okButton.bind("<space>", self.ok_pressed)
 
-        sortButton = ttk.Button(okButtonFrame, takefocus=tk.YES, compound="left",  # кнопка сортировка участков
-                                text=getButton("  Сорт.", self.img)[0],
-                                image=getButton("  Сорт.", self.img)[1])
-        sortButton.bind("<Return>", self.neutral_pressed)
-        sortButton.bind("<Button-1>", self.neutral_pressed)
-        sortButton.bind("<space>", self.neutral_pressed)
+        sideButtonIpadX = 8
 
         if self.form == "terView":
-            okButton.pack(side=tk.LEFT, fill="x", expand=tk.YES, padx=self.padx, pady=0, ipady=self.ipady,
-                          ipadx=self.ipadx)
-            sortButton.pack(side=tk.RIGHT, padx=self.padx, pady=0, ipady=self.ipady, ipadx=self.ipadx)
+            okButton.pack(side=tk.LEFT, fill="x", expand=tk.YES, padx=self.padx, pady=0, ipady=self.ipady)
+            sortButton = ttk.Button(okButtonFrame, takefocus=tk.YES, compound="left",  # кнопка сортировка участков
+                                    text=getButton("  Сорт.", self.img)[0],
+                                    image=getButton("  Сорт.", self.img)[1])
+            sortButton.bind("<Return>", self.neutral_pressed)
+            sortButton.bind("<Button-1>", self.neutral_pressed)
+            sortButton.bind("<space>", self.neutral_pressed)
+            sortButton.pack(side=tk.LEFT, padx=self.padx, pady=0, ipadx=sideButtonIpadX, ipady=self.ipady)
         else:
             if self.negative != None:
-                backButton.pack(side=tk.LEFT, padx=self.padx, pady=0, ipady=self.ipady, ipadx=self.ipadx)
-            okButton.pack(side=tk.RIGHT, fill="x", expand=tk.YES, padx=self.padx, pady=0, ipady=self.ipady,
-                          ipadx=self.ipadx)
+                backButton = ttk.Button(okButtonFrame, takefocus=tk.YES,  # кнопка назад
+
+                                        image=getButton("  Назад", self.img)[1])
+                backButton.bind("<Return>", self.cancel_pressed)
+                backButton.bind("<Button-1>", self.cancel_pressed)
+                backButton.bind("<space>", self.cancel_pressed)
+                backButton.bind("<Escape>", self.cancel_pressed)
+                backButton.pack(side=tk.LEFT, padx=self.padx, pady=0, ipadx=sideButtonIpadX, ipady=self.ipady)
+
+                okButton.pack(side=tk.LEFT, fill="x", expand=tk.YES, padx=self.padx, pady=0, ipady=self.ipady)
+
+                homeButton = ttk.Button(okButtonFrame, takefocus=tk.YES,   # кнопка возврата на главную
+                                        image=getButton("  Главная", self.img)[1])
+                homeButton.bind("<Return>", self.home_pressed)
+                homeButton.bind("<Button-1>", self.home_pressed)
+                homeButton.bind("<space>", self.home_pressed)
+                homeButton.pack(side=tk.LEFT, padx=self.padx, pady=0, ipadx=sideButtonIpadX, ipady=self.ipady)
 
     def create_choicearea(self):
 
@@ -2040,20 +2062,24 @@ def __fillablebox(msg, title="", default="", mask=None, root=None, mono=False, h
     boxRoot.geometry(dialogs.window_size + dialogs.window_position)
     boxRoot.bind("<Escape>", __enterboxCancel)
 
+    mainFrame = tk.Frame(boxRoot)
+    mainFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+    bottomFrame = tk.Frame(boxRoot)
+    bottomFrame.pack(side=tk.BOTTOM, fill=tk.BOTH)
+
+    create_footer(bottomFrame)
+
     # ------------- define the messageFrame ---------------------------------
-    messageFrame = tk.Frame(master=boxRoot)
+    messageFrame = tk.Frame(master=mainFrame)
     messageFrame.pack(side=tk.TOP, fill=tk.BOTH)
 
-    # ------------- define the buttonsFrame ---------------------------------
-    buttonsFrame = ttk.Frame(master=boxRoot)
-    buttonsFrame.pack(side=tk.TOP, fill=tk.BOTH)
-
     # ------------- define the entryFrame ---------------------------------
-    entryFrame = ttk.Frame(master=boxRoot)
+    entryFrame = ttk.Frame(master=mainFrame)
     entryFrame.pack(side=tk.TOP, fill=tk.BOTH)
 
     # ------------- define the buttonsFrame ---------------------------------
-    buttonsFrame = ttk.Frame(master=boxRoot)
+    buttonsFrame = ttk.Frame(master=mainFrame)
     buttonsFrame.pack(side=tk.TOP, fill=tk.BOTH)
 
     # -------------------- the msg widget ----------------------------
@@ -2134,6 +2160,8 @@ def __fillablebox(msg, title="", default="", mask=None, root=None, mono=False, h
     handler = __enterboxCancel
     for selectionEvent in dialogs.STANDARD_SELECTION_EVENTS:
         commandButton.bind("<{}>".format(selectionEvent), handler)
+
+    #create_footer(boxRoot)
 
     # ------------------- time for action! -----------------
     entryWidget.focus_force()  # put the focus on the entryWidget

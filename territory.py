@@ -14,7 +14,7 @@ import reports
 
 GridMode = 0
 
-def terView():
+def terView(start=False):
     """ Список участков """
 
     if io2.Simplified==0:

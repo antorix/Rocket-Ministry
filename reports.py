@@ -199,11 +199,7 @@ class Report():
             
             title = icon("report") + " Отчет за %s %s " % (monthName()[1], getTimerIcon(self.startTime))
 
-            if io2.settings[0][2]==True: # включен кредит часов
-                credit=self.credit
-            else:
-                credit=0
-            gap = float((self.hours+credit) - int(time.strftime("%d", time.localtime()))*io2.settings[0][3]/days())
+            gap = float((self.hours+self.credit) - int(time.strftime("%d", time.localtime()))*io2.settings[0][3]/days())
             
             if gap >= 0:
                 gap_str = icon("extra2") + " Запас: %s" % timeFloatToHHMM(gap) # happy emoticon
@@ -855,3 +851,15 @@ def toggleTimer():
                 report(choice="=)")
             elif choice2 == 1:
                 report("=$")
+
+def getCurrentHours():
+    """ Выдает общее количество часов в этом месяце с кредитом [0] и запас/отставание [1] """
+    if io2.settings[0][2] == True:  # включен кредит часов
+        credit = io2.settings[2][1]
+    else:
+        credit = 0
+    total = io2.settings[2][0] + credit
+    gap = float(
+        total - int(time.strftime("%d", time.localtime())) * io2.settings[0][3] / days()
+    )
+    return timeFloatToHHMM(total), gap
