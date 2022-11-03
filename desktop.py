@@ -70,10 +70,10 @@ def getButton(text="", img=[]):
         image = img[9]
     elif "Помощь" in text:
         image = img[11]
-    elif "[Esc]" in text:
-        image = img[31]
     elif "Отмена [Esc]" in text:
         image = img[12]
+    elif "[Esc]" in text or "Назад" in text:
+        image = img[31]
     elif icon("export") in text:
         image = img[13]
     elif "Аналитика" in text:
