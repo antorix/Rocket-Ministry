@@ -1670,15 +1670,15 @@ class GUItk3(object):
                 io2.LastSystemMessage[1] = 0
                 io2.LastSystemMessage[0] = ""
 
-        self.icon = ttk.Button(self.searchFrame, image=self.img[16]) # кнопка с лупой
+        self.icon = ttk.Button(self.searchFrame, image=self.img[16], takefocus=0) # кнопка с лупой
         self.icon.pack(side=tk.RIGHT, padx=1, pady=1)
         self.icon.bind("<1>", self.find)
 
         self.style = ttk.Style() # поисковая строка
-        self.style.configure("TEntry", foreground="grey", background="green")
-        self.search = ttk.Entry(self.searchFrame, width=20, style="TEntry")
+        self.style.configure("TEntry", foreground="grey60", background="green")
+        self.search = ttk.Entry(self.searchFrame, width=20, style="TEntry", takefocus=0)
         self.search.pack(side=tk.RIGHT, padx=1, pady=1)
-        self.search.insert(0, "Поиск")
+        self.search.insert(0, "Поиск [F3]")
         self.search.bind("<Return>", self.find)
         #self.search.bind_class("Entry", "<3>", self.contextMenu)
         #self.search.bind_class("Text", "<3>", self.contextMenu)
@@ -1848,7 +1848,7 @@ class GUItk3(object):
         okButtonFrame = tk.Frame(self.boxRoot)
         okButtonFrame.pack(side=tk.TOP, fill="both", expand=tk.YES)
 
-        okButton = ttk.Button(okButtonFrame, takefocus=tk.YES, compound="left",  # кнопка OK в списке
+        okButton = ttk.Button(okButtonFrame, takefocus=0, compound="left",  # кнопка OK в списке
                               text=getButton("  OK [Enter]", self.img)[0],
                               image=getButton("  OK [Enter]", self.img)[1])
         okButton.bind("<Return>", self.ok_pressed)
@@ -1859,7 +1859,7 @@ class GUItk3(object):
 
         if self.form == "terView":
             okButton.pack(side=tk.LEFT, fill="x", expand=tk.YES, padx=self.padx, pady=0, ipady=self.ipady)
-            sortButton = ttk.Button(okButtonFrame, takefocus=tk.YES, compound="left",  # кнопка сортировка участков
+            sortButton = ttk.Button(okButtonFrame, takefocus=0, compound="left",  # кнопка сортировка участков
                                     text=getButton("  Сорт.", self.img)[0],
                                     image=getButton("  Сорт.", self.img)[1])
             sortButton.bind("<Return>", self.neutral_pressed)
@@ -1868,7 +1868,7 @@ class GUItk3(object):
             sortButton.pack(side=tk.LEFT, padx=self.padx, pady=0, ipadx=sideButtonIpadX, ipady=self.ipady)
         else:
             if self.negative != None:
-                backButton = ttk.Button(okButtonFrame, takefocus=tk.YES, compound="left",  # кнопка назад
+                backButton = ttk.Button(okButtonFrame, takefocus=0, compound="left",  # кнопка назад
                                         text=getButton("  [Esc]", self.img)[0],
                                         image=getButton("  [Esc]", self.img)[1])
                 backButton.bind("<Return>", self.cancel_pressed)
@@ -1879,7 +1879,7 @@ class GUItk3(object):
 
                 okButton.pack(side=tk.LEFT, fill="x", expand=tk.YES, padx=self.padx, pady=0, ipady=self.ipady)
 
-                homeButton = ttk.Button(okButtonFrame, takefocus=tk.YES, compound="left",   # кнопка возврата на главную
+                homeButton = ttk.Button(okButtonFrame, takefocus=0, compound="left",   # кнопка возврата на главную
                                         text=getButton("  [F1]", self.img)[0],
                                         image=getButton("  [F1]", self.img)[1])
                 homeButton.bind("<Return>", self.home_pressed)
