@@ -134,7 +134,7 @@ def dialogText(title="",
         if default!="":
             print(DefaultText % default)
         choice = input().strip()
-        if choice==None or choice=="":
+        if choice==None:# or choice=="":
             result = None
         elif default!="" and choice=="!":
             result = default
@@ -175,10 +175,10 @@ def dialogText(title="",
             elif "positive" in resp["which"]:
                 if console.process(resp["value"].strip())==True:
                     return ""
-                if resp["value"].strip()!="":
-                    return resp["value"].strip()
-                else:
-                    return None
+                #if resp["value"].strip()!="":
+                return resp["value"].strip()
+                #else:
+                #    return None
             elif "negative" in resp["which"]:
                 return None
             #else:
@@ -206,7 +206,7 @@ def dialogText(title="",
 
         if console.process(choice)==True:
             return ""
-        elif choice==None or choice.strip()=="":
+        elif choice==None:# or choice.strip()=="":
             return None
         else:
             return choice.strip()

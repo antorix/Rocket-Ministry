@@ -119,7 +119,7 @@ class House():
             self.date,
             self.note,
             self.type,
-            [self.porches[i].export() for i in range(len(self.porches))]
+            [porch.export() for porch in self.porches]
         ]
             
     class Porch():
@@ -168,13 +168,15 @@ class House():
                 if set.ifInt(self.flatsLayout)==True:
                     result = self.shift(ind, restore=restore)
                     if result == "disableFloors":
+                        #io2.log("«%s» удален" % number)
+                        io2.log("Удалено: %s" % self.flats[ind].title)
                         del self.flats[ind]
-                        io2.log("«%s» удален" % number)
                         self.flatsLayout="н"
                         self.sortFlats()
                 else:
+                    #io2.log("«%s» удален" % number)
+                    io2.log("Удалено: %s" % self.flats[ind].title)
                     del self.flats[ind]
-                    io2.log("«%s» удален" % number)
                 return "deleted"
 
         def getFlatsRange(self):
@@ -718,7 +720,7 @@ class House():
                 self.floor1,
                 self.note,
                 self.type,
-                [self.flats[i].export() for i in range(len(self.flats))]
+                [flat.export() for flat in self.flats]
             ]
 
         class Flat():
@@ -818,17 +820,14 @@ class House():
 
             def showRecords(self):
                 options = []
-
                 if len(self.records)==0:
-                    options.append("Создайте первую запись в журнале посещений")
+                    options.append("Создайте первое посещение")
                     if io2.Mode == "easygui":
                         options[0] = "  " + options[0]
                 else:
                     for i in range(len(self.records)): # добавляем записи разговоров
                         options.append(icon("mic", simplified=False) + " %s: %s" % (self.records[i].date, self.records[i].title))
-
                 neutral = icon("preferences", simplified=False) + " Детали"
-
                 return neutral, options
 
             def addRecord(self, input, forceStatusUpdate=False):
@@ -965,7 +964,7 @@ class House():
                     self.status,
                     self.phone,
                     self.meeting,
-                    [self.records[i].export() for i in range(len(self.records))]
+                    [record.export() for record in self.records]
                 ]
 
             class Record():
@@ -975,7 +974,4 @@ class House():
                     self.title = ""
                     
                 def export(self):
-                    return [
-                        self.date,
-                        self.title
-                    ]
+                    return self.date, self.title

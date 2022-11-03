@@ -781,8 +781,13 @@ def search(query=""):
                                                        houses[list[i][0][0]].porches[list[i][0][1]].flats[
                                                            list[i][0][2]].title))
                     else:  # for standalone contacts
-                        options2.append("%s%s, %s" % (
-                            number, resources[1][list[i][0][0]].title,
+                        if resources[1][list[i][0][0]].title == "":
+                            title = ""
+                        else:
+                            title = resources[1][list[i][0][0]].title + ", "
+                        options2.append("%s%s%s" % (
+                            number,
+                            title,
                             resources[1][list[i][0][0]].porches[0].flats[0].title))
 
                 if len(options2) == 0:
@@ -831,7 +836,7 @@ def search(query=""):
                     else:  # standalone contacts
                         result = territory.flatView(flat=resources[1][h].porches[0].flats[0], house=resources[1][h], virtual=True)
                         if result == "deleted":
-                            io2.log("«%s» удален" % resources[1][h].porches[0].flats[0].getName())
+                            io2.log("Контакт %s удален" % resources[1][h].porches[0].flats[0].getName())
                             del resources[1][h]
                             io2.save()
                             #query = None

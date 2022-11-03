@@ -275,8 +275,6 @@ def showContacts():
                 selected = 4
             elif settings[0][4] == "т":
                 selected = 5
-            #elif settings[0][4] == "э":
-            #    selected = 6
             else:
                 selected = 0
 
@@ -315,6 +313,7 @@ def showContacts():
                 resources[1][len(resources[1]) - 1].addPorch(input="virtual", type="virtual")
                 resources[1][len(resources[1]) - 1].porches[0].addFlat("+" + newContact, virtual=True)
                 resources[1][len(resources[1]) - 1].porches[0].flats[0].status = "1"
+                io2.log("Создан контакт %s" % resources[1][len(resources[1]) - 1].porches[0].flats[0].getName())
                 io2.save()
 
         elif set.ifInt(choice) == True:
@@ -339,6 +338,7 @@ def showContacts():
                 else:
                     exit = territory.flatView(flat=resources[1][h].porches[0].flats[0], house=resources[1][h], virtual=True)
                     if exit == "deleted":
+                        io2.log("Контакт %s удален" % resources[1][h].porches[0].flats[0].getName())
                         del resources[1][h]
                         io2.save()
                     elif exit == "createdRecord" and io2.settings[0][9] == 0:

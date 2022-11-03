@@ -70,6 +70,8 @@ def getButton(text="", img=[]):
         image = img[9]
     elif "Помощь" in text:
         image = img[11]
+    elif "[Esc]" in text:
+        image = img[31]
     elif "Отмена [Esc]" in text:
         image = img[12]
     elif icon("export") in text:
@@ -84,9 +86,7 @@ def getButton(text="", img=[]):
         image = img[25]
     elif "Справка" in text:
         image = img[30]
-    elif "Назад" in text:
-        image = img[31]
-    elif "Главная" in text:
+    elif "F1" in text:
         image = img[32]
     else:
         text2 = text
@@ -1855,7 +1855,7 @@ class GUItk3(object):
         okButton.bind("<Button-1>", self.ok_pressed)
         okButton.bind("<space>", self.ok_pressed)
 
-        sideButtonIpadX = 8
+        sideButtonIpadX = 0
 
         if self.form == "terView":
             okButton.pack(side=tk.LEFT, fill="x", expand=tk.YES, padx=self.padx, pady=0, ipady=self.ipady)
@@ -1868,9 +1868,9 @@ class GUItk3(object):
             sortButton.pack(side=tk.LEFT, padx=self.padx, pady=0, ipadx=sideButtonIpadX, ipady=self.ipady)
         else:
             if self.negative != None:
-                backButton = ttk.Button(okButtonFrame, takefocus=tk.YES,  # кнопка назад
-
-                                        image=getButton("  Назад", self.img)[1])
+                backButton = ttk.Button(okButtonFrame, takefocus=tk.YES, compound="left",  # кнопка назад
+                                        text=getButton("  [Esc]", self.img)[0],
+                                        image=getButton("  [Esc]", self.img)[1])
                 backButton.bind("<Return>", self.cancel_pressed)
                 backButton.bind("<Button-1>", self.cancel_pressed)
                 backButton.bind("<space>", self.cancel_pressed)
@@ -1879,8 +1879,9 @@ class GUItk3(object):
 
                 okButton.pack(side=tk.LEFT, fill="x", expand=tk.YES, padx=self.padx, pady=0, ipady=self.ipady)
 
-                homeButton = ttk.Button(okButtonFrame, takefocus=tk.YES,   # кнопка возврата на главную
-                                        image=getButton("  Главная", self.img)[1])
+                homeButton = ttk.Button(okButtonFrame, takefocus=tk.YES, compound="left",   # кнопка возврата на главную
+                                        text=getButton("  [F1]", self.img)[0],
+                                        image=getButton("  [F1]", self.img)[1])
                 homeButton.bind("<Return>", self.home_pressed)
                 homeButton.bind("<Button-1>", self.home_pressed)
                 homeButton.bind("<space>", self.home_pressed)
@@ -1936,7 +1937,6 @@ class GUItk3(object):
         self.choiceboxWidget.bind("<Insert>", self.positive_pressed)
         self.choiceboxWidget.bind("<Control-Insert>", self.neutral_pressed)
         self.choiceboxWidget.bind("<BackSpace>", self.cancel_pressed)
-        self.choiceboxWidget.bind("<Alt-2>", self.contacts_pressed)
 
         self.choiceboxWidget.bind("<F1>", self.home_pressed)
         def focus_search(event):

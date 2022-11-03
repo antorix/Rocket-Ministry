@@ -467,8 +467,7 @@ class Report():
                     default=self.note
                 )
                 if choice2 == None:
-                    self.note = ""
-                    self.saveReport(self.note, mute=True)
+                    continue
                 elif "cancelled!" in choice2:
                     continue
                 else:

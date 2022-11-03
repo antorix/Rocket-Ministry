@@ -314,6 +314,8 @@ def porchSettings(house, selectedPorch, jumpToPhone=False):
                 message = "Вы уверены?"
             )
             if answer== True:
+                type = porch.type[0].upper() + porch.type[1:]
+                io2.log("%s %s удален" % (type, house.porches[selectedPorch].title))
                 del house.porches[selectedPorch]
                 io2.save()
                 return "deleted"
@@ -625,7 +627,6 @@ def flatSettings(flat, house=None, virtual=False, allowDelete=True, jumpToStatus
         elif "В отдельный контакт" in result:
             name = flat.clone(toStandalone=True, title=house.title)
             io2.save()
-            io2.log("Создан отдельный контакт %s" % name)
             break
             
         elif "Email" in result: # Email
