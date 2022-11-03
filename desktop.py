@@ -64,7 +64,7 @@ def getButton(text="", img=[]):
         image = img[10]
     elif "Обнов" in text:
         image = img[5]
-    elif "OK [Enter]" in text:
+    elif "OK" in text:
         image = img[14]
     elif "Сохранить" in text:
         image = img[9]
@@ -1937,22 +1937,30 @@ class GUItk3(object):
     def listContextMenu(self, e=None): # контекстное меню списка ***
         menu = tk.Menu(self.boxRoot, tearoff=0)
         menu.add_command(
-            label=getButton("  OK [Enter]", self.img)[0],
-            image=getButton("  OK [Enter]", self.img)[1],
+            label=getButton("  OK", self.img)[0],
+            image=getButton("  OK", self.img)[1],
             compound="left",
             command=self.ok_pressed
         )
         if self.positive != None:
+            if "[" in self.positive:
+                text = self.positive[0: self.positive.index("[")]
+            else:
+                text = self.positive
             menu.add_command(
-                label=getButton(self.positive, self.img)[0],
-                image=getButton(self.positive, self.img)[1],
+                label=getButton(text, self.img)[0],
+                image=getButton(text, self.img)[1],
                 compound="left",
                 command=self.positive_pressed
             )
         if self.neutral != None:
+            if "[" in self.neutral:
+                text = self.neutral[0: self.neutral.index("[")]
+            else:
+                text = self.neutral
             menu.add_command(
-                label=getButton(self.neutral, self.img)[0],
-                image=getButton(self.neutral, self.img)[1],
+                label=getButton(text, self.img)[0],
+                image=getButton(text, self.img)[1],
                 compound="left",
                 command=self.neutral_pressed
             )
