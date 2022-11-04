@@ -16,6 +16,7 @@ from tkinter import ttk
 import tkinter.filedialog as tk_FileDialog
 from tkinter.scrolledtext import ScrolledText
 import string
+import homepage
 from icons import icon
 from os import path
 from reports import updateTimer, timeFloatToHHMM
@@ -64,15 +65,21 @@ def getButton(text="", img=[]):
         image = img[10]
     elif "Обнов" in text:
         image = img[5]
-    elif "OK" in text:
+    elif "OK [Enter]" in text:
         image = img[14]
+    elif "OK" in text:
+        image = None
+        text2 = text
+    elif "Назад" in text:
+        image = None
+        text2 = text
     elif "Сохранить" in text:
         image = img[9]
     elif "Помощь" in text:
         image = img[11]
     elif "Отмена [Esc]" in text:
         image = img[12]
-    elif "[Esc]" in text or "Назад" in text:
+    elif "[Esc]" in text:
         image = img[31]
     elif icon("export") in text:
         image = img[13]
@@ -102,6 +109,62 @@ def getMenu(box, e):
     menu.add_separator()
     menu.add_command(label="Выделить все", command=lambda: e.widget.event_generate("<<SelectAll>>"))
     menu.tk.call("tk_popup", menu, e.x_root, e.y_root)
+
+def config_menu(self):
+    """ Главное меню """
+
+    def fileImport(self):
+        self.callback(self, command="import", choices="import")
+    def fileRestore(self):
+        self.callback(self, command="restore", choices="restore")
+    def fileExport(self):
+        self.callback(self, command="export", choices="export")
+    def fileWipe(self):
+        self.callback(self, command="wipe", choices="wipe")
+    def fileExit(self):
+        self.callback(self, command="exit", choices="exit")
+
+    def menuFile():
+        self.callback(self, command="file", choices="file")
+    def menuReport():
+        self.callback(self, command="report", choices="report")
+    def menuSettings():
+        self.callback(self, command="settings", choices="settings")
+    def menuNotebook():
+        self.callback(self, command="notebook", choices="notebook")
+    def menuAbout():
+        self.callback(self, command="about", choices="about")
+
+    menu = tk.Menu(self.boxRoot, tearoff=0)
+    self.boxRoot.config(menu=menu)
+    filemenu = tk.Menu(menu, tearoff=0)
+    menu.add_cascade(label="Файл", menu=filemenu)
+    if 1:#io2.Simplified==1:
+        menu.add_command(label="Настройки", command=menuSettings)
+    else:
+        settingsMenu = tk.Menu(menu, tearoff=0)
+        menu.add_cascade(label="Настройки", menu=settingsMenu)
+
+        # Список настроек
+        def setSetting(a=None):
+            print(a)
+        options = homepage.preferences(getOptions=True)
+        for option in options:
+            settingsMenu.add_command(label=option[2:], compound="left", command=lambda x=option: setSetting(x))
+
+    menu.add_command(label="Отчет", command=menuReport)
+    menu.add_command(label="Блокнот", command=menuNotebook)
+    menu.add_command(label="О программе", command=menuAbout)
+
+    # Файл
+    filemenu.add_command(label="Импорт", compound="left", image=self.img[27], command=fileImport)
+    filemenu.add_command(label="Экспорт", compound="left", image=self.img[26], command=fileExport)
+    filemenu.add_command(label="Восстановление", compound="left", image=self.img[28], command=fileRestore)
+    filemenu.add_command(label="Очистка", compound="left", image=self.img[29], command=fileWipe)
+
+    if io2.Simplified == 0:
+        filemenu.add_separator()
+        filemenu.add_command(label="Выход с экспортом", command=fileExit)
 
 def create_footer(box, grid=False):
     footerFrame = tk.Frame(box)
@@ -195,7 +258,7 @@ def getFileDialogTitle(msg, title):
 
 
 def textbox(msg="", title=" ", text="",
-            codebox=False, callback=None, run=True, mono=False, positive=None, neutral=None, negative=None):
+            codebox=False, callback=None, run=True, disabled=False, positive=None, neutral=None, negative=None):
     """ Display a message and a text to edit
 
     Parameters
@@ -222,7 +285,7 @@ def textbox(msg="", title=" ", text="",
 
     """
 
-    tb = TextBox(msg=msg, title=title, text=text, mono=mono,
+    tb = TextBox(msg=msg, title=title, text=text, disabled=disabled,
                  codebox=codebox, callback=callback, positive=positive, neutral=neutral, negative=negative)
     if not run:
         return tb
@@ -241,7 +304,7 @@ class TextBox(object):
     library can be used (wx, qt) without breaking anything for the user.
     """
 
-    def __init__(self, msg, title, text, codebox, callback, mono, positive, neutral, negative):
+    def __init__(self, msg, title, text, codebox, callback, disabled, positive, neutral, negative):
         """ Create box object
 
         Parameters
@@ -266,7 +329,7 @@ class TextBox(object):
         self.neutral = neutral
         self.negative = negative
         self.callback = callback
-        self.ui = GUItk(msg, title, text, codebox, self.callback_ui, mono, positive=positive, neutral=neutral, negative=negative)
+        self.ui = GUItk(msg, title, text, codebox, self.callback_ui, disabled, positive=positive, neutral=neutral, negative=negative)
         self.text = text
 
         #self.padx = self.pady = 5
@@ -354,7 +417,7 @@ class GUItk(object):
 
     """ This is the object that contains the tk root object"""
 
-    def __init__(self, msg, title, text, codebox, callback, mono, positive, neutral, negative):
+    def __init__(self, msg, title, text, codebox, callback, disabled, positive, neutral, negative):
 
         """ Create ui object
 
@@ -393,7 +456,7 @@ class GUItk(object):
 
         self.ipadx = 5
 
-        self.mono = mono
+        self.disabled = disabled
 
         self.boxRoot = tk.Tk()
 
@@ -474,7 +537,7 @@ class GUItk(object):
     def set_text(self, text):
         self.textArea.delete(1.0, tk.END)
         self.textArea.insert(tk.END, text, "normal")
-        if self.positive==None:
+        if self.disabled == True:
             self.textArea.config(state=tk.DISABLED, background=dialogs.inactive_background)
         self.textArea.focus_force()
 
@@ -583,18 +646,11 @@ class GUItk(object):
             pady=self.pady,#default_hpad_in_chars * self.calc_character_width(),
             height=500,#TextBoxHeight,  # lines                     # высота текстового окна
             width=500,#TextBoxWidth,   # chars of the current font # ширина текстового окна
-            takefocus=1
+            takefocus=1,
+            font = (dialogs.PROPORTIONAL_FONT_FAMILY, dialogs.PROPORTIONAL_FONT_SIZE)
         )
 
         self.textArea.configure(wrap=tk.WORD)
-        if self.mono == True:
-            self.textArea.configure(
-                font=(dialogs.MONOSPACE_FONT_FAMILY, dialogs.MONOSPACE_FONT_SIZE)
-            )
-        else:
-            self.textArea.configure(
-                font=(dialogs.PROPORTIONAL_FONT_FAMILY, dialogs.PROPORTIONAL_FONT_SIZE)
-            )
 
         # some simple keybindings for scrolling
         self.boxRoot.bind("<Next>", self.textArea.yview_scroll(1, tk.PAGES))
@@ -641,11 +697,14 @@ class GUItk(object):
 
     def create_ok_button(self):
         # put the buttons in the buttonsFrame
+
+        if self.disabled==False:
+            text, image = getButton("  " + self.positive + " [Shift-Enter]", self.img)
+        else:
+            text = self.positive
+            image = None
         self.okButton = ttk.Button(
-            self.buttonsFrame, takefocus=tk.YES, compound="left",
-            text = getButton("  " + self.positive + " [Shift-Enter]", self.img)[0],
-            image = getButton(self.positive + " [Shift-Enter]", self.img)[1]
-        )
+            self.buttonsFrame, takefocus=tk.YES, compound="left", text=text, image=image)
         self.okButton.pack(
             expand=tk.YES, side=tk.LEFT, padx=self.padx,
             ipady=self.ipady, ipadx=self.ipadx)
@@ -974,8 +1033,8 @@ class GUItk2(object):
 
         self.boxRoot = tk.Tk()
         self.boxFont = tk_Font.Font(
-             family=dialogs.PROPORTIONAL_FONT_FAMILY,
-             size=dialogs.PROPORTIONAL_FONT_SIZE)
+             family=dialogs.MONOSPACE_FONT_FAMILY,
+             size=dialogs.MONOSPACE_FONT_SIZE)
 
         #self.boxFont = tk_Font.nametofont("TkFixedFont")
         self.width_in_chars = dialogs.fixw_font_line_length
@@ -1023,7 +1082,7 @@ class GUItk2(object):
         self.messageArea.config(state=tk.NORMAL)
         self.messageArea.delete(1.0, tk.END)
         self.messageArea.insert(tk.END, msg)
-        self.messageArea.config(state=tk.DISABLED)
+        self.messageArea.config(state=tk.DISABLED, bg=dialogs.inactive_background)
         # Adjust msg height
         self.messageArea.update()
         numlines = 500#self.get_num_lines(self.messageArea) # высота окна текста
@@ -1434,7 +1493,7 @@ class GUItk3(object):
 
         self.config_root(title)
 
-        self.config_menu() # меню
+        config_menu(self) # меню
 
         self.set_pos(dialogs.window_position)  # GLOBAL POSITION
 
@@ -1514,44 +1573,8 @@ class GUItk3(object):
     def serviceyear_pressed(self, event=None):
         self.callback(self, command='serviceyear', choices="serviceyear")
 
-    def menuFile(self):
-        self.callback(self, command="file", choices="file")
-    def menuReport(self):
-        self.callback(self, command="report", choices="report")
-    def menuSettings(self):
-        self.callback(self, command="settings", choices="settings")
-    def menuNotebook(self):
-        self.callback(self, command="notebook", choices="notebook")
-    def menuAbout(self):
-        self.callback(self, command="about", choices="about")
-    def fileImport(self):
-        self.callback(self, command="import", choices="import")
-    def fileRestore(self):
-        self.callback(self, command="restore", choices="restore")
-    def fileExport(self):
-        self.callback(self, command="export", choices="export")
-    def fileWipe(self):
-        self.callback(self, command="wipe", choices="wipe")
-    def fileExit(self):
-        self.callback(self, command="exit", choices="exit")
 
-    def config_menu(self):
-        self.menu = tk.Menu(self.boxRoot, tearoff=0)
-        self.boxRoot.config(menu=self.menu)
-        self.filemenu = tk.Menu(self.menu, tearoff=0)
-        self.menu.add_cascade(label="Файл", menu=self.filemenu)
-        #self.menu.add_command(label="Файл", command=self.menuFile)
-        self.menu.add_command(label="Настройки", command=self.menuSettings)
-        self.menu.add_command(label="Отчет", command=self.menuReport)
-        self.menu.add_command(label="Блокнот", command=self.menuNotebook)
-        self.menu.add_command(label="О программе", command=self.menuAbout)
-        self.filemenu.add_command(label="Импорт", compound="left", image=self.img[27], command=self.fileImport)
-        self.filemenu.add_command(label="Экспорт", compound="left", image=self.img[26], command=self.fileExport)
-        self.filemenu.add_command(label="Восстановление", compound="left", image=self.img[28], command=self.fileRestore)
-        self.filemenu.add_command(label="Очистка", compound="left", image=self.img[29], command=self.fileWipe)
-        if io2.Simplified == 0:
-            self.filemenu.add_separator()
-            self.filemenu.add_command(label="Выход с экспортом", command=self.fileExit)
+    # меню
 
     # Methods to change content ---------------------------------------
 
@@ -2422,3 +2445,32 @@ class FileTypeObject:
         if e.startswith("."):
             return '{} files'.format(e[1:].upper())
         return '{} files'.format(e.upper())
+
+def topText(value):
+    form = tk.Toplevel()
+    return
+    def _saveSetting(event=None):
+
+        value = entry.get().strip()
+        form.destroy()
+
+    bgColor = "gray94"
+    width = 180
+    padx = pady = 5
+    form = tk.Toplevel(bg=bgColor, bd=1, relief='solid', borderwidth=1)
+    width = 200
+    height = 100
+    return
+
+    #form.geometry(dialogs.window_size + dialogs.window_position)
+    form.wm_overrideredirect(True)
+    form.grab_set()
+    entry = tk.Entry(form, relief="flat")
+    entry.pack(side="bottom", padx=5, pady=5, fill="x")
+    entry.focus_force()
+    tk.Message(form, bg=bgColor, width=width, text="123").pack(side="top", padx=padx, pady=pady)
+    entry.insert(0, "456")
+    
+    entry.bind("<Return>", _saveSetting)
+    entry.bind("<FocusOut>", _saveSetting)
+    entry.bind("<Escape>", lambda x: form.destroy())

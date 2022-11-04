@@ -178,10 +178,6 @@ def homepage():
         io2.Simplified=0
         settings[0][1]=1
 
-    if io2.Simplified==0:
-        #territory.porchView(houses[1], 2)
-        pass
-
     while 1:
 
         appointment = "" # поиск контактов со встречей на сегодня
@@ -405,7 +401,7 @@ def fileActions():
 
     return False
 
-def preferences():
+def preferences(getOptions=False):
     """ Program preferences """
 
     def status(setting):
@@ -455,7 +451,8 @@ def preferences():
         if io2.Simplified==0 and io2.Mode!="sl4a":
             options.append(                   "%s Файл импорта базы данных: %s" % (icon("box", simplified=False), importURL))
         options.append(                       "%s Пароль на вход: %s" % (icon("box", simplified=False), password))
-        options.append(status(settings[0][16]) + "Режим смайликов")
+        if io2.Mode == "sl4a":
+            options.append(status(settings[0][16]) + "Режим смайликов")
         options.append(status(settings[0][12]) + "Проверять обновления")
         options.append(status(settings[0][1])  + "Консольный режим")
 
@@ -464,6 +461,9 @@ def preferences():
 
         # settings[0][4] - занято под сортировку контактов!
         # settings[0][19] - занято под сортировку участков!
+
+        if getOptions==True:
+            return options
 
         choice = dialogs.dialogList(  # display list of settings
             form="preferences",
@@ -552,7 +552,9 @@ def preferences():
             if settings[0][21]==1:
                 dialogs.dialogInfo(
                     title="Статус обработки подъездов",
-                    message="При включении этого параметра вы сможете указывать для каждого подъезда участка, когда вы в нем были:\n\nв будний день в первой половине дня (первый кружок – %s)\n\nв будний день вечером (второй кружок – %s)\n\nв выходной (третий кружок – %s)\n\nЕсли подъезд посещен все три раза, он учитывается как обработанный в разделе статистики." % (icon("porchCircle1"), icon("porchCircle2"), icon("porchCircle3"))
+                    message="При включении этого параметра вы сможете указывать для каждого подъезда участка, когда вы в нем были:\n\nв будний день в первой половине дня (первый кружок – %s)\n\nв будний день вечером (второй кружок – %s)\n\nв выходной (третий кружок – %s)\n\nЕсли подъезд посещен все три раза, он учитывается как обработанный в разделе статистики." % (icon("porchCircle1"), icon("porchCircle2"), icon("porchCircle3")),
+                    positive="OK",
+                    negative=None
                 )
             io2.save()
 

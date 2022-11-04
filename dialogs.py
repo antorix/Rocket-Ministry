@@ -84,10 +84,10 @@ elif io2.Mode=="easygui":
         , "home.png"         # 32
     ]
 
-    from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
+    from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox, topText
 
     try:
-        from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
+        from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox, topText
     except: # нет desktop - старая версия, догружаем
         from tkinter import messagebox
         if io2.Simplified==0:
@@ -194,7 +194,7 @@ def dialogText(title="",
                 mono=mono,
                 neutral=neutral
             )
-        else:
+        else:           
             choice = textbox(
                 msg=message,
                 title=title,
@@ -202,7 +202,7 @@ def dialogText(title="",
                 positive=positive,
                 neutral=neutral,
                 negative=negative
-            )
+            )#"""
 
         if console.process(choice)==True:
             return ""
@@ -510,7 +510,7 @@ def dialogAlert(title="Внимание!", message="", positive="OK", neutral=No
             #tkinter.messagebox.showinfo(title, message)
             msgbox(title=title, msg=message, positive=positive, neutral=neutral, negative=negative)
 
-def dialogInfo(title="", message="", largeText=False,   mono=False,
+def dialogInfo(title="", message="", largeText=False,   disabled=True,
                positive=None,       negative="Назад",    neutral=None):
     """ Help dialog """
 
@@ -572,12 +572,12 @@ def dialogInfo(title="", message="", largeText=False,   mono=False,
                     msg=message,
                     title=title,
                     text=message,
-                    mono=mono,
+                    disabled=disabled,
                     positive=positive,
                     neutral=neutral,
                     negative=negative
                 )
-            if console.process(choice) == True:
+            if disabled==False and console.process(choice) == True:
                 return ""
             if choice != None:
                 choice = choice.strip()

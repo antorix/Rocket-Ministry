@@ -17,8 +17,12 @@ GridMode = 0
 def terView(start=False):
     """ Список участков """
 
-    if io2.Simplified==0:
+    if io2.Simplified==0: # отладочные действия
         #print(len(io2.resources[2]))
+        #import tkinter as tk
+        #form = tk.Toplevel()
+        from territory import porchView
+        porchView(houses[0], 0)
         pass
 
     choice=""
@@ -651,7 +655,9 @@ def findFlatByNumber(house, porch, number, onlyGetNumber=False):
                             "Примеры умной строки:\n\n" + \
                             "Алексей 30. Показали Отк. 21:4, оставили =буклет о Цар. 2\n\n" + \
                             "ж60. Показали =в, начато =и 1\n\n" + \
-                            "Если вы не пользуетесь умной строкой, ее можно отключить в настройках."
+                            "Если вы не пользуетесь умной строкой, ее можно отключить в настройках.",
+                    positive="OK",
+                    negative=None
                 )
             elif "." not in input:
                 flat.note = input
