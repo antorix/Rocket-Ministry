@@ -84,10 +84,11 @@ elif io2.Mode=="easygui":
         , "home.png"         # 32
     ]
 
-    from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox, topText
+    if io2.Simplified==0: # пробная загрузка модулей в отладочном режиме
+        from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
 
     try:
-        from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox, topText
+        from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
     except: # нет desktop - старая версия, догружаем
         from tkinter import messagebox
         if io2.Simplified==0:

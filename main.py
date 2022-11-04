@@ -9,11 +9,6 @@ def app():
 
     io2.load()
 
-    if io2.Mode=="text":
-        io2.settings[0][1] = 1
-    else:
-        io2.settings[0][1] = 0
-
     if io2.settings[0][17]!="":
         password=dialogs.dialogGetPassword(title="Rocket Ministry")
     else:
