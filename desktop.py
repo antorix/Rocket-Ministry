@@ -68,7 +68,7 @@ def getButton(text="", img=[]):
     elif "OK [Enter]" in text:
         image = img[14]
     elif "OK" in text:
-        image = None
+        image = img[14]
         text2 = text
     elif "Назад" in text:
         image = None
