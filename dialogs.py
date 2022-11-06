@@ -82,6 +82,7 @@ elif io2.Mode=="easygui":
         , "info.png"         # 30
         , "arrow_left.png"   # 31
         , "home.png"         # 32
+        , "rocket64.png"     # 33
     ]
 
     if io2.Simplified==0: # пробная загрузка модулей в отладочном режиме

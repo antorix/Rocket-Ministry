@@ -20,7 +20,7 @@ def terView(start=False):
         #print(len(io2.resources[2]))
         #import tkinter as tk
         #form = tk.Toplevel()
-        porchView(io2.houses[0], 0)
+        #porchView(io2.houses[0], 0)
         pass
 
     choice=""

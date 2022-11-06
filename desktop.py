@@ -383,7 +383,7 @@ class GUItk3(object):
 
         self.ipady = self.ipadx = 5
 
-        #self.width_in_chars = prop_font_line_length
+        self.width_in_chars = dialogs.prop_font_line_length
         # Initialize self.selected_choices
         # This is the value that will be returned if the user clicks the close
         # icon
@@ -711,7 +711,7 @@ class GUItk3(object):
 
     def create_msg_widget(self):
 
-        self.msgFrame = tk.Frame(self.boxRoot) # дублирование title
+        self.msgFrame = tk.Frame(self.boxRoot) # дублирование title - choicebox
         self.msgFrame.pack(side=tk.TOP, expand=1, fill='both')
         if len(self.title)>1 and self.title[1]==" " and self.form != "firstCallMenu" and "Этаж" not in self.title and self.form!="flatView":
             msg = self.title[1:]
@@ -1276,14 +1276,14 @@ class GUItk(object):
 
     def create_msg_widget(self, msg):
 
-        self.msgFrame = tk.Frame(self.boxRoot) # дублирование title
+        self.msgFrame = tk.Frame(self.boxRoot) # дублирование title - textbox
         self.msgFrame.pack(side=tk.TOP, expand=1, fill='both')
         if self.title[1] == " ":
             text = self.title[1:]
         else:
             text = self.title
         self.messageArea = tk.Label(self.msgFrame, text=text, fg="grey30")
-        self.messageArea.pack(side=tk.TOP, expand=1, fill='both', padx=3)
+        self.messageArea.pack(side=tk.TOP, expand=1, fill='both')
 
     def create_text_area(self, wrap_text):
         """
@@ -1291,14 +1291,8 @@ class GUItk(object):
         Put and configure scrollbars
         """
 
-        self.textFrame = tk.Frame(
-            self.boxRoot,
-            padx=self.padx,
-            pady=self.pady#self.pady
-        )
-
-        self.textFrame.pack(side=tk.BOTTOM)
-        # self.textFrame.grid(row=1, column=0, sticky=tk.EW)
+        self.textFrame = tk.Frame(self.boxRoot)
+        self.textFrame.pack(side=tk.BOTTOM, padx=4)
 
         self.textArea = tk.Text(
             self.textFrame,
@@ -1344,8 +1338,8 @@ class GUItk(object):
         # Text will be displayed with wordwrap, so we don't need to have
         # a horizontal scroll for it.
 
-        if not wrap_text:
-            bottomScrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+        #if not wrap_text:
+        #    bottomScrollbar.pack(side=tk.BOTTOM, fill=tk.X)
         rightScrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         self.textArea.pack(side=tk.LEFT, fill=tk.BOTH, expand=tk.YES)
@@ -1379,8 +1373,8 @@ class GUItk(object):
         # put the buttons in the buttonsFrame
         self.cancelButton = ttk.Button(
             self.buttonsFrame, takefocus=tk.YES, compound="left",
-            text=getButton("  " + self.negative + " [Esc]", self.img)[0],
-            image=getButton(self.negative + " [Esc]", self.img)[1]
+            text=getButton(self.negative, self.img)[0],
+            image=getButton(self.negative, self.img)[1]
         )
         self.cancelButton.pack(
             expand=tk.YES, side=tk.RIGHT, padx=self.padx,
@@ -1694,7 +1688,7 @@ class GUItk2(object):
              family=dialogs.MONOSPACE_FONT_FAMILY,
              size=dialogs.MONOSPACE_FONT_SIZE)
 
-        #self.boxFont = tk_Font.nametofont("TkFixedFont")
+        self.boxFont = tk_Font.nametofont("TkFixedFont")
         self.width_in_chars = dialogs.fixw_font_line_length
 
         self.configure_root("Rocket Ministry")
@@ -1827,17 +1821,22 @@ class GUItk2(object):
 
     def create_msg_widget(self, msg):
 
-        if len(self._title) > 1 and self._title[1]==" ":
+        if len(self._title) > 1 and self._title[1]==" ": # дублирование title - buttonbox
             text = self._title[1:]
         else:
             text = self._title
-
-        self.msgArea = tk.Label(self.boxRoot, text=text, fg="grey30")
-        self.msgArea.grid(row=0)#pack(expand=1, fill='both', padx=3)
+        if "О программе" in text:
+            image = self.img[33]
+        else:
+            image = None
+        self.msgArea = tk.Label(self.boxRoot, text=text, image=image, compound="top", fg="grey30")
+        self.msgArea.grid(row=0, padx=5)
 
         self.messageArea = tk.Text(
             self.boxRoot,
             width=self.width_in_chars,
+            height=200,
+            #width=200,
             padx=10,
             pady=10,
             wrap=tk.WORD,
@@ -1845,19 +1844,12 @@ class GUItk2(object):
         )
         self.messageArea.insert(tk.END, msg)
         self.messageArea.config(state=tk.DISABLED, bg=dialogs.inactive_background)
-        self.messageArea.config(width=200, padx=20, background=dialogs.inactive_background)  # ширина окна текста
+        #self.messageArea.config(width=200, padx=10, background=dialogs.inactive_background)  # ширина окна текста
         self.messageArea.grid(row=1)
         self.boxRoot.rowconfigure(0, weight=0)
         self.boxRoot.rowconfigure(1, weight=10)
         self.boxRoot.rowconfigure(2, weight=0)
         self.boxRoot.bind_class("Text", "<3>", self.contextMenu)
-
-
-
-
-
-
-
 
     def contextMenu(self, e=None):
         """ Контекстное меню. Создается из внешней функции getMenu, универсальной для всех виджетов """
@@ -2053,7 +2045,7 @@ def __fillablebox(msg, title="", default="", mask=None, root=None, mono=False, h
 
     create_footer(bottomFrame)
 
-    # Верхняя строка (дублирование title)
+    # Верхняя строка (дублирование title) - fillablebox
     msgFrame = tk.Frame(mainFrame)
     msgFrame.pack(side=tk.TOP, fill='both')
     if title.strip()=="":
