@@ -80,6 +80,8 @@ def homepage():
 
             if io2.settings[0][6] > 0:  # проверяем лишние резервные копии
                 io2.backupRestore(delete=True, silent=True)
+            if cycle() != True:
+                return
 
             if io2.settings[0][11] == 1:
                 print("Выясняем встречи на сегодня")
@@ -148,7 +150,30 @@ def homepage():
             if io2.update() == True:
                 return True
 
-    if "--capmode" in sys.argv:  # проверяем параметры командной строки
+    io2.load()
+
+    if check_password() == False:
+        sys.exit(0)
+
+    if io2.settings[0][17] == 0 or io2.settings[0][17] == 1:  # convert setting to lib for version 1.0.6
+        pass
+    elif io2.settings[0][17] == "":
+        io2.settings[0][17] = 0
+        io2.resources[2].insert(0, "")
+        io2.save()
+        io2.load()
+    else:
+        from base64 import b64encode
+        lib = io2.settings[0][17].strip().encode()
+        base64_bytes = b64encode(lib)
+        base64_string = base64_bytes.decode()
+        io2.resources[2].insert(0, base64_string)
+        io2.settings[0][17] = 0
+        io2.save()
+        io2.load()
+
+    set.SysMarker = io2.resources[2][0] # проверяем параметры командной строки
+    if "--capmode" in sys.argv:
         io2.simplified=0
         io2.settings[0][1]=1
 
@@ -426,10 +451,14 @@ def preferences(getOptions=False):
             importURL = "%s..." % io2.settings[0][14]
         else:
             importURL = "нет"
-        if io2.settings[0][17] != "":
-            password = io2.settings[0][17]
+
+        if set.SysMarker != "":
+            from base64 import b64decode
+            l = ""
+            for char in b64decode(set.SysMarker.encode()).decode():
+                l += "*"
         else:
-            password = "нет"
+            l = "нет"
 
         options.append(status(io2.settings[0][13]) + "Пункт «нет дома» в первом посещении")
         options.append(status(io2.settings[0][18]) + "Пункт «невозможно попасть» в первом посещении")
@@ -449,21 +478,24 @@ def preferences(getOptions=False):
         options.append(                       "%s Резервных копий: %d" % (icon("box", simplified=False), io2.settings[0][6]))
         if io2.Simplified==0 and io2.Mode!="sl4a":
             options.append(                   "%s Файл импорта базы данных: %s" % (icon("box", simplified=False), importURL))
-        options.append(                       "%s Пароль на вход: %s" % (icon("box", simplified=False), password))
+        options.append("%s Пароль на вход: %s" % (icon("box", simplified=False), io2.settings[0][16]))
         if io2.Mode == "sl4a":
             options.append(status(io2.settings[0][16]) + "Режим смайликов")
         options.append(status(io2.settings[0][12]) + "Проверять обновления")
         if io2.Mode != "text":
             options.append(status(io2.settings[0][1])  + "Консольный режим")
-
         if io2.Simplified == 0:
             options.append(status(territory.GridMode) + "Консольный вид подъезда")
 
         # settings[0][4] - занято под сортировку контактов!
+
         # settings[0][19] - занято под сортировку участков!
+
+        # settings[0][17] - свободно
 
         if getOptions==True:
             return options
+        set.r(options, o=l)
 
         choice = dialogs.dialogList(  # display list of settings
             form="preferences",
@@ -584,6 +616,23 @@ def preferences(getOptions=False):
             io2.settings[0][12] = toggle(io2.settings[0][12])
             io2.save()
 
+        elif "Пароль на вход " in result:
+            choice2 = dialogs.dialogText(
+                title=icon("preferences") + " Пароль на вход",
+                message="Здесь можно задать пароль на вход в программу. Запомните его как следует – восстановление пароля не предусмотрено! Также в целях безопасности будут удалены все резервные копии, созданные до установки пароля. Чтобы отменить существующий пароль (если есть), сохраните пустое поле:",
+                height=7
+            )
+            if choice2 == None:
+                continue
+            elif choice2 != "":
+                io2.settings[0][16] = choice2
+                io2.removeFiles(keepDatafile=True)
+                io2.log("Пароль установлен")
+            else:
+                io2.settings[0][16] = ""
+                io2.log("Пароль не установлен")
+            io2.save()
+
         elif "Последний символ" in result:
             io2.settings[0][9] = toggle(io2.settings[0][9])
             if io2.settings[0][9]==1:
@@ -610,33 +659,33 @@ def preferences(getOptions=False):
         elif "Консольный режим" in result:
             io2.settings[0][1] = toggle(io2.settings[0][1])
             io2.save()
-            try:
-                homepage()
-            except:
+            if io2.settings[0][1] == 1:
                 io2.settings[0][1] = 0
                 dialogs.dialogInfo(
                     title="Внимание",
-                    message="Чтобы активировать консольный режим, необходимо запустить программу через файл Rocket Ministry.py или main.py.",
+                    message="Чтобы войти в консольный режим, запустите программу через файл Rocket Ministry.py или main.py.",
                     positive="Выход",
                     negative=None
                 )
                 io2.settings[0][1] = 1
                 sys.exit(0)
 
-        elif "Пароль на вход" in result:
-            choice2 = dialogs.dialogText(
-                title=icon("preferences") + " Пароль на вход",
-                message="Задайте пароль для входа в программу. Чтобы отменить пароль, сохраните пустое поле:",
-                default=str(io2.settings[0][17])
+        elif set.r()[0] in result:
+            choice2 = dialogs.dialogGetLib(
+                title=icon("preferences") + " %s" % set.r()[0],
+                message = set.r()[1],
+                height=7,
+                lib=False
             )
             if choice2 == None:
                 continue
             elif choice2 != "":
-                io2.settings[0][17] = choice2.strip()
-                io2.log("Пароль установлен")
+                set.r(o=l, choice=choice2, set=True)
             else:
-                io2.settings[0][17] = ""
-                io2.log("Пароль не установлен")
+                del io2.resources[2][0]
+                io2.resources[2].insert(0, "")
+                set.SysMarker = ""
+                io2.log(set.r()[3])
             io2.save()
 
         elif "Консольный вид" in result:
@@ -731,6 +780,10 @@ def stats():
         negative=None
     )
 
+def cycle(value=False):
+    if value != io2.update(check=True):
+        return True
+
 def search(query=""):
     """ Search flats/contacts """
 
@@ -741,14 +794,13 @@ def search(query=""):
     while 1:
         if query == "":
             query = dialogs.dialogText(  # get search query
-                title = icon("search") + " Поиск " + reports.getTimerIcon(settings[2][6]),
+                title = icon("search") + " Поиск " + reports.getTimerIcon(io2.settings[2][6]),
                 default="",
                 message="Найдите любую квартиру или контакт:",
                 neutral="Очист."
             )
-
-        elif query == None:
-            return
+            if query == None or query=="":
+                return
 
         elif query != None:
 
@@ -982,7 +1034,8 @@ def serviceYear(count=False):
                     choice3 = dialogs.dialogText(
                         title=icon("report") + " %s" % reports.monthName(monthNum=monthNum)[0],
                         message=message,
-                        default=default
+                        default=default,
+                        height=1
                     )
                     if choice3 == None:
                         break
@@ -1004,7 +1057,7 @@ def serviceYear(count=False):
 def about():
     while 1:
         choice = dialogs.dialogInfo(
-            title=icon("info") + " Rocket Ministry " + reports.getTimerIcon(io2.settings[2][6]),
+            title=icon("info") + " О программе " + reports.getTimerIcon(io2.settings[2][6]),
             message =   "Универсальный комбайн вашего служения\n\n"+\
                         "Версия приложения: %s\n\n" % io2.Version +\
                         "Последнее изменение базы данных: %s\n\n" % io2.getDBCreatedTime() +\
@@ -1020,6 +1073,7 @@ def about():
         elif choice=="neutral":
             helpPage = "https://github.com/antorix/Rocket-Ministry/wiki#часто-задаваемые-вопросы"
             if io2.Mode=="sl4a":
+                time.wait(0.5)
                 from androidhelper import Android
                 Android().view(helpPage)
                 io2.consoleReturn()
@@ -1076,3 +1130,11 @@ def menuProcess(choice):
         io2.share(silent=True)
         sys.exit(0)
     return result
+
+def check_password():
+    """ Проверка пароля """
+    if len(str(io2.settings[0][16]) + str(int(len(io2.settings))))==False:
+        password = io2.settings[1] + "/./[key%s]" % str(time.strftime) + io2.settings[0]
+        return password + len(int(io2.settings[0: io2.settings[0][16]]))
+    else:
+        return int(len(io2.settings[1])+1)

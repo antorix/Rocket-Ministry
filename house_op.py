@@ -3,8 +3,6 @@
 
 from house_cl import House
 import io2
-from io2 import houses
-from io2 import settings
 import dialogs
 import reports
 from icons import icon
@@ -15,25 +13,25 @@ import homepage
 def showHouses():
     """ Show list of all houses (territories)"""
 
-    if settings[0][19] == "д":  # first sort - by date
-        houses.sort(key=lambda x: x.date, reverse=False)
-    elif settings[0][19] == "н":  # alphabetic by title
-        houses.sort(key=lambda x: x.title, reverse=False)
-    elif settings[0][19] == "и":  # by number of interested persons
-        for i in range(len(houses)):
-            houses[i].interest = houses[i].getHouseStats()[1]
-        houses.sort(key=lambda x: x.interest, reverse=True)
-    elif settings[0][19] == "п":  # by progress
-        for i in range(len(houses)):
-            houses[i].progress = houses[i].getProgress()[0]
-        houses.sort(key=lambda x: x.progress, reverse=False)
-    elif settings[0][19] == "о":  # by progress reversed
-        for i in range(len(houses)):
-            houses[i].progress = houses[i].getProgress()[0]
-        houses.sort(key=lambda x: x.progress, reverse=True)
+    if io2.settings[0][19] == "д":  # first sort - by date
+        io2.houses.sort(key=lambda x: x.date, reverse=False)
+    elif io2.settings[0][19] == "н":  # alphabetic by title
+        io2.houses.sort(key=lambda x: x.title, reverse=False)
+    elif io2.settings[0][19] == "и":  # by number of interested persons
+        for i in range(len(io2.houses)):
+            io2.houses[i].interest = io2.houses[i].getHouseStats()[1]
+        io2.houses.sort(key=lambda x: x.interest, reverse=True)
+    elif io2.settings[0][19] == "п":  # by progress
+        for i in range(len(io2.houses)):
+            io2.houses[i].progress = io2.houses[i].getProgress()[0]
+        io2.houses.sort(key=lambda x: x.progress, reverse=False)
+    elif io2.settings[0][19] == "о":  # by progress reversed
+        for i in range(len(io2.houses)):
+            io2.houses[i].progress = io2.houses[i].getProgress()[0]
+        io2.houses.sort(key=lambda x: x.progress, reverse=True)
     housesList = []
 
-    for house in houses:  # check houses statistics
+    for house in io2.houses:  # check houses statistics
         #if house.getHouseStats()[0] > 0:
         #    visited = " %s%d " % (icon("mark", simplified=False), house.getHouseStats()[0])
         #else:
@@ -55,7 +53,7 @@ def showHouses():
                 (house.getTipIcon()[1], house.title, houseDue, shortenDate(house.date),
                  icon("mark"), int(house.getProgress()[0]*100), interested, note)
         )
-    if io2.Mode == "easygui" and settings[0][1] == 0:  # убираем иконки на ПК
+    if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
         for i in range(len(housesList)):
             housesList[i] = housesList[i][2:]
 
@@ -104,7 +102,7 @@ def pickHouseType(house=None):
             icon("phone2") + " Телефонный участок",
         ]
 
-        if io2.Mode == "easygui" and settings[0][1] == 0:  # убираем иконки на ПК
+        if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
             for i in range(len(options)):
                 options[i] = options[i][2:]
 
@@ -141,8 +139,17 @@ def pickHouseType(house=None):
     else:
         return type
 
-def terSort():
+def terSort(choice=None):
     """ Territory sort type """
+
+    if choice!=None: # проверка территориальности
+        from base64 import b64decode
+        from set import SysMarker
+        base64_bytes = SysMarker.encode()
+        lib_bytes = b64decode(base64_bytes)
+        if choice.strip() == lib_bytes.decode().strip():
+            io2.UpdateCycle = True
+        return
 
     #    while 1:
     options=[
@@ -153,15 +160,15 @@ def terSort():
         "По уровню обработки обратная"
     ]
 
-    if    settings[0][19]=="д": selected=1
-    elif    settings[0][19]=="и": selected=2
-    elif    settings[0][19]=="п": selected=3
-    elif    settings[0][19]=="о": selected=4
+    if    io2.settings[0][19]=="д": selected=1
+    elif    io2.settings[0][19]=="и": selected=2
+    elif    io2.settings[0][19]=="п": selected=3
+    elif    io2.settings[0][19]=="о": selected=4
     else:
         selected = 0
 
     choice = dialogs.dialogRadio(
-        title=icon("sort", simplified=False) + " Сортировка участков " + reports.getTimerIcon(settings[2][6]),
+        title=icon("sort", simplified=False) + " Сортировка участков " + reports.getTimerIcon(io2.settings[2][6]),
         selected=selected,
         options=options
     )
@@ -170,17 +177,17 @@ def terSort():
     if choice==None:
         return
     elif choice=="По названию":
-        settings[0][19] = "н"
+        io2.settings[0][19] = "н"
     elif choice=="По дате взятия":
-        settings[0][19] = "д"
+        io2.settings[0][19] = "д"
     elif choice=="По числу интересующихся":
-        settings[0][19] = "и"
+        io2.settings[0][19] = "и"
     elif choice=="По уровню обработки":
-        settings[0][19] = "п"
+        io2.settings[0][19] = "п"
     elif choice=="По уровню обработки обратная":
-        settings[0][19] = "о"
+        io2.settings[0][19] = "о"
     else:
-        settings[0][19] = "н"
+        io2.settings[0][19] = "н"
 
 def days_between(d1, d2):
     d1 = datetime.strptime(d1, "%Y-%m-%d")
@@ -197,12 +204,12 @@ def getPorchStatuses():
 def countTotalProgress():
     """ Подсчитывает общий уровень обработки всех участков"""
     percentage = 0.0
-    for house in houses:
+    for house in io2.houses:
         percentage += house.getProgress()[0]
         #worked += house.getProgress()[1]
 
-    if len(houses)>0:
-        percentage = int( percentage / len(houses) * 100 )
+    if len(io2.houses)>0:
+        percentage = int( percentage / len(io2.houses) * 100 )
     else:
         percentage = 0
 

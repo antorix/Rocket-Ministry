@@ -37,6 +37,12 @@ def initialize_images():
         images.append(tk.PhotoImage(file=image))
     return images
 
+def bindHotKeys(self):
+    self.boxRoot.bind("<Insert>", self.positive_pressed)
+    self.boxRoot.bind("<Control-Insert>", self.neutral_pressed)
+    self.boxRoot.bind("<BackSpace>", self.cancel_pressed)
+    self.boxRoot.bind("<F1>", self.go_home)
+
 def getButton(text="", img=[]):
     """ Выдает по запросу обработанный текст и картинку """
     if text!=None:
@@ -157,14 +163,14 @@ def config_menu(self):
     menu.add_command(label="О программе", command=menuAbout)
 
     # Файл
-    filemenu.add_command(label="Импорт", compound="left", image=self.img[27], command=fileImport)
-    filemenu.add_command(label="Экспорт", compound="left", image=self.img[26], command=fileExport)
-    filemenu.add_command(label="Восстановление", compound="left", image=self.img[28], command=fileRestore)
-    filemenu.add_command(label="Очистка", compound="left", image=self.img[29], command=fileWipe)
+    filemenu.add_command(label="Импорт", compound="left", image=self.img[27], command=lambda s=self: fileImport(s))
+    filemenu.add_command(label="Экспорт", compound="left", image=self.img[26], command=lambda s=self: fileExport(s))
+    filemenu.add_command(label="Восстановление", compound="left", image=self.img[28], command=lambda s=self: fileRestore(s))
+    filemenu.add_command(label="Очистка", compound="left", image=self.img[29], command=lambda s=self: fileWipe(s))
 
     if io2.Simplified == 0:
         filemenu.add_separator()
-        filemenu.add_command(label="Выход с экспортом", command=fileExit)
+        filemenu.add_command(label="Выход с экспортом", command=lambda s=self: fileExit(s))
 
 def create_footer(box, grid=False):
     footerFrame = tk.Frame(box)
@@ -233,9 +239,682 @@ def parse_hotkey(text):
 
     return ret_val
 
+
+
+# -------------------------------------------------------------------
+# choicebox
+# -------------------------------------------------------------------
+
+
+def choicebox(msg="", title="Окно", form="", choices=[], preselect=0,
+            positive=None, neutral=None, negative="Назад", callback=None, run=True):
+    """
+    Present the user with a list of choices.
+    return the choice that he selects.
+
+    :param str msg: the msg to be displayed
+    :param str title: the window title
+    :param list choices: a list or tuple of the choices to be displayed
+    :return: List containing choice selected or None if cancelled
+    """
+    mb = ChoiceBox(msg, title, form, choices, preselect=preselect,
+                   multiple_select=False,
+                   positive=positive,
+                   neutral=neutral,
+                   negative=negative,
+                   callback=callback)
+
+    if run:
+        reply = mb.run()
+        return reply
+    else:
+        return mb
+
+def multchoicebox(msg="", title="Окно", form="", choices=[],
+                  preselect=0, callback=None, positive=None, neutral=None, negative="Назад",
+                  run=True):
+    """ Same as choicebox, but the user can select many items. """
+
+    mb = ChoiceBox(msg, title, form, choices, preselect=preselect,
+                   multiple_select=True,
+                   positive=positive,
+                   neutral=neutral,
+                   negative=negative,
+                   callback=callback)
+    if run:
+        reply = mb.run()
+        return reply
+    else:
+        return mb
+
+class ChoiceBox(object):
+
+    def __init__(self, msg, title, form, choices, preselect, multiple_select, callback, positive, neutral, negative):
+
+        self.ui = GUItk3(msg, title, form, choices, preselect, multiple_select, self.callback_ui,
+                         positive, neutral, negative)
+
+        self.callback = callback
+
+        self.choices = choices
+
+        self.positive = positive
+
+        self.neutral = neutral
+
+        self.neutral = negative
+
+    def run(self):
+        """ Start the ui """
+        self.ui.run()
+        self.ui = None
+        return self.choices
+
+    def stop(self):
+        """ Stop the ui """
+        self.ui.stop()
+
+    def callback_ui(self, ui, command, choices):
+        """ This method is executed when ok, cancel, or x is pressed in the ui.
+        """
+        if command == 'update':  # OK was pressed
+            self.choices = choices
+            if self.callback:
+                # If a callback was set, call main process
+                self.callback(self)
+            else:
+                self.stop()
+        elif command == 'x':
+            self.stop()
+            self.choices = None
+        elif command == 'cancel':
+            self.stop()
+            self.choices = None
+        else:
+            self.stop()
+            self.choices = command
+
+    # methods to change properties --------------
+
+    @property
+    def msg(self):
+        """Text in msg Area"""
+        return self._msg
+
+    @msg.setter
+    def msg(self, msg):
+        self.ui.set_msg(msg)
+
+    @msg.deleter
+    def msg(self):
+        self._msg = ""
+        self.ui.set_msg(self._msg)
+
+class GUItk3(object):
+
+    """ This object contains the tk root object.
+        It draws the window, waits for events and communicates them
+        to MultiBox, together with the entered values.
+
+        The position in wich it is drawn comes from a global variable.
+
+        It also accepts commands from Multibox to change its message.
+    """
+
+    def __init__(self, msg="", title="Участки", form="terView", choices=[], preselect=0, multiple_select=1, callback=1, positive=None, neutral=None, negative="Назад"):
+
+        self.callback = callback
+
+        self.choices = choices
+
+        self.positive = positive
+
+        self.neutral = neutral
+
+        self.negative = negative
+
+        self.form = form
+
+        self.msg = msg
+
+        self.title = title
+
+        self.padx = self.pady = 3
+
+        self.ipady = self.ipadx = 5
+
+        #self.width_in_chars = prop_font_line_length
+        # Initialize self.selected_choices
+        # This is the value that will be returned if the user clicks the close
+        # icon
+        # self.selected_choices = None
+
+        self.multiple_select = multiple_select
+
+        self.boxRoot = tk.Tk()
+        #from os import name
+        #if name == "nt":
+        #    self.boxRoot.iconbitmap('icon.ico') # иконка плохо работает - окно скачет
+        #self.boxRoot.iconify
+        #photo = tk.PhotoImage(file='icon.png')
+        #self.boxRoot.wm_iconphoto(False, photo)
+        #self.boxRoot.call('wm', 'iconphoto', self.boxRoot._w, photo)
+        #self.boxFont = tk_Font.nametofont("TkTextFont") # getWinFonts()[0] шрифты
+
+        self.config_root(title)
+        config_menu(self) # меню
+        self.set_pos(dialogs.window_position)  # GLOBAL POSITION
+        self.create_search_widget()
+        create_footer(self.boxRoot)
+        self.create_buttons_frame()
+        self.create_ok_button()
+        self.create_msg_widget()
+        self.create_choicearea()
+        self.preselect_choice(preselect)
+        self.choiceboxWidget.focus_force()
+
+    # Run and stop methods ---------------------------------------
+
+    def run(self):
+        self.boxRoot.mainloop()  # run it!
+        self.boxRoot.destroy()   # Close the window
+
+    def stop(self):
+        # Get the current position before quitting
+        self.get_pos()
+        self.boxRoot.quit()
+
+    def x_pressed(self):
+        self.callback(self, command='x', choices=self.get_choices())
+
+    def cancel_pressed(self, event=None):
+        if self.form != "terView":
+            self.get_pos()
+            try:
+                dialogs.saveWindowPosition(self.boxRoot)
+            except:
+                pass
+            self.callback(self, command='cancel', choices=self.get_choices())
+
+    def neutral_pressed(self, event=None):
+        if self.neutral != None:
+            self.callback(self, command='neutral', choices="neutral")
+
+    def ok_pressed(self, event=None):
+        self.callback(self, command='update', choices=self.get_choices())
+
+    def positive_pressed(self, event=None):
+        if self.positive != None:
+            self.callback(self, command='update', choices="positive")
+
+    def menu_pressed(self, choice, event=None):
+        self.callback(self, command=choice, choices=choice)
+
+    def search_requested(self, choice, event=None):
+        self.callback(self, command=choice, choices=choice)
+
+    def go_home(self, event=None):
+        self.callback(self, command="home", choices="home")
+
+    def contacts_pressed(self, event=None):
+        self.callback(self, command='contacts', choices="contacts")
+
+    def report_pressed(self, event=None):
+        self.callback(self, command='report', choices="report")
+
+    def stat_pressed(self, event=None):
+        self.callback(self, command='statistics', choices="statistics")
+
+    def timer_pressed(self, event=None):
+        self.callback(self, command='timer', choices="timer")
+
+    def serviceyear_pressed(self, event=None):
+        self.callback(self, command='serviceyear', choices="serviceyear")
+
+
+    # меню
+
+    # Methods to change content ---------------------------------------
+
+    def get_num_lines(self, widget):
+        end_position = widget.index(tk.END)  # '4.0'
+        end_line = end_position.split('.')[0]  # 4
+        return int(end_line) + 1  # 5
+
+    def set_pos(self, pos=None):
+        pos = dialogs.window_size + dialogs.window_position
+        self.boxRoot.geometry(pos)
+
+    def get_pos(self):
+        # The geometry() method sets a size for the window and positions it on
+        # the screen. The first two parameters are width and height of
+        # the window. The last two parameters are x and y screen coordinates.
+        # geometry("250x150+300+300")
+        geom = self.boxRoot.geometry()
+        #x_size = int(geom[ 0: geom.index("x") ])
+        #y_size = int(geom[ geom.index("x")+1 : geom.index("+") ])
+        #y_size2= y_size+20 # коррекция высоты окна на 20, потому что оно почему-то самопроизвольно уменьшается
+        #dialogs.window_size = "%dx%d" % (x_size, y_size2)
+        dialogs.window_size = geom[ 0 : geom.index("+") ]
+        dialogs.window_position = '+' + geom.split('+', 1)[1]
+
+    def preselect_choice(self, preselect):
+        if preselect != None:
+            self.choiceboxWidget.select_set(preselect)
+            #self.choiceboxWidget.selection_set(preselect)
+            self.choiceboxWidget.activate(preselect)
+
+    def get_choices(self):
+        choices_index = self.choiceboxWidget.curselection()
+        if not choices_index:
+            return None
+        if self.multiple_select:
+            selected_choices = [self.choiceboxWidget.get(index)
+                                for index in choices_index]
+        else:
+            selected_choices = self.choiceboxWidget.get(choices_index)
+
+        return selected_choices
+
+    def return_choice(self, choice):
+        return choice
+
+    # Auxiliary methods -----------------------------------------------
+    def calc_character_width(self):
+        char_width = self.boxFont.measure('W')
+        return char_width
+
+    def config_root(self, title):
+
+        #screen_width = self.boxRoot.winfo_screenwidth()
+        #screen_height = self.boxRoot.winfo_screenheight()
+
+        self.boxRoot.title("Rocket Ministry")
+        self.boxRoot.expand = tk.YES
+
+        self.set_pos()
+
+        self.img = initialize_images() # картинки
+
+        #self.boxRoot.protocol('WM_DELETE_WINDOW', self.x_pressed)
+        def exit():
+            self.get_pos()
+            try:
+                dialogs.saveWindowPosition(self.boxRoot)
+            except:
+                pass
+            self.stop()
+            self.boxRoot.destroy()
+            sys.exit(0)
+        self.boxRoot.protocol('WM_DELETE_WINDOW', exit)
+        self.boxRoot.bind('<Any-Key>', self.KeyboardListener)
+        self.boxRoot.bind("<Escape>", self.cancel_pressed)
+
+    def find(self, event):
+        query=self.search.get().strip()
+        self.search_requested(choice="[search]" + query)
+
+    def create_search_widget(self): # поиск
+
+        self.searchFrame = ttk.Frame(master=self.boxRoot)
+        self.searchFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES,
+                              padx=self.padx)#, ipady=self.ipady, ipadx=self.ipadx)
+
+        #self.display = tk.Entry(self.searchFrame, width=50, font=("arial", 8), fg="green", state="readonly")
+        self.display = ScrolledText(self.searchFrame, width=30, font=("Arial", 8), fg="green", bg=dialogs.inactive_background, height=2, state="disabled")
+        self.display.pack(side=tk.LEFT, padx=1, pady=3)
+
+        if io2.LastSystemMessage[0] != "":
+            if io2.LastSystemMessage[1] < 1:
+                self.display.config(state="normal")
+                self.display.insert(tk.INSERT, io2.LastSystemMessage[0])
+                self.display.config(state="disabled")
+                io2.LastSystemMessage[1] += 1
+            else:
+                io2.LastSystemMessage[1] = 0
+                io2.LastSystemMessage[0] = ""
+
+        self.icon = ttk.Button(self.searchFrame, image=self.img[16], takefocus=0) # кнопка с лупой
+        self.icon.pack(side=tk.RIGHT, padx=1, pady=1)
+        self.icon.bind("<1>", self.find)
+
+        self.style = ttk.Style() # поисковая строка
+        self.style.configure("TEntry", foreground="grey60", background="green")
+        self.search = ttk.Entry(self.searchFrame, width=20, style="TEntry", takefocus=0)
+        self.search.pack(side=tk.RIGHT, padx=1, pady=1)
+        self.search.insert(0, "Поиск [F3]")
+        self.search.bind("<Return>", self.find)
+        #self.search.bind_class("Entry", "<3>", self.contextMenu)
+        #self.search.bind_class("Text", "<3>", self.contextMenu)
+        def temp_text(e):
+            self.search.delete(0, "end")
+        self.search.bind("<FocusIn>", temp_text)
+
+        def contextMenu(e=None):
+            """ Контекстное меню. Создается из внешней функции getMenu, универсальной для всех виджетов """
+            getMenu(box=boxRoot, e=e)
+        self.search.bind("<3>", contextMenu)
+
+    def create_buttons_frame(self):
+        self.buttonsFrame = ttk.Frame(self.boxRoot)
+        self.buttonsFrame.pack(side=tk.BOTTOM, fill="y", expand=tk.YES)
+
+        if self.form == "terView":
+            #else: # отдельная конфигурация под стартовую страницу с большими кнопками
+            self.startmenu = ttk.Frame(self.buttonsFrame)
+            self.startmenu.grid(column=0, row=0, columnspan=3, sticky="nsew",
+                                padx=self.padx, ipady=self.ipady, ipadx=self.ipadx)#pack(side=tk.BOTTOM, padx=self.padx, pady=self.pady, expand=tk.YES, fill=tk.BOTH)
+
+            ipadxButton = ipadyButton = 5
+            padx2 = pady2 = 3
+
+            self.terButton = ttk.Button(self.startmenu, text="Новый участок", compound="top", image=self.img[21])
+            self.terButton.grid(row=0, column=0, padx=padx2, pady=pady2, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
+            self.terButton.bind("<Return>", self.positive_pressed)
+            self.terButton.bind("<Button-1>", self.positive_pressed)
+            self.terButton.bind("<space>", self.positive_pressed)
+
+            from contacts import getContactsAmount
+            con = getContactsAmount(date=1)[0]
+            self.conButton = ttk.Button(self.startmenu, text="Контакты (%d)" % con, compound="top", image=self.img[20])
+            self.conButton.grid(row=0, column=1, padx=padx2, pady=pady2, ipadx=ipadxButton+12, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
+            self.conButton.bind("<Return>", self.contacts_pressed)
+            self.conButton.bind("<Button-1>", self.contacts_pressed)
+            self.conButton.bind("<space>", self.contacts_pressed)
+
+            self.startmenu.columnconfigure(0, weight=1)
+            self.startmenu.columnconfigure(1, weight=1)
+            self.startmenu.columnconfigure(2, weight=1)
+
+            rep, gap = reports.getCurrentHours()
+            if gap >= 0:
+                gap_str = "↑"
+            else:
+                gap_str = "↓"
+            if io2.settings[0][3]==0:
+                gap_str = ""
+            self.repButton = ttk.Button(self.startmenu, text="Отчет (%s%s)" % (rep, gap_str), compound="top", image=self.img[22])
+            self.repButton.grid(row=0, column=2, padx=padx2, pady=pady2, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")  # pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
+            self.repButton.bind("<Return>", self.report_pressed)
+            self.repButton.bind("<Button-1>", self.report_pressed)
+            self.repButton.bind("<space>", self.report_pressed)
+
+            from house_op import countTotalProgress
+            self.staButton = ttk.Button(self.startmenu, text="Статистика (%s%%)" % countTotalProgress(), compound="top", image=self.img[23])
+            self.staButton.grid(row=1, column=0, padx=padx2, pady=pady2, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
+            self.staButton.bind("<Return>", self.stat_pressed)
+            self.staButton.bind("<Button-1>", self.stat_pressed)
+            self.staButton.bind("<space>", self.stat_pressed)
+
+            if reports.updateTimer(io2.settings[2][6]) >= 0:  # проверка, включен ли таймер
+                time2 = reports.updateTimer(io2.settings[2][6])
+            else:
+                time2 = reports.updateTimer(io2.settings[2][6]) + 24
+            if io2.settings[2][6] > 0:
+                timerTime = reports.timeFloatToHHMM(time2)
+            else:
+                timerTime = ""
+            self.timButton = ttk.Button(self.startmenu, text="Таймер %s" % timerTime, compound="top", image=getButton("Таймер %s" % timerTime, self.img)[1])
+            self.timButton.grid(row=1, column=1, padx=padx2, pady=pady2, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
+            self.timButton.bind("<Return>", self.timer_pressed)
+            self.timButton.bind("<Button-1>", self.timer_pressed)
+            self.timButton.bind("<space>", self.timer_pressed)
+
+            self.serButton = ttk.Button(self.startmenu, text="Служебный год", compound="top", image=self.img[24])
+            self.serButton.grid(row=1, column=2, padx=padx2, pady=pady2, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
+            self.serButton.bind("<Return>", self.serviceyear_pressed)
+            self.serButton.bind("<Button-1>", self.serviceyear_pressed)
+            self.serButton.bind("<space>", self.serviceyear_pressed)
+
+        # put the buttons in the self.buttonsFrame
+
+        if self.positive == icon("plus", simplified=False):  # если плюс, заменяем его на более красивый
+            self.positive = "  Добавить [Ins]"
+        elif self.positive == icon("down"):
+            self.positive += " [Ins]"
+        if self.positive!=None and self.form != "terView":
+            positiveButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, compound="left",
+                                        text=getButton(self.positive, self.img)[0], image=getButton(self.positive, self.img)[1])
+            positiveButton.grid(column=0, row=1, sticky="we",
+                                padx=self.padx, ipady=self.ipady, ipadx=self.ipadx)
+            # for the commandButton, bind activation events
+            positiveButton.bind("<Return>", self.positive_pressed)
+            positiveButton.bind("<Button-1>", self.positive_pressed)
+            positiveButton.bind("<space>", self.positive_pressed)
+
+        # put the buttons in the self.buttonsFrame
+
+        if self.neutral != None and self.form != "terView":
+            self.neutral += " [Ctrl+Ins]"
+            neutralButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, compound="left",
+                                       text=getButton(self.neutral, self.img)[0], image = getButton(self.neutral, self.img)[1])
+            neutralButton.grid(column=1, row=1, sticky="we",
+                               padx=self.padx, ipady=self.ipady, ipadx=self.ipadx)
+            # for the commandButton, bind activation events
+            neutralButton.bind("<Return>", self.neutral_pressed)
+            neutralButton.bind("<Button-1>", self.neutral_pressed)
+            neutralButton.bind("<space>", self.neutral_pressed)
+
+        # add special buttons for multiple select features
+        if not self.multiple_select:
+            return
+
+        selectAllButton = ttk.Button(self.buttonsFrame, text="Выбрать все")
+        selectAllButton.grid(column=0, row=1, padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
+
+        clearAllButton = ttk.Button(self.buttonsFrame, text="Снять все")
+        clearAllButton.grid(column=1, row=1, padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
+
+        selectAllButton.bind("<Button-1>", self.choiceboxSelectAll)
+
+        clearAllButton.bind("<Button-1>", self.choiceboxClearAll)
+
+    def create_msg_widget(self):
+
+        self.msgFrame = tk.Frame(self.boxRoot) # дублирование title
+        self.msgFrame.pack(side=tk.TOP, expand=1, fill='both')
+        if len(self.title)>1 and self.title[1]==" " and self.form != "firstCallMenu" and "Этаж" not in self.title and self.form!="flatView":
+            msg = self.title[1:]
+        else:
+            msg = self.title
+        self.messageArea = tk.Label(self.msgFrame, text=msg, fg="grey20")
+        self.messageArea.pack(side=tk.TOP, expand=1, fill='both')
+
+    def create_ok_button(self):
+
+        okButtonFrame = tk.Frame(self.boxRoot)
+        okButtonFrame.pack(side=tk.TOP, fill="both", expand=tk.YES)
+
+        okButton = ttk.Button(okButtonFrame, takefocus=0, compound="left",  # кнопка OK в списке
+                              text=getButton("  OK [Enter]", self.img)[0],
+                              image=getButton("  OK [Enter]", self.img)[1])
+        okButton.bind("<Return>", self.ok_pressed)
+        okButton.bind("<Button-1>", self.ok_pressed)
+        okButton.bind("<space>", self.ok_pressed)
+
+        sideButtonIpadX = 0
+
+        if self.form == "terView":
+            okButton.pack(side=tk.LEFT, fill="x", expand=tk.YES, padx=self.padx, ipady=self.ipady)
+
+            if self.neutral != None:
+                neutralButton = ttk.Button(okButtonFrame, takefocus=0, compound="left",  # кнопка сортировка участков
+                                    text=getButton(self.neutral, self.img)[0],
+                                    image=getButton(self.neutral, self.img)[1])
+                neutralButton.bind("<Return>", self.neutral_pressed)
+                neutralButton.bind("<Button-1>", self.neutral_pressed)
+                neutralButton.bind("<space>", self.neutral_pressed)
+                neutralButton.pack(side=tk.LEFT, padx=self.padx, pady=0, ipadx=sideButtonIpadX, ipady=self.ipady)
+
+        else:
+            if self.negative != None:
+                backButton = ttk.Button(okButtonFrame, takefocus=0, compound="left",  # кнопка назад
+                                        text=getButton("  [Esc]", self.img)[0],
+                                        image=getButton("  [Esc]", self.img)[1])
+                backButton.bind("<Return>", self.cancel_pressed)
+                backButton.bind("<Button-1>", self.cancel_pressed)
+                backButton.bind("<space>", self.cancel_pressed)
+                backButton.bind("<Escape>", self.cancel_pressed)
+                backButton.pack(side=tk.LEFT, padx=self.padx, pady=0, ipadx=sideButtonIpadX, ipady=self.ipady)
+
+                okButton.pack(side=tk.LEFT, fill="x", expand=tk.YES, padx=self.padx, ipady=self.ipady)
+
+                homeButton = ttk.Button(okButtonFrame, takefocus=0, compound="left",   # кнопка возврата на главную
+                                        text=getButton("  [F1]", self.img)[0],
+                                        image=getButton("  [F1]", self.img)[1])
+                homeButton.bind("<Return>", self.go_home)
+                homeButton.bind("<Button-1>", self.go_home)
+                homeButton.bind("<space>", self.go_home)
+                homeButton.pack(side=tk.LEFT, padx=self.padx, pady=0, ipadx=sideButtonIpadX, ipady=self.ipady)
+
+    def create_choicearea(self):
+
+        self.choiceboxFrame = ttk.Frame(master=self.boxRoot)
+        self.choiceboxFrame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=tk.YES, padx=1, ipady=self.ipady, ipadx=self.ipadx)
+
+        # --------  put the self.choiceboxWidget in the self.choiceboxFrame ---
+        self.choiceboxWidget = tk.Listbox(self.choiceboxFrame,
+                                          height=500,
+                                          borderwidth="2m", relief="flat",
+                                          bg="white"
+        )
+
+        if 1:#self.form == "porchViewGUIList" or self.form == "porchViewGUIOneFloor" or self.form == "porchText":
+            self.choiceboxWidget.config( font = (dialogs.MONOSPACE_FONT_FAMILY, dialogs.MONOSPACE_FONT_SIZE) )
+        else:
+            self.choiceboxWidget.config(font=(dialogs.PROPORTIONAL_FONT_FAMILY, dialogs.PROPORTIONAL_FONT_SIZE))
+
+        for choice in self.choices:
+            self.choiceboxWidget.insert(tk.END, choice)
+
+        if self.multiple_select:
+            self.choiceboxWidget.configure(selectmode=tk.MULTIPLE)
+
+        # add a vertical scrollbar to the frame
+        rightScrollbar = ttk.Scrollbar(self.choiceboxFrame, orient=tk.VERTICAL,
+                                      command=self.choiceboxWidget.yview)
+        self.choiceboxWidget.configure(yscrollcommand=rightScrollbar.set)
+
+        # add a horizontal scrollbar to the frame
+        bottomScrollbar = tk.Scrollbar(self.choiceboxFrame,
+                                       orient=tk.HORIZONTAL,
+                                       command=self.choiceboxWidget.xview)
+        self.choiceboxWidget.configure(xscrollcommand=bottomScrollbar.set)
+
+        # pack the Listbox and the scrollbars.
+        # Note that although we must define
+        # the textArea first, we must pack it last,
+        # so that the bottomScrollbar will
+        # be located properly.
+
+        bottomScrollbar.pack(side=tk.BOTTOM, fill=tk.X)
+        rightScrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.choiceboxWidget.pack(side=tk.TOP, padx=self.padx, pady=self.pady, expand=tk.YES, fill=tk.BOTH)
+
+        # Bind the keyboard events
+        self.choiceboxWidget.bind("<Return>", self.ok_pressed)
+        self.choiceboxWidget.bind("<Double-Button-1>", self.ok_pressed)
+        self.choiceboxWidget.bind("<3>", self.listContextMenu)
+
+        bindHotKeys(self)
+
+        def focus_search(event):
+            self.search.focus()
+        self.boxRoot.bind("<F3>", focus_search)
+
+    def listContextMenu(self, e=None): # контекстное меню списка ***
+        menu = tk.Menu(self.boxRoot, tearoff=0)
+        menu.add_command(
+            label=getButton("  OK", self.img)[0],
+            image=getButton("  OK", self.img)[1],
+            compound="left",
+            command=self.ok_pressed
+        )
+        if self.positive != None:
+            if "[" in self.positive:
+                text = self.positive[0: self.positive.index("[")]
+            else:
+                text = self.positive
+            menu.add_command(
+                label=getButton(text, self.img)[0],
+                image=getButton(text, self.img)[1],
+                compound="left",
+                command=self.positive_pressed
+            )
+        if self.neutral != None:
+            if "[" in self.neutral:
+                text = self.neutral[0: self.neutral.index("[")]
+            else:
+                text = self.neutral
+            menu.add_command(
+                label=getButton(text, self.img)[0],
+                image=getButton(text, self.img)[1],
+                compound="left",
+                command=self.neutral_pressed
+            )
+        menu.add_separator()
+        menu.add_command(label="Копировать", command=lambda: e.widget.event_generate("<<Copy>>"))
+        menu.tk.call("tk_popup", menu, e.x_root, e.y_root)
+
+    def KeyboardListener(self, event):
+        key = event.keysym
+        if len(key) <= 1:
+            if key in string.printable:
+                # Find the key in the li
+                # before we clear the list, remember the selected member
+                try:
+                    start_n = int(self.choiceboxWidget.curselection()[0])
+                except IndexError:
+                    start_n = -1
+
+                # clear the selection.
+                self.choiceboxWidget.selection_clear(0, 'end')
+
+                # start from previous selection +1
+                for n in range(start_n + 1, len(self.choices)):
+                    item = self.choices[n]
+                    if item[0].lower() == key.lower():
+                        self.choiceboxWidget.selection_set(first=n)
+                        self.choiceboxWidget.see(n)
+                        return
+                else:
+                    # has not found it so loop from top
+                    for n, item in enumerate(self.choices):
+                        if item[0].lower() == key.lower():
+                            self.choiceboxWidget.selection_set(first=n)
+                            self.choiceboxWidget.see(n)
+                            return
+
+                    # nothing matched -- we'll look for the next logical choice
+                    for n, item in enumerate(self.choices):
+                        if item[0].lower() > key.lower():
+                            if n > 0:
+                                self.choiceboxWidget.selection_set(
+                                    first=(n - 1))
+                            else:
+                                self.choiceboxWidget.selection_set(first=0)
+                            self.choiceboxWidget.see(n)
+                            return
+
+                    # still no match (nothing was greater than the key)
+                    # we set the selection to the first item in the list
+                    lastIndex = len(self.choices) - 1
+                    self.choiceboxWidget.selection_set(first=lastIndex)
+                    self.choiceboxWidget.see(lastIndex)
+                    return
+
+    def choiceboxClearAll(self, event):
+        self.choiceboxWidget.selection_clear(0, len(self.choices) - 1)
+
+    def choiceboxSelectAll(self, event):
+        self.choiceboxWidget.selection_set(0, len(self.choices) - 1)
+
+
 # -------------------------------------------------------------------
 # getFileDialogTitle
 # -------------------------------------------------------------------
+
+
 def getFileDialogTitle(msg, title):
     """
     Create nicely-formatted string based on arguments msg and title
@@ -448,6 +1127,10 @@ class GUItk(object):
 
         self.negative = negative
 
+        self.title = title
+
+        self.msg = msg
+
         self.padx = 5
 
         self.pady = 6
@@ -481,7 +1164,9 @@ class GUItk(object):
         else:
             self.configure_root(title)
 
-        #self.create_msg_widget(msg)
+        #bindHotKeys(self)
+
+        self.create_msg_widget(msg)
 
         create_footer(self.boxRoot)
 
@@ -515,20 +1200,6 @@ class GUItk(object):
 
     # Methods to change content ---------------------------------------
 
-    def set_msg(self, msg):
-        self.messageArea.config(state=tk.NORMAL)
-        self.messageArea.delete(1.0, tk.END)
-        self.messageArea.insert(tk.END, msg)
-        #self.messageArea.config(state=tk.DISABLED)
-        # Adjust msg height
-        #self.messageArea.update()
-        numlines = self.get_num_lines(self.messageArea)
-        self.set_msg_height(numlines)
-        self.messageArea.update()
-
-    def set_msg_height(self, numlines):
-        self.messageArea.configure(height=numlines)
-
     def get_num_lines(self, widget):
         end_position = widget.index(tk.END)  # '4.0'
         end_line = end_position.split('.')[0]  # 4
@@ -560,8 +1231,11 @@ class GUItk(object):
     def x_pressed(self):
         self.callback(self, command='x', text=self.get_text())
 
-    def ok_button_pressed(self, event):
+    def ok_button_pressed(self, event=None):
         self.callback(self, command='update', text=self.get_text())
+
+    """def positive_pressed(self, event=None):
+        self.ok_button_pressed()"""
 
     def cancel_pressed(self, event):
         self.get_pos()
@@ -581,7 +1255,7 @@ class GUItk(object):
 
     def configure_root(self, title):
 
-        self.boxRoot.title(title)
+        self.boxRoot.title("  Rocket Ministry")
 
         self.set_pos(dialogs.window_size + dialogs.window_position)
 
@@ -602,28 +1276,14 @@ class GUItk(object):
 
     def create_msg_widget(self, msg):
 
-        if msg is None:
-            msg = ""
-
-        self.msgFrame = tk.Frame(
-            self.boxRoot,
-            padx=self.padx * self.calc_character_width(),
-        )
-        self.messageArea = tk.Text(
-            self.msgFrame,
-            width=10,#self.width_in_chars,
-            state=tk.DISABLED,
-            padx=self.padx,#(default_hpad_in_chars) *
-            #self.calc_character_width(),
-            pady=self.pady,#default_hpad_in_chars *
-            #self.calc_character_width(),
-            wrap=tk.WORD
-        )
-        self.set_msg(msg)
-
+        self.msgFrame = tk.Frame(self.boxRoot) # дублирование title
         self.msgFrame.pack(side=tk.TOP, expand=1, fill='both')
-
-        self.messageArea.pack(side=tk.TOP, expand=1, fill='both')
+        if self.title[1] == " ":
+            text = self.title[1:]
+        else:
+            text = self.title
+        self.messageArea = tk.Label(self.msgFrame, text=text, fg="grey30")
+        self.messageArea.pack(side=tk.TOP, expand=1, fill='both', padx=3)
 
     def create_text_area(self, wrap_text):
         """
@@ -783,10 +1443,8 @@ def enterbox(msg="", title=" ", default="",
         result = result.strip()
     return result
 
-def passwordbox(msg="Введите пароль", title=" ", default="", mono=False, height=5, root=None):
+def libbox(msg="", title="Rocket Ministry", default="", mono=False, height=5, root=None, lib=True):
     """
-    Show a box in which a user can enter a password.
-    The text is masked with asterisks, so the password is not displayed.
 
     :param str msg: the msg to be displayed.
     :param str title: the window title
@@ -794,7 +1452,7 @@ def passwordbox(msg="Введите пароль", title=" ", default="", mono=F
     :return: the text that the user entered, or None if he cancels
       the operation.
     """
-    return __fillablebox(msg, title, default, mask="*", root=root, mono=mono, height=height, neutral=None, password=True)
+    return __fillablebox(msg, title, default, mask="*", root=root, mono=mono, height=height, neutral=None, lib=lib)
 
 
 # -------------------------------------------------------------------
@@ -1039,10 +1697,7 @@ class GUItk2(object):
         #self.boxFont = tk_Font.nametofont("TkFixedFont")
         self.width_in_chars = dialogs.fixw_font_line_length
 
-        if title[1] == " ":
-            self.configure_root(title[2:])
-        else:
-            self.configure_root(title)
+        self.configure_root("Rocket Ministry")
 
         self.create_msg_widget(msg)
 
@@ -1078,25 +1733,6 @@ class GUItk2(object):
         self.boxRoot.quit()
 
     # Methods to change content ---------------------------------------
-    def set_msg(self, msg):
-        self.messageArea.config(state=tk.NORMAL)
-        self.messageArea.delete(1.0, tk.END)
-        self.messageArea.insert(tk.END, msg)
-        self.messageArea.config(state=tk.DISABLED, bg=dialogs.inactive_background)
-        # Adjust msg height
-        self.messageArea.update()
-        numlines = 500#self.get_num_lines(self.messageArea) # высота окна текста
-        self.set_msg_height(numlines)
-        self.messageArea.update()
-        self.messageArea.config(width=200, padx=20, background=dialogs.inactive_background)  # ширина окна текста
-
-    def set_msg_height(self, numlines):
-        self.messageArea.configure(height=numlines)
-
-    def get_num_lines(self, widget):
-        end_position = widget.index(tk.END)  # '4.0'
-        end_line = end_position.split('.')[0]  # 4
-        return int(end_line) + 1  # 5
 
     def set_pos(self, pos):
         self.boxRoot.geometry(pos)
@@ -1191,27 +1827,37 @@ class GUItk2(object):
 
     def create_msg_widget(self, msg):
 
-        if msg is None:
-            msg = ""
+        if len(self._title) > 1 and self._title[1]==" ":
+            text = self._title[1:]
+        else:
+            text = self._title
+
+        self.msgArea = tk.Label(self.boxRoot, text=text, fg="grey30")
+        self.msgArea.grid(row=0)#pack(expand=1, fill='both', padx=3)
 
         self.messageArea = tk.Text(
             self.boxRoot,
             width=self.width_in_chars,
-            state=tk.DISABLED,
-            padx=10,#(default_hpad_in_chars) *
-            #self.calc_character_width(),
-            pady=10,#default_hpad_in_chars *
-            #self.calc_character_width(),
+            padx=10,
+            pady=10,
             wrap=tk.WORD,
+            font=(dialogs.PROPORTIONAL_FONT_FAMILY, dialogs.PROPORTIONAL_FONT_SIZE),
         )
-        self.set_msg(msg)
-        self.messageArea.configure(
-            font=(dialogs.PROPORTIONAL_FONT_FAMILY, dialogs.PROPORTIONAL_FONT_SIZE)
-        )
-        self.messageArea.grid(row=0)
-        self.boxRoot.rowconfigure(0, weight=10, minsize='10m')
-
+        self.messageArea.insert(tk.END, msg)
+        self.messageArea.config(state=tk.DISABLED, bg=dialogs.inactive_background)
+        self.messageArea.config(width=200, padx=20, background=dialogs.inactive_background)  # ширина окна текста
+        self.messageArea.grid(row=1)
+        self.boxRoot.rowconfigure(0, weight=0)
+        self.boxRoot.rowconfigure(1, weight=10)
+        self.boxRoot.rowconfigure(2, weight=0)
         self.boxRoot.bind_class("Text", "<3>", self.contextMenu)
+
+
+
+
+
+
+
 
     def contextMenu(self, e=None):
         """ Контекстное меню. Создается из внешней функции getMenu, универсальной для всех виджетов """
@@ -1336,716 +1982,6 @@ def convert_to_type(input_value, new_type, input_value_name=None):
 
 
 # -------------------------------------------------------------------
-# choicebox
-# -------------------------------------------------------------------
-
-
-def choicebox(msg="", title="Окно", form="", choices=[], preselect=0,
-            positive=None, neutral=None, negative="Назад", callback=None, run=True):
-    """
-    Present the user with a list of choices.
-    return the choice that he selects.
-
-    :param str msg: the msg to be displayed
-    :param str title: the window title
-    :param list choices: a list or tuple of the choices to be displayed
-    :return: List containing choice selected or None if cancelled
-    """
-    mb = ChoiceBox(msg, title, form, choices, preselect=preselect,
-                   multiple_select=False,
-                   positive=positive,
-                   neutral=neutral,
-                   negative=negative,
-                   callback=callback)
-
-    if run:
-        reply = mb.run()
-        return reply
-    else:
-        return mb
-
-def multchoicebox(msg="", title="", form="", choices=[],
-                  preselect=0, callback=None, positive=None, neutral=None, negative=None,
-                  run=True):
-    """ Same as choicebox, but the user can select many items. """
-
-    mb = ChoiceBox(msg, title, form, choices, preselect=preselect,
-                   multiple_select=True,
-                   positive=positive,
-                   neutral=neutral,
-                   negative=negative,
-                   callback=callback)
-    if run:
-        reply = mb.run()
-        return reply
-    else:
-        return mb
-
-class ChoiceBox(object):
-
-    def __init__(self, msg, title, form, choices, preselect, multiple_select, callback, positive, neutral, negative):
-
-        self.ui = GUItk3(msg, title, form, choices, preselect, multiple_select, self.callback_ui,
-                         positive, neutral, negative)
-
-        self.callback = callback
-
-        self.choices = choices
-
-        self.positive = positive
-
-        self.neutral = neutral
-
-        self.neutral = negative
-
-    def run(self):
-        """ Start the ui """
-        self.ui.run()
-        self.ui = None
-        return self.choices
-
-    def stop(self):
-        """ Stop the ui """
-        self.ui.stop()
-
-    def callback_ui(self, ui, command, choices):
-        """ This method is executed when ok, cancel, or x is pressed in the ui.
-        """
-        if command == 'update':  # OK was pressed
-            self.choices = choices
-            if self.callback:
-                # If a callback was set, call main process
-                self.callback(self)
-            else:
-                self.stop()
-        elif command == 'x':
-            self.stop()
-            self.choices = None
-        elif command == 'cancel':
-            self.stop()
-            self.choices = None
-        else:
-            self.stop()
-            self.choices = command
-
-    # methods to change properties --------------
-
-    @property
-    def msg(self):
-        """Text in msg Area"""
-        return self._msg
-
-    @msg.setter
-    def msg(self, msg):
-        self.ui.set_msg(msg)
-
-    @msg.deleter
-    def msg(self):
-        self._msg = ""
-        self.ui.set_msg(self._msg)
-
-class GUItk3(object):
-
-    """ This object contains the tk root object.
-        It draws the window, waits for events and communicates them
-        to MultiBox, together with the entered values.
-
-        The position in wich it is drawn comes from a global variable.
-
-        It also accepts commands from Multibox to change its message.
-    """
-
-    def __init__(self, msg="", title="Участки", form="terView", choices=[], preselect=0, multiple_select=1, callback=1, positive=None, neutral=None, negative="Назад"):
-
-        self.callback = callback
-
-        self.choices = choices
-
-        self.positive = positive
-
-        self.neutral = neutral
-
-        self.negative = negative
-
-        self.form = form
-
-        self.padx = self.pady = 3
-
-        self.ipady = self.ipadx = 5
-
-        #self.width_in_chars = prop_font_line_length
-        # Initialize self.selected_choices
-        # This is the value that will be returned if the user clicks the close
-        # icon
-        # self.selected_choices = None
-
-        self.multiple_select = multiple_select
-
-        self.boxRoot = tk.Tk()
-        #from os import name
-        #if name == "nt":
-        #    self.boxRoot.iconbitmap('icon.ico') # иконка плохо работает - окно скачет
-        #self.boxRoot.iconify
-        #photo = tk.PhotoImage(file='icon.png')
-        #self.boxRoot.wm_iconphoto(False, photo)
-        #self.boxRoot.call('wm', 'iconphoto', self.boxRoot._w, photo)
-        #self.boxFont = tk_Font.nametofont("TkTextFont") # getWinFonts()[0] шрифты
-
-        self.config_root(title)
-
-        config_menu(self) # меню
-
-        self.set_pos(dialogs.window_position)  # GLOBAL POSITION
-
-        self.create_search_widget()
-
-        self.create_ok_button()
-
-        #self.create_msg_widget(msg = self.form[8:])
-
-        create_footer(self.boxRoot)
-
-        self.create_buttons_frame()
-
-        self.create_choicearea()
-
-        #self.create_special_buttons()
-
-        self.preselect_choice(preselect)
-
-        self.choiceboxWidget.focus_force()
-
-    # Run and stop methods ---------------------------------------
-
-    def run(self):
-        self.boxRoot.mainloop()  # run it!
-        self.boxRoot.destroy()   # Close the window
-
-    def stop(self):
-        # Get the current position before quitting
-        self.get_pos()
-        self.boxRoot.quit()
-
-    def x_pressed(self):
-        self.callback(self, command='x', choices=self.get_choices())
-
-    def cancel_pressed(self, event=None):
-        if self.form != "terView":
-            self.get_pos()
-            try:
-                dialogs.saveWindowPosition(self.boxRoot)
-            except:
-                pass
-            self.callback(self, command='cancel', choices=self.get_choices())
-
-    def neutral_pressed(self, event=None):
-        if self.neutral != None:
-            self.callback(self, command='neutral', choices="neutral")
-
-    def ok_pressed(self, event=None):
-        self.callback(self, command='update', choices=self.get_choices())
-
-    def positive_pressed(self, event=None):
-        if self.positive != None:
-            self.callback(self, command='update', choices="positive")
-
-    def menu_pressed(self, choice, event=None):
-        self.callback(self, command=choice, choices=choice)
-
-    def search_requested(self, choice, event=None):
-        self.callback(self, command=choice, choices=choice)
-
-    def go_home(self, event=None):
-        self.callback(self, command="home", choices="home")
-
-    def contacts_pressed(self, event=None):
-        self.callback(self, command='contacts', choices="contacts")
-
-    def report_pressed(self, event=None):
-        self.callback(self, command='report', choices="report")
-
-    def stat_pressed(self, event=None):
-        self.callback(self, command='statistics', choices="statistics")
-
-    def timer_pressed(self, event=None):
-        self.callback(self, command='timer', choices="timer")
-
-    def serviceyear_pressed(self, event=None):
-        self.callback(self, command='serviceyear', choices="serviceyear")
-
-
-    # меню
-
-    # Methods to change content ---------------------------------------
-
-    def set_msg(self, msg):
-        self.messageArea.config(text=msg)
-        #self.messageArea.delete(1.0, tk.END)
-        #self.messageArea.insert(tk.END, msg)
-        #self.messageArea.config(state=tk.DISABLED)
-        # Adjust msg height
-        #self.messageArea.update()
-        #numlines = self.get_num_lines(self.messageArea)
-        #self.set_msg_height(numlines)
-        self.messageArea.update()
-        # put the focus on the entryWidget
-
-    def set_msg_height(self, numlines):
-        self.messageArea.configure(height=numlines)
-
-    def get_num_lines(self, widget):
-        end_position = widget.index(tk.END)  # '4.0'
-        end_line = end_position.split('.')[0]  # 4
-        return int(end_line) + 1  # 5
-
-    def set_pos(self, pos=None):
-        pos = dialogs.window_size + dialogs.window_position
-        self.boxRoot.geometry(pos)
-
-    def get_pos(self):
-        # The geometry() method sets a size for the window and positions it on
-        # the screen. The first two parameters are width and height of
-        # the window. The last two parameters are x and y screen coordinates.
-        # geometry("250x150+300+300")
-        geom = self.boxRoot.geometry()
-        #x_size = int(geom[ 0: geom.index("x") ])
-        #y_size = int(geom[ geom.index("x")+1 : geom.index("+") ])
-        #y_size2= y_size+20 # коррекция высоты окна на 20, потому что оно почему-то самопроизвольно уменьшается
-        #dialogs.window_size = "%dx%d" % (x_size, y_size2)
-        dialogs.window_size = geom[ 0 : geom.index("+") ]
-        dialogs.window_position = '+' + geom.split('+', 1)[1]
-
-    def preselect_choice(self, preselect):
-        if preselect != None:
-            self.choiceboxWidget.select_set(preselect)
-            #self.choiceboxWidget.selection_set(preselect)
-            self.choiceboxWidget.activate(preselect)
-
-    def get_choices(self):
-        choices_index = self.choiceboxWidget.curselection()
-        if not choices_index:
-            return None
-        if self.multiple_select:
-            selected_choices = [self.choiceboxWidget.get(index)
-                                for index in choices_index]
-        else:
-            selected_choices = self.choiceboxWidget.get(choices_index)
-
-        return selected_choices
-
-    def return_choice(self, choice):
-        return choice
-
-    # Auxiliary methods -----------------------------------------------
-    def calc_character_width(self):
-        char_width = self.boxFont.measure('W')
-        return char_width
-
-    def config_root(self, title):
-
-        #screen_width = self.boxRoot.winfo_screenwidth()
-        #screen_height = self.boxRoot.winfo_screenheight()
-
-        if len(title)==1:
-            self.boxRoot.title(title)
-        elif title[1]==" ":
-            self.boxRoot.title(title[2:])
-        else:
-            self.boxRoot.title(title)
-        self.boxRoot.expand = tk.YES
-
-        self.set_pos()
-
-        self.img = initialize_images() # картинки
-
-        #self.boxRoot.protocol('WM_DELETE_WINDOW', self.x_pressed)
-        def exit():
-            self.get_pos()
-            try:
-                dialogs.saveWindowPosition(self.boxRoot)
-            except:
-                pass
-            self.stop()
-            self.boxRoot.destroy()
-            sys.exit(0)
-        self.boxRoot.protocol('WM_DELETE_WINDOW', exit)
-        self.boxRoot.bind('<Any-Key>', self.KeyboardListener)
-        self.boxRoot.bind("<Escape>", self.cancel_pressed)
-
-    def find(self, event):
-        query=self.search.get().strip()
-        self.search_requested(choice="[search]" + query)
-
-    def create_search_widget(self): # поиск
-
-        self.searchFrame = ttk.Frame(master=self.boxRoot)
-        self.searchFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES,
-                              padx=self.padx)#, ipady=self.ipady, ipadx=self.ipadx)
-
-        #self.display = tk.Entry(self.searchFrame, width=50, font=("arial", 8), fg="green", state="readonly")
-        self.display = ScrolledText(self.searchFrame, width=30, font=("Arial", 8), fg="green", bg=dialogs.inactive_background, height=2, state="disabled")
-        self.display.pack(side=tk.LEFT, padx=1, pady=3)
-
-        if io2.LastSystemMessage[0] != "":
-            if io2.LastSystemMessage[1] < 1:
-                self.display.config(state="normal")
-                self.display.insert(tk.INSERT, io2.LastSystemMessage[0])
-                self.display.config(state="disabled")
-                io2.LastSystemMessage[1] += 1
-            else:
-                io2.LastSystemMessage[1] = 0
-                io2.LastSystemMessage[0] = ""
-
-        self.icon = ttk.Button(self.searchFrame, image=self.img[16], takefocus=0) # кнопка с лупой
-        self.icon.pack(side=tk.RIGHT, padx=1, pady=1)
-        self.icon.bind("<1>", self.find)
-
-        self.style = ttk.Style() # поисковая строка
-        self.style.configure("TEntry", foreground="grey60", background="green")
-        self.search = ttk.Entry(self.searchFrame, width=20, style="TEntry", takefocus=0)
-        self.search.pack(side=tk.RIGHT, padx=1, pady=1)
-        self.search.insert(0, "Поиск [F3]")
-        self.search.bind("<Return>", self.find)
-        #self.search.bind_class("Entry", "<3>", self.contextMenu)
-        #self.search.bind_class("Text", "<3>", self.contextMenu)
-        def temp_text(e):
-            self.search.delete(0, "end")
-        self.search.bind("<FocusIn>", temp_text)
-
-        def contextMenu(e=None):
-            """ Контекстное меню. Создается из внешней функции getMenu, универсальной для всех виджетов """
-            getMenu(box=boxRoot, e=e)
-        self.search.bind("<3>", contextMenu)
-
-    def create_buttons_frame(self):
-        self.buttonsFrame = ttk.Frame(self.boxRoot)
-        self.buttonsFrame.pack(side=tk.BOTTOM, fill="y", expand=tk.YES)
-
-        if self.form == "terView":
-            #else: # отдельная конфигурация под стартовую страницу с большими кнопками
-            self.startmenu = ttk.Frame(self.buttonsFrame)
-            self.startmenu.grid(column=0, row=0, columnspan=3, sticky="nsew",
-                                padx=self.padx, ipady=self.ipady, ipadx=self.ipadx)#pack(side=tk.BOTTOM, padx=self.padx, pady=self.pady, expand=tk.YES, fill=tk.BOTH)
-
-            ipadxButton = ipadyButton = 5
-            padx2 = pady2 = 3
-
-            self.terButton = ttk.Button(self.startmenu, text="Новый участок", compound="top", image=self.img[21])
-            self.terButton.grid(row=0, column=0, padx=padx2, pady=pady2, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
-            self.terButton.bind("<Return>", self.positive_pressed)
-            self.terButton.bind("<Button-1>", self.positive_pressed)
-            self.terButton.bind("<space>", self.positive_pressed)
-
-            from contacts import getContactsAmount
-            con = getContactsAmount(date=1)[0]
-            self.conButton = ttk.Button(self.startmenu, text="Контакты (%d)" % con, compound="top", image=self.img[20])
-            self.conButton.grid(row=0, column=1, padx=padx2, pady=pady2, ipadx=ipadxButton+10, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
-            self.conButton.bind("<Return>", self.contacts_pressed)
-            self.conButton.bind("<Button-1>", self.contacts_pressed)
-            self.conButton.bind("<space>", self.contacts_pressed)
-
-            rep, gap = reports.getCurrentHours()
-            if gap >= 0:
-                gap_str = "↑"
-            else:
-                gap_str = "↓"
-            if io2.settings[0][3]==0:
-                gap_str = ""
-            self.repButton = ttk.Button(self.startmenu, text="Отчет (%s%s)" % (rep, gap_str), compound="top", image=self.img[22])
-            self.repButton.grid(row=0, column=2, padx=padx2, pady=pady2, ipadx=ipadxButton+10, ipady=ipadyButton, sticky="nesw")  # pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
-            self.repButton.bind("<Return>", self.report_pressed)
-            self.repButton.bind("<Button-1>", self.report_pressed)
-            self.repButton.bind("<space>", self.report_pressed)
-
-            from house_op import countTotalProgress
-            self.staButton = ttk.Button(self.startmenu, text="Статистика (%s%%)" % countTotalProgress(), compound="top", image=self.img[23])
-            self.staButton.grid(row=1, column=0, padx=padx2, pady=pady2, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
-            self.staButton.bind("<Return>", self.stat_pressed)
-            self.staButton.bind("<Button-1>", self.stat_pressed)
-            self.staButton.bind("<space>", self.stat_pressed)
-
-            if reports.updateTimer(io2.settings[2][6]) >= 0:  # проверка, включен ли таймер
-                time2 = reports.updateTimer(io2.settings[2][6])
-            else:
-                time2 = reports.updateTimer(io2.settings[2][6]) + 24
-            if io2.settings[2][6] > 0:
-                timerTime = reports.timeFloatToHHMM(time2)
-            else:
-                timerTime = ""
-            self.timButton = ttk.Button(self.startmenu, text="Таймер %s" % timerTime, compound="top", image=getButton("Таймер %s" % timerTime, self.img)[1])
-            self.timButton.grid(row=1, column=1, padx=padx2, pady=pady2, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
-            self.timButton.bind("<Return>", self.timer_pressed)
-            self.timButton.bind("<Button-1>", self.timer_pressed)
-            self.timButton.bind("<space>", self.timer_pressed)
-
-            self.serButton = ttk.Button(self.startmenu, text="Служебный год", compound="top", image=self.img[24])
-            self.serButton.grid(row=1, column=2, padx=padx2, pady=pady2, ipadx=ipadxButton, ipady=ipadyButton, sticky="nesw")#pack(side=side, padx=self.padx, pady=self.pady, ipady=ipadyButton, expand=expand, fill=fill)
-            self.serButton.bind("<Return>", self.serviceyear_pressed)
-            self.serButton.bind("<Button-1>", self.serviceyear_pressed)
-            self.serButton.bind("<space>", self.serviceyear_pressed)
-
-        # put the buttons in the self.buttonsFrame
-
-        if self.positive == icon("plus", simplified=False):  # если плюс, заменяем его на более красивый
-            self.positive = "  Добавить [Ins]"
-        elif self.positive == icon("down"):
-            self.positive += " [Ins]"
-        if self.positive!=None and self.form != "terView":
-            positiveButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, compound="left",
-                                        text=getButton(self.positive, self.img)[0], image=getButton(self.positive, self.img)[1])
-            positiveButton.grid(column=0, row=1, sticky="we",
-                                padx=self.padx, ipady=self.ipady, ipadx=self.ipadx)
-            # for the commandButton, bind activation events
-            positiveButton.bind("<Return>", self.positive_pressed)
-            positiveButton.bind("<Button-1>", self.positive_pressed)
-            positiveButton.bind("<space>", self.positive_pressed)
-
-        # put the buttons in the self.buttonsFrame
-
-        if self.neutral != None and self.form != "terView":
-            self.neutral += " [Ctrl+Ins]"
-            neutralButton = ttk.Button(self.buttonsFrame, takefocus=tk.YES, compound="left",
-                                       text=getButton(self.neutral, self.img)[0], image = getButton(self.neutral, self.img)[1])
-            neutralButton.grid(column=1, row=1, sticky="we",
-                               padx=self.padx, ipady=self.ipady, ipadx=self.ipadx)
-            # for the commandButton, bind activation events
-            neutralButton.bind("<Return>", self.neutral_pressed)
-            neutralButton.bind("<Button-1>", self.neutral_pressed)
-            neutralButton.bind("<space>", self.neutral_pressed)
-
-        # add special buttons for multiple select features
-        if not self.multiple_select:
-            return
-
-        selectAllButton = ttk.Button(self.buttonsFrame, text="Выбрать все")
-        selectAllButton.grid(column=0, row=1, padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
-
-        clearAllButton = ttk.Button(self.buttonsFrame, text="Снять все")
-        clearAllButton.grid(column=1, row=1, padx=self.padx, pady=self.pady, ipady=self.ipady, ipadx=self.ipadx)
-
-        selectAllButton.bind("<Button-1>", self.choiceboxSelectAll)
-
-        clearAllButton.bind("<Button-1>", self.choiceboxClearAll)
-
-    def create_msg_widget(self, msg):
-
-        if msg is None:
-            msg = ""
-
-        self.msgFrame = tk.Frame(
-            self.boxRoot,
-            padx=0#self.padx * self.calc_character_width(),
-        )
-        self.messageArea = tk.Label(
-            self.msgFrame,
-            width=30,#self.width_in_chars,
-            height=5
-            #state=tk.DISABLED,
-            #padx=10,#(dialogs.default_hpad_in_chars * self.calc_character_width()),
-            #pady=10,#(dialogs.default_hpad_in_chars * self.calc_character_width()),
-            #wrap=tk.WORD,
-        )
-        self.set_msg(msg)
-
-        self.msgFrame.pack(side=tk.TOP, expand=0, fill='y')
-
-        self.msgFrame.config(width=20, height=0)
-
-        self.messageArea.pack(side=tk.TOP, expand=0, fill='y')
-
-    def create_ok_button(self):
-
-        okButtonFrame = tk.Frame(self.boxRoot)
-        okButtonFrame.pack(side=tk.TOP, fill="both", expand=tk.YES)
-
-        okButton = ttk.Button(okButtonFrame, takefocus=0, compound="left",  # кнопка OK в списке
-                              text=getButton("  OK [Enter]", self.img)[0],
-                              image=getButton("  OK [Enter]", self.img)[1])
-        okButton.bind("<Return>", self.ok_pressed)
-        okButton.bind("<Button-1>", self.ok_pressed)
-        okButton.bind("<space>", self.ok_pressed)
-
-        sideButtonIpadX = 0
-
-        if self.form == "terView":
-            okButton.pack(side=tk.LEFT, fill="x", expand=tk.YES, padx=self.padx, pady=0, ipady=self.ipady)
-
-            if self.neutral != None:
-                neutralButton = ttk.Button(okButtonFrame, takefocus=0, compound="left",  # кнопка сортировка участков
-                                    text=getButton(self.neutral, self.img)[0],
-                                    image=getButton(self.neutral, self.img)[1])
-                neutralButton.bind("<Return>", self.neutral_pressed)
-                neutralButton.bind("<Button-1>", self.neutral_pressed)
-                neutralButton.bind("<space>", self.neutral_pressed)
-                neutralButton.pack(side=tk.LEFT, padx=self.padx, pady=0, ipadx=sideButtonIpadX, ipady=self.ipady)
-
-        else:
-            if self.negative != None:
-                backButton = ttk.Button(okButtonFrame, takefocus=0, compound="left",  # кнопка назад
-                                        text=getButton("  [Esc]", self.img)[0],
-                                        image=getButton("  [Esc]", self.img)[1])
-                backButton.bind("<Return>", self.cancel_pressed)
-                backButton.bind("<Button-1>", self.cancel_pressed)
-                backButton.bind("<space>", self.cancel_pressed)
-                backButton.bind("<Escape>", self.cancel_pressed)
-                backButton.pack(side=tk.LEFT, padx=self.padx, pady=0, ipadx=sideButtonIpadX, ipady=self.ipady)
-
-                okButton.pack(side=tk.LEFT, fill="x", expand=tk.YES, padx=self.padx, pady=0, ipady=self.ipady)
-
-                homeButton = ttk.Button(okButtonFrame, takefocus=0, compound="left",   # кнопка возврата на главную
-                                        text=getButton("  [F1]", self.img)[0],
-                                        image=getButton("  [F1]", self.img)[1])
-                homeButton.bind("<Return>", self.go_home)
-                homeButton.bind("<Button-1>", self.go_home)
-                homeButton.bind("<space>", self.go_home)
-                homeButton.pack(side=tk.LEFT, padx=self.padx, pady=0, ipadx=sideButtonIpadX, ipady=self.ipady)
-
-    def create_choicearea(self):
-
-        self.choiceboxFrame = ttk.Frame(master=self.boxRoot)
-        self.choiceboxFrame.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=tk.YES, padx=1, ipady=self.ipady, ipadx=self.ipadx)
-
-        # --------  put the self.choiceboxWidget in the self.choiceboxFrame ---
-        self.choiceboxWidget = tk.Listbox(self.choiceboxFrame,
-                                          height=500,
-                                          borderwidth="2m", relief="flat",
-                                          bg="white"
-        )
-
-        if 1:#self.form == "porchViewGUIList" or self.form == "porchViewGUIOneFloor" or self.form == "porchText":
-            self.choiceboxWidget.config( font = (dialogs.MONOSPACE_FONT_FAMILY, dialogs.MONOSPACE_FONT_SIZE) )
-        else:
-            self.choiceboxWidget.config(font=(dialogs.PROPORTIONAL_FONT_FAMILY, dialogs.PROPORTIONAL_FONT_SIZE))
-
-        for choice in self.choices:
-            self.choiceboxWidget.insert(tk.END, choice)
-
-        if self.multiple_select:
-            self.choiceboxWidget.configure(selectmode=tk.MULTIPLE)
-
-        # add a vertical scrollbar to the frame
-        rightScrollbar = ttk.Scrollbar(self.choiceboxFrame, orient=tk.VERTICAL,
-                                      command=self.choiceboxWidget.yview)
-        self.choiceboxWidget.configure(yscrollcommand=rightScrollbar.set)
-
-        # add a horizontal scrollbar to the frame
-        bottomScrollbar = tk.Scrollbar(self.choiceboxFrame,
-                                       orient=tk.HORIZONTAL,
-                                       command=self.choiceboxWidget.xview)
-        self.choiceboxWidget.configure(xscrollcommand=bottomScrollbar.set)
-
-        # pack the Listbox and the scrollbars.
-        # Note that although we must define
-        # the textArea first, we must pack it last,
-        # so that the bottomScrollbar will
-        # be located properly.
-
-        bottomScrollbar.pack(side=tk.BOTTOM, fill=tk.X)
-        rightScrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        self.choiceboxWidget.pack(side=tk.TOP, padx=self.padx, pady=self.pady, expand=tk.YES, fill=tk.BOTH)
-
-        # Bind the keyboard events
-        self.choiceboxWidget.bind("<Return>", self.ok_pressed)
-        self.choiceboxWidget.bind("<Double-Button-1>", self.ok_pressed)
-        self.choiceboxWidget.bind("<Insert>", self.positive_pressed)
-        self.choiceboxWidget.bind("<Control-Insert>", self.neutral_pressed)
-        self.choiceboxWidget.bind("<BackSpace>", self.cancel_pressed)
-        self.choiceboxWidget.bind("<F1>", self.go_home)
-        self.choiceboxWidget.bind("<3>", self.listContextMenu)
-
-        def focus_search(event):
-            self.search.focus()
-        self.choiceboxWidget.bind("<F3>", focus_search)
-
-    def listContextMenu(self, e=None): # контекстное меню списка ***
-        menu = tk.Menu(self.boxRoot, tearoff=0)
-        menu.add_command(
-            label=getButton("  OK", self.img)[0],
-            image=getButton("  OK", self.img)[1],
-            compound="left",
-            command=self.ok_pressed
-        )
-        if self.positive != None:
-            if "[" in self.positive:
-                text = self.positive[0: self.positive.index("[")]
-            else:
-                text = self.positive
-            menu.add_command(
-                label=getButton(text, self.img)[0],
-                image=getButton(text, self.img)[1],
-                compound="left",
-                command=self.positive_pressed
-            )
-        if self.neutral != None:
-            if "[" in self.neutral:
-                text = self.neutral[0: self.neutral.index("[")]
-            else:
-                text = self.neutral
-            menu.add_command(
-                label=getButton(text, self.img)[0],
-                image=getButton(text, self.img)[1],
-                compound="left",
-                command=self.neutral_pressed
-            )
-        menu.add_separator()
-        menu.add_command(label="Копировать", command=lambda: e.widget.event_generate("<<Copy>>"))
-        menu.tk.call("tk_popup", menu, e.x_root, e.y_root)
-
-    def KeyboardListener(self, event):
-        key = event.keysym
-        if len(key) <= 1:
-            if key in string.printable:
-                # Find the key in the li
-                # before we clear the list, remember the selected member
-                try:
-                    start_n = int(self.choiceboxWidget.curselection()[0])
-                except IndexError:
-                    start_n = -1
-
-                # clear the selection.
-                self.choiceboxWidget.selection_clear(0, 'end')
-
-                # start from previous selection +1
-                for n in range(start_n + 1, len(self.choices)):
-                    item = self.choices[n]
-                    if item[0].lower() == key.lower():
-                        self.choiceboxWidget.selection_set(first=n)
-                        self.choiceboxWidget.see(n)
-                        return
-                else:
-                    # has not found it so loop from top
-                    for n, item in enumerate(self.choices):
-                        if item[0].lower() == key.lower():
-                            self.choiceboxWidget.selection_set(first=n)
-                            self.choiceboxWidget.see(n)
-                            return
-
-                    # nothing matched -- we'll look for the next logical choice
-                    for n, item in enumerate(self.choices):
-                        if item[0].lower() > key.lower():
-                            if n > 0:
-                                self.choiceboxWidget.selection_set(
-                                    first=(n - 1))
-                            else:
-                                self.choiceboxWidget.selection_set(first=0)
-                            self.choiceboxWidget.see(n)
-                            return
-
-                    # still no match (nothing was greater than the key)
-                    # we set the selection to the first item in the list
-                    lastIndex = len(self.choices) - 1
-                    self.choiceboxWidget.selection_set(first=lastIndex)
-                    self.choiceboxWidget.see(lastIndex)
-                    return
-
-    def choiceboxClearAll(self, event):
-        self.choiceboxWidget.selection_clear(0, len(self.choices) - 1)
-
-    def choiceboxSelectAll(self, event):
-        self.choiceboxWidget.selection_set(0, len(self.choices) - 1)
-
-
-# -------------------------------------------------------------------
 # fillablebox
 # -------------------------------------------------------------------
 
@@ -2057,7 +1993,7 @@ cancelButton = None
 nButton = None
 okButton = None
 
-def __fillablebox(msg, title="", default="", mask=None, root=None, mono=False, height=5, neutral=None, password=False):
+def __fillablebox(msg, title="", default="", mask=None, root=None, mono=False, height=5, neutral=None, lib=False):
     """
     Show a box in which a user can enter some text.
     You may optionally specify some default text, which will appear in the
@@ -2085,7 +2021,7 @@ def __fillablebox(msg, title="", default="", mask=None, root=None, mono=False, h
     #boxRoot.protocol('WM_DELETE_WINDOW', __enterboxQuit)
     def exit():
         geom = boxRoot.geometry()
-        if password == False:
+        if lib == False:
             dialogs.window_position = '+' + geom.split('+', 1)[1]
             dialogs.window_size = geom[0: geom.index("+")]
             dialogs.saveWindowPosition(boxRoot)
@@ -2093,21 +2029,20 @@ def __fillablebox(msg, title="", default="", mask=None, root=None, mono=False, h
         sys.exit(0)
     boxRoot.protocol('WM_DELETE_WINDOW', exit)
 
-    if title[1] == " ":
-        boxRoot.title(title[2:])
-    else:
-        boxRoot.title(title)
+    boxRoot.title("Rocket Ministry")
 
     #from os import name
     #if name == "nt":
     #    boxRoot.iconbitmap('icon.ico')
 
-    if password==True:
-        dialogs.window_size = "300x150"
-        dialogs.window_position = "+500+350"
-        height=2
+    if lib==True:
+        height = 1
+        boxRoot.geometry("250x120+500+350")
+    else:
+        height=height
+        pos = dialogs.window_size + dialogs.window_position
+        boxRoot.geometry(pos)
 
-    boxRoot.geometry(dialogs.window_size + dialogs.window_position)
     boxRoot.bind("<Escape>", __enterboxCancel)
 
     mainFrame = tk.Frame(boxRoot)
@@ -2117,6 +2052,19 @@ def __fillablebox(msg, title="", default="", mask=None, root=None, mono=False, h
     bottomFrame.pack(side=tk.BOTTOM, fill=tk.BOTH)
 
     create_footer(bottomFrame)
+
+    # Верхняя строка (дублирование title)
+    msgFrame = tk.Frame(mainFrame)
+    msgFrame.pack(side=tk.TOP, fill='both')
+    if title.strip()=="":
+        text = None
+    elif title[1]==" ":
+        text = title[1:]
+    else:
+        text = title
+    messageArea = tk.Label(msgFrame, text=text, fg="grey30")
+    if text!=None:
+        messageArea.pack(side=tk.TOP, expand=1, fill='both', padx=3)
 
     # ------------- define the messageFrame ---------------------------------
     messageFrame = tk.Frame(master=mainFrame)

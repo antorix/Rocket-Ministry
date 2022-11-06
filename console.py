@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import io2
-from io2 import settings
-from io2 import resources
 from os import remove
 import dialogs
 import reports
@@ -20,8 +18,8 @@ def dialog(houseTitle=""):
 
     while 1: 
         input = dialogs.dialogText(
-            title = icon("console") + " Консоль " + reports.getTimerIcon(settings[2][6]),
-            message="Введите команду (или символ _ для выполнения %s):" % settings[0][13],
+            title = icon("console") + " Консоль " + reports.getTimerIcon(io2.settings[2][6]),
+            message="Введите команду (или символ _ для выполнения %s):" % io2.settings[0][13],
             default=default
         )
         if input != None and not "cancelled" in input:
@@ -72,13 +70,13 @@ def process(input):
         success = True
 
     if input=="clearnotes": # delete all notes
-        del resources[0][:]
+        del io2.resources[0][:]
         io2.log("Удалены все заметки")
         io2.save(manual=True)
         success = True
 
-    if "save" in input[:4]: # save DB
-        io2.save(manual=True)
+    if input=="save": # save DB
+        io2.save(forced=True, silent=False)
         success = True
 
     if "load" in input[:4]: # load DB
@@ -98,11 +96,11 @@ def process(input):
         success = True
 
     if "import" in input[:6]:
-        result = io2.load(dataFile=settings[0][14], forced=True, delete=True)
+        result = io2.load(dataFile=io2.settings[0][14], forced=True, delete=True)
         if result != "fail":
             io2.save()
             try:
-                remove(settings[0][14])
+                remove(io2.settings[0][14])
             except:
                 print("Не получилось удалить импортированный файл")
             else:
@@ -116,14 +114,14 @@ def process(input):
         success = True
 
     if "time" in input[:4] or "#" in input[0]: # start/stop timer
-        if settings[2][6] == 0:
+        if io2.settings[2][6] == 0:
             reports.report(choice="=(")
         else:
             reports.report(choice="=)")
         success = True
     
     if input[len(input)-1]=="+" and len(input)>1: # note by + in the end
-        resources[0].append(input[:len(input)-1].strip())
+        io2.resources[0].append(input[:len(input)-1].strip())
         io2.log("В блокнот внесена запись «%s»" % input[:len(input)-1])
         io2.save()
         success = True
@@ -137,8 +135,8 @@ def process(input):
         success = True
 
     if "grid" in input[:4]: # режим сетки
-        settings[0][5] = homepage.toggle(settings[0][5])
-        if settings[0][5]==1:
+        io2.settings[0][5] = homepage.toggle(io2.settings[0][5])
+        if io2.settings[0][5]==1:
             io2.log("Режим сетки в подъезде включен")
         else:
             io2.log("Режим сетки в подъезде отключен")

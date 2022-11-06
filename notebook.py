@@ -6,8 +6,7 @@ import webbrowser
 import reports
 import io2
 import set
-from io2 import settings
-from io2 import resources
+import time
 from icons import icon
 import homepage
 
@@ -18,10 +17,10 @@ def showNotebook():
     while 1:
         options = []
         
-        for i in range(len(resources[0])):
-            options.append(icon("note") + " " + resources[0][i])
+        for i in range(len(io2.resources[0])):
+            options.append(icon("note") + " " + io2.resources[0][i])
 
-        if io2.Mode=="easygui" and settings[0][1]==0: # убираем иконки на ПК
+        if io2.Mode=="easygui" and io2.settings[0][1]==0: # убираем иконки на ПК
             for i in range(len(options)):
                 options[i] = options[i][2:]
 
@@ -32,7 +31,7 @@ def showNotebook():
 
         if choice!="positive":
             choice = dialogs.dialogList(
-                title = icon("notebook") + " Блокнот " + reports.getTimerIcon(settings[2][6]),
+                title = icon("notebook") + " Блокнот " + reports.getTimerIcon(io2.settings[2][6]),
                 message = "Список заметок:",
                 form = "showNotebook",
                 positive=icon("plus", simplified=False),
@@ -45,9 +44,10 @@ def showNotebook():
             break # exit
         elif choice=="neutral": # export
             output = ""
-            for i in range(len(resources[0])):
-                output += resources[0][i] + "\n\n"
+            for i in range(len(io2.resources[0])):
+                output += io2.resources[0][i] + "\n\n"
             if io2.Mode == "sl4a": # Sharing to cloud if on Android
+                time.wait(0.5)
                 try:
                     from androidhelper import Android
                     Android().sendEmail("Введите email","Заметки",output,attachmentUri=None)
@@ -59,8 +59,8 @@ def showNotebook():
                     return True
             else:
                 with open("мои заметки.txt", "w", encoding="utf-8") as file:
-                    for i in range(len(resources[0])):
-                        file.write(resources[0][i]+"\n\n")
+                    for i in range(len(io2.resources[0])):
+                        file.write(io2.resources[0][i]+"\n\n")
                 webbrowser.open("мои заметки.txt")
                 io2.log("Экспорт выполнен")
 
@@ -73,7 +73,7 @@ def showNotebook():
                 largeText=True
             )
             if choice2 != None and len(choice2)>0:
-                resources[0].append(choice2)
+                io2.resources[0].append(choice2)
                 io2.save()
                 continue
             
@@ -90,12 +90,12 @@ def showNotebook():
                     #icon("clipboard") +   " В буфер обмена "
                     ]
 
-                if io2.Mode == "easygui" and settings[0][1] == 0:  # убираем иконки на ПК
+                if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
                     for i in range(len(options2)):
                         options2[i] = options2[i][2:]
 
                 choice2 = dialogs.dialogList(
-                    title = icon("note") + " Заметка «%s» " % resources[0][result] + reports.getTimerIcon(settings[2][6]),
+                    title = icon("note") + " Заметка «%s» " % io2.resources[0][result] + reports.getTimerIcon(io2.settings[2][6]),
                     options=options2,
                     message="Выберите действие:",
                     form="noteEdit"
@@ -104,28 +104,28 @@ def showNotebook():
                     continue
                 elif choice2==0: # правка
                     choice3 = dialogs.dialogText(
-                        icon("note") + " Правка заметки " + reports.getTimerIcon(settings[2][6]),
-                        default = resources[0][result],
+                        icon("note") + " Правка заметки " + reports.getTimerIcon(io2.settings[2][6]),
+                        default = io2.resources[0][result],
                         positive="Сохранить",
                         negative="Отмена",
                         largeText=True
                     )
                     if choice3 != None:
-                        resources[0][result] = choice3
+                        io2.resources[0][result] = choice3
                         io2.save()
                 elif choice2==1: # удаление
-                    del resources[0][result]
+                    del io2.resources[0][result]
                     io2.save()
                 elif choice2==2: # в буфер
                     if io2.Mode == "sl4a":
                         from androidhelper import Android
-                        Android().setClipboard(resources[0][result].strip())
+                        Android().setClipboard(io2.resources[0][result].strip())
                     else:
                         from tkinter import Tk
                         r = Tk()
                         r.withdraw()
                         r.clipboard_clear()
-                        r.clipboard_append(resources[0][result].strip())
+                        r.clipboard_append(io2.resources[0][result].strip())
                         r.update()
                         r.destroy()
         else:

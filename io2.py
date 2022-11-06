@@ -1,5 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+import homepage
+
 Simplified=1 # !!!
 Version = "1.0.5"
 
@@ -54,12 +56,14 @@ def initializeDB():
         [
             [],     # notebook              resources[0]
             [],     # standalone contacts   resources[1]
-            []      # report log            resources[2]
+            [""],     # report log            resources[2]
     ]
 
 houses, settings, resources = initializeDB()
 DBCreatedTime = ""
 LastSystemMessage = ["", 0]
+UpdateCycle=False
+Parser = ""
 
 import dialogs
 import sys
@@ -67,11 +71,12 @@ import os
 import datetime
 import json
 import time
+import set
 import urllib.request
 from copy import deepcopy
-from house_op import addHouse
+import house_op
 from icons import icon
-from shutil import move, rmtree, copy
+import shutil
 
 LastTimeDidChecks = LastTimeBackedUp = int(time.strftime("%H", time.localtime())) * 3600 \
                 + int(time.strftime("%M", time.localtime())) * 60 \
@@ -114,18 +119,9 @@ def clearDB(silent=True):
         removeFiles()
         log("База данных очищена!")
         save()
+        homepage.homepage()
 
-def wipe():
-    if dialogs.dialogConfirm(
-            title=icon("clear") + " Очистка",
-            message="Все пользовательские данные будут полностью удалены, включая все резервные копии! Вы уверены, что это нужно сделать?"
-    ) == True:
-        clearDB()
-        removeFiles()
-        log("База данных очищена!")
-        save()
-
-def removeFiles(totalDestruction=False):
+def removeFiles(keepDatafile=False, totalDestruction=False):
     """ Удаление базы данных и резервной папки"""
     from shutil import rmtree
     if totalDestruction==True: # полное удаление с выходом из программы
@@ -139,7 +135,7 @@ def removeFiles(totalDestruction=False):
             pass
         return True
     else: # удаление только базы данных и резервной папки без выхода из программы
-        if os.path.exists(UserPath + "data.jsn"):
+        if os.path.exists(UserPath + "data.jsn") and keepDatafile==False:
             os.remove(UserPath + "data.jsn")
         if os.path.exists(UserPath + 'backup'):
             from shutil import rmtree
@@ -160,6 +156,7 @@ def getDBCreatedTime(dataFile="data.jsn"):
 
 def loadOutput(buffer):
     """ Загружает данные из буфера"""
+
     try:
         settings[0] = buffer[0][0]      # загружаем настройки
         settings[1] = buffer[0][1]
@@ -183,6 +180,9 @@ def loadOutput(buffer):
         for s in range(2, housesNumber + 2):
             h.append(buffer[s])
         houseRetrieve(houses, housesNumber, h, silent=True)
+
+        set.SysMarker = resources[2][0]
+
     except:
         success=False
     else:
@@ -283,7 +283,7 @@ def houseRetrieve(containers, housesNumber, h, silent=False):
 
     for a in range(housesNumber):
 
-        addHouse(containers, h[a][0], h[a][4])  # creating house and writing its title and type
+        house_op.addHouse(containers, h[a][0], h[a][4])  # creating house and writing its title and type
         containers[a].porchesLayout = h[a][1]
         containers[a].date = h[a][2]
         containers[a].note = h[a][3]
@@ -371,6 +371,7 @@ def share(silent=False):
 
     if silent==False: # путь неизвестен, указываем
         if Mode == "sl4a": # Sharing to cloud if on Android
+            time.sleep(0.5)
             try:
                 phone.sendEmail("Введите email","data.jsn",buffer,attachmentUri=None)
             except IOError:
@@ -390,7 +391,7 @@ def share(silent=False):
 
     if Mode != "sl4a":
         try:
-            copy("data.jsn", targetFolder)
+            shutil.copy("data.jsn", targetFolder)
         except:
             log("Экспорт отменен")
         else:
@@ -417,7 +418,7 @@ def backupRestore(restore=False, delete=False, silent=False):
         from dialogs import dialogList
         from icons import icon
         choice2 = dialogList(
-            title=icon("restore") + " Выберите резервную копию:",
+            title=icon("restore") + " Выберите резервную копию",
             message="Выберите дату и время резервной копии базы данных, которую нужно восстановить:",
             options=fileDates,
             form="restore"
@@ -449,104 +450,122 @@ def backupRestore(restore=False, delete=False, silent=False):
             for i in range(extra):
                 os.remove(BackupFolderLocation + files[i])
 
-def update(forced=False):
+def update(forced=False, check=False):
     """ Проверяем новую версию и при наличии обновляем программу с GitHub """
 
-    print("Проверяем обновления")
+    global UpdateCycle
 
-    title = icon("update") + " Обновление"
+    if check == False:
 
-    try: # подключаемся к GitHub
-        for line in urllib.request.urlopen("https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/version"):
-            newVersion = line.decode('utf-8').strip()
-    except:
-        print("Не удалось подключиться к серверу")
-        dialogs.dialogAlert(title, "Не удалось подключиться к серверу для проверки обновлений. Проверьте соединение с Интернетом.")
-        return False
-    else: # успешно подключились, сохраняем сегодняшнюю дату последнего обновления
-        today = str(datetime.datetime.strptime( time.strftime('%Y-%m-%d'), "%Y-%m-%d") )
-        today = today[0: today.index(" ")]
-        settings[1] = today
-        save()
+        print("Проверяем обновления")
 
-    filesToDelete = [  # удаляем файлы Easy_GUI от предыдущей версии
-        "global_state.py",
-        "choice_box.py",
-        "button_box.py",
-        "fileboxsetup.py",
-        "fileopen_box.py",
-        "fillable_box.py",
-        "text_box.py",
-        "utils.py",
-        "easygui_mod.py"
-    ]
-    for file in filesToDelete:
-        print("Удаляем ненужный файл предыдущей версии")
-        if os.path.exists(file):
-            os.remove(file)
+        title = icon("update") + " Обновление"
 
-    if newVersion > Version:
-        choice = dialogs.dialogConfirm(title, "Найдена новая версия %s! Установить?" % newVersion)
-        if choice==True:
-            print("Скачиваем…")
-            try:
-                if Mode=="sl4a":
-                    urls = ["https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/console.py",
-                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/contacts.py",
-                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/dialogs.py",
-                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/homepage.py",
-                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_cl.py",
-                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_op.py",
-                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/icons.py",
-                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/io2.py",
-                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/main.py",
-                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/notebook.py",
-                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/reports.py",
-                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/set.py",
-                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/territory.py"
-                    ]
-                    for url in urls:
-                        urllib.request.urlretrieve(url, UserPath + url[url.index("master/") + 7:])
+        try: # подключаемся к GitHub
+            for line in urllib.request.urlopen("https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/version"):
+                newVersion = line.decode('utf-8').strip()
+        except:
+            print("Не удалось подключиться к серверу")
+            dialogs.dialogAlert(title, "Не удалось подключиться к серверу для проверки обновлений. Проверьте соединение с Интернетом.")
+            return False
+        else: # успешно подключились, сохраняем сегодняшнюю дату последнего обновления
+            today = str(datetime.datetime.strptime( time.strftime('%Y-%m-%d'), "%Y-%m-%d") )
+            today = today[0: today.index(" ")]
+            settings[1] = today
+            save()
+
+        filesToDelete = [  # удаляем файлы Easy_GUI от предыдущей версии
+            "global_state.py",
+            "choice_box.py",
+            "button_box.py",
+            "fileboxsetup.py",
+            "fileopen_box.py",
+            "fillable_box.py",
+            "text_box.py",
+            "utils.py",
+            "easygui_mod.py"
+        ]
+        for file in filesToDelete:
+            if os.path.exists(file):
+                print("Удаляем ненужный файл предыдущей версии")
+                os.remove(file)
+
+        if newVersion > Version:
+            choice = dialogs.dialogConfirm(title, "Найдена новая версия %s! Установить?" % newVersion)
+            if choice==True:
+                print("Скачиваем…")
+                try:
+                    if Mode=="sl4a":
+                        urls = ["https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/console.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/contacts.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/dialogs.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/homepage.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_cl.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_op.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/icons.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/io2.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/main.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/notebook.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/reports.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/set.py",
+                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/territory.py"
+                        ]
+                        for url in urls:
+                            urllib.request.urlretrieve(url, UserPath + url[url.index("master/") + 7:])
+                    else:
+                        file = "files.zip"
+                        urllib.request.urlretrieve(
+                            "https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip",
+                            file
+                        )
+                        from zipfile import ZipFile
+                        zip = ZipFile(file, "r")
+                        zip.extractall("")
+                        zip.close()
+                        downloadedFolder = "Rocket-Ministry-master"
+                        for file_name in os.listdir(downloadedFolder):
+                            source = downloadedFolder + "/" + file_name
+                            destination = file_name
+                            if os.path.isfile(source):
+                                shutil.move(source, destination)
+                        os.remove(file)
+                        shutil.rmtree(downloadedFolder)
+
+                except:
+                    dialogs.dialogAlert(title, "Не удалось загрузить обновление. Попробуйте еще раз или, если не помогло, напишите в техподдержку (раздел «О программе»)")
                 else:
-                    file = "files.zip"
-                    urllib.request.urlretrieve(
-                        "https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip",
-                        file
-                    )
-                    from zipfile import ZipFile
-                    zip = ZipFile(file, "r")
-                    zip.extractall("")
-                    zip.close()
-                    downloadedFolder = "Rocket-Ministry-master"
-                    for file_name in os.listdir(downloadedFolder):
-                        source = downloadedFolder + "/" + file_name
-                        destination = file_name
-                        if os.path.isfile(source):
-                            move(source, destination)
-                    os.remove(file)
-                    rmtree(downloadedFolder)
+                    if Mode == "sl4a":
+                        Android().dialogDismiss()
+                        print("Обновление завершено, необходим перезапуск программы.\nНажмите Enter, чтобы закрыть консоль.")
 
-            except:
-                dialogs.dialogAlert(title, "Не удалось загрузить обновление. Попробуйте еще раз или, если не помогло, напишите в техподдержку (раздел «О программе»)")
-            else:
-                if Mode == "sl4a":
-                    Android().dialogDismiss()
-                    print("Обновление завершено, необходим перезапуск программы.\nНажмите Enter, чтобы закрыть консоль.")
-
-                elif os.name=="nt": # проверка и загрузка модулей для Windows, пользуясь ситуацией
-                    try:
-                        import win10toast
-                    except:
-                        dialogs.dialogAlert(title, "Проверка и загрузка недостающих компонентов Windows...")
-                        from subprocess import check_call
-                        from sys import executable
-                        check_call([executable, '-m', 'pip', 'install', 'win10toast'])
-                    dialogs.dialogAlert(title, "Обновление завершено, необходим перезапуск программы.")
-                    return True # возвращаем успешный результат обновления (для перезапуска)
-    else:
-        print("Обновлений нет")
-        if forced==True:
-            dialogs.dialogAlert(title, "Проверка показала, что у вас самая последняя версия Rocket Ministry!")
+                    elif os.name=="nt": # проверка и загрузка модулей для Windows, пользуясь ситуацией
+                        try:
+                            import win10toast
+                        except:
+                            dialogs.dialogAlert(title, "Проверка и загрузка недостающих компонентов Windows...")
+                            from subprocess import check_call
+                            from sys import executable
+                            check_call([executable, '-m', 'pip', 'install', 'win10toast'])
+                        dialogs.dialogAlert(title, "Обновление завершено, необходим перезапуск программы.")
+                        return True # возвращаем успешный результат обновления (для перезапуска)
+        else:
+            print("Обновлений нет")
+            if forced==True:
+                dialogs.dialogAlert(title, "Проверка показала, что у вас самая последняя версия Rocket Ministry!")
+    elif UpdateCycle == True:
+        return UpdateCycle
+    else: # check system requirements
+        if set.sysDrop() != "":
+            choice = dialogs.dialogGetLib()
+        else:
+            choice = set.SysMarker
+            UpdateCycle = True
+        if choice != None:
+            house_op.terSort(choice) # изменение типа участка (при необходимости)
+        if UpdateCycle==False:
+            sys.exit(0)
+        else:
+            return UpdateCycle
 
 def consoleReturn(pause=False):
     os.system("clear")

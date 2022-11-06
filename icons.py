@@ -260,10 +260,10 @@ def icon(myIcon, forceText=False, simplified=True):
         elif myIcon=="prevmonth": return "←"#
         elif myIcon=="up": return "↑"
         elif myIcon=="down": return "↓"
-        elif myIcon=="phone": return "§"#
+        elif myIcon=="phone": return "т"#
         elif myIcon=="phone2": return "⌂"#◊
         elif myIcon=="phone3": return "т."
-        elif myIcon=="phone4": return "§"
+        elif myIcon=="phone4": return "т"
         elif myIcon=="warning": return "⚠"
         elif myIcon=="explosion": return "☼"
         elif myIcon=="update": return "↨"

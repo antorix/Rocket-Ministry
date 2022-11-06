@@ -9,7 +9,7 @@ import reports
 import house_op
 from icons import icon
 import homepage
-from territory import GridMode
+import territory
 from random import random
 from copy import deepcopy
 
@@ -92,10 +92,14 @@ class House():
         return list
         
     def addPorch(self, input="", type="condo"):
-        self.porches.append(self.Porch()) 
+        self.porches.append(self.Porch())
         self.porches[len(self.porches)-1].title = input.strip()
         self.porches[len(self.porches)-1].type = type
-        
+        if type=="подъезд" or type=="диапазон":
+            self.porches[len(self.porches)-1].flatsLayout = "н"
+        else:
+            self.porches[len(self.porches)-1].flatsLayout = "а"
+
     def rename(self, input):
         self.title = input[3:].upper()
 
@@ -180,6 +184,7 @@ class House():
                 return "deleted"
 
         def getFlatsRange(self):
+            """ Выдает диапазон квартир в подъезде многоквартирного дома"""
             range = ""
             if self.type!="подъезд":
                 return range
@@ -188,7 +193,10 @@ class House():
 
             for flat in self.flats:
                 if not "." in flat.number:
-                    list.append(int(flat.number))
+                    try:
+                        list.append(int(flat.number))
+                    except:
+                        return " –" # в подъезде есть нецифровые номера квартир, выходим
             list.sort()
 
             if len(list) == 1:
@@ -262,11 +270,31 @@ class House():
             return result
 
         def sortFlats(self):
+            onlyNumbersAllowed = "Для сортировки по номеру все номера должны содержать только цифры!"
             if self.flatsLayout == "н": # numeric by number
-                self.flats.sort(key=lambda x: float(x.number))
+                try:
+                    self.flats.sort(key=lambda x: float(x.number))
+                except:
+                    dialogs.dialogAlert(
+                        title=icon("sort") + " Сортировка",
+                        message=onlyNumbersAllowed
+                    )
+                    self.flatsLayout = "а"
+                    self.flats.sort(key=lambda x: x.title)
+
+            elif self.flatsLayout == "а":  # alphabetic
+                self.flats.sort(key=lambda x: x.title)
 
             elif self.flatsLayout == "о": # numeric by number reversed
-                self.flats.sort(key=lambda x: float(x.number), reverse=True)
+                try:
+                    self.flats.sort(key=lambda x: float(x.number), reverse=True)
+                except:
+                    dialogs.dialogAlert(
+                        title=icon("sort") + " Сортировка",
+                        message=onlyNumbersAllowed
+                    )
+                    self.flatsLayout = "а"
+                    self.flats.sort(key=lambda x: x.title)
 
             elif self.flatsLayout=="с": # alphabetic by status character
                 self.flats.sort(key=lambda x: float(x.number))
@@ -280,17 +308,26 @@ class House():
                 self.flats.sort(key=lambda x: x.note, reverse=True)
 
             elif set.ifInt(self.flatsLayout)==True and self.type=="подъезд": # сортировка по этажам
-                self.flats.sort(key=lambda x: float(x.number))
-                rows = int(self.flatsLayout)
-                columns = int(len(self.flats) / rows)
-                row=[i for i in range(rows)]
-                i=0
-                for r in range(rows):
-                    row[r]=self.flats[i:i+columns]
-                    i += columns
-                row = row[::-1]
-                del self.flats [:]
-                for r in range(rows): self.flats += row[r]
+                try:
+                    self.flats.sort(key=lambda x: float(x.number))
+                except:
+                    dialogs.dialogAlert(
+                        title=icon("sort") + " Сортировка",
+                        message = "Для поэтажной сортировки все номера квартир должны содержать только цифры!"
+                    )
+                    self.flatsLayout = "а"
+                    self.flats.sort(key=lambda x: x.title)
+                else:
+                    rows = int(self.flatsLayout)
+                    columns = int(len(self.flats) / rows)
+                    row=[i for i in range(rows)]
+                    i=0
+                    for r in range(rows):
+                        row[r]=self.flats[i:i+columns]
+                        i += columns
+                    row = row[::-1]
+                    del self.flats [:]
+                    for r in range(rows): self.flats += row[r]
 
             else:
                 self.flatsLayout = "н"
@@ -320,7 +357,7 @@ class House():
                 else:
                     break
 
-        def autoFloorArrange(self, forced=False):
+        def autoFloorArrange(self):
             """ Подсчитывает и предлагает разбивку по этажам """
 
             porch2 = deepcopy(self.flats) # создаем клон подъезда на случай, если пользователь передумает менять сортировку
@@ -328,36 +365,41 @@ class House():
             self.deleteHiddenFlats()
 
             fnumber = len(self.flats)
+            if fnumber<2:
+                dialogs.dialogAlert(
+                    title = icon("sort") + " Сортировка",
+                    message="Для поэтажной сортировки должно быть больше одной квартиры!"
+                )
+                return
             options = []
-            if fnumber>=6 or forced==True:
-                for i in range(2, fnumber + 1):
-                    if fnumber % i == 0:
-                        options.append(str(i))
-                del options[len(options)-1]
-                options.append("Свой вариант")
-                choice=dialogs.dialogList(
-                    title="Сколько этажей в подъезде?",
-                    positive=None,
-                    negative="Не менять",
-                    options=options)
-                if homepage.menuProcess(choice) == True:
-                    return
-                if choice==None:
+            for i in range(2, fnumber + 1):
+                if fnumber % i == 0:
+                    options.append(str(i))
+            del options[len(options)-1]
+            options.append("Свой вариант")
+            choice=dialogs.dialogList(
+                title="Сколько этажей в подъезде?",
+                positive=None,
+                negative="Не менять",
+                options=options)
+            if homepage.menuProcess(choice) == True:
+                return
+            if choice==None:
 
-                    del self.flats[:]  # возвращаем исходные квартиры из подъезда-клона
-                    self.flats = deepcopy(porch2)
-                    return
+                del self.flats[:]  # возвращаем исходные квартиры из подъезда-клона
+                self.flats = deepcopy(porch2)
+                return
 
-                elif set.ifInt(choice) == True:
-                    try:
-                        result = int(options[int(choice)])
-                    except: # выбран свой вариант
-                        self.forceFloors()
-                    else:
-                        self.flatsLayout = result
-                        self.sortFlats()
+            elif set.ifInt(choice) == True:
+                try:
+                    result = int(options[int(choice)])
+                except: # выбран свой вариант
+                    self.forceFloors()
+                else:
+                    self.flatsLayout = result
+                    self.sortFlats()
 
-        def forceFloors(self, floors=None, silent=False):
+        def forceFloors(self, floors=None):
             """ Создаем любое выбранное количество этажей """
             success=False
             message = "Сколько этажей требуется?"
@@ -379,20 +421,25 @@ class House():
                     self.flatsLayout="н"
                     self.sortFlats()
                     warn = False
+                    extraFlats = 0
                     while 1:
                         a = len(self.flats) / int(answer)
                         if not a.is_integer(): # собрать этажность не удалось, добавляем одну квартиру и пробуем снова
                             warn=True
-                            lastNumber = int( self.flats[ len(self.flats)-1 ].number) + 1
+                            try:
+                                lastNumber = int( self.flats[ len(self.flats)-1 ].number) + 1
+                            except:
+                                return
                             self.addFlat("+%d" % lastNumber)
+                            extraFlats += 1
                             continue
                         else:
                             self.flatsLayout = int(answer)
                             self.sortFlats()
-                            if warn==True and silent==True:
+                            if warn==True:
                                 dialogs.dialogAlert(
                                     title=icon("sort", simplified=False) + " Сортировка",
-                                    message="Для данной раскладки были добавлены новые квартиры. Удалите вручную квартиры на этажах с нестандартным числом квартир."
+                                    message="Теперь вам нужно вручную удалить %d квартир(ы) на тех этажах, где нестандартное число квартир. Для этого нажимайте на иконку %s на этих этажах." % (extraFlats, icon("cut"))
                                 )
                             success = True
                             break
@@ -497,7 +544,7 @@ class House():
 
             forceText = False
 
-            if io2.settings[0][1]==1 or io2.Mode=="text" or GridMode==1:  # показываем подъезд в классическом режиме
+            if io2.settings[0][1]==1 or io2.Mode=="text" or territory.GridMode==1:  # показываем подъезд в классическом режиме
                 return showGrid()
 
             if floor!=0: # если получен конкретный этаж, функция вывода списка всего подъезда выдает список только одного этажа
@@ -541,7 +588,8 @@ class House():
             input=input.strip()
             rename = False
 
-            if virtual == False: # сначала проверяем, нет ли квартиры с таким же номером, удаленной ранее
+            # сначала проверяем, нет ли квартиры с таким же номером, удаленной ранее (только для подъезда)
+            if virtual == False and self.type=="подъезд":
                 try:
                     input_1 = str(int(input) - 1)
                 except:
@@ -579,7 +627,7 @@ class House():
                     self.flatsLayout = flatsLayoutOriginal # возвращаем исходную сортировку
                     self.sortFlats()
 
-            if set.ifInt(self.flatsLayout)==True and not "." in input:
+            if not "." in input and set.ifInt(self.flatsLayout)==True:
                 if warnCreationProhibited == True and rename==False:
                     if io2.Mode=="text" or io2.settings[0][1]==1:
                         message = MessageOfProhibitedFlatCreation1 % self.getPreviouslyDeletedFlats() + "\n\n" + \
@@ -656,7 +704,6 @@ class House():
             try:
                 start = int(input[1:s])
             except:
-                io2.log("Ошибка массового ввода, проверьте номера")
                 start=success=0 # ошибочный ввод из-за дефиса не в том месте
 
             try:
@@ -673,7 +720,6 @@ class House():
                 if f!=0:
                     self.flatsLayout = input[f+1:]
             else:
-                io2.log("Ошибка массового ввода, проверьте номера")
                 success=0
 
             if success==True and self.type == "подъезд":
@@ -757,7 +803,7 @@ class House():
                     return self.title[self.title.index(",") + 1:].strip()
                 elif set.ifInt(self.title)==True: # один номер
                     return ""
-                elif set.ifInt(self.title)==False: # что-то помимо номера, но не запятая
+                elif set.ifInt(self.title)==False and self.number=="virtual": # что-то помимо номера, но не запятая
                     return self.title
                 else:
                     return ""
@@ -790,7 +836,7 @@ class House():
                         tempFlatNumber = self.title
                     resources[1].append(House())  # create house address
                     newVirtualHouse = resources[1][len(resources[1]) - 1]
-                    newVirtualHouse.addPorch("virtual")  # create virtual porch
+                    newVirtualHouse.addPorch(type="virtual")  # create virtual porch ***
                     newVirtualHouse.porches[0].addFlat("+" + self.getName(), virtual=True)  # create flat
                     newContact = newVirtualHouse.porches[0].flats[0]
                     newContact.title = newContact.getName()
@@ -900,7 +946,7 @@ class House():
                     result = input[input.index(".")+1:].strip()
                 elif not "." in input and not "," in input: # ввод одного номера или контакта
                     if virtual==False:
-                        self.title = self.number = input[1:].strip()
+                        self.title = self.number = input[1:].strip() # ***
                     else:
                         self.title = input[1:].strip()
                 elif "," in input and not "." in input:

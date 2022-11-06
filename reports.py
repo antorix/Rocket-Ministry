@@ -48,7 +48,7 @@ class Report():
             io2.log(message)
             date = time.strftime("%d.%m", time.localtime()) + "." + str(int(time.strftime("%Y", time.localtime())) - 2000)
             time2 = time.strftime("%H:%M:%S", time.localtime())
-            io2.resources[2].insert(0, "\n%s %s: %s" % (date, time2, message))
+            io2.resources[2].insert(1, "\n%s %s: %s" % (date, time2, message))
         if save==True or backup==True:
             io2.save(forced=True, silent=True) # после выключения секундомера делаем резервную копию принудительно
         elif save==True:
@@ -261,12 +261,12 @@ class Report():
                 continue
             elif choice=="neutral": # show logReport
                     message=""
-                    for line in io2.resources[2]:
-                        message+=line
+                    for i in range(1, len(io2.resources[2])):
+                        message += io2.resources[2][i]
                     dialogs.dialogInfo(
                         largeText=True,
                         title=icon("logreport") + " Журнал отчета",
-                        message=message
+                        message=message[1:]
                     )
                     continue
             elif set.ifInt(choice)==True:
@@ -497,6 +497,7 @@ class Report():
             return
         elif "neutral" or icon("export") in answer:  # export last month report
             if io2.Mode == "sl4a":
+                time.wait(0.5)
                 try:
                     from androidhelper import Android
                     Android().sendEmail("Введите email", "Отчет за %s" % monthName()[3], self.lastMonth, attachmentUri=None)
@@ -837,12 +838,13 @@ def toggleTimer():
         if io2.settings[0][2] == False:
             report(choice="=)")  # запись обычного времени
         else:  # если в настройках включен кредит, спрашиваем:
+            options = [icon("timer") + " Служение", icon("credit") + " Кредит"]
+            if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
+                for i in range(len(options)):
+                    options[i] = options[i][2:]
             choice2 = dialogs.dialogList(
-                title="Запись времени",
-                options=[
-                    icon("timer") + " Служение",
-                    icon("credit") + " Кредит"
-                ],
+                title="Что записать?",
+                options=options,
                 selected=1,
                 negative="Отмена"
             )

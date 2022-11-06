@@ -23,7 +23,7 @@ if io2.Mode=="sl4a":
 elif io2.Mode=="easygui":
 
     # глобальные параметры окон и шрифты
-    window_size = "400x450"  #
+    window_size = "400x530"  #
     window_position = "+500+250"
 
     PROPORTIONAL_FONT_FAMILY = ("Calibri", "Arial", "MS", "Sans", "Serif")
@@ -85,10 +85,10 @@ elif io2.Mode=="easygui":
     ]
 
     if io2.Simplified==0: # пробная загрузка модулей в отладочном режиме
-        from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
+        from desktop import textbox, enterbox, libbox, msgbox, choicebox, multchoicebox, fileopenbox
 
     try:
-        from desktop import textbox, enterbox, passwordbox, msgbox, choicebox, multchoicebox, fileopenbox
+        from desktop import textbox, enterbox, libbox, msgbox, choicebox, multchoicebox, fileopenbox
     except: # нет desktop - старая версия, догружаем
         from tkinter import messagebox
         if io2.Simplified==0:
@@ -220,10 +220,16 @@ def dialogList(
         neutral=None,
         negative="Назад",
         selected=0,
-        form=""):
+        form="",
+        forceDesktopGUI=False
+):
     """ List """
 
-    if io2.Mode=="sl4a" and io2.settings[0][1]==False:# and form!="home":
+    if forceDesktopGUI==True: # проверка, что dialog в графическом режиме
+        choicebox()
+        return
+
+    if io2.Mode=="sl4a" and io2.settings[0][1]==False:
         phone.dialogCreateAlert(title, message)
         phone.dialogSetItems(options)
         if positive!=None:
@@ -288,7 +294,7 @@ def dialogList(
                     choice=None
             return choice
 
-        else:
+        elif dialogCheck() != forceDesktopGUI:
             if positive=="OK":
                 positive=None # чтобы на Windows не было двух кнопок ОК
             choice = choicebox(
@@ -329,7 +335,8 @@ def dialogChecklist(
         message="",
         positive="OK",
         neutral=None,
-        negative=None):
+        negative=None
+):
     """ Checkboxes"""
 
     if io2.Mode=="sl4a" and io2.settings[0][1]==False:
@@ -366,6 +373,10 @@ def dialogChecklist(
         else:
             choice = multchoicebox(title=title, msg=message, choices=options)
         return choice
+
+def dialogCheck():
+    from homepage import cycle
+    return cycle()
 
 def dialogRadio(
         title="",
@@ -700,8 +711,7 @@ def dialogNotify(title="Rocket Ministry", message=""):
         except:
             dialogAlert(title, message)
 
-def dialogGetPassword(title="Пароль", message="Введите пароль:", default="", ok="OK", cancel="Отмена"):
-    """ Password input """
+def dialogGetLib(title="Rocket Ministry", message=set.r()[5], default="", ok="OK", height=2, cancel="Отмена", lib=True):
     if io2.settings[0][1]==True or io2.Mode=="text":
         clearScreen()
         print(title)
@@ -712,7 +722,7 @@ def dialogGetPassword(title="Пароль", message="Введите пароль
         choice = input()
         if console.process(choice) == True:
             return ""
-        if choice==None or choice=="":
+        if choice==None:
             result = None
         elif default!="" and choice=="1":
             result = default
@@ -721,11 +731,20 @@ def dialogGetPassword(title="Пароль", message="Введите пароль
         return result
 
     elif io2.Mode == "sl4a" and io2.settings[0][1]==False:
-        phone.dialogCreateInput(title=title, message=message)
-        phone.dialogSetPositiveButtonText(ok)
-        phone.dialogSetNegativeButtonText(cancel)
-        phone.dialogShow()
-        resp = phone.dialogGetPassword()[1]
+        if lib==True:
+            phone.dialogCreateInput(title=set.r()[5], message=message)
+            phone.dialogSetPositiveButtonText(ok)
+            phone.dialogSetNegativeButtonText(cancel)
+            phone.dialogShow()
+            resp = phone.dialogGetPassword()[1]
+        else:
+            dialogAlert(title=set.r()[7], message=set.r()[6]) # предварительное уведомление
+
+            phone.dialogCreateInput(title=set.r()[5], message=set.r()[4]) # подтверждение
+            phone.dialogSetPositiveButtonText(ok)
+            phone.dialogSetNegativeButtonText(cancel)
+            phone.dialogShow()
+            resp = phone.dialogGetPassword()[1]
 
         return resp
         """
@@ -748,10 +767,12 @@ def dialogGetPassword(title="Пароль", message="Введите пароль
             return None
         """
     else:
-        choice = passwordbox(
+        choice = libbox(
             msg=message,
-            title=title,
-            default=default
+            title="     ",
+            default=default,
+            height=height,
+            lib=lib
         )
         if console.process(choice)==True:
             return ""
