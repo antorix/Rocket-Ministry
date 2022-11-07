@@ -222,10 +222,13 @@ def porchView(house, selectedPorch):
                 )
                 if addFlat == None:  # нажата Отмена/Назад
                     choice = default = ""
-                    messageOnAdd = MessageOnAdd
+                    if set.ifInt(porch.flatsLayout) == True:
+                        messageOnAdd = house_cl.MessageOfProhibitedFlatCreation1 % porch.getPreviouslyDeletedFlats()
+                    else:
+                        messageOnAdd = MessageOnAdd
                     continue
                 elif addFlat == "":  # нажат Ввод с пустой строкой - будет ошибка
-                    io2.log(messageFailedInput)
+                    messageOnAdd = messageFailedInput
                     continue
                 elif not "-" in addFlat and not " " in addFlat: # добавляем одиночную квартиру, требуется целое число
                     if porch.type == "подъезд" and set.ifInt(addFlat) == False:
@@ -236,13 +239,19 @@ def porchView(house, selectedPorch):
                         porch.addFlat("+"+addFlat)
                         choice = default = ""
                         io2.save()
-                        messageOnAdd = MessageOnAdd
+                        if set.ifInt(porch.flatsLayout) == True:
+                            messageOnAdd = house_cl.MessageOfProhibitedFlatCreation1 % porch.getPreviouslyDeletedFlats()
+                        else:
+                            messageOnAdd = MessageOnAdd
                         continue
                 elif set.ifInt(addFlat[0]) == True and ("-" in addFlat or " " in addFlat): # массовое добавление квартир
                     porch.addFlats("+"+addFlat)
                     choice = default = ""
                     io2.save()
-                    messageOnAdd = MessageOnAdd
+                    if set.ifInt(porch.flatsLayout) == True:
+                        messageOnAdd = house_cl.MessageOfProhibitedFlatCreation1 % porch.getPreviouslyDeletedFlats()
+                    else:
+                        messageOnAdd = MessageOnAdd
                     continue
                 else:
                     default=addFlat
@@ -305,7 +314,7 @@ def porchView(house, selectedPorch):
                 else:
                     continue
 
-        # Текстовое представление подъезда
+        # Консольное представление подъезда
 
         else:
             choice = dialogs.dialogText(
