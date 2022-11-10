@@ -63,6 +63,7 @@ def icon(myIcon, forceText=False, simplified=True):
         elif myIcon=="date": return "📆"
         elif myIcon=="call": return "📲"
         elif myIcon=="lamp": return "💡"
+        elif myIcon=="bell": return "🔔"
         elif myIcon=="bullet": return "•"
         elif myIcon=="arrow": return "↑"
         elif myIcon=="star": return "⭐"
@@ -238,6 +239,7 @@ def icon(myIcon, forceText=False, simplified=True):
         elif myIcon=="date": return "√"
         elif myIcon=="call": return "→"
         elif myIcon=="lamp": return "☼"
+        elif myIcon=="bell": return "☼"
         elif myIcon=="bullet": return "◦"
         elif myIcon=="arrow": return "↑"
         elif myIcon=="star": return "✶" #✶*

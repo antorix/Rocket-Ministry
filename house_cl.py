@@ -16,7 +16,7 @@ from copy import deepcopy
 MessageOfProhibitedFlatCreation1 = "В поэтажной раскладке можно только создавать квартиры, удаленные ранее%s."
 MessageOfProhibitedFlatCreation2 = "Отключить поэтажную сортировку, чтобы создать %s"
 
-class House():
+class House(object):
     
     def __init__(self):
         self.title = ""
@@ -82,7 +82,7 @@ class House():
                 note = ""
             list.append(self.getPorchType()[1] + " %s%s %s %s" % (self.porches[i].title, self.porches[i].getFlatsRange(), self.porches[i].showStatus(), note))
 
-        if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
+        if io2.Mode == "desktop" and io2.settings[0][1] == 0:  # убираем иконки на ПК
             for i in range(len(list)):
                 list[i] = list[i][2:]
 
@@ -126,7 +126,7 @@ class House():
             [porch.export() for porch in self.porches]
         ]
             
-    class Porch():
+    class Porch(object):
         
         def __init__(self):
             self.title = ""
@@ -769,7 +769,7 @@ class House():
                 [flat.export() for flat in self.flats]
             ]
 
-        class Flat():
+        class Flat(object):
             
             def __init__(self):
                 self.title = "" # пример title: "20, Василий 30 лет"
@@ -868,7 +868,7 @@ class House():
                 options = []
                 if len(self.records)==0:
                     options.append("Создайте первое посещение")
-                    if io2.Mode == "easygui":
+                    if io2.Mode == "desktop":
                         options[0] = "  " + options[0]
                 else:
                     for i in range(len(self.records)): # добавляем записи разговоров
@@ -1013,7 +1013,7 @@ class House():
                     [record.export() for record in self.records]
                 ]
 
-            class Record():
+            class Record(object):
 
                 def __init__(self):
                     self.date = ""

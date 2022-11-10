@@ -25,7 +25,7 @@ def homepage():
     def firstRun():
         """ Срабатывает при первом запуске программы, определяется по отсутствию settings[1]"""
 
-        if io2.Mode == "easygui": # установка шрифта
+        if io2.Mode == "desktop": # установка шрифта
             if name=="nt" and not path.exists(
                     path.expandvars("%userprofile%") + "/AppData/Local/Microsoft/Windows/Fonts/LiberationMono-Regular.ttf")\
                     and dialogs.dialogConfirm(
@@ -176,11 +176,10 @@ def homepage():
     if "--capmode" in sys.argv:
         io2.simplified=0
         io2.settings[0][1]=1
-
-    if io2.Mode=="easygui": # определение положения окна
+    if io2.Mode == "desktop" and io2.settings[0][1] == 0:
         try:
             with open("winpos.ini", "r") as file:
-                line=file.read()
+                line = file.read()
         except:
             with open("winpos.ini", "w") as file:
                 file.write(dialogs.window_size)
@@ -188,6 +187,7 @@ def homepage():
         else:
             dialogs.window_position = '+' + line.split('+', 1)[1]
             dialogs.window_size = line[0: line.index("+")]
+        dialogs.createDesktopGUI()
 
     if io2.settings[1]=="":
         firstRun()
@@ -215,18 +215,18 @@ def homepage():
         else:
             time2 = reports.updateTimer(io2.settings[2][6]) + 24
         if io2.settings[2][6] > 0:
-            if io2.Mode != "easygui":
+            if io2.Mode != "desktop":
                 timerTime = " \u2b1b %s" % reports.timeFloatToHHMM(time2)
             else:
                 timerTime = " " + reports.timeFloatToHHMM(time2)
         else:
-            if io2.Mode != "easygui":
+            if io2.Mode != "desktop":
                 timerTime = " \u25b6"
             else:
                 timerTime = " "
 
         if io2.settings[2][11]==1:
-            remind = icon("warning")
+            remind = icon("bell")
         else:
             remind=""
 
@@ -243,14 +243,7 @@ def homepage():
         else:
             gap_str = ""
 
-        housesDue=0 # подсчет просроченных домов
-        for h in range(len(io2.houses)):
-            if house_op.days_between(
-                    io2.houses[h].date,
-                    time.strftime("%Y-%m-%d", time.localtime())
-            ) > 180:  # время просрочки
-                housesDue += 1
-        if housesDue==0:
+        if house_op.calcDueTers() == 0: # подсчет просроченных домов
             due = ""
         else:
             due = icon("warning")
@@ -268,7 +261,7 @@ def homepage():
                 icon("info") +      " О программе"
                 ]
 
-        if io2.Mode=="easygui" and io2.settings[0][1]==0: # убираем иконки на ПК
+        if io2.Mode=="desktop" and io2.settings[0][1]==0: # убираем иконки на ПК
             for i in range(len(options)):
                 options[i] = options[i][2:]
 
@@ -276,7 +269,7 @@ def homepage():
             title = "Добро пожаловать в Rocket Ministry! Введите help, если нужна помощь по работе в консольном режиме. %s" % reports.getTimerIcon(io2.settings[2][6])
         else:
             title = "🚀 Rocket Ministry " + reports.getTimerIcon(io2.settings[2][6])
-            
+
         if io2.Simplified == 0:
             negative = "Выход"
         else:
@@ -285,12 +278,11 @@ def homepage():
         if io2.Mode == "sl4a":
             dialogs.clearScreen()
             io2.consoleReturn(pause=False)
-        elif io2.Mode == "easygui" and io2.settings[0][1]==0:
-            territory.terView(start=True)
 
         # Run home screen
 
-        choice = dialogs.dialogList(
+        if io2.Mode != "desktop" or io2.settings[0][1]!=0:
+            choice = dialogs.dialogList(
             form = "home",
             message = "Главная страница, список действий:",
             title = title,
@@ -299,6 +291,9 @@ def homepage():
             neutral = icon("timer") + " Таймер" + timerTime,
             negative=negative
         )
+        else:
+            territory.terView()
+            continue
         if menuProcess(choice)==True:
             continue
         elif choice=="neutral": # таймер
@@ -369,7 +364,7 @@ def fileActions():
         if io2.Mode == "sl4a":
             options.append(icon("explosion") + " Самоуничтожение")
 
-        if io2.Mode=="easygui" and io2.settings[0][1]==0: # убираем иконки на ПК
+        if io2.Mode=="desktop" and io2.settings[0][1]==0: # убираем иконки на ПК
             for i in range(len(options)):
                 options[i] = options[i][2:]
 
@@ -425,6 +420,14 @@ def fileActions():
 
     return False
 
+def toggle(setting):
+    if set.ifInt(setting) == False:
+        setting=0
+    if setting == 1:
+        return 0
+    else:
+        return 1
+
 def preferences(getOptions=False):
     """ Program preferences """
 
@@ -435,37 +438,21 @@ def preferences(getOptions=False):
         else:
             return icon("mark", simplified=False) + " "
 
-    def toggle(setting):
-        if set.ifInt(setting) == False:
-            setting=0
-        if setting == 1:
-            return 0
-        else:
-            return 1
-
     exit = 0
 
     while 1:
         options = []
-        if io2.settings[0][14] != "":
-            importURL = "%s..." % io2.settings[0][14]
+        if io2.settings[0][14] != ".":
+            importURL = "%s" % io2.settings[0][14]
         else:
             importURL = "нет"
-
-        if set.SysMarker != "":
-            from base64 import b64decode
-            l = ""
-            for char in b64decode(set.SysMarker.encode()).decode():
-                l += "*"
-        else:
-            l = "нет"
 
         options.append(status(io2.settings[0][13]) + "Пункт «нет дома» в первом посещении")
         options.append(status(io2.settings[0][18]) + "Пункт «невозможно попасть» в первом посещении")
         options.append(status(io2.settings[0][10]) + "Умная строка в первом посещении")
-        options.append(status(io2.settings[0][7]) +  "Автоматически записывать повторные посещения")
+        options.append(status(io2.settings[0][7]) +  "Автоматический учет повторных посещений")
         options.append(                       "%s Норма часов в месяц: %d" % (icon("box", simplified=False), io2.settings[0][3]))
-        if io2.Mode != "easygui":
+        if io2.Mode != "desktop":
             options.append(status(io2.settings[0][20]) + "Режим справочной")
         options.append(status(io2.settings[0][2])  + "Кредит часов")
         options.append(status(io2.settings[0][11]) + "Уведомления о встречах на сегодня")
@@ -474,7 +461,7 @@ def preferences(getOptions=False):
         if io2.Mode == "sl4a":
             options.append(status(io2.settings[0][0])+"Бесшумный режим при включенном таймере")
         options.append(status(io2.settings[0][21]) + "Статус обработки подъездов")
-        options.append(status(io2.settings[0][9]) +  "Последний символ посещения влияет на статус контакта")
+        options.append(status(io2.settings[0][9]) +  "Обновление статуса цифрой в посещении")
         options.append(                       "%s Резервных копий: %d" % (icon("box", simplified=False), io2.settings[0][6]))
         if io2.Simplified==0 and io2.Mode!="sl4a":
             options.append(                   "%s Файл импорта базы данных: %s" % (icon("box", simplified=False), importURL))
@@ -493,9 +480,9 @@ def preferences(getOptions=False):
 
         # settings[0][17] - свободно
 
+        set.r(options=options, replace=True)
         if getOptions==True:
             return options
-        set.r(options, o=l)
 
         choice = dialogs.dialogList(  # display list of settings
             form="preferences",
@@ -513,186 +500,215 @@ def preferences(getOptions=False):
         else:
             continue
 
-        if "Бесшумный режим" in result:
-            io2.settings[0][0] = toggle(io2.settings[0][0])
-            io2.save()
-
-        elif "нет дома" in result:
-            io2.settings[0][13] = toggle(io2.settings[0][13])
-            io2.save()
-
-        elif "Кредит часов" in result:
-            io2.settings[0][2] = toggle(io2.settings[0][2])
-            io2.save()
-
-        elif "Норма" in result:
-            message = "Введите месячную норму часов для подсчета запаса или отставания от нормы по состоянию на текущий день. Если эта функция не нужна, введите пустую строку или 0:"
-            while 1:
-                choice2 = dialogs.dialogText(
-                    height=5,
-                    title="Месячная норма",
-                    message=message,
-                    default=str(io2.settings[0][3])
-                )
-                try:
-                    if choice2 != None:
-                        if choice2 == "":
-                            io2.settings[0][3] = 0
-                        else:
-                            io2.settings[0][3] = int(choice2)
-                        io2.save()
-                    else:
-                        break
-                except:
-                    message = "Не удалось изменить, попробуйте еще"
-                    continue
-                else:
-                    break
-
-        elif "Резервных копий" in result:  # backup copies
-            while 1:
-                choice2 = dialogs.dialogText(
-                    title="Число резервных копий",
-                    message="От 0 до 10 000:",
-                    default=str(io2.settings[0][6]),
-                )
-                try:
-                    if choice2 != None:
-                        io2.settings[0][6] = int(choice2)
-                        if io2.settings[0][6] > 10000:
-                            io2.settings[0][6] = 10000
-                        elif io2.settings[0][6] < 0:
-                            io2.settings[0][6] = 0
-                        io2.save()
-                    else:
-                        break
-                except:
-                    io2.log("Не удалось изменить, попробуйте еще")
-                    continue
-                else:
-                    break
-
-        elif "Автоматически записывать" in result:
-            io2.settings[0][7] = toggle(io2.settings[0][7])
-            io2.save()
-
-        elif "Режим смайликов" in result:
-            io2.settings[0][16] = toggle(io2.settings[0][16])
-            io2.save()
-
-        elif "Статус обработки подъездов" in result:
-            io2.settings[0][21] = toggle(io2.settings[0][21])
-            if io2.settings[0][21]==1:
-                dialogs.dialogInfo(
-                    largeText=True,
-                    title="Статус обработки подъездов",
-                    message="При включении этого параметра вы сможете указывать для каждого подъезда участка, когда вы в нем были:\n\nв будний день в первой половине дня (первый кружок – %s)\n\nв будний день вечером (второй кружок – %s)\n\nв выходной (третий кружок – %s)\n\nЕсли подъезд посещен все три раза, он учитывается как обработанный в разделе статистики." % (icon("porchCircle1"), icon("porchCircle2"), icon("porchCircle3")),
-                    positive="OK",
-                    negative=None
-                )
-            io2.save()
-
-        elif "Режим справочной" in result:
-            io2.settings[0][20] = toggle(io2.settings[0][20])
-            io2.save()
-
-        elif "Умная строка" in result:
-            io2.settings[0][10] = toggle(io2.settings[0][10])
-            io2.save()
-
-        elif "Напоминать о сдаче" in result:
-            io2.settings[0][8] = toggle(io2.settings[0][8])
-            io2.save()
-
-        elif "невозможно попасть" in result:
-            io2.settings[0][18] = toggle(io2.settings[0][18])
-            io2.save()
-
-        elif "Уведомления о встречах" in result:
-            io2.settings[0][11] = toggle(io2.settings[0][11])
-            io2.save()
-
-        elif "Проверять обновления" in result:
-            io2.settings[0][12] = toggle(io2.settings[0][12])
-            io2.save()
-
-        elif "Пароль на вход " in result:
-            choice2 = dialogs.dialogText(
-                title=icon("preferences") + " Пароль на вход",
-                message="Здесь можно задать пароль на вход в программу. Запомните его как следует – восстановление пароля не предусмотрено! Также в целях безопасности будут удалены все резервные копии, созданные до установки пароля. Чтобы отменить существующий пароль (если есть), сохраните пустое поле:",
-                height=7
-            )
-            if choice2 == None:
-                continue
-            elif choice2 != "":
-                io2.settings[0][16] = choice2
-                io2.removeFiles(keepDatafile=True)
-                io2.log("Пароль установлен")
-            else:
-                io2.settings[0][16] = ""
-                io2.log("Пароль не установлен")
-            io2.save()
-
-        elif "Последний символ" in result:
-            io2.settings[0][9] = toggle(io2.settings[0][9])
-            if io2.settings[0][9]==1:
-                dialogs.dialogInfo(
-                    largeText=True,
-                    title="Последний символ посещения влияет на статус контакта",
-                    message="Внимание, вы входите в зону хардкора! :) При включении этого параметра в конце каждого посещения должна стоять цифра от 0 до 5. Она определит статус контакта (в стиле «умной строки», только во всех посещениях):\n\n0 = %s\n1 = %s\n2 = %s\n3 = %s\n4 = %s\n5 = %s\n\nЭто должен быть строго последний символ строки. При отсутствии такой цифры статус контакта становится неопределенным (%s).\n\nДанный параметр отменяет ручной выбор статуса после каждого создания нового посещения." %
-                            ( icon("reject"), icon("interest"), icon("green"), icon("purple"), icon("brown"), icon("danger"), icon("question")),
-                    positive="OK",
-                    negative=None
-                )
-            io2.save()
-
-        elif "Файл импорта" in result:
-            choice2 = dialogs.dialogFileOpen(default=io2.settings[0][14])
-            if choice2 != None:
-                io2.settings[0][14] = choice2.strip()
-                io2.save()
-
-        elif "Переносить минуты" in result:
-            io2.settings[0][15] = toggle(io2.settings[0][15])
-            io2.save()
-
-        elif "Консольный режим" in result:
-            io2.settings[0][1] = toggle(io2.settings[0][1])
-            io2.save()
-            if io2.settings[0][1] == 1:
-                io2.settings[0][1] = 0
-                dialogs.dialogInfo(
-                    title="Внимание",
-                    message="Чтобы войти в консольный режим, запустите программу через файл Rocket Ministry.py или main.py.",
-                    positive="Выход",
-                    negative=None
-                )
-                io2.settings[0][1] = 1
-                sys.exit(0)
-
-        elif set.r()[0] in result:
-            choice2 = dialogs.dialogGetLib(
-                title=icon("preferences") + " %s" % set.r()[0],
-                message = set.r()[1],
-                height=7,
-                lib=False
-            )
-            if choice2 == None:
-                continue
-            elif choice2 != "":
-                set.r(o=l, choice=choice2, set=True)
-            else:
-                del io2.resources[2][0]
-                io2.resources[2].insert(0, "")
-                set.SysMarker = ""
-                io2.log(set.r()[3])
-            io2.save()
-
-        elif "Консольный вид" in result:
-            territory.GridMode = toggle(territory.GridMode)
+        feedSetting(result)
 
     if exit == 1:
         return True
+
+def feedSetting(result, self=None):
+    """ Получает строку и по ней выставляет настройку """
+
+    if io2.Mode == "desktop" and io2.settings[0][1] == 0:
+        dialogs.saveWindowPosition(self.boxRoot)
+
+    if "Бесшумный режим" in result:
+        io2.settings[0][0] = toggle(io2.settings[0][0])
+        io2.save()
+
+    elif "нет дома" in result:
+        io2.settings[0][13] = toggle(io2.settings[0][13])
+        io2.save()
+
+    elif "Кредит часов" in result:
+        io2.settings[0][2] = toggle(io2.settings[0][2])
+        io2.save()
+
+    elif "Норма" in result:
+        message = "Введите месячную норму часов для подсчета запаса или отставания от нормы по состоянию на текущий день. Если эта функция не нужна, введите пустую строку или 0:"
+        while 1:
+            choice2 = dialogs.dialogText(
+                height=5,
+                title="Месячная норма",
+                message=message,
+                default=str(io2.settings[0][3])
+            )
+            try:
+                if choice2 != None:
+                    if choice2 == "":
+                        io2.settings[0][3] = 0
+                    else:
+                        io2.settings[0][3] = int(choice2)
+                    if io2.Mode == "desktop" and io2.settings[0][1] == 0:
+                        self.settingsMenu.entryconfig(4, label="Норма часов в месяц: %d" % io2.settings[0][3])
+                    io2.save()
+                else:
+                    break
+            except:
+                message = "Не удалось изменить, попробуйте еще"
+                continue
+            else:
+                break
+
+    elif "Резервных копий" in result:  # backup copies
+        while 1:
+            choice2 = dialogs.dialogText(
+                title="Число резервных копий",
+                message="От 0 до 10 000:",
+                default=str(io2.settings[0][6]),
+            )
+            try:
+                if choice2 != None:
+                    io2.settings[0][6] = int(choice2)
+                    if io2.settings[0][6] > 10000:
+                        io2.settings[0][6] = 10000
+                    elif io2.settings[0][6] < 0:
+                        io2.settings[0][6] = 0
+                    if io2.Mode == "desktop" and io2.settings[0][1] == 0:
+                        self.settingsMenu.entryconfig(11, label="Резервных копий: %s" % choice2)
+                    io2.save()
+                else:
+                    break
+            except:
+                io2.log("Не удалось изменить, попробуйте еще")
+                continue
+            else:
+                break
+
+    elif "Автоматический учет" in result:
+        io2.settings[0][7] = toggle(io2.settings[0][7])
+        io2.save()
+
+    elif "Режим смайликов" in result:
+        io2.settings[0][16] = toggle(io2.settings[0][16])
+        io2.save()
+
+    elif "Статус обработки подъездов" in result:
+        io2.settings[0][21] = toggle(io2.settings[0][21])
+        if io2.settings[0][21] == 1:
+            dialogs.dialogInfo(
+                largeText=True,
+                title="Статус обработки подъездов",
+                message="При включении этого параметра вы сможете указывать для каждого подъезда участка, когда вы в нем были:\n\nв будний день в первой половине дня (первый кружок – %s)\n\nв будний день вечером (второй кружок – %s)\n\nв выходной (третий кружок – %s)\n\nЕсли подъезд посещен все три раза, он учитывается как обработанный в разделе статистики." % (
+                icon("porchCircle1"), icon("porchCircle2"), icon("porchCircle3")),
+                positive="OK",
+                negative=None
+            )
+        io2.save()
+
+    elif "Режим справочной" in result:
+        io2.settings[0][20] = toggle(io2.settings[0][20])
+        io2.save()
+
+    elif "Умная строка" in result:
+        io2.settings[0][10] = toggle(io2.settings[0][10])
+        io2.save()
+
+    elif "Напоминать о сдаче" in result:
+        io2.settings[0][8] = toggle(io2.settings[0][8])
+        io2.save()
+
+    elif "невозможно попасть" in result:
+        io2.settings[0][18] = toggle(io2.settings[0][18])
+        io2.save()
+
+    elif "Уведомления о встречах" in result:
+        io2.settings[0][11] = toggle(io2.settings[0][11])
+        io2.save()
+
+    elif "Проверять обновления" in result:
+        io2.settings[0][12] = toggle(io2.settings[0][12])
+        io2.save()
+
+    elif "Пароль на вход " in result:
+        choice2 = dialogs.dialogText(
+            title=icon("preferences") + " Пароль на вход",
+            message="Здесь можно задать пароль на вход в программу. Запомните его как следует – восстановление пароля не предусмотрено! Также в целях безопасности будут удалены все резервные копии, созданные до установки пароля. Чтобы отменить существующий пароль (если есть), сохраните пустое поле:",
+            height=7
+        )
+        if choice2 == None:
+            pass
+        elif choice2 != "":
+            io2.settings[0][16] = choice2
+            io2.removeFiles(keepDatafile=True)
+            io2.log("Пароль установлен")
+        else:
+            io2.settings[0][16] = ""
+            io2.log("Пароль не установлен")
+        io2.save()
+
+    elif "Обновление статуса" in result:
+        io2.settings[0][9] = toggle(io2.settings[0][9])
+        if io2.settings[0][9] == 1:
+            dialogs.dialogInfo(
+                largeText=True,
+                title="Обновление статуса цифрой в посещении",
+                message="Здесь можно переключиться на альтернативный способ обновления статуса контакта после каждого посещения. Теперь, вместо ручного выбора статуса, нужно ставить цифру от 0 до 5 в конце каждого посещения. Эта цифра определяет статус контакта (как в «умной строке»):\n\n0 = %s\n1 = %s\n2 = %s\n3 = %s\n4 = %s\n5 = %s\n\nЭто должен быть строго последний символ строки. При отсутствии такой цифры статус контакта становится неопределенным (%s)." %
+                        (icon("reject"), icon("interest"), icon("green"), icon("purple"), icon("brown"), icon("danger"),
+                         icon("question")),
+                positive="OK",
+                negative=None
+            )
+        io2.save()
+
+    elif "Файл импорта" in result:
+        choice2 = dialogs.dialogFileOpen(default=io2.settings[0][14])
+        if choice2 != ".":
+            io2.settings[0][14] = choice2.strip()
+        else:
+            choice2="нет"
+        if io2.Mode == "desktop" and io2.settings[0][1] == 0:
+            self.settingsMenu.entryconfig(12, label="Файл импорта базы данных: %s" % choice2)
+        io2.save()
+
+    elif "Переносить минуты" in result:
+        io2.settings[0][15] = toggle(io2.settings[0][15])
+        io2.save()
+
+    elif "Консольный режим" in result:
+        io2.settings[0][1] = toggle(io2.settings[0][1])
+        io2.save()
+        if io2.settings[0][1] == 1:
+            io2.settings[0][1] = 0
+            dialogs.dialogInfo(
+                title="Внимание",
+                message="Чтобы войти в консольный режим, запустите программу через файл Rocket Ministry.py или main.py.",
+                positive="OK",
+                negative=None,
+            )
+            io2.settings[0][1] = 1
+        else:
+            dialogs.createDesktopGUI()
+
+    elif set.r()[0] in result:
+        choice2 = dialogs.dialogGetLib(
+            title=icon("preferences") + " %s" % set.r()[0],
+            message=set.r()[1],
+            height=7,
+            lib=False
+        )
+        if choice2 == None:
+            if io2.Mode == "desktop" and io2.settings[0][1] == 0:
+                self.settingsMenu.entryconfig(13, label="%s нет" % set.r()[0])
+            io2.save()
+        elif choice2 != "":
+            set.r(choice=choice2, set=True)
+            if io2.Mode=="desktop" and io2.settings[0][1]==0:
+                self.settingsMenu.entryconfig(13, label="%s %s" % (set.r()[0], set.r(choice=choice2, set=True, replace=True, getO=True)))
+            io2.save()
+        else:
+            del io2.resources[2][0]
+            io2.resources[2].insert(0, "")
+            set.SysMarker = ""
+            io2.log(set.r()[3])
+            if io2.Mode == "desktop" and io2.settings[0][1] == 0:
+                self.settingsMenu.entryconfig(13, label="%s нет" % set.r()[0])
+            io2.save()
+
+    elif "Консольный вид" in result:
+        territory.GridMode = toggle(territory.GridMode)
+
+    if io2.Mode == "desktop" and io2.settings[0][1] == 0 and self!=None:
+        self.update(choices = self.choices)
 
 def stats():
     status0 = status1 = status2 = status3 = status4 = status5 = nostatus = statusQ = returns = returns1 = returns2 = housesDue = porches = porchesCompleted = 0
@@ -776,8 +792,8 @@ def stats():
         largeText=True,
         title=icon("stats") + " Статистика " + reports.getTimerIcon(io2.settings[2][6]),
         message=message,
-        positive="OK",
-        negative=None
+        positive=None,
+        negative="Назад"
     )
 
 def cycle(value=False):
@@ -959,20 +975,21 @@ def serviceYear(count=False):
             gapWord = "Отставание"
         else:
             gapEmo = ""
+        if io2.settings[0][3]!=0:
+            neutral = icon("calc") + " Аналитика"
+        else:
+            neutral = None
+        title = "%s Всего %s ч." % (icon("calendar"), reports.timeFloatToHHMM(hourSum)[ 0 : reports.timeFloatToHHMM(hourSum).index(":") ],)
+        if io2.settings[0][3] != 0:
+            title += " ⇨ %+d %s %s" % (gap, gapEmo, reports.getTimerIcon(io2.settings[2][6]))
 
         # Display dialog
 
         choice = dialogs.dialogList(
-            title="%s Всего %s ч. ⇨ %+d %s %s" % (
-                icon("calendar"),
-                reports.timeFloatToHHMM(hourSum)[ 0 : reports.timeFloatToHHMM(hourSum).index(":") ],
-                gap,
-                gapEmo,
-                reports.getTimerIcon(io2.settings[2][6])
-            ),
+            title=title,
             message="Выберите месяц:",
             form="serviceYear",
-            neutral=icon("calc") + " Аналитика",
+            neutral=neutral,
             options=options)
 
         if menuProcess(choice)==True:
@@ -992,6 +1009,7 @@ def serviceYear(count=False):
                 average = yearNorm - hourSum
             dialogs.dialogInfo(
                 largeText=True,
+                doublesize=True,
                 title="%s Аналитика" % icon("calc"),
                 message="Месяцев введено: %d\n\n" % monthNumber +
                         "Часов введено: %d\n\n" % hourSum +
@@ -1002,8 +1020,7 @@ def serviceYear(count=False):
                         "____\n" +
                         "¹ Равна 12 * месячная норма (в настройках).\n\n" +
                         "² Среднее число часов, которые нужно служить каждый месяц в оставшиеся (не введенные) месяцы.",
-                positive="OK",
-                negative=None
+                negative="Назад"
             )
         else:
             if choice < 4:
@@ -1012,7 +1029,7 @@ def serviceYear(count=False):
                 monthNum = choice - 3
             if io2.settings[4][choice]!=None:
                 options2 = [icon("edit") + " Править ", icon("cut") + " Очистить "]
-                if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
+                if io2.Mode == "desktop" and io2.settings[0][1] == 0:  # убираем иконки на ПК
                     for i in range(len(options2)):
                         options2[i] = options2[i][2:]
                 choice2 = dialogs.dialogList(
@@ -1084,10 +1101,13 @@ def about():
             break
 
 def menuProcess(choice):
-    """ Обрабатывает ввод, если он получен из меню (только в easygui)"""
-    if io2.Mode!="easygui":
+    """ Обрабатывает ввод, если он получен из меню (только на ПК)"""
+    if io2.Mode!="desktop":
         return False
     result = False
+    if choice=="ter":
+        territory.terView()
+        result = True
     if choice=="report":
         reports.report()
         result = True

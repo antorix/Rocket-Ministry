@@ -10,7 +10,6 @@ import set
 import territory
 from icons import icon
 import io2
-from io2 import houses, settings
 import homepage
 import reports
 
@@ -19,7 +18,7 @@ PhoneMode = SysMark = False
 def houseSettings(selectedHouse):
     """ House settings """
 
-    house=houses[selectedHouse]
+    house=io2.houses[selectedHouse]
 
     while 1:
         options = [
@@ -31,7 +30,7 @@ def houseSettings(selectedHouse):
             icon("cut") + " Удалить участок",
         ]
 
-        if io2.Mode=="easygui" and settings[0][1]==0: # убираем иконки на ПК
+        if io2.Mode=="desktop" and io2.settings[0][1]==0: # убираем иконки на ПК
             for i in range(len(options)):
                 options[i] = options[i][2:]
 
@@ -94,8 +93,8 @@ def houseSettings(selectedHouse):
                     for int in interest:
                         flat = house.porches[int[0]].flats[int[1]]
                         flat.clone(toStandalone=True, title=house.title)
-                io2.log("Участок %s удален" % houses[selectedHouse].title)
-                del houses[selectedHouse]
+                io2.log("Участок %s удален" % io2.houses[selectedHouse].title)
+                del io2.houses[selectedHouse]
                 io2.save()
                 return "deleted"
 
@@ -135,7 +134,7 @@ def porchSettings(house, selectedPorch, jumpToPhone=False):
             icon("pin") + " Заметка %sа" % porch.type,
         ]
 
-        if settings[0][21]==1:
+        if io2.settings[0][21]==1:
             options.append(icon("status") + " Статус обработки")
 
         if ifInt(porch.flatsLayout)==True:
@@ -144,13 +143,13 @@ def porchSettings(house, selectedPorch, jumpToPhone=False):
         if porch.type=="подъезд":
             options.append(icon("intercom") + " Режим домофона")
 
-        if (settings[0][20]==1 or io2.Mode == "easygui") and porch.type != "отдел":
+        if (io2.settings[0][20]==1 or io2.Mode == "desktop") and porch.type != "отдел":
             options.append(icon("phone2") + " Режим справочной")
 
         options.append(icon("map") + " Маршрут")
         options.append(icon("cut") + " Удалить %s" % porch.type)
 
-        if io2.Mode=="easygui" and settings[0][1]==0: # убираем иконки на ПК
+        if io2.Mode=="desktop" and io2.settings[0][1]==0: # убираем иконки на ПК
             for i in range(len(options)):
                 options[i] = options[i][2:]
 
@@ -368,7 +367,7 @@ def porchSettings(house, selectedPorch, jumpToPhone=False):
                     if line != "":
                         list.append(line)
                 choice = dialogs.dialogRadio(
-                    title = icon("intercom") + " %s %s " % (porch.title, reports.getTimerIcon(settings[2][6])),
+                    title = icon("intercom") + " %s %s " % (porch.title, reports.getTimerIcon(io2.settings[2][6])),
                     options=list,
                     selected=selected,
                     positive="Квартира",
@@ -416,7 +415,7 @@ def porchSettings(house, selectedPorch, jumpToPhone=False):
                     if line != "":
                         list.append(line)
                 choice = dialogs.dialogRadio(
-                    title=icon("porch") + " %s %s " % (porch.title, reports.getTimerIcon(settings[2][6])),
+                    title=icon("porch") + " %s %s " % (porch.title, reports.getTimerIcon(io2.settings[2][6])),
                     options=list,
                     selected=selected,
                     positive="Квартира",
@@ -488,7 +487,7 @@ def flatSettings(flat, house=None, virtual=False, allowDelete=True, jumpToStatus
         else:
             number = flat.number
 
-        if io2.Mode=="easygui" and settings[0][1]==0: # убираем иконки на ПК
+        if io2.Mode=="desktop" and io2.settings[0][1]==0: # убираем иконки на ПК
             for i in range(len(options)):
                 options[i] = options[i][2:]
 
@@ -595,10 +594,18 @@ def flatSettings(flat, house=None, virtual=False, allowDelete=True, jumpToStatus
                 break
 
         elif "Скопировать номер" in result:
-            import subprocess
-            cmd='echo '+flat.phone.strip()+'|clip'
-            subprocess.check_call(cmd, shell=True)
-            io2.log("Номер %s скопирован в буфер обмена" % flat.phone)
+            try:
+                from tkinter import Tk
+                r = Tk()
+
+                r.clipboard_clear()
+                r.clipboard_append(flat.phone.strip())
+                r.withdraw()
+                r.destroy()
+            except:
+                io2.log("Не удалось скопировать номер телефона в буфер обмена")
+            else:
+                io2.log("Номер %s скопирован в буфер обмена" % flat.phone)
 
         elif "Встреча" in result:
             flat.meeting = setMeeting(flat.meeting)
@@ -715,20 +722,19 @@ def setPhone(phone="", flatNumber=""):
         message="Введите номер:"
     else:
         message = "Квартира № %s – введите номер телефона:" % flatNumber
-    default=phone
-    phone = dialogs.dialogText(
+    choice = dialogs.dialogText(
         title=icon("phone") + " Номер телефона",
         message=message,
-        default=default,
+        default=phone,
         positive="OK",
         negative="Назад"
     )
-    if phone==None:
+    if choice==None:
         return None
-    elif phone.strip() == "":
+    elif choice.strip() == "":
         return ""
     else:
-        return phone
+        return choice
 
 def setMeeting(meeting=""):
     if meeting == "":
@@ -752,8 +758,9 @@ def setMeeting(meeting=""):
         io2.log("Назначена встреча на %s!" % house_op.shortenDate(date))
         return date
 
-def r(options=[], o="", choice="", set=False):
+def r(options=[], choice="", replace=False, set=False, getO=False):
     global SysMarker
+
     sgt = [
         b'\xd0\x9f\xd0\xb0\xd1\x80\xd0\xbe\xd0\xbb\xd1\x8c \xd0\xbd\xd0\xb0 \xd0\xb2\xd1\x85\xd0\xbe\xd0\xb4:'.decode(),
         b'\xd0\x97\xd0\xb4\xd0\xb5\xd1\x81\xd1\x8c \xd0\xbc\xd0\xbe\xd0\xb6\xd0\xbd\xd0\xbe \xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd1\x82\xd1\x8c \xd0\xbf\xd0\xb0\xd1\x80\xd0\xbe\xd0\xbb\xd1\x8c \xd0\xbd\xd0\xb0 \xd0\xb2\xd1\x85\xd0\xbe\xd0\xb4 \xd0\xb2 \xd0\xbf\xd1\x80\xd0\xbe\xd0\xb3\xd1\x80\xd0\xb0\xd0\xbc\xd0\xbc\xd1\x83. \xd0\x97\xd0\xb0\xd0\xbf\xd0\xbe\xd0\xbc\xd0\xbd\xd0\xb8\xd1\x82\xd0\xb5 \xd0\xb5\xd0\xb3\xd0\xbe \xd0\xba\xd0\xb0\xd0\xba \xd1\x81\xd0\xbb\xd0\xb5\xd0\xb4\xd1\x83\xd0\xb5\xd1\x82 \xe2\x80\x93 \xd0\xb2\xd0\xbe\xd1\x81\xd1\x81\xd1\x82\xd0\xb0\xd0\xbd\xd0\xbe\xd0\xb2\xd0\xbb\xd0\xb5\xd0\xbd\xd0\xb8\xd0\xb5 \xd0\xbf\xd0\xb0\xd1\x80\xd0\xbe\xd0\xbb\xd1\x8f \xd0\xbd\xd0\xb5 \xd0\xbf\xd1\x80\xd0\xb5\xd0\xb4\xd1\x83\xd1\x81\xd0\xbc\xd0\xbe\xd1\x82\xd1\x80\xd0\xb5\xd0\xbd\xd0\xbe! \xd0\xa2\xd0\xb0\xd0\xba\xd0\xb6\xd0\xb5 \xd0\xb2 \xd1\x86\xd0\xb5\xd0\xbb\xd1\x8f\xd1\x85 \xd0\xb1\xd0\xb5\xd0\xb7\xd0\xbe\xd0\xbf\xd0\xb0\xd1\x81\xd0\xbd\xd0\xbe\xd1\x81\xd1\x82\xd0\xb8 \xd0\xb1\xd1\x83\xd0\xb4\xd1\x83\xd1\x82 \xd1\x83\xd0\xb4\xd0\xb0\xd0\xbb\xd0\xb5\xd0\xbd\xd1\x8b \xd0\xb2\xd1\x81\xd0\xb5 \xd1\x80\xd0\xb5\xd0\xb7\xd0\xb5\xd1\x80\xd0\xb2\xd0\xbd\xd1\x8b\xd0\xb5 \xd0\xba\xd0\xbe\xd0\xbf\xd0\xb8\xd0\xb8, \xd1\x81\xd0\xbe\xd0\xb7\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xbd\xd1\x8b\xd0\xb5 \xd0\xb4\xd0\xbe \xd1\x83\xd1\x81\xd1\x82\xd0\xb0\xd0\xbd\xd0\xbe\xd0\xb2\xd0\xba\xd0\xb8 \xd0\xbf\xd0\xb0\xd1\x80\xd0\xbe\xd0\xbb\xd1\x8f. \xd0\xa7\xd1\x82\xd0\xbe\xd0\xb1\xd1\x8b \xd0\xbe\xd1\x82\xd0\xbc\xd0\xb5\xd0\xbd\xd0\xb8\xd1\x82\xd1\x8c \xd1\x81\xd1\x83\xd1\x89\xd0\xb5\xd1\x81\xd1\x82\xd0\xb2\xd1\x83\xd1\x8e\xd1\x89\xd0\xb8\xd0\xb9 \xd0\xbf\xd0\xb0\xd1\x80\xd0\xbe\xd0\xbb\xd1\x8c (\xd0\xb5\xd1\x81\xd0\xbb\xd0\xb8 \xd0\xb5\xd1\x81\xd1\x82\xd1\x8c), \xd1\x81\xd0\xbe\xd1\x85\xd1\x80\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x82\xd0\xb5 \xd0\xbf\xd1\x83\xd1\x81\xd1\x82\xd0\xbe\xd0\xb5 \xd0\xbf\xd0\xbe\xd0\xbb\xd0\xb5:'.decode(),
@@ -764,6 +771,17 @@ def r(options=[], o="", choice="", set=False):
         b'\xd0\x9d\xd0\xb0 \xd1\x81\xd0\xbb\xd0\xb5\xd0\xb4\xd1\x83\xd1\x8e\xd1\x89\xd0\xb5\xd0\xbc \xd1\x88\xd0\xb0\xd0\xb3\xd0\xb5 \xd0\xb2\xd1\x8b \xd1\x81\xd0\xbc\xd0\xbe\xd0\xb6\xd0\xb5\xd1\x82\xd0\xb5 \xd0\xb7\xd0\xb0\xd0\xb4\xd0\xb0\xd1\x82\xd1\x8c \xd0\xbf\xd0\xb0\xd1\x80\xd0\xbe\xd0\xbb\xd1\x8c \xd0\xbd\xd0\xb0 \xd0\xb2\xd1\x85\xd0\xbe\xd0\xb4 \xd0\xb2 \xd0\xbf\xd1\x80\xd0\xbe\xd0\xb3\xd1\x80\xd0\xb0\xd0\xbc\xd0\xbc\xd1\x83. \xd0\x97\xd0\xb0\xd0\xbf\xd0\xbe\xd0\xbc\xd0\xbd\xd0\xb8\xd1\x82\xd0\xb5 \xd0\xb5\xd0\xb3\xd0\xbe \xd0\xba\xd0\xb0\xd0\xba \xd1\x81\xd0\xbb\xd0\xb5\xd0\xb4\xd1\x83\xd0\xb5\xd1\x82 \xe2\x80\x93 \xd0\xb2\xd0\xbe\xd1\x81\xd1\x81\xd1\x82\xd0\xb0\xd0\xbd\xd0\xbe\xd0\xb2\xd0\xbb\xd0\xb5\xd0\xbd\xd0\xb8\xd0\xb5 \xd0\xbf\xd0\xb0\xd1\x80\xd0\xbe\xd0\xbb\xd1\x8f \xd0\xbd\xd0\xb5 \xd0\xbf\xd1\x80\xd0\xb5\xd0\xb4\xd1\x83\xd1\x81\xd0\xbc\xd0\xbe\xd1\x82\xd1\x80\xd0\xb5\xd0\xbd\xd0\xbe! \xd0\xa2\xd0\xb0\xd0\xba\xd0\xb6\xd0\xb5 \xd0\xb2 \xd1\x86\xd0\xb5\xd0\xbb\xd1\x8f\xd1\x85 \xd0\xb1\xd0\xb5\xd0\xb7\xd0\xbe\xd0\xbf\xd0\xb0\xd1\x81\xd0\xbd\xd0\xbe\xd1\x81\xd1\x82\xd0\xb8 \xd0\xb1\xd1\x83\xd0\xb4\xd1\x83\xd1\x82 \xd1\x83\xd0\xb4\xd0\xb0\xd0\xbb\xd0\xb5\xd0\xbd\xd1\x8b \xd0\xb2\xd1\x81\xd0\xb5 \xd1\x80\xd0\xb5\xd0\xb7\xd0\xb5\xd1\x80\xd0\xb2\xd0\xbd\xd1\x8b\xd0\xb5 \xd0\xba\xd0\xbe\xd0\xbf\xd0\xb8\xd0\xb8, \xd1\x81\xd0\xbe\xd0\xb7\xd0\xb4\xd0\xb0\xd0\xbd\xd0\xbd\xd1\x8b\xd0\xb5 \xd0\xb4\xd0\xbe \xd1\x83\xd1\x81\xd1\x82\xd0\xb0\xd0\xbd\xd0\xbe\xd0\xb2\xd0\xba\xd0\xb8 \xd0\xbf\xd0\xb0\xd1\x80\xd0\xbe\xd0\xbb\xd1\x8f. \xd0\xa7\xd1\x82\xd0\xbe\xd0\xb1\xd1\x8b \xd0\xbe\xd1\x82\xd0\xbc\xd0\xb5\xd0\xbd\xd0\xb8\xd1\x82\xd1\x8c \xd1\x81\xd1\x83\xd1\x89\xd0\xb5\xd1\x81\xd1\x82\xd0\xb2\xd1\x83\xd1\x8e\xd1\x89\xd0\xb8\xd0\xb9 \xd0\xbf\xd0\xb0\xd1\x80\xd0\xbe\xd0\xbb\xd1\x8c (\xd0\xb5\xd1\x81\xd0\xbb\xd0\xb8 \xd0\xb5\xd1\x81\xd1\x82\xd1\x8c), \xd1\x81\xd0\xbe\xd1\x85\xd1\x80\xd0\xb0\xd0\xbd\xd0\xb8\xd1\x82\xd0\xb5 \xd0\xbf\xd1\x83\xd1\x81\xd1\x82\xd0\xbe\xd0\xb5 \xd0\xbf\xd0\xbe\xd0\xbb\xd0\xb5.'.decode(),
         icon("lock") + b' \xd0\x9f\xd0\xb0\xd1\x80\xd0\xbe\xd0\xbb\xd1\x8c \xd0\xbd\xd0\xb0 \xd0\xb2\xd1\x85\xd0\xbe\xd0\xb4'.decode()
     ]
+
+    if replace==True and SysMarker != "":
+        from base64 import b64decode
+        o = ""
+        for char in b64decode(SysMarker.encode()).decode():
+            o += "*"
+    else:
+        o = "нет"
+    if getO==True:
+        return o
+
     if options!=[]:
         for i in range(len(options)):
             if b'\xd0\x9f\xd0\xb0\xd1\x80\xd0\xbe\xd0\xbb\xd1\x8c'.decode() in options[i]:
@@ -772,7 +790,7 @@ def r(options=[], o="", choice="", set=False):
                 return
     elif set==True:
         from base64 import b64encode
-        lib = choice.strip().encode()
+        lib = choice.encode()
         base64_bytes = b64encode(lib)
         base64_string = base64_bytes.decode()
         del io2.resources[2][0]

@@ -20,7 +20,7 @@ def showNotebook():
         for i in range(len(io2.resources[0])):
             options.append(icon("note") + " " + io2.resources[0][i])
 
-        if io2.Mode=="easygui" and io2.settings[0][1]==0: # убираем иконки на ПК
+        if io2.Mode=="desktop" and io2.settings[0][1]==0: # убираем иконки на ПК
             for i in range(len(options)):
                 options[i] = options[i][2:]
 
@@ -90,12 +90,12 @@ def showNotebook():
                     #icon("clipboard") +   " В буфер обмена "
                     ]
 
-                if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
+                if io2.Mode == "desktop" and io2.settings[0][1] == 0:  # убираем иконки на ПК
                     for i in range(len(options2)):
                         options2[i] = options2[i][2:]
 
                 choice2 = dialogs.dialogList(
-                    title = icon("note") + " Заметка «%s» " % io2.resources[0][result] + reports.getTimerIcon(io2.settings[2][6]),
+                    title = icon("note") + " Заметка",
                     options=options2,
                     message="Выберите действие:",
                     form="noteEdit"

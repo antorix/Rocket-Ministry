@@ -237,8 +237,7 @@ class Report():
             options.append(icon("returns")  + " Повторные: %d" % self.returns)
             options.append(icon("studies")  + " Изучения: %d" % self.studies)
             options.append(icon("pin") + " Примечание: %s" % self.note)
-
-            if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
+            if io2.Mode == "desktop" and io2.settings[0][1] == 0:  # убираем иконки на ПК
                 for i in range(len(options)):
                     options[i] = options[i][2:]
 
@@ -247,7 +246,7 @@ class Report():
                 form = "display",
                 message=message,
                 options=options,
-                positive = monthName()[2],
+                positive = icon("restore") + " " + monthName()[2],
                 neutral = icon("logreport") + " Журнал"
             )
 
@@ -265,6 +264,7 @@ class Report():
                         message += io2.resources[2][i]
                     dialogs.dialogInfo(
                         largeText=True,
+                        doublesize=True,
                         title=icon("logreport") + " Журнал отчета",
                         message=message[1:]
                     )
@@ -489,15 +489,15 @@ class Report():
         answer = dialogs.dialogInfo(
             title=icon("report") + " Отчет прошлого месяца ",
             message=io2.settings[2][12],
-            positive = None,
-            neutral = icon("export") + exportButton,
-            negative = "Назад"
+            positive = icon("export") + exportButton,
+            negative = "Назад",
+            neutral=None
         )
         if answer == None:#123
             return
-        elif "neutral" or icon("export") in answer:  # export last month report
+        elif "positive" or icon("export") in answer:  # export last month report
             if io2.Mode == "sl4a":
-                time.wait(0.5)
+                time.sleep(0.5)
                 try:
                     from androidhelper import Android
                     Android().sendEmail("Введите email", "Отчет за %s" % monthName()[3], self.lastMonth, attachmentUri=None)
@@ -528,7 +528,7 @@ def getTimerIcon(startTime):
     """ Returns timer and ringer icon, if active, and add silent icon on Android """
 
     if startTime > 0:
-        if io2.Mode != "easygui" and io2.settings[0][1] == 0:
+        if io2.Mode != "desktop" and io2.settings[0][1] == 0:
             output = " " + icon("timer")
         else:
             output = ""
@@ -839,7 +839,7 @@ def toggleTimer():
             report(choice="=)")  # запись обычного времени
         else:  # если в настройках включен кредит, спрашиваем:
             options = [icon("timer") + " Служение", icon("credit") + " Кредит"]
-            if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
+            if io2.Mode == "desktop" and io2.settings[0][1] == 0:  # убираем иконки на ПК
                 for i in range(len(options)):
                     options[i] = options[i][2:]
             choice2 = dialogs.dialogList(

@@ -1,9 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import homepage
 
 Simplified=1 # !!!
-Version = "1.0.5"
+Version = "1.0.6"
 
 try: # определяем ОС
     print("Загружаем графическую библиотеку")
@@ -17,7 +16,7 @@ except:
         BackupFolderLocation = "./backup/"
         print("Графическая библиотека не найдена, входим в консольный режим")
     else:
-        Mode = "easygui"
+        Mode = "desktop"
         UserPath = ""
         BackupFolderLocation = "./backup/"
 else:
@@ -61,7 +60,7 @@ def initializeDB():
 
 houses, settings, resources = initializeDB()
 DBCreatedTime = ""
-LastSystemMessage = ["", 0]
+SystemMessage = ""
 UpdateCycle=False
 Parser = ""
 
@@ -85,7 +84,7 @@ LastTimeDidChecks = LastTimeBackedUp = int(time.strftime("%H", time.localtime())
 def log(message):
     """ Displaying and logging to file important system messages """
 
-    global LastSystemMessage
+    global SystemMessage
 
     if Mode == "sl4a":
         phone.makeToast(message)
@@ -94,8 +93,7 @@ def log(message):
         if settings[0][1]==True or "--textconsole" in sys.argv:
             time.sleep(0.5)
 
-    LastSystemMessage[0] += message + "\n"
-    LastSystemMessage[1] = 0
+    SystemMessage = message + "\n" + SystemMessage
 
 def clearDB(silent=True):
     """ Очистка базы данных """
@@ -119,7 +117,7 @@ def clearDB(silent=True):
         removeFiles()
         log("База данных очищена!")
         save()
-        homepage.homepage()
+        #homepage.homepage()
 
 def removeFiles(keepDatafile=False, totalDestruction=False):
     """ Удаление базы данных и резервной папки"""
@@ -194,7 +192,6 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
     """ Loading houses and settings from JSON file """
 
     global houses, settings, resources
-    from dialogs import dialogAlert
     buffer=[]
     temp = deepcopy(getOutput())  # создаем временную базу
 
@@ -207,22 +204,21 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
                 with open(AndroidDownloadPath + dataFile+".txt", "r") as file:
                     buffer = json.load(file)
             else:
-                dialogAlert(title = icon("smartphone") + " Импорт из загрузок",
+                dialogs.dialogAlert(title = icon("smartphone") + " Импорт из загрузок",
                             message="Файл базы данных data.jsn не найден в папке «Загрузки» либо поврежден!")
                 return
 
         elif dataFile==None: # загрузка произвольного файла на телефоне (открываем диалог выбора файлов)
-            from dialogs import dialogFileOpen
-            dataFile = dialogFileOpen(title = icon("download") + " Выберите файл:")
+
+            dataFile = dialogs.dialogFileOpen(title = icon("download") + " Выберите файл:")
             if dataFile==None:
-                log("Импорт отменен")
                 return
             try:
                 with open(dataFile, "r") as file:
                     buffer = json.load(file)
             except:
-                dialogAlert(title = icon("download") + " Импорт из файла",
-                            message="Файл базы данных data.jsn не найден в указанном местоположении либо поврежден!")
+                dialogs.dialogAlert(title = icon("download") + " Импорт из файла",
+                            message="Файл базы данных data.jsn не найден в указанном месте либо поврежден!")
                 return
 
         elif os.path.exists(UserPath + dataFile): # обычная загрузка
@@ -232,23 +228,24 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
     else: # обычная загрузка файла по умолчанию или через импорт
         if forced==True:
             if dataFile==None:
-                from dialogs import dialogFileOpen
-                dataFile = dialogFileOpen()
+                try:
+                    dataFile = dialogs.dialogFileOpen()
+                except:
+                    return
                 if dataFile==".":
-                    log("Импорт отменен")
                     return
             else:
                 print("Загружаем из настроек, кэп")
 
         if forced==False and not os.path.exists(dataFile):
-            print("База не найдена, начинаем заново")
+            print("База данных не найдена, создаю новую.")
         try:
             with open(dataFile, "r") as file:
                 buffer = json.load(file)
         except:
             if forced==True:
-                dialogAlert(title="Загрузка базы данных",
-                            message="Файл базы данных не найден в указанном месте либо поврежден!")
+                dialogs.dialogAlert(title="Загрузка базы данных",
+                            message="Файл базы данных data.jsn не найден в указанном месте либо поврежден!")
                 settings[0][14]=""
             return
 
@@ -259,7 +256,7 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
         del buffer[0]
         clearDB()
         if loadOutput(buffer)==False: # ошибочный импорт, восстанавливаем временную базу
-            dialogAlert(title="Загрузка базы данных",
+            dialogs.dialogAlert(title="Загрузка базы данных",
                         message="Файл базы данных поврежден!")
             clearDB()
             loadOutput(temp[1:])
@@ -274,7 +271,7 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
                     elif os.path.exists(AndroidDownloadPath + dataFile+".txt"):
                         os.remove(AndroidDownloadPath + dataFile+".txt")
     else:
-        dialogAlert(title="Загрузка базы данных", message="Файл базы данных поврежден, создаю новый.")
+        dialogs.dialogAlert(title="Загрузка базы данных", message="Файл базы данных поврежден, создаю новый.")
         clearDB()
         loadOutput(temp[1:])
 
@@ -378,7 +375,7 @@ def share(silent=False):
                 log("Не удалось отправить базу!")
             else:
                 consoleReturn(pause=True)
-        elif Mode == "easygui":
+        elif Mode == "desktop":
             targetFolder = tkinter.filedialog.askdirectory(title="Выберите папку для записи файла базы данных data.jsn:")
         else:
             targetFolder = input("Введите путь к папке, в которую будет записан файл базы данных data.jsn:\n")
@@ -393,17 +390,16 @@ def share(silent=False):
         try:
             shutil.copy("data.jsn", targetFolder)
         except:
-            log("Экспорт отменен")
+            pass
         else:
             log("Файл успешно экспортирован в %s" % targetFolder)
 
 def backupRestore(restore=False, delete=False, silent=False):
     """ Восстановление файла из резервной копии """
 
-    from dialogs import dialogAlert
     if os.path.exists(BackupFolderLocation)==False:
         if silent == False:
-            dialogAlert(title="Восстановление", message="Папки резервных файлов не существует!")
+            dialogs.dialogAlert(title="Восстановление", message="Папки резервных файлов не существует!")
         return
     files = [f for f in os.listdir(BackupFolderLocation) if os.path.isfile(os.path.join(BackupFolderLocation, f))]
     fileDates = []
@@ -415,9 +411,8 @@ def backupRestore(restore=False, delete=False, silent=False):
     # Если выбран режим восстановления
 
     if restore == True:
-        from dialogs import dialogList
         from icons import icon
-        choice2 = dialogList(
+        choice2 = dialogs.dialogList(
             title=icon("restore") + " Выберите резервную копию",
             message="Выберите дату и время резервной копии базы данных, которую нужно восстановить:",
             options=fileDates,
@@ -425,7 +420,6 @@ def backupRestore(restore=False, delete=False, silent=False):
         )  # choose file
 
         if choice2 == None:
-            log("Восстановление отменено")
             return
         elif choice2 == "":
             if settings[0][1] == True:

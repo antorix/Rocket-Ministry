@@ -11,7 +11,6 @@ import dialogs
 import reports
 
 GridMode = 0
-MessageOnAdd = "Введите один номер (напр. 1) или диапазон номеров через дефис или пробел (напр. 1 50):"
 
 def terView(start=False):
     """ Список участков """
@@ -20,7 +19,7 @@ def terView(start=False):
         #print(len(io2.resources[2]))
         #import tkinter as tk
         #form = tk.Toplevel()
-        #porchView(io2.houses[0], 0)
+        #porchView(io2.houses[1], 2)
         pass
 
     choice=""
@@ -36,6 +35,7 @@ def terView(start=False):
                 positive = icon("plus", simplified=False),
                 neutral = icon("sort", simplified=False) + " Сорт."
             )
+            #print(choice)
         if homepage.menuProcess(choice) == True:
             continue
         elif choice==None:
@@ -158,18 +158,27 @@ def houseView(selectedHouse):
 def porchView(house, selectedPorch):
     """ Вид поодъезда - список квартир или этажей """
 
-    global MessageOnAdd
+    def updateMessageOnAdd(forcedMessage):
+        if forcedMessage!="":
+            result = forcedMessage
+        elif set.ifInt(porch.flatsLayout) == True:
+            result = house_cl.MessageOfProhibitedFlatCreation1 % porch.getPreviouslyDeletedFlats()
+        else:
+            result = defaultMessage
+        return result
+
     porch = house.porches[selectedPorch]
+    defaultMessage = "Введите один номер (напр. 1) или диапазон номеров через дефис или пробел (напр. 1 50):"
     messageFailedInput = "Не сработало, попробуйте еще раз."
     porchMessage = "\n"#"Список %s, сортировка %s:" % (house.getPorchType()[2], porch.getSortType())
-    default = choice = ""
+    default = choice = forcedMessage = ""
     selected=0
-    if set.ifInt(porch.flatsLayout) == True:
-        messageOnAdd = house_cl.MessageOfProhibitedFlatCreation1 % porch.getPreviouslyDeletedFlats()
-    else:
-        messageOnAdd = MessageOnAdd
+
     while 1: # Показываем весь подъезд
         # Стандартный списочный вид
+
+        messageOnAdd = updateMessageOnAdd(forcedMessage)
+        forcedMessage=""
 
         if io2.settings[0][1]==0 and io2.Mode!="text" and GridMode==0:
 
@@ -222,41 +231,31 @@ def porchView(house, selectedPorch):
                 )
                 if addFlat == None:  # нажата Отмена/Назад
                     choice = default = ""
-                    if set.ifInt(porch.flatsLayout) == True:
-                        messageOnAdd = house_cl.MessageOfProhibitedFlatCreation1 % porch.getPreviouslyDeletedFlats()
-                    else:
-                        messageOnAdd = MessageOnAdd
                     continue
                 elif addFlat == "":  # нажат Ввод с пустой строкой - будет ошибка
-                    messageOnAdd = messageFailedInput
+                    default = addFlat
+                    forcedMessage = "Не сработало, попробуйте еще раз."
                     continue
                 elif not "-" in addFlat and not " " in addFlat: # добавляем одиночную квартиру, требуется целое число
                     if porch.type == "подъезд" and set.ifInt(addFlat) == False:
                         default = addFlat
-                        messageOnAdd = "В многоквартирном доме номера квартир могут содержать только цифры!"
+                        forcedMessage = "В многоквартирном доме номера квартир могут содержать только цифры!"
                         continue
                     else:
                         porch.addFlat("+"+addFlat)
                         choice = default = ""
                         io2.save()
-                        if set.ifInt(porch.flatsLayout) == True:
-                            messageOnAdd = house_cl.MessageOfProhibitedFlatCreation1 % porch.getPreviouslyDeletedFlats()
-                        else:
-                            messageOnAdd = MessageOnAdd
                         continue
                 elif set.ifInt(addFlat[0]) == True and ("-" in addFlat or " " in addFlat): # массовое добавление квартир
                     porch.addFlats("+"+addFlat)
                     choice = default = ""
                     io2.save()
-                    if set.ifInt(porch.flatsLayout) == True:
-                        messageOnAdd = house_cl.MessageOfProhibitedFlatCreation1 % porch.getPreviouslyDeletedFlats()
-                    else:
-                        messageOnAdd = MessageOnAdd
                     continue
-                else:
-                    default=addFlat
-                    messageOnAdd = messageFailedInput
-                    continue
+                #else:
+                #    default=addFlat
+                #    choice = ""
+                #    forcedMessage = "Не сработало, попробуйте еще раз."
+                #    continue
             else:
                 continue
 
@@ -378,7 +377,9 @@ def porchView(house, selectedPorch):
                 default = choice = ""
             else:  # go to flat view
                 result = findFlatByNumber(house, porch, choice)
-                if result=="deleted":
+                if result == True:
+                    default = choice = ""
+                elif result=="deleted":
                     porch.deleteFlat(i)
                     io2.save()
                 elif result==False:
@@ -409,7 +410,7 @@ def flatView(flat, house=None, virtual=False, allowDelete=True):
 
         neutral, options = flat.showRecords()
 
-        if io2.Mode=="easygui" and io2.settings[0][1]==0: # убираем иконки на ПК
+        if io2.Mode=="desktop" and io2.settings[0][1]==0: # убираем иконки на ПК
             for i in range(len(options)):
                 options[i] = options[i][2:]
 
@@ -469,7 +470,7 @@ def flatView(flat, house=None, virtual=False, allowDelete=True):
                 continue
             elif int(choice) <= len(flat.records): # edit record
                 options2 = [icon("edit") + " Править", icon("cut") + " Удалить"]
-                if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
+                if io2.Mode == "desktop" and io2.settings[0][1] == 0:  # убираем иконки на ПК
                     for i in range(len(options2)):
                         options2[i] = options2[i][2:]
                 choice2 = dialogs.dialogList(
@@ -539,7 +540,7 @@ def findFlatByNumber(house, porch, number, onlyGetNumber=False):
         else:
             noteForConsole=""
 
-        if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
+        if io2.Mode == "desktop" and io2.settings[0][1] == 0:  # убираем иконки на ПК
             for i in range(len(options)):
                 options[i] = options[i][2:]
 
@@ -598,7 +599,10 @@ def findFlatByNumber(house, porch, number, onlyGetNumber=False):
                 io2.save()
                 record = dialogs.dialogText(
                     title="%s Ввод данных о первом посещении" % icon("mic", simplified=False),
-                    message="Описание разговора:"
+                    message="О чем говорили?",
+                    largeText=True,
+                    positive="Сохранить",
+                    negative="Отмена"
                 )
                 if record == None:
                     return
@@ -616,7 +620,9 @@ def findFlatByNumber(house, porch, number, onlyGetNumber=False):
                             icon("phone") + " Записать телефон",
                             icon("appointment") + " Назначить встречу"
                         ]
-                        if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
+                        if io2.settings[0][20] == 1 and set.PhoneMode == True:
+                            del options[3]
+                        if io2.Mode == "desktop" and io2.settings[0][1] == 0:  # убираем иконки на ПК
                             for i in range(len(options)):
                                 options[i] = options[i][2:]
                         choices = dialogs.dialogChecklist(
@@ -635,7 +641,9 @@ def findFlatByNumber(house, porch, number, onlyGetNumber=False):
                             if "Добавить видео" in checked:  # видео
                                 reports.report(choice="==в")
                             if "Записать телефон" in checked:  # телефон
-                                flat.phone = set.setPhone()
+                                newPhone = set.setPhone(flat.phone)
+                                if newPhone != None:
+                                    flat.phone = newPhone
                             if "Назначить встречу" in checked:  # встреча
                                 flat.meeting = set.setMeeting()
                             io2.save()
@@ -652,6 +660,7 @@ def findFlatByNumber(house, porch, number, onlyGetNumber=False):
             elif input == "neutral" or input == "*" or input == "справка" or input == "help":
                 dialogs.dialogInfo(
                     largeText=True,
+                    doublesize=True,
                     title="%s Умная строка" % icon("rocket"),
                     message="«Умная строка» – это самый мощный и быстрый способ добавления нового посещения, а также ввода данных в отчет!\n\n" +
                             "Введите любой текст без точки, и он превратится в заметку квартиры.\n\n" + \

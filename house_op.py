@@ -53,7 +53,7 @@ def showHouses():
                 (house.getTipIcon()[1], house.title, houseDue, shortenDate(house.date),
                  icon("mark"), int(house.getProgress()[0]*100), interested, note)
         )
-    if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
+    if io2.Mode == "desktop" and io2.settings[0][1] == 0:  # убираем иконки на ПК
         for i in range(len(housesList)):
             housesList[i] = housesList[i][2:]
 
@@ -102,7 +102,7 @@ def pickHouseType(house=None):
             icon("phone2") + " Телефонный участок",
         ]
 
-        if io2.Mode == "easygui" and io2.settings[0][1] == 0:  # убираем иконки на ПК
+        if io2.Mode == "desktop" and io2.settings[0][1] == 0:  # убираем иконки на ПК
             for i in range(len(options)):
                 options[i] = options[i][2:]
 
@@ -214,3 +214,14 @@ def countTotalProgress():
         percentage = 0
 
     return percentage
+
+def calcDueTers():
+    """ Подсчет просроченных домов """
+    housesDue = 0
+    for h in range(len(io2.houses)):
+        if days_between(
+                io2.houses[h].date,
+                time.strftime("%Y-%m-%d", time.localtime())
+        ) > 180:  # время просрочки
+            housesDue += 1
+    return housesDue
