@@ -667,17 +667,18 @@ def feedSetting(result, self=None):
     elif "Консольный режим" in result:
         io2.settings[0][1] = toggle(io2.settings[0][1])
         io2.save()
-        if io2.settings[0][1] == 1:
-            io2.settings[0][1] = 0
-            dialogs.dialogInfo(
-                title="Внимание",
-                message="Чтобы войти в консольный режим, запустите программу через файл Rocket Ministry.py или main.py.",
-                positive="OK",
-                negative=None,
-            )
-            io2.settings[0][1] = 1
-        else:
-            dialogs.createDesktopGUI()
+        if io2.Mode == "desktop":
+            if io2.settings[0][1] == 1:
+                io2.settings[0][1] = 0
+                dialogs.dialogInfo(
+                    title="Внимание",
+                    message="Чтобы войти в консольный режим, программа должна быть запущена через файл Rocket Ministry.py или main.py.",
+                    positive="OK",
+                    negative=None,
+                )
+                io2.settings[0][1] = 1
+            else:
+                dialogs.createDesktopGUI()
 
     elif set.r()[0] in result:
         choice2 = dialogs.dialogGetLib(
