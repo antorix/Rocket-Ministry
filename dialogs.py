@@ -77,7 +77,7 @@ elif io2.Mode=="desktop":
             messagebox.showerror(title="Rocket Ministry", message="Ошибка импорта графической библиотеки в файле dialogs, работа приложения прекращена. Обратитесь в техподдержку.")
             sys.exit(0)
         else:
-            import urllib.rrequest
+            import urllib.request
             urllib.request.urlretrieve(
                 "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/desktop.py",
                 "desktop.py"

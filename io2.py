@@ -10,6 +10,7 @@ try: # определяем ОС
 except:
     try:
         import tkinter
+        open("timer1.png")
     except:
         Mode = "text"
         UserPath = ""
