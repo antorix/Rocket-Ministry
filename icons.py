@@ -6,7 +6,11 @@ from os import name
 
 def icon(myIcon, forceText=False, simplified=True):
     simplified=True
-    if io2.Mode=="sl4a" and io2.settings[0][1]==False and forceText==False:#) or name=="posix":
+    if io2.Mode=="kivy":
+        if myIcon == "plus": return "+"
+        else:
+            return ""
+    elif io2.Mode=="sl4a" and io2.settings[0][1]==False and forceText==False:#) or name=="posix":
         if myIcon=="globe": return "🗺"
         elif myIcon=="map": return "🧭"
         elif myIcon=="rocket": return "🚀"
@@ -37,8 +41,8 @@ def icon(myIcon, forceText=False, simplified=True):
         elif myIcon=="download": return "📥"
         elif myIcon=="export": return "📨"
         elif myIcon=="edit": return "🖋"
-        elif myIcon=="extra": return "😎"
-        elif myIcon=="extra2": return "😎"
+        elif myIcon=="extra": return "😍"
+        elif myIcon=="extra2": return "😍"
         elif myIcon=="slippage": return "😥"
         elif myIcon=="placements": return "📚"
         elif myIcon=="video": return "🎞"
@@ -205,7 +209,7 @@ def icon(myIcon, forceText=False, simplified=True):
         elif myIcon=="download": return "▼"
         elif myIcon=="export": return "▲"
         elif myIcon=="edit": return "*" #✶
-        elif myIcon=="extra": return "☺"
+        elif myIcon=="extra": return "☺"#"☺"
         elif myIcon=="extra2": return "↑"
         elif myIcon=="slippage":
             if io2.settings[0][1] != 1 and simplified==False:
@@ -263,7 +267,7 @@ def icon(myIcon, forceText=False, simplified=True):
         elif myIcon=="up": return "↑"
         elif myIcon=="down": return "↓"
         elif myIcon=="phone": return "т"#
-        elif myIcon=="phone2": return "⌂"#◊
+        elif myIcon=="phone2": return "◊"#◊
         elif myIcon=="phone3": return "т."
         elif myIcon=="phone4": return "т"
         elif myIcon=="warning": return "⚠"

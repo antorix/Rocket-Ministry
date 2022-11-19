@@ -2,20 +2,21 @@
 # -*- coding: utf-8 -*-
 
 Simplified=1 # !!!
-Version = "1.0.6"
+Version = "1.0.7"
 
 try: # определяем ОС
-    print("Загружаем графическую библиотеку")
+    print("Загружаем SL4A")
     from androidhelper import Android
 except:
+    print("SL4A не обнаружен, ищем Tkinter")
     try:
         import tkinter
         open("timer1.png")
     except:
+        print("Tkinter и (или) графические файлы не обнаружены, входим в консольный режим")
         Mode = "text"
         UserPath = ""
         BackupFolderLocation = "./backup/"
-        print("Графическая библиотека не найдена, входим в консольный режим")
     else:
         Mode = "desktop"
         UserPath = ""
@@ -56,12 +57,11 @@ def initializeDB():
         [
             [],     # notebook              resources[0]
             [],     # standalone contacts   resources[1]
-            [""],     # report log            resources[2]
+            [],     # report log            resources[2]
     ]
 
 houses, settings, resources = initializeDB()
 DBCreatedTime = ""
-SystemMessage = ""
 UpdateCycle=False
 Parser = ""
 
@@ -85,8 +85,6 @@ LastTimeDidChecks = LastTimeBackedUp = int(time.strftime("%H", time.localtime())
 def log(message):
     """ Displaying and logging to file important system messages """
 
-    global SystemMessage
-
     if Mode == "sl4a":
         phone.makeToast(message)
     else:
@@ -94,7 +92,8 @@ def log(message):
         if settings[0][1]==True or "--textconsole" in sys.argv:
             time.sleep(0.5)
 
-    SystemMessage = message + "\n" + SystemMessage
+    if Mode=="desktop" and settings[0][1]==0:
+        dialogs.MainGUI.systemMessage = message + "\n" + dialogs.MainGUI.systemMessage
 
 def clearDB(silent=True):
     """ Очистка базы данных """
@@ -377,7 +376,8 @@ def share(silent=False):
             else:
                 consoleReturn(pause=True)
         elif Mode == "desktop":
-            targetFolder = tkinter.filedialog.askdirectory(title="Выберите папку для записи файла базы данных data.jsn:")
+            targetFolder = tkinter.filedialog.askdirectory(title="Выберите папку для записи файла")
+
         else:
             targetFolder = input("Введите путь к папке, в которую будет записан файл базы данных data.jsn:\n")
     else: # выполняется из консоли, путь прописан в файле export.ini
@@ -445,122 +445,105 @@ def backupRestore(restore=False, delete=False, silent=False):
             for i in range(extra):
                 os.remove(BackupFolderLocation + files[i])
 
-def update(forced=False, check=False):
+def update(forced=False):
     """ Проверяем новую версию и при наличии обновляем программу с GitHub """
 
-    global UpdateCycle
+    print("Проверяем обновления")
 
-    if check == False:
+    title = icon("update") + " Обновление"
 
-        print("Проверяем обновления")
+    try: # подключаемся к GitHub
+        for line in urllib.request.urlopen("https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/version"):
+            newVersion = line.decode('utf-8').strip()
+    except:
+        print("Не удалось подключиться к серверу")
+        dialogs.dialogAlert(title, "Не удалось подключиться к серверу для проверки обновлений. Проверьте соединение с Интернетом.")
+        return False
+    else: # успешно подключились, сохраняем сегодняшнюю дату последнего обновления
+        today = str(datetime.datetime.strptime( time.strftime('%Y-%m-%d'), "%Y-%m-%d") )
+        today = today[0: today.index(" ")]
+        settings[1] = today
+        save()
 
-        title = icon("update") + " Обновление"
+    filesToDelete = [  # удаляем файлы Easy_GUI от предыдущей версии
+        "global_state.py",
+        "choice_box.py",
+        "button_box.py",
+        "fileboxsetup.py",
+        "fileopen_box.py",
+        "fillable_box.py",
+        "text_box.py",
+        "utils.py",
+        "easygui_mod.py"
+    ]
+    for file in filesToDelete:
+        if os.path.exists(file):
+            print("Удаляем ненужный файл предыдущей версии")
+            os.remove(file)
 
-        try: # подключаемся к GitHub
-            for line in urllib.request.urlopen("https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/version"):
-                newVersion = line.decode('utf-8').strip()
-        except:
-            print("Не удалось подключиться к серверу")
-            dialogs.dialogAlert(title, "Не удалось подключиться к серверу для проверки обновлений. Проверьте соединение с Интернетом.")
-            return False
-        else: # успешно подключились, сохраняем сегодняшнюю дату последнего обновления
-            today = str(datetime.datetime.strptime( time.strftime('%Y-%m-%d'), "%Y-%m-%d") )
-            today = today[0: today.index(" ")]
-            settings[1] = today
-            save()
-
-        filesToDelete = [  # удаляем файлы Easy_GUI от предыдущей версии
-            "global_state.py",
-            "choice_box.py",
-            "button_box.py",
-            "fileboxsetup.py",
-            "fileopen_box.py",
-            "fillable_box.py",
-            "text_box.py",
-            "utils.py",
-            "easygui_mod.py"
-        ]
-        for file in filesToDelete:
-            if os.path.exists(file):
-                print("Удаляем ненужный файл предыдущей версии")
-                os.remove(file)
-
-        if newVersion > Version:
-            choice = dialogs.dialogConfirm(title, "Найдена новая версия %s! Установить?" % newVersion)
-            if choice==True:
-                print("Скачиваем…")
-                try:
-                    if Mode=="sl4a":
-                        urls = ["https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/console.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/contacts.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/dialogs.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/homepage.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_cl.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_op.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/icons.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/io2.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/main.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/notebook.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/reports.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/set.py",
-                                "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/territory.py"
-                        ]
-                        for url in urls:
-                            urllib.request.urlretrieve(url, UserPath + url[url.index("master/") + 7:])
-                    else:
-                        file = "files.zip"
-                        urllib.request.urlretrieve(
-                            "https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip",
-                            file
-                        )
-                        from zipfile import ZipFile
-                        zip = ZipFile(file, "r")
-                        zip.extractall("")
-                        zip.close()
-                        downloadedFolder = "Rocket-Ministry-master"
-                        for file_name in os.listdir(downloadedFolder):
-                            source = downloadedFolder + "/" + file_name
-                            destination = file_name
-                            if os.path.isfile(source):
-                                shutil.move(source, destination)
-                        os.remove(file)
-                        shutil.rmtree(downloadedFolder)
-
-                except:
-                    dialogs.dialogAlert(title, "Не удалось загрузить обновление. Попробуйте еще раз или, если не помогло, напишите в техподдержку (раздел «О программе»)")
+    if newVersion > Version:
+        choice = dialogs.dialogConfirm(title, "Найдена новая версия %s! Установить?" % newVersion)
+        if choice==True:
+            print("Скачиваем…")
+            try:
+                if Mode=="sl4a":
+                    urls = ["https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/console.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/contacts.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/dialogs.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/homepage.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_cl.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/house_op.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/icons.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/io2.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/main.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/notebook.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/reports.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/set.py",
+                            "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/territory.py"
+                    ]
+                    for url in urls:
+                        urllib.request.urlretrieve(url, UserPath + url[url.index("master/") + 7:])
                 else:
-                    if Mode == "sl4a":
-                        Android().dialogDismiss()
-                        print("Обновление завершено, необходим перезапуск программы.\nНажмите Enter, чтобы закрыть консоль.")
+                    file = "files.zip"
+                    urllib.request.urlretrieve(
+                        "https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip",
+                        file
+                    )
+                    from zipfile import ZipFile
+                    zip = ZipFile(file, "r")
+                    zip.extractall("")
+                    zip.close()
+                    downloadedFolder = "Rocket-Ministry-master"
+                    for file_name in os.listdir(downloadedFolder):
+                        source = downloadedFolder + "/" + file_name
+                        destination = file_name
+                        if os.path.isfile(source):
+                            shutil.move(source, destination)
+                    os.remove(file)
+                    shutil.rmtree(downloadedFolder)
 
-                    elif os.name=="nt": # проверка и загрузка модулей для Windows, пользуясь ситуацией
-                        try:
-                            import win10toast
-                        except:
-                            dialogs.dialogAlert(title, "Проверка и загрузка недостающих компонентов Windows...")
-                            from subprocess import check_call
-                            from sys import executable
-                            check_call([executable, '-m', 'pip', 'install', 'win10toast'])
-                        dialogs.dialogAlert(title, "Обновление завершено, необходим перезапуск программы.")
-                        return True # возвращаем успешный результат обновления (для перезапуска)
-        else:
-            print("Обновлений нет")
-            if forced==True:
-                dialogs.dialogAlert(title, "Проверка показала, что у вас самая последняя версия Rocket Ministry!")
-    elif UpdateCycle == True:
-        return UpdateCycle
-    else: # check system requirements
-        if set.sysDrop() != "":
-            choice = dialogs.dialogGetLib()
-        else:
-            choice = set.SysMarker
-            UpdateCycle = True
-        if choice != None:
-            house_op.terSort(choice) # изменение типа участка (при необходимости)
-        if UpdateCycle==False:
-            sys.exit(0)
-        else:
-            return UpdateCycle
+            except:
+                dialogs.dialogAlert(title, "Не удалось загрузить обновление. Попробуйте еще раз или, если не помогло, напишите в техподдержку (раздел «О программе»)")
+            else:
+                if Mode == "sl4a":
+                    Android().dialogDismiss()
+                    print("Обновление завершено, необходим перезапуск программы.\nНажмите Enter, чтобы закрыть консоль.")
+
+                elif os.name=="nt": # проверка и загрузка модулей для Windows, пользуясь ситуацией
+                    try:
+                        import win10toast
+                    except:
+                        dialogs.dialogAlert(title, "Проверка и загрузка недостающих компонентов Windows...")
+                        from subprocess import check_call
+                        from sys import executable
+                        check_call([executable, '-m', 'pip', 'install', 'win10toast'])
+                    dialogs.dialogAlert(title, "Обновление завершено, необходим перезапуск программы.")
+                    return True # возвращаем успешный результат обновления (для перезапуска)
+    else:
+        print("Обновлений нет")
+        if forced==True:
+            dialogs.dialogAlert(title, "Проверка показала, что у вас самая последняя версия Rocket Ministry!")
+
 
 def consoleReturn(pause=False):
     os.system("clear")
@@ -578,3 +561,11 @@ def getCurTime():
     return int(time.strftime("%H", time.localtime())) * 3600 \
               + int(time.strftime("%M", time.localtime())) * 60 \
               + int(time.strftime("%S", time.localtime()))
+
+def clearScreen():
+    if 1:#io2.Mode == "text" or io2.settings[0][1] == 1:
+        if os.name!="posix":
+            clear = lambda: os.system('cls')
+        else:
+            clear = lambda: os.system('clear')
+        clear()

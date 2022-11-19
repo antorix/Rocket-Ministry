@@ -80,8 +80,6 @@ def homepage():
 
             if io2.settings[0][6] > 0:  # проверяем лишние резервные копии
                 io2.backupRestore(delete=True, silent=True)
-            if cycle() != True:
-                return
 
             if io2.settings[0][11] == 1:
                 print("Выясняем встречи на сегодня")
@@ -151,43 +149,17 @@ def homepage():
                 return True
 
     io2.load()
-
-    if check_password() == False:
-        sys.exit(0)
-
-    if io2.settings[0][17] == 0 or io2.settings[0][17] == 1:  # convert setting to lib for version 1.0.6
-        pass
-    elif io2.settings[0][17] == "":
-        io2.settings[0][17] = 0
-        io2.resources[2].insert(0, "")
-        io2.save()
-        io2.load()
-    else:
-        from base64 import b64encode
-        lib = io2.settings[0][17].strip().encode()
-        base64_bytes = b64encode(lib)
-        base64_string = base64_bytes.decode()
-        io2.resources[2].insert(0, base64_string)
-        io2.settings[0][17] = 0
-        io2.save()
-        io2.load()
-
-    set.SysMarker = io2.resources[2][0] # проверяем параметры командной строки
     if "--capmode" in sys.argv:
         io2.simplified=0
         io2.settings[0][1]=1
     if io2.Mode == "desktop" and io2.settings[0][1] == 0:
         try:
-            with open("winpos.ini", "r") as file:
-                line = file.read()
+            import desktop
         except:
-            with open("winpos.ini", "w") as file:
-                file.write(dialogs.window_size)
-                file.write(dialogs.window_position)
+            print("Класс Desktop не обнаружен")
+            io2.Mode = "text"
         else:
-            dialogs.window_position = '+' + line.split('+', 1)[1]
-            dialogs.window_size = line[0: line.index("+")]
-        dialogs.createDesktopGUI()
+            dialogs.MainGUI = desktop.Desktop()
 
     if io2.settings[1]=="":
         firstRun()
@@ -276,7 +248,7 @@ def homepage():
             negative=None
 
         if io2.Mode == "sl4a":
-            dialogs.clearScreen()
+            io2.clearScreen()
             io2.consoleReturn(pause=False)
 
         # Run home screen
@@ -465,12 +437,11 @@ def preferences(getOptions=False):
         options.append(                       "%s Резервных копий: %d" % (icon("box", simplified=False), io2.settings[0][6]))
         if io2.Simplified==0 and io2.Mode!="sl4a":
             options.append(                   "%s Файл импорта базы данных: %s" % (icon("box", simplified=False), importURL))
-        options.append("%s Пароль на вход: %s" % (icon("box", simplified=False), io2.settings[0][16]))
         if io2.Mode == "sl4a":
             options.append(status(io2.settings[0][16]) + "Режим смайликов")
         options.append(status(io2.settings[0][12]) + "Проверять обновления")
-        if io2.Mode != "text":
-            options.append(status(io2.settings[0][1])  + "Консольный режим")
+        #if io2.Mode != "text":
+        #    options.append(status(io2.settings[0][1])  + "Консольный режим")
         if io2.Simplified == 0:
             options.append(status(territory.GridMode) + "Консольный вид подъезда")
 
@@ -480,7 +451,6 @@ def preferences(getOptions=False):
 
         # settings[0][17] - свободно
 
-        set.r(options=options, replace=True)
         if getOptions==True:
             return options
 
@@ -509,7 +479,7 @@ def feedSetting(result, self=None):
     """ Получает строку и по ней выставляет настройку """
 
     if io2.Mode == "desktop" and io2.settings[0][1] == 0:
-        dialogs.saveWindowPosition(self.boxRoot)
+        dialogs.MainGUI.getWindowPosition()
 
     if "Бесшумный режим" in result:
         io2.settings[0][0] = toggle(io2.settings[0][0])
@@ -586,7 +556,7 @@ def feedSetting(result, self=None):
         io2.settings[0][21] = toggle(io2.settings[0][21])
         if io2.settings[0][21] == 1:
             dialogs.dialogInfo(
-                largeText=True,
+                doublesize=True,
                 title="Статус обработки подъездов",
                 message="При включении этого параметра вы сможете указывать для каждого подъезда участка, когда вы в нем были:\n\nв будний день в первой половине дня (первый кружок – %s)\n\nв будний день вечером (второй кружок – %s)\n\nв выходной (третий кружок – %s)\n\nЕсли подъезд посещен все три раза, он учитывается как обработанный в разделе статистики." % (
                 icon("porchCircle1"), icon("porchCircle2"), icon("porchCircle3")),
@@ -640,7 +610,7 @@ def feedSetting(result, self=None):
         io2.settings[0][9] = toggle(io2.settings[0][9])
         if io2.settings[0][9] == 1:
             dialogs.dialogInfo(
-                largeText=True,
+                doublesize=True,
                 title="Обновление статуса цифрой в посещении",
                 message="Здесь можно переключиться на альтернативный способ обновления статуса контакта после каждого посещения. Теперь, вместо ручного выбора статуса, нужно ставить цифру от 0 до 5 в конце каждого посещения. Эта цифра определяет статус контакта (как в «умной строке»):\n\n0 = %s\n1 = %s\n2 = %s\n3 = %s\n4 = %s\n5 = %s\n\nЭто должен быть строго последний символ строки. При отсутствии такой цифры статус контакта становится неопределенным (%s)." %
                         (icon("reject"), icon("interest"), icon("green"), icon("purple"), icon("brown"), icon("danger"),
@@ -678,7 +648,16 @@ def feedSetting(result, self=None):
                 )
                 io2.settings[0][1] = 1
             else:
-                dialogs.createDesktopGUI()
+                try:
+                    import desktop
+                except:
+                    print("Класс Desktop не обнаружен")
+                    io2.Mode = "text"
+                else:
+                    try:
+                        dialogs.MainGUI.update()
+                    except:
+                        dialogs.MainGUI = desktop.Desktop()
 
     elif set.r()[0] in result:
         choice2 = dialogs.dialogGetLib(
@@ -790,16 +769,12 @@ def stats():
                         (porchesCompleted, porches, porchesCompleted / porches * 100)
 
     dialogs.dialogInfo(
-        largeText=True,
+        doublesize=True,
         title=icon("stats") + " Статистика " + reports.getTimerIcon(io2.settings[2][6]),
         message=message,
         positive=None,
         negative="Назад"
     )
-
-def cycle(value=False):
-    if value != io2.update(check=True):
-        return True
 
 def search(query=""):
     """ Search flats/contacts """
@@ -1009,7 +984,6 @@ def serviceYear(count=False):
             else:
                 average = yearNorm - hourSum
             dialogs.dialogInfo(
-                largeText=True,
                 doublesize=True,
                 title="%s Аналитика" % icon("calc"),
                 message="Месяцев введено: %d\n\n" % monthNumber +
@@ -1076,6 +1050,7 @@ def about():
     while 1:
         choice = dialogs.dialogInfo(
             title=icon("info") + " О программе " + reports.getTimerIcon(io2.settings[2][6]),
+            largeText=True,
             message =   "Универсальный комбайн вашего служения\n\n"+\
                         "Версия приложения: %s\n\n" % io2.Version +\
                         "Последнее изменение базы данных: %s\n\n" % io2.getDBCreatedTime() +\
@@ -1147,15 +1122,7 @@ def menuProcess(choice):
         io2.backupRestore(restore=True)
     elif choice == "wipe":
         io2.clearDB(silent=False)
-    elif choice=="exit":
+    elif choice == "exit":
         io2.share(silent=True)
-        sys.exit(0)
+        #sys.exit(0)
     return result
-
-def check_password():
-    """ Проверка пароля """
-    if len(str(io2.settings[0][16]) + str(int(len(io2.settings))))==False:
-        password = io2.settings[1] + "/./[key%s]" % str(time.strftime) + io2.settings[0]
-        return password + len(int(io2.settings[0: io2.settings[0][16]]))
-    else:
-        return int(len(io2.settings[1])+1)

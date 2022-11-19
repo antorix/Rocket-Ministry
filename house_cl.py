@@ -156,7 +156,7 @@ class House(object):
             if len(self.flats[ind].records)!=0 or self.flats[ind].getName()!="" or\
                     self.flats[ind].note!="" or self.flats[ind].meeting!="" or \
                     self.flats[ind].phone != "": # проверка, что квартира не пустая
-                if set.ifInt(self.flatsLayout) == False and io2.settings[0][1]==0:
+                if set.ifInt(self.flatsLayout) == False:
                     answer = dialogs.dialogConfirm(
                         title=icon(
                             "cut") + " Удаление «%s»" % self.flats[ind].number,
@@ -165,20 +165,14 @@ class House(object):
                 else: # выбрано удаление квартиры с записями в поэтажной раскладке:
                     restore=True
             if answer==True:
-                if "." in self.flats[ind].number:
-                    number = self.flats[ind].number[0: self.flats[ind].number.index(".")]
-                else:
-                    number = self.flats[ind].number
                 if set.ifInt(self.flatsLayout)==True:
                     result = self.shift(ind, restore=restore)
                     if result == "disableFloors":
-                        #io2.log("«%s» удален" % number)
                         io2.log("Удалено: %s" % self.flats[ind].title)
                         del self.flats[ind]
                         self.flatsLayout="н"
                         self.sortFlats()
                 else:
-                    #io2.log("«%s» удален" % number)
                     io2.log("Удалено: %s" % self.flats[ind].title)
                     del self.flats[ind]
                 return "deleted"
@@ -646,7 +640,34 @@ class House(object):
 
             self.flats.append(self.Flat()) # если ранее удаленной квартиры нет, создаем новую
             last = len(self.flats)-1
-            record = self.flats[last].setFlat(input, virtual)
+            record = ""
+
+            if "." in input and not "," in input:  # lone "."
+                if virtual == False:
+                    self.flats[last].title = self.flats[last].number = input[1:input.index(".")].strip()
+                record = input[input.index(".") + 1:].strip()
+            elif not "." in input and not "," in input:  # ввод одного номера или контакта
+                if virtual == False:
+                    self.flats[last].title = self.flats[last].number = input[1:].strip()  # ***
+                else:
+                    self.flats[last].title = input[1:].strip()
+            elif "," in input and not "." in input:
+                self.flats[last].number = input[1:input.index(",")]
+                self.flats[last].title = input[1:].strip()
+            elif "." in input and "," in input:  # if both present in right order, correctly return record
+                if input.index(",") < input.index("."):  # , .
+                    self.flats[last].title = input[1:input.index(".")].strip()
+                    self.flats[last].number = input[1:input.index(",")]
+                else:  # . ,
+                    if virtual == False:
+                        self.flats[last].title = self.flats[last].number = input[1:input.index(".")].strip()
+                record = input[input.index(".") + 1:].strip()
+
+            if virtual == True:
+                self.flats[last].number = "virtual"
+
+            self.flats[last].updateStatus()
+            
             createdFlat = last
             delete = False
 
@@ -678,6 +699,7 @@ class House(object):
             return self.flats[createdFlat]
             
         def addFlats(self, input):
+            """ Массовое создание квартир через дефис или пробел """
             s=f=0
             success=True
 
@@ -808,8 +830,19 @@ class House(object):
                 else:
                     return ""
 
-            def wipe(self):
+            def wipe(self, silent=True):
                 """ Полностью очищает квартиру, оставляя только номер """
+                if silent==False:
+                    if len(self.records) != 0 or self.getName() != "" or \
+                            self.note != "" or self.meeting != "" or \
+                            self.phone != "":  # проверка, что квартира не пустая
+                        if dialogs.dialogConfirm(
+                            title=icon(
+                                "cut") + " Удаление «%s»" % self.number,
+                            message="Вы удаляете квартиру в подъезде с поэтажной сортировкой. Удалить такую квартиру нельзя, но можно очистить все ее данные. Продолжать?"
+                        ) == False:
+                            return
+
                 del self.records[:]
                 self.status = self.note = self.phone = self.meeting = ""
                 self.title = self.number
@@ -933,39 +966,6 @@ class House(object):
                     self.title = self.number + ", " + choice
                 if io2.settings[0][9]==1 or forceStatusUpdate==True or (len(self.records)==0 and self.getName()==""):
                     self.updateStatus()
-
-            def setFlat(self, input="", virtual=False):
-                """ Определяет и прописывает корректные title и number, возвращает запись посещения.
-                 Используется при любом создании и правке любых контактов, адресных и отдельных!
-                 Input подается начиная с "+". """
-                result=""
-
-                if "." in input and not "," in input: # lone "."
-                    if virtual==False:
-                        self.title = self.number = input[1:input.index(".")].strip()
-                    result = input[input.index(".")+1:].strip()
-                elif not "." in input and not "," in input: # ввод одного номера или контакта
-                    if virtual==False:
-                        self.title = self.number = input[1:].strip() # ***
-                    else:
-                        self.title = input[1:].strip()
-                elif "," in input and not "." in input:
-                    self.number = input[1:input.index(",")]
-                    self.title = input[1:].strip()
-                elif "." in input and "," in input: # if both present in right order, correctly return record
-                    if input.index(",") < input.index("."): # , .
-                        self.title = input[1:input.index(".")].strip()
-                        self.number = input[1:input.index(",")]
-                    else: # . ,
-                        if virtual==False:
-                            self.title = self.number = input[1:input.index(".")].strip()
-                    result = input[input.index(".")+1:].strip()
-
-                if virtual==True:
-                    self.number = "virtual"
-
-                self.updateStatus()
-                return result
 
             def hide(self):
                 """Делает квартиру невидимой, не меняя этажность подъезда"""

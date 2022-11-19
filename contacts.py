@@ -302,7 +302,7 @@ def showContacts():
             newContact = dialogs.dialogText(
                 icon("contact") + " Новый контакт",
                 default=default,
-                message="Введите имя:"
+                message="Имя и (или) описание человека:"
             )
             if newContact == None or newContact == "":
                 continue
@@ -323,12 +323,15 @@ def showContacts():
                 f = contacts[choice][7][2]
                 if contacts[choice][8] != "virtual":  # смотрим контакт на участке
                     if set.ifInt(io2.houses[h].porches[p].flatsLayout)==True:
-                        allowDelete = False # нельзя удалить контакт, если он в доме с поэтажной сортировкой
+                        allowDelete = "contacts" # нельзя удалить квартиру в подъезде с поэтажной сортировкой, но можно очистить
                     else:
                         allowDelete = True
                     exit = territory.flatView(flat=io2.houses[h].porches[p].flats[f], house=io2.houses[h], allowDelete=allowDelete)
                     if exit == "deleted":
                         io2.houses[h].porches[p].deleteFlat(f)
+                        io2.save()
+                    elif exit == "wiped":
+                        io2.houses[h].porches[p].flats[f].wipe(silent=False)
                         io2.save()
                     elif exit == "createdRecord" and io2.settings[0][9] == 0:
                         set.flatSettings(flat=io2.houses[h].porches[p].flats[f], house=io2.houses[h], jumpToStatus=True)
@@ -336,9 +339,16 @@ def showContacts():
                 else:
                     exit = territory.flatView(flat=io2.resources[1][h].porches[0].flats[0], house=io2.resources[1][h], virtual=True)
                     if exit == "deleted":
-                        io2.log("Контакт %s удален" % io2.resources[1][h].porches[0].flats[0].getName())
-                        del io2.resources[1][h]
-                        io2.save()
+                        name = io2.resources[1][h].porches[0].flats[0].getName()
+                        answer = dialogs.dialogConfirm(
+                            title=icon(
+                                "cut") + " Удаление",
+                                message="Точно удалить контакт %s?" % name
+                        )
+                        if answer == True:
+                            io2.log("Контакт %s удален" % name)
+                            del io2.resources[1][h]
+                            io2.save()
                     elif exit == "createdRecord" and io2.settings[0][9] == 0:
                         set.flatSettings(flat=io2.resources[1][h].porches[0].flats[0], house=io2.resources[1][h], jumpToStatus=True)
                     continue

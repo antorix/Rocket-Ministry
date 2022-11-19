@@ -48,7 +48,7 @@ class Report():
             io2.log(message)
             date = time.strftime("%d.%m", time.localtime()) + "." + str(int(time.strftime("%Y", time.localtime())) - 2000)
             time2 = time.strftime("%H:%M:%S", time.localtime())
-            io2.resources[2].insert(1, "\n%s %s: %s" % (date, time2, message))
+            io2.resources[2].insert(0, "\n%s %s: %s" % (date, time2, message))
         if save==True or backup==True:
             io2.save(forced=True, silent=True) # после выключения секундомера делаем резервную копию принудительно
         elif save==True:
@@ -260,7 +260,7 @@ class Report():
                 continue
             elif choice=="neutral": # show logReport
                     message=""
-                    for i in range(1, len(io2.resources[2])):
+                    for i in range(len(io2.resources[2])):
                         message += io2.resources[2][i]
                     dialogs.dialogInfo(
                         largeText=True,
@@ -586,7 +586,7 @@ def monthName(monthCode=None, monthNum=None):
         monthNum = 1
         lastTheoMonthNum = 4
         curTheoMonthNum = 5
-    if month=="Feb":
+    elif month=="Feb":
         curMonthUp = "Февраль"
         curMonthLow = "февраль"
         lastMonthUp = "Январь"
@@ -596,7 +596,7 @@ def monthName(monthCode=None, monthNum=None):
         monthNum = 2
         lastTheoMonthNum = 5
         curTheoMonthNum = 6
-    if month=="Mar":
+    elif month=="Mar":
         curMonthUp = "Март"
         curMonthLow = "март"
         lastMonthUp = "Февраль"
@@ -606,7 +606,7 @@ def monthName(monthCode=None, monthNum=None):
         monthNum = 3
         lastTheoMonthNum = 6
         curTheoMonthNum = 7
-    if month=="Apr":
+    elif month=="Apr":
         curMonthUp = "Апрель"
         curMonthLow = "апрель"
         lastMonthUp = "Март"
@@ -616,7 +616,7 @@ def monthName(monthCode=None, monthNum=None):
         monthNum = 4
         lastTheoMonthNum = 7
         curTheoMonthNum = 8
-    if month=="May":
+    elif month=="May":
         curMonthUp = "Май"
         curMonthLow = "май"
         lastMonthUp = "Апрель"
@@ -626,7 +626,7 @@ def monthName(monthCode=None, monthNum=None):
         monthNum = 5
         lastTheoMonthNum = 8
         curTheoMonthNum = 9
-    if month=="Jun":
+    elif month=="Jun":
         curMonthUp = "Июнь"
         curMonthLow = "июнь"
         lastMonthUp = "Май"
@@ -636,7 +636,7 @@ def monthName(monthCode=None, monthNum=None):
         monthNum = 6
         lastTheoMonthNum = 9
         curTheoMonthNum = 10
-    if month=="Jul":
+    elif month=="Jul":
         curMonthUp = "Июль"
         curMonthLow = "июль"
         lastMonthUp = "Июнь"
@@ -646,7 +646,7 @@ def monthName(monthCode=None, monthNum=None):
         monthNum = 7
         lastTheoMonthNum = 10
         curTheoMonthNum = 11
-    if month=="Aug":
+    elif month=="Aug":
         curMonthUp = "Август"
         curMonthLow = "август"
         lastMonthUp = "Июль"
@@ -656,7 +656,7 @@ def monthName(monthCode=None, monthNum=None):
         monthNum = 8
         lastTheoMonthNum = 11
         curTheoMonthNum = 12
-    if month=="Sep":
+    elif month=="Sep":
         curMonthUp = "Сентябрь"
         curMonthLow = "сентябрь"
         lastMonthUp = "Август"
@@ -676,7 +676,7 @@ def monthName(monthCode=None, monthNum=None):
         monthNum = 10
         lastTheoMonthNum = 1
         curTheoMonthNum = 2
-    if month=="Nov":
+    elif month=="Nov":
         curMonthUp = "Ноябрь"
         curMonthLow = "ноябрь"
         lastMonthUp = "Октябрь"
@@ -686,7 +686,7 @@ def monthName(monthCode=None, monthNum=None):
         monthNum = 11
         lastTheoMonthNum = 2
         curTheoMonthNum = 3
-    if month=="Dec":
+    elif month=="Dec":
         curMonthUp = "Декабрь"
         curMonthLow = "декабрь"
         lastMonthUp = "Ноябрь"

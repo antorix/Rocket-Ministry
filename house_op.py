@@ -222,6 +222,6 @@ def calcDueTers():
         if days_between(
                 io2.houses[h].date,
                 time.strftime("%Y-%m-%d", time.localtime())
-        ) > 180:  # время просрочки
+        ) > 122:  # время просрочки
             housesDue += 1
     return housesDue

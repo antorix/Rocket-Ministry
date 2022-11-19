@@ -324,7 +324,6 @@ def porchView(house, selectedPorch):
                 message = porch.showFlats(),
                 form="porchText",
                 height=porch.showFlats(countFloors=True),
-                mono=True,
                 default=default,
                 neutral=icon("preferences", simplified=False) + " Детали"
             )
@@ -442,9 +441,8 @@ def flatView(flat, house=None, virtual=False, allowDelete=True):
         elif choice==None:
             break
         elif choice=="neutral" or choice=="*":
-            if set.flatSettings(flat, house, virtual, allowDelete=allowDelete)=="deleted":
-                exit = "deleted"
-                break
+            exit = set.flatSettings(flat, house, virtual, allowDelete=allowDelete)
+            break
         elif choice=="positive": # new record
             choice2 = dialogs.dialogText(
                 title = icon("mic", simplified=False) + " Новая запись посещения",
@@ -582,7 +580,7 @@ def findFlatByNumber(house, porch, number, onlyGetNumber=False):
 
         elif "Невозможно попасть" in result:
             if flat.note != "":
-                flat.note += "| 🚫"# + icon("unreachable", simplified=False)
+                flat.note += " | 🚫"# + icon("unreachable", simplified=False)
             else:
                 flat.note = " 🚫"# + icon("unreachable", simplified=False)
             io2.save()
@@ -659,7 +657,6 @@ def findFlatByNumber(house, porch, number, onlyGetNumber=False):
                 pass
             elif input == "neutral" or input == "*" or input == "справка" or input == "help":
                 dialogs.dialogInfo(
-                    largeText=True,
                     doublesize=True,
                     title="%s Умная строка" % icon("rocket"),
                     message="Введите любой текст без точки, и он превратится в заметку квартиры.\n\n" + \
