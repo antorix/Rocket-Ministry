@@ -718,7 +718,6 @@ def ifInt(char):
     try: int(char) + 1
     except: return False
     else: return True
-SysMarker = 0
 
 def setPhone(phone="", flatNumber=""):
     if flatNumber=="":
