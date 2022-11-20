@@ -179,8 +179,6 @@ def loadOutput(buffer):
             h.append(buffer[s])
         houseRetrieve(houses, housesNumber, h, silent=True)
 
-        set.SysMarker = resources[2][0]
-
     except:
         success=False
     else:
