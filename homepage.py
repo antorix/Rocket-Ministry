@@ -22,59 +22,11 @@ except:
 def homepage():
     """ Home page """
 
-    def firstRun():
-        """ Срабатывает при первом запуске программы, определяется по отсутствию settings[1]"""
-
-        if io2.Mode == "desktop": # установка шрифта
-            if name=="nt" and not path.exists(
-                    path.expandvars("%userprofile%") + "/AppData/Local/Microsoft/Windows/Fonts/LiberationMono-Regular.ttf")\
-                    and dialogs.dialogConfirm(
-                        "Установка Rocket Ministry",
-                        "Перед первым запуском рекомендуется установить шрифт Liberation Mono. Сделать это сейчас?"
-                    ) == True:
-                try:
-                    startfile("fonts_install.vbs")
-                    time.sleep(2)
-                except:
-                    try:
-                        import tkinter.messagebox
-                        tkinter.messagebox.showinfo(
-                            "Установка Rocket Ministry",
-                            "На следующем экране, пожалуйста, подтвердите установку шрифта.")
-                        startfile("LiberationMono-Regular.ttf")
-                    except:
-                        pass
-        try:
-            startfile("create_shortcuts.vbs") # установка иконок
-        except:
-            pass
-
-        message = "У вас есть месячная норма часов? Введите ее или оставьте 0, если не нужна:"
-        while 1:
-            hours = dialogs.dialogText(
-                title = icon("timer") + " Норма часов",
-                message=message,
-                default=str(io2.settings[0][3])
-            )
-            try:
-                if hours != None:
-                    if hours == "":
-                        io2.settings[0][3] = 0
-                    else:
-                        io2.settings[0][3] = int(hours)
-                else:
-                    io2.save()
-                    break
-            except:
-                message = "Не удалось изменить, попробуйте еще"
-                continue
-            else:
-                io2.save()
-                break
-
     def dailyRoutine():
-        if io2.update() == True:
-            return True
+
+        if io2.settings[0][12] == 1:
+            if io2.update() == True:
+                return True
 
         curTime = io2.getCurTime()
 
@@ -83,26 +35,6 @@ def homepage():
 
             if io2.settings[0][6] > 0:  # проверяем лишние резервные копии
                 io2.backupRestore(delete=True, silent=True)
-
-            if io2.settings[0][11] == 1:
-                print("Выясняем встречи на сегодня")
-                if len(datedFlats) == 1:
-                    dialogs.dialogInfo(
-                        title = icon("appointment") + " Встречи на сегодня",
-                        message = "Сегодня у вас запланирована встреча! Вас ждет %s." % datedFlats[0].getName(),
-                        positive="OK",
-                        negative=None
-                    )
-                    territory.flatView(datedFlats[0])
-                elif len(datedFlats) > 1:
-                    dialogs.dialogInfo(
-                        title = icon("appointment") + " Встречи на сегодня",
-                        message = "Сегодня у вас запланированы %d встречи!" % len(datedFlats),
-                        positive="OK",
-                        negative=None
-                    )
-                    io2.settings[0][4] = "в"
-                    contacts.showContacts()
 
             print("Определяем начало нового месяца")
             savedMonth = io2.settings[3]
@@ -161,9 +93,6 @@ def homepage():
         else:
             dialogs.MainGUI = desktop.Desktop()
 
-    if io2.settings[1]=="":
-        firstRun()
-
     if weeklyRoutine() == True:
         return
 
@@ -173,6 +102,8 @@ def homepage():
         io2.Simplified=0
         io2.settings[0][1]=1
 
+    dailyRoutine()
+
     while 1:
         io2.settings[0][12]=1
 
@@ -180,8 +111,6 @@ def homepage():
         totalContacts, datedFlats = contacts.getContactsAmount(date=1)
         if len(datedFlats)>0:
             appointment = icon("appointment")
-
-        dailyRoutine()
 
         if reports.updateTimer(io2.settings[2][6]) >= 0: # проверка, включен ли таймер
             time2 = reports.updateTimer(io2.settings[2][6])
@@ -432,7 +361,7 @@ def preferences(getOptions=False):
         if io2.Mode != "desktop":
             options.append(status(io2.settings[0][20]) + "Режим справочной")
         options.append(status(io2.settings[0][2])  + "Кредит часов")
-        options.append(status(io2.settings[0][11]) + "Уведомления о встречах на сегодня")
+        #options.append(status(io2.settings[0][11]) + "Уведомления о встречах на сегодня")
         options.append(status(io2.settings[0][8])  + "Напоминать о сдаче отчета")
         options.append(status(io2.settings[0][15]) + "Переносить минуты отчета на следующий месяц")
         if io2.Mode == "sl4a":
@@ -444,7 +373,7 @@ def preferences(getOptions=False):
             options.append(                   "%s Файл импорта базы данных: %s" % (icon("box", simplified=False), importURL))
         if io2.Mode == "sl4a":
             options.append(status(io2.settings[0][16]) + "Режим смайликов")
-        #options.append(status(io2.settings[0][12]) + "Проверять обновления")
+        options.append(status(io2.settings[0][12]) + "Проверять обновления")
         #if io2.Mode != "text":
         #    options.append(status(io2.settings[0][1])  + "Консольный режим")
         if io2.Simplified == 0:
@@ -1071,7 +1000,7 @@ def about():
         elif choice=="neutral":
             helpPage = "https://github.com/antorix/Rocket-Ministry/wiki#часто-задаваемые-вопросы"
             if io2.Mode=="sl4a":
-                time.wait(0.5)
+                time.sleep(0.5)
                 from androidhelper import Android
                 Android().view(helpPage)
                 io2.consoleReturn()

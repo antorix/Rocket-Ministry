@@ -71,7 +71,6 @@ import os
 import datetime
 import json
 import time
-import set
 import urllib.request
 from copy import deepcopy
 import house_op
@@ -385,7 +384,7 @@ def share(silent=False, clipboard=False):
 
         if success == True:
             dialogs.dialogAlert(title="Перенос данных",
-                            message="Данные загружены в буфер обмена. Теперь перейдите в Rocket Ministry 2.0 и нажмите на кнопку «Импорт данных».")
+                            message="Данные загружены в буфер обмена. Теперь перейдите в Rocket Ministry 2.0 и нажмите на кнопку «Перенос данных».")
         return success
 
     if silent==False: # путь неизвестен, указываем
@@ -471,7 +470,14 @@ def update(forced=False):
     """ Проверяем новую версию и при наличии обновляем программу с GitHub """
 
     if Mode == "sl4a":
-        return # мобильная версия больше не проверяет обновления
+        answer = dialogs.dialogConfirm(
+            title = icon("update") + " Обновление",
+            message="Вышло совершенно новое, полноценное Android-приложение Rocket Ministry 2.0. Необходимо загрузить новый загрузочный apk-файл. Ваши данные можно будет перенести в новую программу. После ее установки QPython RM можно будет удалить. Скачиваем?")
+        if answer == True:
+            time.sleep(1)
+            from androidhelper import Android
+            Android().view("https://github.com/antorix/Rocket-Ministry/releases/download/v2/rocketministry.apk")
+        return # мобильная версия больше не проверяет обновления, но просто выводит сообщение о версии 2.0
     else:
         print("Проверяем обновления")
 
@@ -490,7 +496,7 @@ def update(forced=False):
         settings[1] = today
         save()
 
-    filesToDelete = [  # удаляем файлы Easy_GUI от предыдущей версии
+    filesToDelete = [  # удаляем файлы от предыдущей версии
         "global_state.py",
         "choice_box.py",
         "button_box.py",
@@ -498,7 +504,6 @@ def update(forced=False):
         "fileopen_box.py",
         "fillable_box.py",
         "text_box.py",
-        "utils.py",
         "easygui_mod.py"
     ]
     for file in filesToDelete:
@@ -556,13 +561,11 @@ def update(forced=False):
                 elif os.name=="nt": # проверка и загрузка модулей для Windows, пользуясь ситуацией
                     try:
                         import kivy
-                        import win10toast
                     except:
                         dialogs.dialogAlert(title, "Проверка и загрузка недостающих компонентов Windows...")
                         from subprocess import check_call
                         from sys import executable
                         check_call([executable, '-m', 'pip', 'install', 'kivy'])
-                        check_call([executable, '-m', 'pip', 'install', 'win10toast'])
                     dialogs.dialogAlert(title, "Обновление завершено, необходим перезапуск программы.")
                     return True # возвращаем успешный результат обновления (для перезапуска)
     else:
