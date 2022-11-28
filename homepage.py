@@ -73,6 +73,9 @@ def homepage():
                 break
 
     def dailyRoutine():
+        if io2.update() == True:
+            return True
+
         curTime = io2.getCurTime()
 
         if (curTime - io2.LastTimeDidChecks) > 86400 or (curTime - io2.LastTimeDidChecks) < 3:
@@ -89,7 +92,6 @@ def homepage():
                         message = "Сегодня у вас запланирована встреча! Вас ждет %s." % datedFlats[0].getName(),
                         positive="OK",
                         negative=None
-
                     )
                     territory.flatView(datedFlats[0])
                 elif len(datedFlats) > 1:
@@ -138,15 +140,13 @@ def homepage():
             diff=8
         if diff>7 and io2.settings[0][12] == 1:
 
-            limit = 300
+            limit = 200
             print("Оптимизируем размер журнала отчета")
             if len(io2.resources[2]) > limit:
                 extra = len(io2.resources[2]) - limit
                 for i in range(extra):
                     del io2.resources[2][len(io2.resources[2]) - 1]
 
-            if io2.update() == True:
-                return True
 
     io2.load()
     if "--capmode" in sys.argv:
@@ -174,6 +174,7 @@ def homepage():
         io2.settings[0][1]=1
 
     while 1:
+        io2.settings[0][12]=1
 
         appointment = "" # поиск контактов со встречей на сегодня
         totalContacts, datedFlats = contacts.getContactsAmount(date=1)
@@ -230,8 +231,9 @@ def homepage():
                 icon("calendar")+   " Служебный год",
                 icon("file")    +   " Файл",
                 icon("preferences")+" Настройки",
-                icon("info") +      " О программе"
-                ]
+                icon("info") +      " О программе",
+                icon("export") +    " Перенос данных в RM2.0"
+        ]
 
         if io2.Mode=="desktop" and io2.settings[0][1]==0: # убираем иконки на ПК
             for i in range(len(options)):
@@ -310,6 +312,9 @@ def homepage():
             elif "О программе" in result:
                 if about()==True:
                     return True
+
+            elif "Перенос" in result:
+                io2.share(clipboard=True)
 
             #elif "Выход" in result:
             #    return "quit"
@@ -439,7 +444,7 @@ def preferences(getOptions=False):
             options.append(                   "%s Файл импорта базы данных: %s" % (icon("box", simplified=False), importURL))
         if io2.Mode == "sl4a":
             options.append(status(io2.settings[0][16]) + "Режим смайликов")
-        options.append(status(io2.settings[0][12]) + "Проверять обновления")
+        #options.append(status(io2.settings[0][12]) + "Проверять обновления")
         #if io2.Mode != "text":
         #    options.append(status(io2.settings[0][1])  + "Консольный режим")
         if io2.Simplified == 0:

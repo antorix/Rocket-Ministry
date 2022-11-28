@@ -597,7 +597,6 @@ def flatSettings(flat, house=None, virtual=False, allowDelete=True, jumpToStatus
             try:
                 from tkinter import Tk
                 r = Tk()
-
                 r.clipboard_clear()
                 r.clipboard_append(flat.phone.strip())
                 r.withdraw()

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 Simplified=1 # !!!
-Version = "1.0.7"
+Version = "1.0.8"
 
 try: # определяем ОС
     print("Загружаем SL4A")
@@ -250,7 +250,7 @@ def load(dataFile="data.jsn", download=False, forced=False, delete=False):
     # буфер получен, читаем из него
     if len(buffer)==0:
         print("База данных не найдена, создаю новую.")
-    elif buffer[0] == "Rocket Ministry application data file. Format: JSON. Do NOT edit manually!":
+    elif "Rocket Ministry application data file." in buffer[0]:
         del buffer[0]
         clearDB()
         if loadOutput(buffer)==False: # ошибочный импорт, восстанавливаем временную базу
@@ -310,7 +310,7 @@ def houseRetrieve(containers, housesNumber, h, silent=False):
 
 def getOutput():
     """ Возвращает строку со всеми данными программы, которые затем либо сохраняются локально, либо экспортируются"""
-    output = ["Rocket Ministry application data file. Format: JSON. Do NOT edit manually!"] + [settings] + \
+    output = ["Rocket Ministry application data file. Do NOT edit manually!"] + [settings] + \
             [[resources[0], [resources[1][i].export() for i in range(len(resources[1]))], resources[2]]]
     for i in range(len(houses)):
         output.append(houses[i].export())
@@ -357,12 +357,36 @@ def save(forced=False, silent=True, forcedBackup=False):
         if silent == False:
             log("База успешно сохранена")
 
-def share(silent=False):
+def share(silent=False, clipboard=False):
     """ Sharing database """
 
     output = getOutput()
 
     buffer = json.dumps(output)
+
+    if clipboard == True: # экспорт данных в буфер обмена
+        success = True
+        s = str(buffer)
+        if Mode == "sl4a":
+            try:
+                phone.setClipboard(s)
+            except:
+                success = False
+        else:
+            try:
+                from tkinter import Tk
+                r = Tk()
+                r.clipboard_clear()
+                r.clipboard_append(s)
+                r.withdraw()
+                r.destroy()
+            except:
+                success = False
+
+        if success == True:
+            dialogs.dialogAlert(title="Перенос данных",
+                            message="Данные загружены в буфер обмена. Теперь перейдите в Rocket Ministry 2.0 и нажмите на кнопку «Импорт данных».")
+        return success
 
     if silent==False: # путь неизвестен, указываем
         if Mode == "sl4a": # Sharing to cloud if on Android
@@ -446,7 +470,10 @@ def backupRestore(restore=False, delete=False, silent=False):
 def update(forced=False):
     """ Проверяем новую версию и при наличии обновляем программу с GitHub """
 
-    print("Проверяем обновления")
+    if Mode == "sl4a":
+        return # мобильная версия больше не проверяет обновления
+    else:
+        print("Проверяем обновления")
 
     title = icon("update") + " Обновление"
 
@@ -484,7 +511,7 @@ def update(forced=False):
         if choice==True:
             print("Скачиваем…")
             try:
-                if Mode=="sl4a":
+                if 0:#Mode=="sl4a":
                     urls = ["https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/console.py",
                             "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/contacts.py",
                             "https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/dialogs.py",
@@ -519,21 +546,22 @@ def update(forced=False):
                             shutil.move(source, destination)
                     os.remove(file)
                     shutil.rmtree(downloadedFolder)
-
             except:
                 dialogs.dialogAlert(title, "Не удалось загрузить обновление. Попробуйте еще раз или, если не помогло, напишите в техподдержку (раздел «О программе»)")
             else:
-                if Mode == "sl4a":
+                if 0:#Mode == "sl4a":
                     Android().dialogDismiss()
                     print("Обновление завершено, необходим перезапуск программы.\nНажмите Enter, чтобы закрыть консоль.")
 
                 elif os.name=="nt": # проверка и загрузка модулей для Windows, пользуясь ситуацией
                     try:
+                        import kivy
                         import win10toast
                     except:
                         dialogs.dialogAlert(title, "Проверка и загрузка недостающих компонентов Windows...")
                         from subprocess import check_call
                         from sys import executable
+                        check_call([executable, '-m', 'pip', 'install', 'kivy'])
                         check_call([executable, '-m', 'pip', 'install', 'win10toast'])
                     dialogs.dialogAlert(title, "Обновление завершено, необходим перезапуск программы.")
                     return True # возвращаем успешный результат обновления (для перезапуска)
@@ -541,7 +569,6 @@ def update(forced=False):
         print("Обновлений нет")
         if forced==True:
             dialogs.dialogAlert(title, "Проверка показала, что у вас самая последняя версия Rocket Ministry!")
-
 
 def consoleReturn(pause=False):
     os.system("clear")

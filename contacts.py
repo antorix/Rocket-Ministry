@@ -172,12 +172,10 @@ def showContacts():
             contacts.sort(key=lambda x: x[0])  # by name
         elif io2.settings[0][4]=="с":
             contacts.sort(key=lambda x: x[16]) # by status
-        elif io2.settings[0][4]=="п":
-            contacts.sort(key=lambda x: x[4])  # by last record date
         elif io2.settings[0][4]=="а":
             contacts.sort(key=lambda x: x[2])  # by address
         elif io2.settings[0][4]=="т":
-            contacts.sort(key=lambda x: x[9])  # by phone number
+            contacts.sort(key=lambda x: x[9], reverse=True)  # by phone number
 
         #if io2.Mode=="sl4a":
         #    gap = " "
@@ -260,7 +258,6 @@ def showContacts():
                 "По имени",
                 "По статусу",
                 "По адресу",
-                "По дате последнего посещения",
                 "По номеру телефона"
             ]
             if io2.settings[0][4] == "и":

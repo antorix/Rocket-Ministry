@@ -91,7 +91,7 @@ class House(object):
 
         return list
         
-    def addPorch(self, input="", type="condo"):
+    def addPorch(self, input="", type="подъезд"):
         self.porches.append(self.Porch())
         self.porches[len(self.porches)-1].title = input.strip()
         self.porches[len(self.porches)-1].type = type

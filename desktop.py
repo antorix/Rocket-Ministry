@@ -506,6 +506,9 @@ class Desktop(ttk.Frame):
         self.filemenu.add_command(label="Восстановление", compound="left", image=self.img[28],
                              command=lambda s=self: fileRestore(s))
         self.filemenu.add_command(label="Очистка", compound="left", image=self.img[29], command=lambda s=self: fileWipe(s))
+        self.filemenu.add_separator()
+        self.filemenu.add_command(label="Экспорт данных в RM2.0", compound="left", image=self.img[26],
+                                  command=lambda: io2.share(clipboard=True))
 
         if io2.Simplified == 0:
             self.filemenu.add_separator()

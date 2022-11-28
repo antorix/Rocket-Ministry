@@ -703,17 +703,21 @@ def timeHHMMToFloat(mytime):
     if mytime==None:
         return None
 
-    if mytime[0]=="-":
-        mytime = mytime[1:]
-
     if ":" not in mytime:
-        result = abs(int(mytime.strip()))
+        result1 = abs(int(mytime.strip()))
+        result2 = 0
     else:
-        lis = [mytime]
-        start_dt = datetime.datetime.strptime("00:00", '%H:%M')
-        result = [float('{:0.2f}'.format((datetime.datetime.strptime(mytime, '%H:%M') - start_dt).seconds / 3600)) for mytime in lis][0]
 
-    return result
+        hours = mytime[: mytime.index(":")]
+        minutes = mytime[mytime.index(":") + 1:]
+
+        result1 = abs(int(hours))
+
+        lis = ["00:%s" % minutes]
+        start_dt = datetime.datetime.strptime("00:00", '%H:%M')
+        result2 = [float('{:0.2f}'.format((datetime.datetime.strptime(mytime, '%H:%M') - start_dt).seconds / 3600)) for mytime in lis][0]
+
+    return result1 + result2
 
 def timeFloatToHHMM(hours):
     delta = str(datetime.timedelta(hours=hours)).strip()
@@ -753,7 +757,7 @@ def timeFloatToHHMM(hours):
             and set.ifInt(delta[1])==False:     # "2 days, 12:00:00"
         days = int(delta[0]) * 24
         hours = days + int(delta[8:10])
-        minutes = int(delta[12:13])
+        minutes = int(delta[11:13])
         result = str("%d:%02d" % (hours, minutes))
         
     elif "days" in delta and len(delta) == 16 \
