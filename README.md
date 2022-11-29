@@ -1,6 +1,6 @@
 Скорость. Простота. Функциональность. Открытый исходный код. Кросс-платформенность. 
 
-![](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhvgh-91HxTfDBmc1H2_LEkNExTBqzz-KK7PP7IunNSK5--j7JiTyHTVX7Il_n9vJh_jY4ub40BLVAfY-W0OBIXPtWwwB0MEQTpuQcrIFiqNVKWdjo0_GTe97QFQ4P7cDCrIFar8K7_A-cSUM3tB4idJrMJrfRwPbnB5u8qamOyR9W61TSxDcxFnxDV/s767/android+windows-collage.png)
+![](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgxu5JpvCvVrU6s3B7Z8cRHfwI7ktVCWpthk4UoKphPrg2DJfTIJUdvhkCLyz6QIcQr-kAKKQBwpwtYKvrMtJeCsBnqlpBrPM_MqJdGKuLvCf2zxr6hNBedm9UbmbJg0sXWk_W-ajjvMZtyQHy5r7gPiBCt-s_G_DhTWJ13voBLuuh3TyfF3jeilST_mw/s1600/3screens.jpg)
 
 * [Что умеет Rocket Ministry](https://github.com/antorix/Rocket-Ministry/wiki#возможности-программы)
 
