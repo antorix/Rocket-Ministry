@@ -472,11 +472,11 @@ def update(forced=False):
     if Mode == "sl4a":
         answer = dialogs.dialogConfirm(
             title = icon("update") + " Обновление",
-            message="Вышло совершенно новое, полноценное Android-приложение Rocket Ministry 2.0. Необходимо загрузить новый загрузочный apk-файл. Ваши данные можно будет перенести в новую программу. После ее установки QPython RM можно будет удалить. Скачиваем?")
+            message="На Play Маркете вышло совершенно новое, полноценное Android-приложение Rocket Ministry 2.0. Развитие версии QPython RM на этом прекращено. Ваши данные можно будет перенести в новую программу, после чего QPython RM можно будет удалить. Перейти на Play Маркет для загрузки?")
         if answer == True:
             time.sleep(1)
             from androidhelper import Android
-            Android().view("https://github.com/antorix/Rocket-Ministry/releases/download/v2/rocketministry.apk")
+            Android().view("https://play.google.com/store/apps/details?id=org.rocketministry")
         return # мобильная версия больше не проверяет обновления, но просто выводит сообщение о версии 2.0
     else:
         print("Проверяем обновления")
