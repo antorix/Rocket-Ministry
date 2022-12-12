@@ -4,6 +4,8 @@
 
 * [Страница приложения на Play Маркете](https://play.google.com/store/apps/details?id=org.rocketministry)
 
+* [Возможности приложения](https://github.com/antorix/Rocket-Ministry/wiki#возможности-приложения)
+
 * [Установка на Windows](https://github.com/antorix/Rocket-Ministry/wiki#windows)
  
 * [Установка на Linux](https://github.com/antorix/Rocket-Ministry/wiki#linux)
