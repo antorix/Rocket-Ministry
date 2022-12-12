@@ -327,7 +327,7 @@ class RM(App):
             print("Произошла ошибка при запуске программы.")
             self.stop()
         else:
-            #utils.save(backup=True)
+            utils.save(backup=True)
             return self.globalAnchor
 
     # Подготовка переменных
