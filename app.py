@@ -3022,7 +3022,7 @@ class RM(App):
             clipboard = Clipboard.paste()
         else:
             try:
-                clipboard = docx2txt.process(wordFile)
+                clipboard = docx2txt.process(wordFile) # имитация буфера обмена, но с Word-файлом
             except:
                 self.popup("Не удалось загрузить Word-файл. Скорее всего, файл ошибочного формата или не содержит нужных данных.")
                 return

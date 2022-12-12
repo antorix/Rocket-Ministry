@@ -47,7 +47,7 @@ else:
     except:
         from subprocess import check_call
         from sys import executable
-        check_call([executable, '-m', 'pip', 'install', 'docx'])
+        check_call([executable, '-m', 'pip', 'install', 'python-docx'])
         from docx import Document
 
 BackupFolderLocation = UserPath + "backup/"
@@ -153,7 +153,7 @@ def loadOutput(buffer):
 
     return success
 
-def load(datafile=None, forced=False, wordFile=None, clipboard=None):
+def load(datafile=None, forced=False, clipboard=None):
     """ Loading houses and settings from JSON file """
 
     global DataFile, UserPath, houses, settings, resources
@@ -189,27 +189,9 @@ def load(datafile=None, forced=False, wordFile=None, clipboard=None):
 
     elif forced==True: # импорт по запросу с конкретным файлом (txt или Word)
         try:
-            if wordFile == None:
-                with open(datafile, "r") as file:
-                    buffer = json.load(file)
-                    print("Буфер получен из импортированного файла.")
-            else:
-                print("received Word file: ", wordFile)
-                import textract
-                clipboard = textract.process(wordFile)
-                clipboard = str(clipboard).strip()
-                clipboard = clipboard[clipboard.index("[\"Rocket Ministry"):]
-                with open("temp", "w") as file:
-                    file.write(clipboard)
-                with open("temp", "r") as file:
-                    buffer = json.load(file)
-                    print("Буфер получен из импортированного файла.")
-
-                #with open(wordFile, 'rb') as f:
-                #    source_stream = StringIO(f.read())
-                #document = Document(source_stream)
-                #source_stream.close()
-
+            with open(datafile, "r") as file:
+                buffer = json.load(file)
+                print("Буфер получен из импортированного файла.")
         except:
             app.MyApp.popup("Не удалось загрузить указанный файл данных. Скорее всего, он поврежден или не соответствует формату.")
             return False
@@ -514,13 +496,11 @@ def update():
         except:
             print("Не удалось загрузить обновление.")
         else:
-            try:
-                import kivy
-            except:
-                from subprocess import check_call
-                from sys import executable
-                check_call([executable, '-m', 'pip', 'install', 'kivy'])
-                check_call([executable, '-m', 'pip', 'install', 'python-docx'])
+            from subprocess import check_call
+            from sys import executable
+            check_call([executable, '-m', 'pip', 'install', 'kivy'])
+            check_call([executable, '-m', 'pip', 'install', 'python-docx'])
+            check_call([executable, '-m', 'pip', 'install', 'docx2txt'])
 
     else:
         print("Обновлений нет.")
