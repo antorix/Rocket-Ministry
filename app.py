@@ -217,7 +217,9 @@ class Counter(AnchorLayout):
         self.add_widget(box)
 
     def get(self):
-        if utils.ifInt(self.input.text) == True:
+        if not ":" in self.input.text and utils.ifInt(self.input.text) == True:
+            return self.input.text
+        elif ":" in self.input.text:
             return self.input.text
         else:
             return "0"
@@ -327,7 +329,7 @@ class RM(App):
             print("Произошла ошибка при запуске программы.")
             self.stop()
         else:
-            #utils.save(backup=True)
+            utils.save(backup=True)
             return self.globalAnchor
 
     # Подготовка переменных
@@ -1288,7 +1290,7 @@ class RM(App):
             else:
                 self.createInputBox(
                     title="Новые дома",
-                    message="Введите номер дома (или другого объекта). Допустимы как цифры, так и буквы:",
+                    message="Введите номер дома (или другого объекта):",
                     checkbox="Массовое добавление",
                     active=False,
                     hint="1 / 1а / красный дом"
@@ -1300,8 +1302,8 @@ class RM(App):
         elif self.displayed.form == "houseView":
             self.displayed.form = "createNewPorch"
             if self.house.type == "condo":
-                message = "Введите заголовок подъезда (обычно просто номер):"
-                hint = "1"
+                message = "Введите заголовок подъезда:"
+                hint = "Номер или описание"
             else:
                 message = "Для удобства участок можно разделить на части, или сегменты. Введите название нового сегмента:"
                 hint = "1 / южная часть / администрация"
@@ -2278,8 +2280,8 @@ class RM(App):
             hint_y = 1
         grid = GridLayout(rows=5, cols=1, size_hint=(1, hint_y), spacing=self.spacing*2, padding=self.padding*2)
         self.inputBoxText = Label(text=message, color=self.standardTextColor, valign="center",
-                                  halign="center", text_size = (Window.size[0]*.9, None),
-                                  size_hint=(1, 1))
+                                  halign="center", text_size = (Window.size[0]*.9, self.standardTextHeight*2),
+                                  size_hint=(1, hint_y))
         grid.add_widget(self.inputBoxText)
         if input == True:
             if multiline==True:
@@ -2308,7 +2310,7 @@ class RM(App):
 
                 elif self.displayed.form == "createNewFlat":
                     if value == 1:
-                        self.inputBoxText.text = "Введите первый и последний номера добавляемого диапазона. Допустимы только цифры:"
+                        self.inputBoxText.text = "Введите первый и последний номера добавляемого диапазона:"
                         textbox.remove_widget(self.inputBoxEntry)
                         height = self.standardTextHeight
                         self.inputBoxEntry = TextInput(hint_text = "От", multiline=multiline, height=height,
@@ -2335,7 +2337,8 @@ class RM(App):
 
         else: # если галочки нет, добавляем пустой виджет
             b.add_widget(Widget(size_hint=(1, 1), height=height))
-            grid.size_hint = (1, .5)
+            if multiline == False:
+                grid.size_hint = (1, .5)
 
         if "recordView" in self.displayed.form or "note" in self.displayed.form: # добавление корзины
             grid.add_widget(self.bin())
@@ -2639,7 +2642,7 @@ class RM(App):
         utils.save()
 
     def onKeyboardFocus(self, instance, value, k=.5):
-        if 0:#self.platform == "desktop":
+        if self.platform == "desktop":
             return
         elif value:
             self.interface.size_hint_y = k
@@ -3022,7 +3025,7 @@ class RM(App):
             clipboard = Clipboard.paste()
         else:
             try:
-                clipboard = docx2txt.process(wordFile)
+                clipboard = docx2txt.process(wordFile) # имитация буфера обмена, но с Word-файлом
             except:
                 self.popup("Не удалось загрузить Word-файл. Скорее всего, файл ошибочного формата или не содержит нужных данных.")
                 return
