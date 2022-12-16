@@ -6,7 +6,7 @@ def initializeDB():
     import time
     return [],\
         [
-        [1, 0, 0, 0, "с", 0, 10, 1, 1, 0, 1, 1, 1, 1, "", 1, 0, "", 1, "д", 0, 0, 1], # program settings: settings[0][0…], see set.preferences()
+        [1, 0, 0, 0, "с", 0, 10, 0, 2, 0, 1, 1, 1, 1, "", 1, 0, "", 1, "д", 0, 0, 1], # program settings: settings[0][0…], see set.preferences()
         "",# дата последнего обновления settings[1]
         # report:                       settings[2]
         [0.0,       # [0] hours         settings[2][0…]
@@ -33,7 +33,8 @@ def initializeDB():
     ]
 
 houses, settings, resources = initializeDB()
-Version = "2.0.2" # …7
+Version = "2.0.3" # …10
+Devmode = 1# DEVMODE!
 
 DBCreatedTime = ""
 from kivy import platform
@@ -70,14 +71,18 @@ LastTimeBackedUp = int(time.strftime("%H", time.localtime())) * 3600 \
                 + int(time.strftime("%M", time.localtime())) * 60 \
                 + int(time.strftime("%S", time.localtime()))
 
-def log(message, title="Внимание"):
+def log(message, title="Внимание", timeout=3, forceNotify=False):
     """ Displaying and logging to file important system messages """
     try:
-        if app.MyApp.platform == "mobile":
+        if app.MyApp.platform == "mobile" and forceNotify == False:
             plyer.notification.notify(toast=True, message=message)
         else:
-            plyer.notification.notify(app_name="Rocket Ministry", title="Rocket Ministry", app_icon="icon.ico",
-                                  ticker="Rocket Ministry", message=message, timeout=3)
+            if app.MyApp.platform == "mobile":
+                icon = ""#"icon.png"
+            else:
+                icon = "icon.ico"
+            plyer.notification.notify(app_name="Rocket Ministry", title="Rocket Ministry", app_icon=icon,
+                                  ticker="Rocket Ministry", message=message, timeout=timeout)
     except:
         print(message)
 
@@ -153,7 +158,7 @@ def loadOutput(buffer):
 
     return success
 
-def load(datafile=None, forced=False, clipboard=None):
+def load(datafile=None, saveOK=True, forced=False, clipboard=None):
     """ Loading houses and settings from JSON file """
 
     global DataFile, UserPath, houses, settings, resources
@@ -173,7 +178,7 @@ def load(datafile=None, forced=False, clipboard=None):
             clipboard = str(clipboard).strip()
             clipboard = clipboard[ clipboard.index("[\"Rocket Ministry") : ]
         except:
-            print("В буфере обмена нет данных требуемого формата.")
+            app.MyApp.popup("В буфере обмена нет данных для импорта. Нажмите «Помощь», чтобы узнать о том, как переносить данные Rocket Ministry.")
             return False
 
         with open("temp", "w") as file:
@@ -193,19 +198,42 @@ def load(datafile=None, forced=False, clipboard=None):
                 buffer = json.load(file)
                 print("Буфер получен из импортированного файла.")
         except:
-            app.MyApp.popup("Не удалось загрузить указанный файл данных. Скорее всего, он поврежден или не соответствует формату.")
+            app.MyApp.popup("Не удалось загрузить файл данных. Скорее всего, он поврежден или не соответствует формату.")
             return False
 
     else: # обычная загрузка
-        try:
-            with open(UserPath + datafile, "r") as file:
-                buffer = json.load(file)
-        except:
-            if forced==True:
-                app.MyApp.popup(title="Загрузка базы данных",
-                                message="Файл базы данных %s не найден в указанном месте либо поврежден!" % datafile)
+        if os.path.exists(UserPath + datafile):
+            size = os.path.getsize(UserPath + datafile) # файл меньше 320 байт не загружаем
+            if size < 320:
+                message = "Файл данных найден, но пустой. Пытаюсь восстановить резервную копию."
+                print(message)
+                if forced == True:
+                    app.MyApp.popup(title="Загрузка базы данных", message=message)
+                if backupRestore(restoreWorking=True, saveOK=saveOK) == True:
+                    print("База успешно загружена.")
+                    if saveOK==True:
+                        save(backup=True)  # успешный результат с загрузкой копии
+                        print("База сохранена с резервированием.")
+                    return True
+                else:
+                    print("Не удалось восстановить непустую резервную копию (ее нет?).")
+            else:
+                with open(UserPath + datafile, "r") as file:
+                    buffer = json.load(file)
+                print("Буфер получен из файла data.jsn в стандартном местоположении.")
         else:
-            print("Буфер получен из файла data.jsn в стандартном местоположении.")
+            message = f"Файл базы данных {datafile} не найден, пытаюсь восстановить резервную копию."
+            print(message)
+            if forced==True:
+                app.MyApp.popup(title="Загрузка базы данных", message=message)
+            if backupRestore(restoreWorking=True, saveOK=saveOK) == True:
+                print("База успешно загружена.")
+                if saveOK == True:
+                    save(backup=True)  # успешный результат с загрузкой копии
+                    print("База сохранена с резервированием.")
+                return True
+            else:
+                print("Не удалось восстановить непустую резервную копию (ее нет?).")
 
     # Буфер получен, читаем из него
 
@@ -218,15 +246,18 @@ def load(datafile=None, forced=False, clipboard=None):
         result = loadOutput(buffer)
         if result == False:
             print("Ошибочный импорт, восстанавливаем резервную копию.")
-            backupRestore(restoreWorking=True)
+            backupRestore(restoreWorking=True, saveOK=saveOK)
+        else:
+            if saveOK == True:
+                save(backup=True)  # успешный результат
+                print("База сохранена с резервированием.")
+            return True
 
     else:
         print("База получена, но контрольная строка не совпадает.")
         if clipboard == None and forced == False:
             print("Восстанавливаю резервную копию.")
             backupRestore(restoreWorking=True)
-
-    return True # значит success
 
 def houseRetrieve(containers, housesNumber, h, silent=False):
     """ Retrieves houses from JSON buffer into objects """
@@ -283,7 +314,8 @@ def save(backup=False, silent=True):
     # Сначала резервируем раз в 5 минут
 
     curTime = getCurTime()
-    if backup==True or (settings[0][6] > 0 and (curTime - LastTimeBackedUp) > 300):
+
+    if backup != False and (backup==True or (settings[0][6] > 0 and (curTime - LastTimeBackedUp) > 300)):
         if os.path.exists(UserPath + DataFile):
             if not os.path.exists(BackupFolderLocation):
                 try:
@@ -358,16 +390,16 @@ def share(silent=False, clipboard=False, email=False, folder=None, doc=False):
         except:
             pass#app.MyApp.popup("Не удалось экспортировать файл данных!")
         else:
-            app.MyApp.popup("Данные успешно экспортированы в файл «%s». Нажмите «Помощь», чтобы узнать, как перенести данные на другое устройство." % filename)
+            app.MyApp.popup("Данные успешно экспортированы в файл «%s»." % filename)
 
-    elif folder != None: # экспорт в файл
+    elif app.MyApp.devmode == 0 and folder != None: # экспорт в файл
         try:
             with open(folder + "/data.jsn", "w") as file:
                 json.dump(output, file)
         except:
             app.MyApp.popup("Не удалось сохранить!")
         else:
-            app.MyApp.popup("Данные успешно сохранены в файл %s. Нажмите «Помощь», чтобы узнать, как перенести данные на другое устройство." % folder + "/data.jsn")
+            app.MyApp.popup("Данные успешно сохранены в файл %s." % folder + "/data.jsn")
 
     else:
         try:
@@ -391,7 +423,7 @@ def share(silent=False, clipboard=False, email=False, folder=None, doc=False):
             if silent==False:
                 app.MyApp.popup("Успешно выполнен экспорт базы данных в папку %s." % path)
 
-def backupRestore(silent=False, delete=False, restoreNumber=None, restoreWorking=False):
+def backupRestore(silent=True, saveOK=True, delete=False, restoreNumber=None, restoreWorking=False):
     """ Восстановление файла из резервной копии """
 
     if os.path.exists(BackupFolderLocation)==False:
@@ -409,7 +441,7 @@ def backupRestore(silent=False, delete=False, restoreNumber=None, restoreWorking
         files.sort(reverse=True)
         fileDates.sort(reverse=True)
         try:
-            load(forced=True, datafile=BackupFolderLocation + files[restoreNumber])
+            load(forced=True, saveOK=saveOK, datafile=BackupFolderLocation + files[restoreNumber])
         except:
             return False
         else:
@@ -422,8 +454,9 @@ def backupRestore(silent=False, delete=False, restoreNumber=None, restoreWorking
             size = os.path.getsize(BackupFolderLocation + files[i])
             if size > 320:
                 try:
-                    load(forced=True, datafile=BackupFolderLocation + files[i])
+                    load(forced=True, saveOK=saveOK, datafile=BackupFolderLocation + files[i])
                 except:
+                    print("Непустая резервная копия не найдена.")
                     return False
                 else:
                     print("Успешно загружена последняя непустая резервная копия.")
@@ -509,9 +542,6 @@ def getCurTime():
     return int(time.strftime("%H", time.localtime())) * 3600 \
               + int(time.strftime("%M", time.localtime())) * 60 \
               + int(time.strftime("%S", time.localtime()))
-
-def navigate(address):
-    webbrowser.open("https://yandex.ru/maps/?text=%s" % address)
 
 def ifInt(char):
     """ Checks if value is integer """
@@ -759,7 +789,7 @@ def monthName(monthCode=None, monthNum=None):
         monthNum = 11
         lastTheoMonthNum = 2
         curTheoMonthNum = 3
-    elif month == "Dec":
+    else:
         curMonthUp = "Декабрь"
         curMonthLow = "декабрь"
         lastMonthUp = "Ноябрь"
@@ -771,7 +801,6 @@ def monthName(monthCode=None, monthNum=None):
         curTheoMonthNum = 4
 
     return curMonthUp, curMonthLow, lastMonthUp, lastMonthLow, lastMonthEn, curMonthRuShort, monthNum, lastTheoMonthNum, curTheoMonthNum
-
 
 def timeHHMMToFloat(mytime):
     if mytime == None:

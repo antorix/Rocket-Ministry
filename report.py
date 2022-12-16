@@ -23,7 +23,7 @@ class Report(object):
         self.reminder = utils.settings[2][11]
         self.lastMonth = utils.settings[2][12]
 
-    def saveReport(self, message="", mute=False, save=True):
+    def saveReport(self, message="", mute=False, save=True, forceNotify=False):
         """ Выгрузка данных из класса в настройки, сохранение и оповещение """
         utils.settings[2] = [
             self.hours,
@@ -41,7 +41,7 @@ class Report(object):
             self.lastMonth
         ]
         if mute == False:
-            utils.log(message)
+            utils.log(message, forceNotify=forceNotify)
             date = time.strftime("%d.%m", time.localtime()) + "." + str(int(time.strftime("%Y", time.localtime())) - 2000)
             time2 = time.strftime("%H:%M:%S", time.localtime())
             utils.resources[2].insert(0, "\n%s %s: %s" % (date, time2, message))
@@ -155,7 +155,11 @@ class Report(object):
         if input == "(":  # start timer
             self.startTime = int(time.strftime("%H", time.localtime())) * 3600 + int(
             time.strftime("%M", time.localtime())) * 60 + int(time.strftime("%S", time.localtime()))
-            self.saveReport("Таймер запущен")
+            if utils.settings[0][0] == 1:
+                forceNotify = True
+            else:
+                forceNotify = False
+            self.saveReport("Таймер запущен", forceNotify=forceNotify)
 
         elif input == ")":  # остановка таймера
             if self.startTime > 0:

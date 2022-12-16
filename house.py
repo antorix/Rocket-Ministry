@@ -107,7 +107,7 @@ class House(object):
         ]
             
     class Porch(object):
-        
+
         def __init__(self):
             self.title = ""
             self.status = "⚪⚪⚪" #"000"
@@ -456,7 +456,7 @@ class House(object):
                 self.flats[last].number = "virtual"
 
             self.flats[last].updateStatus()
-            
+
             createdFlat = last
             delete = False
 
@@ -481,7 +481,7 @@ class House(object):
                 createdFlat = last-1
 
             return self.flats[createdFlat]
-            
+
         def addFlats(self, input):
             """ Массовое создание квартир через дефис или пробел """
             s=f=0
@@ -546,7 +546,7 @@ class House(object):
             ]
 
         class Flat(object):
-            
+
             def __init__(self):
                 self.title = "" # пример title: "20, Василий 30 лет"
                 self.note = ""
@@ -601,13 +601,12 @@ class House(object):
                         self.records.append(deepcopy(record))
 
                 else: # создаем отдельный контакт
-                    from utils import resources
                     if "," in self.title:
                         tempFlatNumber = self.title[0: self.title.index(",")]
                     else:
                         tempFlatNumber = self.title
-                    resources[1].append(House())  # create house address
-                    newVirtualHouse = resources[1][len(resources[1]) - 1]
+                    utils.resources[1].append(House())  # create house address
+                    newVirtualHouse = utils.resources[1][len(utils.resources[1]) - 1]
                     newVirtualHouse.addPorch(type="virtual")  # create virtual porch ***
                     newVirtualHouse.porches[0].addFlat("+" + self.getName(), virtual=True)  # create flat
                     newContact = newVirtualHouse.porches[0].flats[0]
@@ -619,7 +618,7 @@ class House(object):
                     newContact.status = deepcopy(self.status)
                     newContact.phone = deepcopy(self.phone)
                     newContact.meeting = deepcopy(self.meeting)
-                    utils.log("Создан контакт %s" % newContact.getName())
+                    #utils.log("Создан контакт %s" % newContact.getName())
                     return newContact.getName()
 
             def output(self):
@@ -646,7 +645,7 @@ class House(object):
                 date = time.strftime("%d", time.localtime())
                 month = utils.monthName()[5]
                 timeCur = time.strftime("%H:%M", time.localtime())
-                
+
                 self.records[0].date = "%s %s %s" % (date, month, timeCur)
 
                 self.updateStatus()
@@ -660,7 +659,6 @@ class House(object):
             def deleteRecord(self, f):
                 del self.records[f]
                 self.updateStatus()
-                utils.log("Запись посещения удалена")
 
             def updateStatus(self):
                 """ Обновление статуса квартиры после любой операции """
@@ -750,6 +748,6 @@ class House(object):
                 def __init__(self):
                     self.date = ""
                     self.title = ""
-                    
+
                 def export(self):
                     return self.date, self.title
