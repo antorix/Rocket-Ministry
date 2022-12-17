@@ -34,7 +34,7 @@ def initializeDB():
 
 houses, settings, resources = initializeDB()
 Version = "2.0.3" # …10
-Devmode = 1# DEVMODE!
+Devmode = 0# DEVMODE!
 
 DBCreatedTime = ""
 from kivy import platform
