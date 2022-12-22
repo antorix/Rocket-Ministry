@@ -44,7 +44,7 @@ class Report(object):
             utils.log(message, forceNotify=forceNotify)
             date = time.strftime("%d.%m", time.localtime()) + "." + str(int(time.strftime("%Y", time.localtime())) - 2000)
             time2 = time.strftime("%H:%M:%S", time.localtime())
-            utils.resources[2].insert(0, "\n%s %s: %s" % (date, time2, message))
+            utils.resources[2].insert(0, f"\n{date} {time2}: {message}")
         if save==True:
             utils.save(backup=True, silent=True)
 
@@ -52,14 +52,15 @@ class Report(object):
         savedMonth = utils.settings[3]
         currentMonth = time.strftime("%b", time.localtime())
         if savedMonth != currentMonth:
-            utils.log("Начался новый месяц, давайте сдадим отчет за %s!" % utils.monthName()[3])
+            utils.log("Начался новый месяц, давайте сдадим отчет!")
+            time.sleep(1)
             rolloverHours, rolloverCredit = self.saveLastMonth()
             self.clear(rolloverHours, rolloverCredit)
             self.saveReport(mute=True)
             utils.settings[3] = time.strftime("%b", time.localtime())
             self.reminder = 1
             utils.save()
-            app.MyApp.sendLastMonthReport()
+            app.RM.sendLastMonthReport()
 
     def toggleTimer(self):
         result = 0
@@ -226,6 +227,7 @@ class Report(object):
     def getLastMonthReport(self):
         """ Выдает отчет прошлого месяца """
 
+        self.lastMonthNoFormatting = ""
         self.lastMonthNoFormatting = self.lastMonth.replace('[u]', '')
         self.lastMonthNoFormatting = self.lastMonthNoFormatting.replace('[/u]', '')
         self.lastMonthNoFormatting = self.lastMonthNoFormatting.replace('[b]', '')

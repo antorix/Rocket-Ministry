@@ -12,5 +12,5 @@ except:
 import app
 
 if __name__ == "__main__":
-    app.MyApp = app.RM()
-    app.MyApp.run()
+    app.RM = app.RMApp()
+    app.RM.run()

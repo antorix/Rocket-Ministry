@@ -16,5 +16,5 @@ if not path.exists("main.py"):
     from rm_install import install
     install(standalone=False)
 
-app.MyApp = app.RM()
-app.MyApp.run()
+app.RM = app.RMApp()
+app.RM.run()

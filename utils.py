@@ -6,7 +6,7 @@ def initializeDB():
     import time
     return [],\
         [
-        [1, 0, 0, 0, "с", 0, 10, 0, 2, 0, 1, 1, 1, 1, "", 1, 0, "", 1, "д", 0, 0, 1], # program settings: settings[0][0…], see set.preferences()
+        [1, 0, 0, 0, "с", 0, 10, 0, 1.5, 0, 1, 1, 1, 1, "", 1, 0, "", "0", "д", 0, 0, 1], # program settings: settings[0][0…], see set.preferences()
         "",# дата последнего обновления settings[1]
         # report:                       settings[2]
         [0.0,       # [0] hours         settings[2][0…]
@@ -33,8 +33,14 @@ def initializeDB():
     ]
 
 houses, settings, resources = initializeDB()
-Version = "2.0.3" # …10
+Version = "2.1.0" # …12
 Devmode = 0# DEVMODE!
+# В настройках можно выбрать цвет отказа: синий, красный или коричневый.
+# Устранен баг, который возникал на некоторых устройствах, при котором при наборе текста могли появляться лишние слова.
+# Улучшен алгоритм сортировки домов в обычных участках, если в номерах используются буквы.
+# Более интеллектуальный алгоритм создания новых квартир подъезда.
+# Повышено быстродействие при клике по квартире – особенно ощутимо на подъездах с большим числом квартир.
+# Доработка дизайна.
 
 DBCreatedTime = ""
 from kivy import platform
@@ -42,7 +48,6 @@ if platform == "android":
     UserPath = "../"#storage/emulated/0/Android/data/org.rocketministry/"
 else:
     UserPath = ""
-
     try:
         from docx import Document
     except:
@@ -71,13 +76,13 @@ LastTimeBackedUp = int(time.strftime("%H", time.localtime())) * 3600 \
                 + int(time.strftime("%M", time.localtime())) * 60 \
                 + int(time.strftime("%S", time.localtime()))
 
-def log(message, title="Внимание", timeout=3, forceNotify=False):
+def log(message="", title="Внимание", timeout=3, forceNotify=False):
     """ Displaying and logging to file important system messages """
     try:
-        if app.MyApp.platform == "mobile" and forceNotify == False:
+        if app.RM.platform == "mobile" and forceNotify == False:
             plyer.notification.notify(toast=True, message=message)
         else:
-            if app.MyApp.platform == "mobile":
+            if app.RM.platform == "mobile":
                 icon = ""#"icon.png"
             else:
                 icon = "icon.ico"
@@ -96,7 +101,7 @@ def clearDB(silent=True):
     resources[:] = initializeDB()[2][:]
     if silent==False:
         log("База данных очищена!")
-    save()
+    #save()
 
 def removeFiles(keepDatafile=False):
     """ Удаление базы данных и резервной папки"""
@@ -164,7 +169,7 @@ def load(datafile=None, saveOK=True, forced=False, clipboard=None):
     global DataFile, UserPath, houses, settings, resources
     if datafile == None:
         datafile = DataFile
-    app.MyApp.popupForm = ""
+    app.RM.popupForm = ""
     print("Загружаю буфер.")
 
     # Сначала получаем буфер
@@ -178,7 +183,7 @@ def load(datafile=None, saveOK=True, forced=False, clipboard=None):
             clipboard = str(clipboard).strip()
             clipboard = clipboard[ clipboard.index("[\"Rocket Ministry") : ]
         except:
-            app.MyApp.popup("В буфере обмена нет данных для импорта. Нажмите «Помощь», чтобы узнать о том, как переносить данные Rocket Ministry.")
+            app.RM.popup("В буфере обмена нет данных для импорта. Нажмите «Помощь», чтобы узнать о том, как переносить данные Rocket Ministry.")
             return False
 
         with open("temp", "w") as file:
@@ -198,7 +203,7 @@ def load(datafile=None, saveOK=True, forced=False, clipboard=None):
                 buffer = json.load(file)
                 print("Буфер получен из импортированного файла.")
         except:
-            app.MyApp.popup("Не удалось загрузить файл данных. Скорее всего, он поврежден или не соответствует формату.")
+            app.RM.popup("Не удалось загрузить файл данных. Скорее всего, он поврежден или не соответствует формату.")
             return False
 
     else: # обычная загрузка
@@ -208,7 +213,7 @@ def load(datafile=None, saveOK=True, forced=False, clipboard=None):
                 message = "Файл данных найден, но пустой. Пытаюсь восстановить резервную копию."
                 print(message)
                 if forced == True:
-                    app.MyApp.popup(title="Загрузка базы данных", message=message)
+                    app.RM.popup(title="Загрузка базы данных", message=message)
                 if backupRestore(restoreWorking=True, saveOK=saveOK) == True:
                     print("База успешно загружена.")
                     if saveOK==True:
@@ -225,7 +230,7 @@ def load(datafile=None, saveOK=True, forced=False, clipboard=None):
             message = f"Файл базы данных {datafile} не найден, пытаюсь восстановить резервную копию."
             print(message)
             if forced==True:
-                app.MyApp.popup(title="Загрузка базы данных", message=message)
+                app.RM.popup(title="Загрузка базы данных", message=message)
             if backupRestore(restoreWorking=True, saveOK=saveOK) == True:
                 print("База успешно загружена.")
                 if saveOK == True:
@@ -238,7 +243,10 @@ def load(datafile=None, saveOK=True, forced=False, clipboard=None):
     # Буфер получен, читаем из него
 
     if len(buffer)==0:
-        print("Cоздаю новую базу.")
+        print("Создаю новую базу.")
+        save(backup=True)  # успешный результат
+        print("База сохранена с резервированием.")
+
     elif "Rocket Ministry application data file." in buffer[0]:
         print("База определена, контрольная строка совпадает.")
         del buffer[0]
@@ -315,7 +323,7 @@ def save(backup=False, silent=True):
 
     curTime = getCurTime()
 
-    if backup != False and (backup==True or (settings[0][6] > 0 and (curTime - LastTimeBackedUp) > 300)):
+    if backup==True or (settings[0][6] > 0 and (curTime - LastTimeBackedUp) > 300):
         if os.path.exists(UserPath + DataFile):
             if not os.path.exists(BackupFolderLocation):
                 try:
@@ -327,7 +335,7 @@ def save(backup=False, silent=True):
             with open(BackupFolderLocation + "data_" + savedTime + ".jsn", "w") as newbkfile:
                 json.dump(output, newbkfile)
                 if silent == False:
-                    app.MyApp.popup("Создана резервная копия.")
+                    app.RM.popup("Создана резервная копия.")
                 LastTimeBackedUp = curTime
 
     # Сохраняем
@@ -335,9 +343,9 @@ def save(backup=False, silent=True):
     with open(UserPath + DataFile, "w") as file:
         json.dump(output, file)
     if silent == False:
-        app.MyApp.popup("Выполнено сохранение базы данных.")
+        app.RM.popup("Выполнено сохранение базы данных.")
 
-    if os.path.exists("sync.ini"): # делаем экспорт в файл, если найден файл sync.ini, где прописан путь
+    if Devmode == 0 and os.path.exists("sync.ini"): # делаем экспорт в файл, если найден файл sync.ini, где прописан путь
         with open("sync.ini", encoding='utf-8', mode="r") as f:
             folder = f.read()
         doc = Document()
@@ -361,10 +369,10 @@ def share(silent=False, clipboard=False, email=False, folder=None, doc=False):
             s = str(buffer)
             Clipboard.copy(s)
         except:
-            app.MyApp.popup("Не удалось загрузить базу данных в буфер обмена. Попробуйте еще раз.")
+            app.RM.popup("Не удалось загрузить базу данных в буфер обмена. Попробуйте еще раз.")
             return
         else:
-            app.MyApp.popup("Данные помещены в буфер обмена.")
+            app.RM.popup("Данные помещены в буфер обмена.")
 
     elif email == True: # экспорт в сообщении
         s = str(buffer)
@@ -373,7 +381,7 @@ def share(silent=False, clipboard=False, email=False, folder=None, doc=False):
         timeCur = time.strftime("%H.%M", time.localtime())
         dated = "%s %s %s" % (date, month, timeCur)
         filename = "Данные Rocket Ministry от %s" % dated
-        plyer.email.send(subject=filename, text=s)
+        plyer.email.send(subject=filename, text=s, create_chooser=True)
 
     elif doc == True: # экспорт в Word
         try:
@@ -388,18 +396,18 @@ def share(silent=False, clipboard=False, email=False, folder=None, doc=False):
             filename = folder + "/Данные Rocket Ministry от %s.docx" % dated
             doc.save(filename)
         except:
-            pass#app.MyApp.popup("Не удалось экспортировать файл данных!")
+            pass#app.RM.popup("Не удалось экспортировать файл данных!")
         else:
-            app.MyApp.popup("Данные успешно экспортированы в файл «%s»." % filename)
+            app.RM.popup("Данные успешно экспортированы в файл «%s»." % filename)
 
-    elif app.MyApp.devmode == 0 and folder != None: # экспорт в файл
+    elif app.RM.devmode == 0 and folder != None: # экспорт в файл
         try:
             with open(folder + "/data.jsn", "w") as file:
                 json.dump(output, file)
         except:
-            app.MyApp.popup("Не удалось сохранить!")
+            app.RM.popup("Не удалось сохранить!")
         else:
-            app.MyApp.popup("Данные успешно сохранены в файл %s." % folder + "/data.jsn")
+            app.RM.popup("Данные успешно сохранены в файл %s." % folder + "/data.jsn")
 
     else:
         try:
@@ -418,17 +426,17 @@ def share(silent=False, clipboard=False, email=False, folder=None, doc=False):
                 path = os.path.expanduser("~")
         except:
             if silent==False:
-                app.MyApp.popup("Не удалось выполнить экспорт базы данных.")
+                app.RM.popup("Не удалось выполнить экспорт базы данных.")
         else:
             if silent==False:
-                app.MyApp.popup("Успешно выполнен экспорт базы данных в папку %s." % path)
+                app.RM.popup("Успешно выполнен экспорт базы данных в папку %s." % path)
 
 def backupRestore(silent=True, saveOK=True, delete=False, restoreNumber=None, restoreWorking=False):
     """ Восстановление файла из резервной копии """
 
     if os.path.exists(BackupFolderLocation)==False:
         if silent == False:
-            app.MyApp.popup(title="Восстановление", message="Резервные файлы еще не создавались!")
+            app.RM.popup(title="Восстановление", message="Резервные файлы еще не создавались!")
         return
     files = [f for f in os.listdir(BackupFolderLocation) if os.path.isfile(os.path.join(BackupFolderLocation, f))]
     fileDates = []
@@ -461,7 +469,7 @@ def backupRestore(silent=True, saveOK=True, delete=False, restoreNumber=None, re
                 else:
                     print("Успешно загружена последняя непустая резервная копия.")
                     if silent == False:
-                        app.MyApp.popup("Успешно загружена резервная копия от %s." % fileDates[i])
+                        app.RM.popup("Успешно загружена резервная копия от %s." % fileDates[i])
                     return True
 
     # Если выбран режим удаления лишних копий
@@ -484,11 +492,11 @@ def update():
     # Определяются по тому, что проверка обновлений делается первый раз.
 
     if settings[1] == "":
-        app.MyApp.firstRunFlag = True
+        app.RM.firstRunFlag = True
     else:
-        app.MyApp.firstRunFlag = False
+        app.RM.firstRunFlag = False
 
-    if app.MyApp.platform == "mobile":
+    if app.RM.platform == "mobile":
         return # мобильная версия не проверяет обновления
     else:
         print("Проверяем обновления настольной версии.")
@@ -573,22 +581,6 @@ def countTotalProgress():
         percentage = 0
 
     return percentage
-
-def days_between(d1, d2):
-    d1 = datetime.strptime(d1, "%Y-%m-%d")
-    d2 = datetime.strptime(d2, "%Y-%m-%d")
-    return abs((d2 - d1).days)
-
-def calcDueTers():
-    """ Подсчет просроченных домов """
-    housesDue = 0
-    for h in range(len(houses)):
-        if days_between(
-                houses[h].date,
-                time.strftime("%Y-%m-%d", time.localtime())
-        ) > 122:  # время просрочки
-            housesDue += 1
-    return housesDue
 
 def checkDate(date):
     """Проверяет, что дата в формате ГГГГ-ММ-ДД"""

@@ -6,6 +6,7 @@ import utils
 from random import random
 from copy import deepcopy
 import app
+import datetime
 from iconfonts import icon
 
 class House(object):
@@ -29,6 +30,21 @@ class House(object):
                 if self.porches[a].flats[b].status == "1": interest += 1
         return visited, interest
 
+    def getPreviousPorchStats(self, selectedPorch):
+        """ Получает диапазон квартир и этажность подъезда, предыдущего к полученному """
+        firstflat = "1"
+        lastflat = "20"
+        floors = "5"
+        if selectedPorch > 0:
+            prevFirst = int(self.porches[selectedPorch-1] .getFirstAndLastNumbers()[0])
+            prevLast = int(self.porches[selectedPorch-1]  .getFirstAndLastNumbers()[1])
+            prevRange = prevLast - prevFirst
+            firstflat = str( int(prevLast)+1 )
+            lastflat = str(int(prevLast)+1 + prevRange)
+            floors = str(int(prevRange / 4)) #str(self.porches[selectedPorch-1].showFlats(countFloors=True))
+
+        return firstflat, lastflat, floors
+
     def getPorchType(self):
         """ Выдает тип своего подъезда [0],
             существительное типа контакта в родительном падеже единственного числа [1],
@@ -44,6 +60,18 @@ class House(object):
         else:
             return "подъезд", "квартиры", "квартир", "квартире"
 
+    def due(self):
+        """ Определяет, что участок просрочен """
+
+        d1 = datetime.datetime.strptime(self.date, "%Y-%m-%d")
+        d2 = datetime.datetime.strptime(time.strftime("%Y-%m-%d", time.localtime()), "%Y-%m-%d")
+        days_between = abs((d2 - d1).days)
+
+        if days_between > 123:
+            return True
+        else:
+            return False
+
     def showPorches(self):
         list = []
         try:
@@ -52,11 +80,12 @@ class House(object):
             self.porches.sort(key=lambda x: x.title, reverse=False) # если не получается, алфавитно
 
         for i in range(len(self.porches)):
-            if self.porches[i].note != "":
-                note = " •" + self.porches[i].note
+            if self.type == "condo":
+                listIcon = icon('icon-login')
             else:
-                note = ""
-            list.append("%s%s" % (self.porches[i].title, self.porches[i].getFlatsRange()))
+                listIcon = icon('icon-location-1')
+                b1=b2=""
+            list.append(f"{listIcon} [b]{self.porches[i].title}[/b]{self.porches[i].getFlatsRange()}")
 
         if self.type != "condo" and len(list) == 0:
             list.append("Создайте %s участка" % self.getPorchType()[0])
@@ -89,7 +118,7 @@ class House(object):
         for porch in self.porches:
             for flat in porch.flats:
                 totalFlats +=1
-                if flat.getStatus()[1] != 4 and flat.getStatus()[1] != 5:
+                if flat.status != "" and flat.status != "?":
                     workedFlats += 1
         if totalFlats != 0:
             return workedFlats / totalFlats, workedFlats
@@ -162,36 +191,43 @@ class House(object):
                 if "подъезд" in self.type:
                     result = self.shift(ind, restore=restore)
                     if result == "disableFloors":
-                        utils.log("Удалено: %s" % self.flats[ind].title)
+                        #utils.log("Удалено: %s" % self.flats[ind].title)
                         del self.flats[ind]
                         self.flatsLayout = "н"
                         self.sortFlats()
                 else:
-                    utils.log("Удалено: %s" % self.flats[ind].title)
+                    #utils.log("Удалено: %s" % self.flats[ind].title)
                     del self.flats[ind]
                 return "deleted"
 
         def getFlatsRange(self):
             """ Выдает диапазон квартир в подъезде многоквартирного дома"""
             range = ""
-            if not "подъезд" in self.type:
-                return range
+            #if not "подъезд" in self.type:
+            #    return range
 
-            list = []
+            if "подъезд" in self.type:
+                list = []
+                for flat in self.flats:
+                    if not "." in flat.number:
+                        try:
+                            list.append(int(flat.number))
+                        except:
+                            return " –" # в подъезде есть нецифровые номера квартир, выходим
+                list.sort()
+                if len(list) == 1:
+                    range = " [i]%s–%s[/i]" % (list[0], list[0])
+                elif len(list) > 1:
+                    last = len(list) - 1
+                    range = " [i]%s–%s[/i]" % (list[0], list[last])
 
-            for flat in self.flats:
-                if not "." in flat.number:
-                    try:
-                        list.append(int(flat.number))
-                    except:
-                        return " –" # в подъезде есть нецифровые номера квартир, выходим
-            list.sort()
+            else:
+                if len(self.flats) == 0:
+                    range == ""
+                else:
+                    last = len(self.flats)-1
+                    range = " [i]%s–%s[/i]" % (self.flats[0].number, self.flats[last].number)
 
-            if len(list) == 1:
-                range = " [i]%s–%s[/i]" % (list[0], list[0])
-            elif len(list) > 1:
-                last = len(list) - 1
-                range = " [i]%s–%s[/i]" % (list[0], list[last])
             return range
 
         def shift(self, ind, restore=False):
@@ -212,7 +248,7 @@ class House(object):
             self.sortFlats()
 
             if status != "" and deletedFlat.number != number:
-                app.MyApp.popup("В этом подъезде больше нельзя сокращать этажи, потому что последняя квартира с записью исчезнет! Но вы можете изменить диапазон квартир или кол-во этажей на экране «Квартиры».")
+                app.RM.popup("В этом подъезде больше нельзя сокращать этажи, потому что последняя квартира с записью исчезнет! Но вы можете изменить диапазон квартир или кол-во этажей на экране «Квартиры».")
 
             else:
                 if restore == True:
@@ -259,8 +295,12 @@ class House(object):
                 if utils.ifInt(flat.number) == True:
                     numbers.append(int(flat.number))
             numbers.sort()
-            first = str(numbers[0])
-            last = str(numbers[len(numbers) - 1])
+            try:
+                first = str(numbers[0])
+                last = str(numbers[len(numbers) - 1])
+            except:
+                first = "1"
+                last = "20"
             return first, last
 
         def sortFlats(self):
@@ -270,28 +310,29 @@ class House(object):
                 try:
                     self.flats.sort(key=lambda x: float(x.number))
                 except:
-                    self.flatsLayout = "а"
-                    self.flats.sort(key=lambda x: x.title)
+                    #self.flatsLayout = "а"
+                    #self.flats.sort(key=lambda x: x.title)
+                    self.flats.sort(key=lambda x: x.titleNumberized())
 
             elif self.flatsLayout == "о": # numeric by number reversed
                 try:
                     self.flats.sort(key=lambda x: float(x.number), reverse=True)
                 except:
-                    self.flatsLayout = "а"
-                    self.flats.sort(key=lambda x: x.title, reverse=True)
+                    #self.flatsLayout = "а"
+                    self.flats.sort(key=lambda x: x.titleNumberized(), reverse=True)
 
             elif self.flatsLayout=="с": # alphabetic by status character
                 try:
                     self.flats.sort(key=lambda x: float(x.number))
                 except:
-                    self.flats.sort(key=lambda x: x.title, reverse=True)
+                    self.flats.sort(key=lambda x: x.titleNumberized(), reverse=True)
                 self.flats.sort(key=lambda x: x.getStatus()[1])
 
             elif self.flatsLayout=="т": # by phone number
                 try:
                     self.flats.sort(key=lambda x: float(x.number))
                 except:
-                    self.flats.sort(key=lambda x: x.title, reverse=True)
+                    self.flats.sort(key=lambda x: x.titleNumberized(), reverse=True)
                 self.flats.sort(key=lambda x: x.phone, reverse=True)
 
             elif self.flatsLayout=="з": # by note
@@ -353,7 +394,7 @@ class House(object):
                     self.rows = floors
                     self.sortFlats()
                     if warn==True:
-                        app.MyApp.popup(
+                        app.RM.popup(
                             message="\nЗапрошено нестандартное соотношение квартир и этажей. Пришлось добавить %d квартир(ы), которые вам нужно вручную удалить на нужных этажах. Для этого нажмите на кнопку [b]%s Уменьшить этаж[/b] в деталях квартиры на соответствующем этаже." % (extraFlats, icon("icon-resize-small-1"))
                         )
                     break
@@ -362,7 +403,7 @@ class House(object):
             """ Вывод квартир для вида подъезда """
 
             def showListOfFlats():
-                """Вывод подъезда в графическом режиме списком квартир (весь дом или один этаж)"""
+                """Вывод подъезда в графическом режиме списком квартир """
                 options=[]
                 i = 0
                 for flat in self.flats:  # выводим квартиры
@@ -386,7 +427,6 @@ class House(object):
                 i = 0
                 for r in range(self.rows):
                     options.append("%2d│ " % (self.rows - r + self.floor1 - 1))
-                    flat = ""
                     for c in range(self.columns):
                         options.append("%s%s" % (self.flats[i].getStatus()[0], self.flats[i].number))
                         i += 1
@@ -395,7 +435,7 @@ class House(object):
             # Сначала сортируем квартиры
 
             self.sortFlats()
-            if utils.ifInt(self.flatsLayout)==False: # если любая сортировка кроме поэтажной
+            if self.floors() == False: # если любая сортировка кроме поэтажной
                 self.rows = 1
                 self.columns = 999
             else:
@@ -407,13 +447,14 @@ class House(object):
 
             # Вывод квартир - определяем режим, затем вызываем соответствующую функцию
 
-            if utils.ifInt(self.flatsLayout)==True: # показываем подъезд в графическом режиме, если включена поэтажная сортировка
+            elif self.floors() == True: # показываем подъезд в графическом режиме, если включена поэтажная сортировка
                 result = showListOfFloors() # полным списком
                 if result==None:
                     flats = showListOfFlats()
                     return flats # поэтажная сортировка не сработала, переключение на обычный список
                 else:
                     return result
+
             else: # поэтажная сортировка отключена
                 flats = showListOfFlats()
                 return flats
@@ -471,7 +512,7 @@ class House(object):
                             delete=True
                         else:
                             if silent==False:
-                                app.MyApp.popup("Контакт с таким номером уже существует, и в нем есть записи!")
+                                app.RM.popup("Контакт с таким номером уже существует, и в нем есть записи!")
                             del self.flats[last] # user reconsidered, delete the newly created empty flat
                             createdFlat = -1
                     break
@@ -565,8 +606,13 @@ class House(object):
                         phone=""
                     else:
                         phone = " т." + self.phone
-                    line += "%s %s %s%s [i]%s[/i]" % (self.getStatus()[0],\
-                                                self.number, self.getName(), phone, self.note)
+                    if self.note != "":
+                        note = " • " + self.note
+                    else:
+                        note = ""
+                    #line += f"{self.getStatus()[0]} {self.number} {self.getName()}{phone}{self.note}"
+                    line += "%s %s %s%s%s" % (self.getStatus()[0],\
+                                                self.number, self.getName(), phone, note)
                 return line
 
             def getName(self):
@@ -628,12 +674,13 @@ class House(object):
                 print("-------------------")
 
             def showRecords(self):
+                listIcon = icon("icon-chat")
                 options = []
                 if len(self.records)==0:
                     options.append("Создайте первое посещение")
                 else:
                     for i in range(len(self.records)): # добавляем записи разговоров
-                        options.append("%s\n[i]%s[/i]" % (self.records[i].date, self.records[i].title))
+                        options.append(f"{listIcon} {self.records[i].date}\n[i]{self.records[i].title}[/i]")
                 return options
 
             def addRecord(self, input):
@@ -702,8 +749,21 @@ class House(object):
                 self.number = str ( float(self.number) + random() )
                 #self.wipe()
 
+            def titleNumberized(self):
+                """ Убирает из заголовка квартиры все нечисловые символы, чтобы получилось отсортировать по номеру"""
+
+                result = 0
+                l = len(self.title)
+                while l > 0:
+                    if utils.ifInt(self.title[:l]) == True:
+                        result = int(self.title[:l])
+                        break
+                    else:
+                        l -= 1
+                return result
+
             def getStatus(self):
-                """ Возвращает иконку и сортировочное значение статуса на основе цифры """
+                """ Возвращает иконку и сортировочное значение статуса в int """
 
                 if self.status == "0":
                     string = "{0}"
@@ -722,13 +782,13 @@ class House(object):
                     value = 3
                 elif self.status == "?":
                     string = "{?}"
-                    value = 4
+                    value = 10
                 elif self.status == "5":
                     string = "{5}"
                     value = 7
                 else:
                     string = "{ }"
-                    value = 5
+                    value = 9
 
                 return string, value
 
