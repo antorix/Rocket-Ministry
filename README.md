@@ -1,6 +1,6 @@
 Скорость. Простота. Функциональность. Открытый исходный код. Кросс-платформенность. 
 
-![](https://play-lh.googleusercontent.com/8hSwThWYTnTqTWlxqAevwgIFbbhWPmCbblRPmdcVifrslL2lqCo7vOH-73x5MPRC2uM)
+![](https://play-lh.googleusercontent.com/q-cCzYtedP5OKpyFOZ44GHlSm49qVN50pNyn4k95ZDi3Xnc3hr_qiUEleSVJ7orT2Q=w2560-h1440-rw)
 
 * [Страница приложения на Play Маркете](https://play.google.com/store/apps/details?id=org.rocketministry)
 
