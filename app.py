@@ -4269,6 +4269,9 @@ class RMApp(App):
             self.boxFooter.size_hint_y = self.marginSizeHintY * 1.3
             self.standardTextHeight = Window.size[1] * .06  # 90
 
+        if self.platform == "desktop":
+            self.standardTextHeight = 40
+
     def buttonFlash(self, instance=None, timeout=None):
 
         if timeout == None:
