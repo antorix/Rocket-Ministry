@@ -6,7 +6,7 @@ def initializeDB():
     import time
     return [],\
         [
-        [1, 0, 0, 0, "с", 0, 10, 0, 1.5, 0, 1, 1, 1, 1, "", 1, 0, "", "0", "д", 0, 0, 1], # program settings: settings[0][0…], see set.preferences()
+        [1, 5, 0, 0, "с", 0, 10, 0, 1.5, 0, 1, 1, 1, 1, "", 1, 0, "", "0", "д", 0, 0, 1], # program settings: settings[0][0…], see set.preferences()
         "",# дата последнего обновления settings[1]
         # report:                       settings[2]
         [0.0,       # [0] hours         settings[2][0…]
@@ -33,14 +33,27 @@ def initializeDB():
     ]
 
 houses, settings, resources = initializeDB()
-Version = "2.1.0" # …12
+Version = "2.1.1" # …14
 Devmode = 0# DEVMODE!
-# В настройках можно выбрать цвет отказа: синий, красный или коричневый.
-# Устранен баг, который возникал на некоторых устройствах, при котором при наборе текста могли появляться лишние слова.
-# Улучшен алгоритм сортировки домов в обычных участках, если в номерах используются буквы.
-# Более интеллектуальный алгоритм создания новых квартир подъезда.
-# Повышено быстродействие при клике по квартире – особенно ощутимо на подъездах с большим числом квартир.
-# Доработка дизайна.
+"""
+* Добавление квартир с помощью списка номеров через запятую. Можно ввести вручную или скопировать из буфера.
+
+* Добавление времени в отчет с помощью циферблата с часами и минутами.
+
+* Сетка подъезда может быть не только в центре, но может прилипать к одной из 8 точек по краям экрана. Удобно сделать ближе к той руке, которой вы держите телефон.
+
+* В участке вместо простого показа карты теперь сразу запускается прокладка маршрута.  
+
+* Сортировка контактов по заметке.
+
+* Доработки дизайна и оптимизации.
+
+* Оптимизации под Windows/Linux:
+  - адаптация под ландшафтный режим интерфейса;
+  - программа запоминает размер и положение окна при выходе;
+  - загрузка файла простым перетаскиванием на окно программы;
+  - переключение между полями ввода клавишей Tab.
+"""
 
 DBCreatedTime = ""
 from kivy import platform
@@ -86,7 +99,8 @@ def log(message="", title="Внимание", timeout=3, forceNotify=False):
                 icon = ""#"icon.png"
             else:
                 icon = "icon.ico"
-            plyer.notification.notify(app_name="Rocket Ministry", title="Rocket Ministry", app_icon=icon,
+            if 1:#Devmode==0:
+                plyer.notification.notify(app_name="Rocket Ministry", title="Rocket Ministry", app_icon=icon,
                                   ticker="Rocket Ministry", message=message, timeout=timeout)
     except:
         print(message)
@@ -105,7 +119,6 @@ def clearDB(silent=True):
 
 def removeFiles(keepDatafile=False):
     """ Удаление базы данных и резервной папки"""
-    from shutil import rmtree
     global UserPath, DataFile, BackupFolderLocation
     if os.path.exists(UserPath + DataFile) and keepDatafile==False:
         os.remove(UserPath + DataFile)
@@ -156,6 +169,9 @@ def loadOutput(buffer):
             h.append(buffer[s])
         houseRetrieve(houses, housesNumber, h, silent=True)
 
+        if settings[1] != "": # определяем, что приложение запускается впервые, если ни разу не делалась проверка обновлений
+            app.RM.firstRunFlag = False
+
     except:
         success=False
     else:
@@ -163,7 +179,7 @@ def loadOutput(buffer):
 
     return success
 
-def load(datafile=None, saveOK=True, forced=False, clipboard=None):
+def load(datafile=None, allowSave=True, forced=False, clipboard=None, silent=False):
     """ Loading houses and settings from JSON file """
 
     global DataFile, UserPath, houses, settings, resources
@@ -203,7 +219,8 @@ def load(datafile=None, saveOK=True, forced=False, clipboard=None):
                 buffer = json.load(file)
                 print("Буфер получен из импортированного файла.")
         except:
-            app.RM.popup("Не удалось загрузить файл данных. Скорее всего, он поврежден или не соответствует формату.")
+            if silent == False:
+                app.RM.popup("Не удалось загрузить файл данных. Скорее всего, он поврежден или не соответствует формату.")
             return False
 
     else: # обычная загрузка
@@ -214,9 +231,9 @@ def load(datafile=None, saveOK=True, forced=False, clipboard=None):
                 print(message)
                 if forced == True:
                     app.RM.popup(title="Загрузка базы данных", message=message)
-                if backupRestore(restoreWorking=True, saveOK=saveOK) == True:
+                if backupRestore(restoreWorking=True, allowSave=allowSave) == True:
                     print("База успешно загружена.")
-                    if saveOK==True:
+                    if allowSave==True:
                         save(backup=True)  # успешный результат с загрузкой копии
                         print("База сохранена с резервированием.")
                     return True
@@ -231,9 +248,9 @@ def load(datafile=None, saveOK=True, forced=False, clipboard=None):
             print(message)
             if forced==True:
                 app.RM.popup(title="Загрузка базы данных", message=message)
-            if backupRestore(restoreWorking=True, saveOK=saveOK) == True:
+            if backupRestore(restoreWorking=True, allowSave=allowSave) == True:
                 print("База успешно загружена.")
-                if saveOK == True:
+                if allowSave == True:
                     save(backup=True)  # успешный результат с загрузкой копии
                     print("База сохранена с резервированием.")
                 return True
@@ -254,9 +271,9 @@ def load(datafile=None, saveOK=True, forced=False, clipboard=None):
         result = loadOutput(buffer)
         if result == False:
             print("Ошибочный импорт, восстанавливаем резервную копию.")
-            backupRestore(restoreWorking=True, saveOK=saveOK)
+            backupRestore(restoreWorking=True, allowSave=allowSave)
         else:
-            if saveOK == True:
+            if allowSave == True:
                 save(backup=True)  # успешный результат
                 print("База сохранена с резервированием.")
             return True
@@ -308,9 +325,10 @@ def getOutput():
             [[resources[0], [resources[1][i].export() for i in range(len(resources[1]))], resources[2]]]
     for house in houses:
         output.append(house.export())
+
     return output
 
-def save(backup=False, silent=True):
+def save(backup=False, silent=True, export=False):
     """ Saving database to JSON file """
 
     global DataFile, LastTimeBackedUp, UserPath
@@ -323,7 +341,7 @@ def save(backup=False, silent=True):
 
     curTime = getCurTime()
 
-    if backup==True or (settings[0][6] > 0 and (curTime - LastTimeBackedUp) > 300):
+    if backup==True or (curTime - LastTimeBackedUp) > 300:
         if os.path.exists(UserPath + DataFile):
             if not os.path.exists(BackupFolderLocation):
                 try:
@@ -340,12 +358,17 @@ def save(backup=False, silent=True):
 
     # Сохраняем
 
-    with open(UserPath + DataFile, "w") as file:
-        json.dump(output, file)
-    if silent == False:
-        app.RM.popup("Выполнено сохранение базы данных.")
+    try:
+        with open(UserPath + DataFile, "w") as file:
+            json.dump(output, file)
+        if silent == False:
+            app.RM.popup("Выполнено сохранение базы данных.")
+    except:
+        print("Ошибка записи!")
 
-    if Devmode == 0 and os.path.exists("sync.ini"): # делаем экспорт в файл, если найден файл sync.ini, где прописан путь
+    # Экспорт в файл на ПК, если найден файл sync.ini, где прописан путь
+
+    if export == True and Devmode == 0 and os.path.exists("sync.ini"):
         with open("sync.ini", encoding='utf-8', mode="r") as f:
             folder = f.read()
         doc = Document()
@@ -431,7 +454,7 @@ def share(silent=False, clipboard=False, email=False, folder=None, doc=False):
             if silent==False:
                 app.RM.popup("Успешно выполнен экспорт базы данных в папку %s." % path)
 
-def backupRestore(silent=True, saveOK=True, delete=False, restoreNumber=None, restoreWorking=False):
+def backupRestore(silent=True, allowSave=True, delete=False, restoreNumber=None, restoreWorking=False):
     """ Восстановление файла из резервной копии """
 
     if os.path.exists(BackupFolderLocation)==False:
@@ -449,7 +472,7 @@ def backupRestore(silent=True, saveOK=True, delete=False, restoreNumber=None, re
         files.sort(reverse=True)
         fileDates.sort(reverse=True)
         try:
-            load(forced=True, saveOK=saveOK, datafile=BackupFolderLocation + files[restoreNumber])
+            load(forced=True, allowSave=allowSave, datafile=BackupFolderLocation + files[restoreNumber])
         except:
             return False
         else:
@@ -462,7 +485,7 @@ def backupRestore(silent=True, saveOK=True, delete=False, restoreNumber=None, re
             size = os.path.getsize(BackupFolderLocation + files[i])
             if size > 320:
                 try:
-                    load(forced=True, saveOK=saveOK, datafile=BackupFolderLocation + files[i])
+                    load(forced=True, allowSave=allowSave, datafile=BackupFolderLocation + files[i])
                 except:
                     print("Непустая резервная копия не найдена.")
                     return False
@@ -475,26 +498,22 @@ def backupRestore(silent=True, saveOK=True, delete=False, restoreNumber=None, re
     # Если выбран режим удаления лишних копий
 
     elif delete == True:
-        if settings[0][6] > 0:
-            print("Обрабатываем резервные копии.")
-            limit = settings[0][6]
-            if len(files) > limit:  # лимит превышен, удаляем
-                extra = len(files) - limit
-                for i in range(extra):
-                    os.remove(BackupFolderLocation + files[i])
+        print("Обрабатываем резервные копии.")
+        limit = 10
+        if len(files) > limit:  # лимит превышен, удаляем
+            extra = len(files) - limit
+            for i in range(extra):
+                os.remove(BackupFolderLocation + files[i])
 
 def update():
     """ Проверяем новую версию и при наличии обновляем программу с GitHub """
 
     global Version
 
-    # Действия при первом запуске программы на устройстве.
-    # Определяются по тому, что проверка обновлений делается первый раз.
-
-    if settings[1] == "":
-        app.RM.firstRunFlag = True
-    else:
-        app.RM.firstRunFlag = False
+    today = str(datetime.datetime.strptime(time.strftime('%Y-%m-%d'), "%Y-%m-%d"))
+    today = today[0: today.index(" ")]
+    settings[1] = today
+    save()
 
     if app.RM.platform == "mobile":
         return # мобильная версия не проверяет обновления
@@ -508,10 +527,6 @@ def update():
         print("Не удалось подключиться к серверу.")
         return
     else: # успешно подключились, сохраняем сегодняшнюю дату последнего обновления
-        today = str(datetime.datetime.strptime( time.strftime('%Y-%m-%d'), "%Y-%m-%d") )
-        today = today[0: today.index(" ")]
-        settings[1] = today
-        save()
         print("Версия на сайте: ", newVersion)
 
     if newVersion > Version:

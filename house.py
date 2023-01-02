@@ -30,21 +30,6 @@ class House(object):
                 if self.porches[a].flats[b].status == "1": interest += 1
         return visited, interest
 
-    def getPreviousPorchStats(self, selectedPorch):
-        """ Получает диапазон квартир и этажность подъезда, предыдущего к полученному """
-        firstflat = "1"
-        lastflat = "20"
-        floors = "5"
-        if selectedPorch > 0:
-            prevFirst = int(self.porches[selectedPorch-1] .getFirstAndLastNumbers()[0])
-            prevLast = int(self.porches[selectedPorch-1]  .getFirstAndLastNumbers()[1])
-            prevRange = prevLast - prevFirst
-            firstflat = str( int(prevLast)+1 )
-            lastflat = str(int(prevLast)+1 + prevRange)
-            floors = str(int(prevRange / 4)) #str(self.porches[selectedPorch-1].showFlats(countFloors=True))
-
-        return firstflat, lastflat, floors
-
     def getPorchType(self):
         """ Выдает тип своего подъезда [0],
             существительное типа контакта в родительном падеже единственного числа [1],
@@ -203,8 +188,6 @@ class House(object):
         def getFlatsRange(self):
             """ Выдает диапазон квартир в подъезде многоквартирного дома"""
             range = ""
-            #if not "подъезд" in self.type:
-            #    return range
 
             if "подъезд" in self.type:
                 list = []
@@ -216,17 +199,19 @@ class House(object):
                             return " –" # в подъезде есть нецифровые номера квартир, выходим
                 list.sort()
                 if len(list) == 1:
-                    range = " [i]%s–%s[/i]" % (list[0], list[0])
+                    range = f" [i]{list[0]}[/i]"
                 elif len(list) > 1:
                     last = len(list) - 1
-                    range = " [i]%s–%s[/i]" % (list[0], list[last])
+                    range = f" [i]{list[0]}–{list[last]}[/i]"
 
             else:
                 if len(self.flats) == 0:
                     range == ""
+                elif len(self.flats) == 1:
+                    range = f" [i]{self.flats[0].number}[/i]"
                 else:
                     last = len(self.flats)-1
-                    range = " [i]%s–%s[/i]" % (self.flats[0].number, self.flats[last].number)
+                    range = f" [i]{self.flats[0].number}–{self.flats[last].number}[/i]"
 
             return range
 
@@ -248,7 +233,7 @@ class House(object):
             self.sortFlats()
 
             if status != "" and deletedFlat.number != number:
-                app.RM.popup("В этом подъезде больше нельзя сокращать этажи, потому что последняя квартира с записью исчезнет! Но вы можете изменить диапазон квартир или кол-во этажей на экране «Квартиры».")
+                app.RM.popup("В этом подъезде больше нельзя уменьшать этажи, потому что последняя квартира с записью исчезнет! Но вы можете изменить диапазон квартир или кол-во этажей на экране «Квартиры».")
 
             else:
                 if restore == True:
@@ -289,7 +274,7 @@ class House(object):
             return result
 
         def getFirstAndLastNumbers(self):
-            """Возвращает первый и последний номера в подъезде"""
+            """Возвращает первый и последний номера в подъезде и кол-во этажей"""
             numbers = []
             for flat in self.flats:
                 if utils.ifInt(flat.number) == True:
@@ -298,10 +283,14 @@ class House(object):
             try:
                 first = str(numbers[0])
                 last = str(numbers[len(numbers) - 1])
+                floors = self.type[7:]
+                if floors == "":
+                    floors = "1"
             except:
                 first = "1"
                 last = "20"
-            return first, last
+                floors = "5"
+            return first, last, floors
 
         def sortFlats(self):
             """Сортировка квартир"""
@@ -395,7 +384,7 @@ class House(object):
                     self.sortFlats()
                     if warn==True:
                         app.RM.popup(
-                            message="\nЗапрошено нестандартное соотношение квартир и этажей. Пришлось добавить %d квартир(ы), которые вам нужно вручную удалить на нужных этажах. Для этого нажмите на кнопку [b]%s Уменьшить этаж[/b] в деталях квартиры на соответствующем этаже." % (extraFlats, icon("icon-resize-small-1"))
+                            message="\nЗапрошено нестандартное соотношение квартир и этажей. Пришлось добавить %d квартир(ы), которые вам нужно вручную удалить на нужных этажах. Для этого нажмите на кнопку [b]%s Уменьшить этаж[/b] в деталях квартиры на соответствующем этаже." % (extraFlats, icon("icon-right-dir"))
                         )
                     break
 
@@ -403,7 +392,7 @@ class House(object):
             """ Вывод квартир для вида подъезда """
 
             def showListOfFlats():
-                """Вывод подъезда в графическом режиме списком квартир """
+                """Вывод подъезда/сегмента простым списком квартир """
                 options=[]
                 i = 0
                 for flat in self.flats:  # выводим квартиры
@@ -418,11 +407,11 @@ class House(object):
                     elif self.type=="диапазон":
                         options.append("Создайте один или несколько телефонных номеров")
                     else:
-                        options.append("Создайте квартиры подъезда")
+                        pass#options.append("Создайте квартиры подъезда")
                 return options
 
             def showListOfFloors():
-                """Вывод подъезда в подъездной раскладке"""
+                """Вывод многоквартирного подъезда в подъездной раскладке"""
                 options = []
                 i = 0
                 for r in range(self.rows):
@@ -482,7 +471,7 @@ class House(object):
             return mylist
 
         def addFlat(self, input, forcedDelete=False, silent=False, virtual=False):
-            """Создает квартиру и возвращает ссылку на нее (экземпляр)"""
+            """Создает квартиру и возвращает ссылку на нее (экземпляр). Первый символ должен быть `+` """
             input=input.strip()
             if input == "+":
                 return None
@@ -512,7 +501,7 @@ class House(object):
                             delete=True
                         else:
                             if silent==False:
-                                app.RM.popup("Контакт с таким номером уже существует, и в нем есть записи!")
+                                app.RM.popup(f"Нельзя создать № {self.flats[i].number} – этот номер уже существует, и в нем есть записи!")
                             del self.flats[last] # user reconsidered, delete the newly created empty flat
                             createdFlat = -1
                     break
@@ -598,21 +587,30 @@ class House(object):
                 self.meeting = ""
                 self.records = [] # list of Record instances, initially empty
 
-            def addFlatTolist(self, forceText=False):
+            def addFlatTolist(self):
                 """ Функция для форматированного показа строки в режимах списков подъезда (полный и поэтажный) """
                 line=""
                 if not "." in self.number:
                     if self.phone=="":
                         phone=""
                     else:
-                        phone = " т." + self.phone
+                        phone = " " + icon("icon-phone-1") + "\u00A0" + self.phone #" т." + self.phone
                     if self.note != "":
-                        note = " • " + self.note
+                        note = " " + icon("icon-sticky-note") + "\u00A0" + self.note# " • " + self.note
                     else:
                         note = ""
-                    #line += f"{self.getStatus()[0]} {self.number} {self.getName()}{phone}{self.note}"
-                    line += "%s %s %s%s%s" % (self.getStatus()[0],\
-                                                self.number, self.getName(), phone, note)
+                    if self.getName() == "":
+                        name = ""
+                    else:
+                        name = self.getName().strip()
+
+                    line += "%s [b]%s[/b] %s" % (
+                        self.getStatus()[0],
+                        self.number,
+                        name,
+                        #phone,
+                        #note
+                    )
                 return line
 
             def getName(self):
