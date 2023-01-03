@@ -851,7 +851,6 @@ class RMApp(App):
         self.setParameters()
         self.setTheme()
         self.createInterface()
-        self.terPressed()
         Clock.schedule_interval(self.updateTimer, 1)
         if self.devmode == 0:
             self.onStartup()
@@ -873,6 +872,7 @@ class RMApp(App):
         self.showSlider = False
         self.devmode = utils.Devmode
         self.restore = 0
+        self.form = "ter"
         self.displayed = self.feed
         self.button = {
             "save":     str(icon("icon-floppy") + " Сохранить"),
@@ -918,26 +918,18 @@ class RMApp(App):
                 Window.top = int(lines[2])
                 Window.left = int(lines[3])
             except:
-                k = 1.3
-                y = Window.size[1] * k
-                #x = y / 2
+                pass
 
             def __dropFile(*args):
                 self.importDB(wordFile=args[1].decode())
                 self.terPressed()
             Window.bind(on_drop_file=__dropFile)
-            def __resize(window=None, width=None, height=None):
-                with open("win.ini", "w") as file:
-                    file.write(str(width)+"\n")
-                    file.write(str(height)+"\n")
-                    file.write(str(Window.top)+"\n")
-                    file.write(str(Window.left))
-            Window.bind(on_resize=__resize)
             def __close(*args):
                 print("Выход из программы.")
                 utils.save(export=True)
                 __resize(width=args[0].size[0], height=args[0].size[1])
             Window.bind(on_request_close=__close)
+            Window.bind(on_resize=self.checkOrientation)
 
         elif platform == "android":
             plyer.orientation.set_portrait()
@@ -1099,6 +1091,8 @@ class RMApp(App):
         self.interface.add_widget(self.boxFooter)
         self.globalAnchor.add_widget(self.interface)
 
+        self.checkOrientation()
+
     def setTheme(self):
 
         self.themeDefault = [0.92, 0.92, 0.92, .9], [0, .15, .35, .8], [.18, .65, .83, 1] # цвет фона, кнопок и title
@@ -1202,7 +1196,6 @@ class RMApp(App):
         #if 1:#self.devmode==1:
         try:
             #a/b
-            self.checkOrientation()
             self.mainList.clear_widgets()
             self.detailsButton.disabled = True
             if self.showSlider == False:
@@ -1688,7 +1681,7 @@ class RMApp(App):
         elif self.displayed.form == "repLog":
             self.repPressed()
         else:
-            self.loadForm(form=self.lastForm, instance=instance)
+            self.loadForm()#form=self.lastForm, instance=instance)
 
     def sortPressed(self, instance=None):
         self.dropSortMenu.clear_widgets()
@@ -2438,6 +2431,8 @@ class RMApp(App):
             self.porchView()
 
         if self.displayed.form == "houseView":
+            #plyer.maps.route(self.house.title)
+            #return
             try:
                 address = f"google.navigation:q={self.house.title}"
                 intent = Intent(Intent.ACTION_VIEW, Uri.parse(address))
@@ -2634,7 +2629,6 @@ class RMApp(App):
 
     def repPressed(self, instance=None):
 
-        self.checkOrientation()
         self.counterChanged = False
         self.detailsButton.disabled = True
         self.neutral.disabled = True
@@ -2793,7 +2787,6 @@ class RMApp(App):
     def settingsPressed(self, instance=None):
         """ Настройки """
 
-        self.checkOrientation()
         self.lastForm = self.displayed.form
         self.displayed.form = "set"
         self.detailsButton.disabled = True
@@ -3523,27 +3516,27 @@ class RMApp(App):
         AL.add_widget(addList)
         return AL
 
-    def loadForm(self, form="", instance=None):
+    def loadForm(self, instance=None):
         """ Вывод заданной формы """
-
-        if form == "ter" or form == "createNewHouse":
+            
+        if self.form == "ter" or self.form == "createNewHouse":
             self.terPressed()
-        elif form == "houseView" or form == "createNewPorch" or form == "editHouse" or\
-            form == "houseDetails" or form == "noteForHouse":
+        elif self.form == "houseView" or self.form == "createNewPorch" or self.form == "editHouse" or\
+            self.form == "houseDetails" or self.form == "noteForHouse":
             self.houseView()
-        elif form == "porchView" or form == "createNewFlat" or form == "editPorch" or\
-            form == "porchDetails" or form == "noteForPorch":
+        elif self.form == "porchView" or self.form == "createNewFlat" or self.form == "editPorch" or\
+            self.form == "porchDetails" or self.form == "noteForPorch":
             self.porchView()
-        elif form == "flatView" or form == "createNewRecord" or form == "editFlat" or\
-            form == "flatDetails" or form == "noteForFlat":
+        elif self.form == "flatView" or self.form == "createNewRecord" or self.form == "editFlat" or\
+            self.form == "flatDetails" or self.form == "noteForFlat":
             self.flatView()
-        elif form == "recordView":
+        elif self.form == "recordView":
             self.recordView()
-        elif form == "rep":
+        elif self.form == "rep":
             self.repPressed()
-        elif form == "con":
+        elif self.form == "con":
             self.conPressed()
-        elif form == "search":
+        elif self.form == "search":
             self.feed = self.lastFeed
             self.find()
         else:
@@ -4254,7 +4247,7 @@ class RMApp(App):
             #time.sleep(2)
             #self.restart()
 
-    def checkOrientation(self):
+    def checkOrientation(self, window=None, width=None, height=None):
         """ Проверка ориентации экрана, и если она горизонтальная, адаптация интерфейса"""
         if Window.size[0] <= Window.size[1]:
             self.orientation = "v"
@@ -4270,7 +4263,13 @@ class RMApp(App):
             self.standardTextHeight = Window.size[1] * .06  # 90
 
         if self.platform == "desktop":
+            with open("win.ini", "w") as file:
+                file.write(str(width)+"\n")
+                file.write(str(height)+"\n")
+                file.write(str(Window.top)+"\n")
+                file.write(str(Window.left))
             self.standardTextHeight = 40
+            self.loadForm()
 
     def buttonFlash(self, instance=None, timeout=None):
 
