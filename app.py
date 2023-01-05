@@ -74,32 +74,20 @@ else:
 
 #Builder.load_file('rm.kv')
 
-class DataTransfer(object):
-    def __init__(self):
-        self.message = ""
-        self.title = ""
-        self.form = ""
-        self.options = []
-        self.selected = 0
-        self.positive = ""
-        self.neutral = ""
-        self.negative = ""
-
-    def update(self, message="", title="", form="", options=[], selected=0,
-                 positive="", neutral="", negative=""):
+class Feed(object):
+    def __init__(self, message="", title="", form="", options=[], sort=None, details=None, note=None,
+                 positive="", neutral="", negative="", back=True):
         self.message = message
         self.title = title
         self.form = form
         self.options = options
-        self.preselect = selected
         self.positive = positive
         self.neutral = neutral
         self.negative = negative
-
-    def show(self):
-        print(self.title)
-        print(self.message)
-        print(self.options)
+        self.sort = sort
+        self.details = details
+        self.note = note
+        self.back = back
 
 class MyTextInput(TextInput):
     def __init__(self, multiline=False, size_hint_y=1, size_hint_x=1, hint_text="", pos_hint = {"center_y": .5},
@@ -853,6 +841,7 @@ class RMApp(App):
         self.setParameters()
         self.setTheme()
         self.createInterface()
+        self.terPressed()
         Clock.schedule_interval(self.updateTimer, 1)
         if self.devmode == 0:
             self.onStartup()
@@ -867,21 +856,19 @@ class RMApp(App):
             self.platform = "desktop"
         self.rep = report.Report()
         iconfonts.register('default_font', 'fontello.ttf', 'fontello.fontd')
-        self.feed = DataTransfer()
         self.contactsEntryPoint = self.searchEntryPoint = self.popupEntryPoint = 0
         self.porch = house.House().Porch()
-        self.lastForm = "ter"
+        self.stack = []
         self.showSlider = False
         self.devmode = utils.Devmode
         self.restore = 0
-        self.form = "ter"
-        self.displayed = self.feed
         self.button = {
             "save":     str(icon("icon-floppy") + " Сохранить"),
             "cancel":   "Отмена", # str(icon("icon-left-big")
             "exit":     "Выход", # str(icon("icon-left-big") +
             "ok":       str(icon("icon-ok-1") + " OK"),
             "change":   str(icon("icon-pencil-squared") + " Изменить"),
+            "details":  icon("icon-pencil-1"),
             "yes":      "Да",
             "no":       "Нет"
         }
@@ -1194,23 +1181,47 @@ class RMApp(App):
 
     # Основные действия с центральным списком
 
-    def update(self):#, a=1, b=1):
+    def updateList(self):#, a=1, b=1):
         """Заполнение главного списка элементами"""
 
-        #if 1:#self.devmode==1:
-        try:
+        if 1:#self.devmode==1:
+        #try:
             #a/b
             self.mainList.clear_widgets()
-            self.detailsButton.disabled = True
+            self.popupEntryPoint = 0
             if self.showSlider == False:
                 self.sortButton.disabled = True
-            self.popupEntryPoint = 0
-            self.positive.text = self.displayed.positive
-            self.neutral.text = self.displayed.neutral
-            self.negative.text = self.displayed.negative
 
-            if not "rep" in self.displayed.form and self.displayed.form != "set":
-                self.note.text = icon("icon-sticky-note-o") + " Заметка"
+            self.positive.text = self.displayed.positive # выставление параметров, полученных из feed
+            self.negative.text = self.displayed.negative
+            if self.displayed.neutral != None:
+                self.neutral.disabled = False
+                self.neutral.text = self.displayed.neutral
+            else:
+                self.neutral.text = ""
+                self.neutral.disabled = True
+            if self.displayed.sort != None:
+                self.sortButton.disabled = False
+                self.sortButton.text = self.displayed.sort
+            else:
+                self.sortButton.text = ""
+                self.sortButton.disabled = True
+            if self.displayed.details != None:
+                self.detailsButton.disabled = False
+                self.detailsButton.text = self.displayed.details
+            else:
+                self.detailsButton.text = ""
+                self.detailsButton.disabled = True
+            if self.displayed.note != None:
+                self.note.disabled = False
+                self.note.text = self.displayed.note
+            else:
+                self.note.text = ""
+                self.note.disabled = True
+            if self.displayed.back == True:
+                self.backButton.disabled = False
+            else:
+                self.backButton.disabled = True
 
             # Обычный список (этажей нет)
 
@@ -1432,7 +1443,7 @@ class RMApp(App):
                                options=[self.button["yes"], self.button["no"]])
                 Clock.schedule_once(__onFirstRun, 2)
 
-        except: # в случае ошибки пытаемся восстановить последнюю резервную копию
+        """except: # в случае ошибки пытаемся восстановить последнюю резервную копию
             if self.restore < 10:
                 print(f"Файл базы данных поврежден, пытаюсь восстановить резервную копию {self.restore}.")
                 result = utils.backupRestore(restoreNumber = self.restore, allowSave=False)
@@ -1441,7 +1452,7 @@ class RMApp(App):
                     self.restore += 1
                     self.rep = report.Report()
                     utils.save(backup=False)
-                    self.update()
+                    self.updateList()
                 else:
                     print("Резервных копий больше нет.")
                     self.restore = 10
@@ -1450,7 +1461,7 @@ class RMApp(App):
                 self.popupForm = "emergencyExport"
                 self.popup(title="Ошибка базы данных",
                        message="Программа не может продолжить работу. Попробуйте удалить объект, созданный последним. Если это не помогает, зайдите в настройки, сделайте экспорт данных в Google Диск и отправьте файл разработчикам для анализа проблемы. Также вы можете выполнить очистку данных и начать работу с нуля.")
-
+"""
     def sliderToggle(self, mode=""):
         utils.settings[0][7] = 0
         if mode == "off":
@@ -1654,6 +1665,9 @@ class RMApp(App):
         """Нажата кнопка «назад»"""
         self.showSlider = False
         self.sliderToggle()
+        if self.displayed.form == "ter" or self.displayed.form == "con" or self.displayed.form == "search":
+            return
+
         if self.displayed.form == "houseView" or self.displayed.form == "createNewHouse":
             self.terPressed()
         elif self.displayed.form == "porchView" or self.displayed.form == "createNewPorch" or\
@@ -1811,23 +1825,6 @@ class RMApp(App):
     def notePressed(self, instance=None):
         self.lastForm = self.displayed.form
 
-        """if self.displayed.form == "ter" or self.displayed.form == "set" or self.displayed.form == "con":
-            self.feed.update(
-                form="noteGlobal",                
-                details=False,
-                sort=False,
-                options=options,
-                form="porchView",
-                positive=icon("icon-plus-circled-1") + positive,
-                neutral=neutral,
-                negative=self.button["exit"]
-            )
-            self.displayed = self.feed
-    
-            self.update()"""
-
-
-
         if self.displayed.form == "ter" or self.displayed.form == "con":
             self.detailsButton.disabled = True
         self.sortButton.disabled = True
@@ -1883,15 +1880,14 @@ class RMApp(App):
             options=[]
             for line in utils.resources[2]:
                 options.append(line)
-            self.feed.update(
+            self.displayed = Feed(
                 title="Журнал отчета",
                 options=options,
                 form="repLog",
                 positive="",#self.button["save"],
                 negative=self.button["exit"]
             )
-            self.displayed = self.feed
-            self.update()
+            self.updateList()
 
     # Действия главных кнопок positive, neutral, negative
 
@@ -2113,7 +2109,7 @@ class RMApp(App):
                 a1 = AnchorLayout(anchor_x="center", anchor_y="center")
                 self.flatRangeStart = MyTextInput(text=firstflat, multiline=False, size_hint_y=None, size_hint_x=None,
                                                 height=self.standardTextHeight, width=self.counterHeight*.6,
-                                                input_type="number", shrink=False, focus=True)
+                                                input_type="number", shrink=False)
                 a1.add_widget(self.flatRangeStart)
                 b1.add_widget(a1)
                 b1.add_widget(Label(text="по", color=self.standardTextColor))
@@ -2211,7 +2207,7 @@ class RMApp(App):
             newPorch = self.inputBoxEntry.text
             if newPorch == None:
                 self.houseView()
-                self.update()
+                self.updateList()
             elif newPorch == "":
                 self.inputBoxText.text = "Не сработало, попробуйте еще раз."
             else:
@@ -2463,15 +2459,6 @@ class RMApp(App):
     # Действия других кнопок
 
     def terPressed(self, instance=None):
-        try:
-            self.lastForm = self.displayed.form
-        except:
-            pass
-        else:
-            self.displayed.form = "ter"
-
-        self.detailsButton.disabled = False
-        self.neutral.disabled = True
         self.contactsEntryPoint = 0
         self.searchEntryPoint = 0
 
@@ -2515,24 +2502,23 @@ class RMApp(App):
         if len(housesList) == 0:
             housesList.append("Создайте свой первый участок")
 
-        self.feed.update(  # display list of houses and options
+        if utils.resources[0][0].strip() != "":
+            note = icon("icon-sticky-note") + " Заметка"
+        else:
+            note = icon("icon-sticky-note-o") + " Заметка"
+
+        self.displayed = Feed(  # display list of houses and options
             title="Участки (%d)" % len(utils.houses),
-            # houses sorting type, timer icon
             message="Список участков:",
             options=housesList,
             form="ter",
+            sort=icon("icon-sort-alt-up"),
+            note=note,
             positive=icon("icon-plus-circled-1") + " Новый участок",
-            negative=self.button["cancel"]
+            negative="",
+            back=False
         )
-        self.displayed = self.feed
-        self.update()
-        if utils.resources[0][0].strip() != "":
-            self.note.text = icon("icon-sticky-note") + " Заметка"
-        else:
-            self.note.text = icon("icon-sticky-note-o") + " Заметка"
-
-        self.sortButton.disabled = False
-        self.sortButton.text = icon("icon-sort-alt-up")
+        self.updateList()
 
     def conPressed(self, instance=None):
 
@@ -2540,9 +2526,6 @@ class RMApp(App):
         self.displayed.form = "con"
         self.contactsEntryPoint = 1
         self.searchEntryPoint = 0
-        #self.popupEntryPoint = 0
-        self.detailsButton.disabled = True
-        self.neutral.disabled = True
         self.showSlider = False
         self.sliderToggle()
         self.allcontacts = self.getContacts()
@@ -2616,24 +2599,23 @@ class RMApp(App):
         if len(options) == 0:
             options.append("Здесь будут отображаться жильцы со всех участков и отдельные контакты, созданные вами.")
 
-        self.feed.update(
+        if utils.resources[0][0].strip() != "":
+            note = icon("icon-sticky-note") + " Заметка"
+        else:
+            note = icon("icon-sticky-note-o") + " Заметка"
+
+        self.displayed = Feed(
             form="con",
             title="Контакты (%d)" % len(self.allcontacts),
             message="Список контактов:",
             options=options,
+            note=note,
+            sort=icon("icon-sort-alt-up"),
             positive=icon("icon-plus-circled-1") + " Новый контакт",
-            negative=self.button["cancel"]
+            negative="",
+            back=False
         )
-        self.displayed = self.feed
-        self.update()
-
-        if utils.resources[0][0].strip() != "":
-            self.note.text = icon("icon-sticky-note") + " Заметка"
-        else:
-            self.note.text = icon("icon-sticky-note-o") + " Заметка"
-
-        self.sortButton.disabled = False
-        self.sortButton.text = icon("icon-sort-alt-up")
+        self.updateList()
 
         if len(options) >= 10:
             try:  # пытаемся всегда вернуться на последний контакт
@@ -2647,19 +2629,19 @@ class RMApp(App):
         self.detailsButton.disabled = True
         self.neutral.disabled = True
         self.sortButton.disabled = True
+        self.backButton.disabled = False
         self.showSlider = False
         self.sliderToggle()
         self.note.text = icon("icon-history") + " Журнал"
-        self.lastForm = self.displayed.form
+        if self.displayed.form != "set":
+            self.lastForm = self.displayed.form
         self.displayed.form = "rep"
         self.pageTitle.text = "Отчет"
         self.detailsButton.disabled = True
         self.positive.text = self.button["save"]
         self.negative.text = self.button["cancel"]
 
-        self.reportPanel = TabbedPanel(background_color=self.globalBGColor0,
-                                       background_image=""
-                                       )
+        self.reportPanel = TabbedPanel(background_color=self.globalBGColor0, background_image="")
         tab1 = TTab(text=utils.monthName()[0])
         tab2 = TTab(text=utils.monthName()[2])
         tab3 = TTab(text="Служ. год")
@@ -2799,7 +2781,8 @@ class RMApp(App):
     def settingsPressed(self, instance=None):
         """ Настройки """
 
-        self.lastForm = self.displayed.form
+        if self.displayed.form != "rep":
+            self.lastForm = self.displayed.form
         self.displayed.form = "set"
         self.detailsButton.disabled = True
         self.sortButton.disabled = True
@@ -2926,7 +2909,6 @@ class RMApp(App):
 
     def searchPressed(self, instance=None):
         self.lastForm = self.displayed.form
-        self.lastFeed = self.feed
         self.popupForm = "search"
         self.popup(title="Поиск")
 
@@ -2934,8 +2916,6 @@ class RMApp(App):
         self.contactsEntryPoint = 0
         allContacts = self.getContacts(forSearch=True)
         self.searchResults = []
-        self.detailsButton.disabled = True
-        self.showSlider = False
         for i in range(len(allContacts)):  # start search in flats/contacts
             found = False
             if self.searchQuery in allContacts[i][2].lower() or self.searchQuery in allContacts[i][2].lower() or self.searchQuery in \
@@ -2987,17 +2967,21 @@ class RMApp(App):
         if len(options) == 0:
             options.append("Ничего не найдено")
 
-        self.feed.update(
+        if utils.resources[0][0].strip() != "":
+            note = icon("icon-sticky-note") + " Заметка"
+        else:
+            note = icon("icon-sticky-note-o") + " Заметка"
+
+        self.displayed = Feed(
             form="search",
             title="Поиск по запросу \"%s\"" % self.searchQuery,
             message="Результаты:",
             options=options,
-            positive="",#self.button["ok"],
-            negative=self.button["exit"]
+            note=note,
+            back=False
         )
-        self.displayed = self.feed
         self.mypopup.dismiss()
-        self.update()
+        self.updateList()
 
         if len(options) >= 10:
             try:  # пытаемся всегда вернуться в последний элемент поиска
@@ -3028,26 +3012,22 @@ class RMApp(App):
         else:
             due=""
 
-        self.feed.update(
+        if house.note.strip() != "":
+            note = icon("icon-sticky-note") + " Заметка"
+        else:
+            note = icon("icon-sticky-note-o") + " Заметка"
+
+        self.displayed = Feed(
             form="houseView",
             title=house.title+due,
             options=house.showPorches(),
+            note=note,
+            details=self.button["details"],
             positive=icon("icon-plus-circled-1") + " Новый " + house.getPorchType()[0],
             neutral=icon("icon-direction"),
             negative=self.button["exit"]
         )
-        self.displayed = self.feed
-
-        self.update()
-
-        if house.note.strip() != "":
-            self.note.text = icon("icon-sticky-note") + " Заметка"
-        else:
-            self.note.text = icon("icon-sticky-note-o") + " Заметка"
-
-        self.detailsButton.disabled = False
-
-        self.neutral.disabled = False
+        self.updateList()
 
     def porchView(self, porch=None, selectedPorch=None, instance=None):
         """ Вид подъезда - список квартир или этажей """
@@ -3079,49 +3059,43 @@ class RMApp(App):
             neutral = ""
         elif self.porch.floors() == True:
             neutral = icon("icon-th-1")
+        elif not "подъезд" in self.porch.type:  # Отрисовка нижних клавиш (positive, view, neutral)
+            neutral = None
         else:
             neutral = icon("icon-menu")
 
-        self.feed.update(
+        if self.porch.floors() == True:
+            sort = icon("icon-resize-full-alt-1")
+        else:
+            sort = icon("icon-sort-alt-up")
+
+        if porch.note.strip() != "":
+            note = icon("icon-sticky-note") + " Заметка"
+        else:
+            note = icon("icon-sticky-note-o") + " Заметка"
+
+        self.displayed = Feed(
             title=self.house.title+segment,
             options=options,
             form="porchView",
+            note=note,
+            sort=sort,
+            details=self.button["details"],
             positive=icon("icon-plus-circled-1") + positive,
             neutral=neutral,
             negative=self.button["exit"]
         )
-        self.displayed = self.feed
-
-        self.update()
+        self.updateList()
 
         if len(self.porch.flats) == 0: # если нет квартир, сразу форма создания
             self.positivePressed()
             return
 
-        if porch.note.strip() != "":
-            self.note.text = icon("icon-sticky-note") + " Заметка"
-        else:
-            self.note.text = icon("icon-sticky-note-o") + " Заметка"
-
-        self.detailsButton.disabled = False
-
-        if "подъезд" in self.porch.type:  # Отрисовка нижних клавиш (positive, view, neutral)
-            self.neutral.disabled = False
-        else:
-            self.neutral.disabled = True
-
-        if self.porch.floors() == True:
-            self.sortButton.disabled = False
-            self.sortButton.text = icon("icon-resize-full-alt-1")
-        else:
-            self.sortButton.disabled = False
-            self.sortButton.text = icon("icon-sort-alt-up")
-
-            if len(self.porch.flats) >= 10:
-                try: # пытаемся всегда вернуться в последнюю квартиру
-                    self.scroll.scroll_to(widget=self.btn[self.clickedBtnIndex], padding=0, animate=False)
-                except:
-                    pass
+        if self.porch.floors() == False and len(self.porch.flats) >= 10:
+            try: # пытаемся всегда вернуться в последнюю квартиру
+                self.scroll.scroll_to(widget=self.btn[self.clickedBtnIndex], padding=0, animate=False)
+            except:
+                pass
 
     def flatView(self, flat=None, selectedFlat=None, call=True, instance=None):
         """ Вид квартиры - список записей посещения """
@@ -3129,8 +3103,6 @@ class RMApp(App):
             flat = self.flat
         if selectedFlat != None:
             flat = self.porch[selectedFlat]
-
-        self.detailsButton.disabled = False
 
         if flat.number == "virtual":  # прячем номера отдельных контактов
             number = " "
@@ -3148,16 +3120,23 @@ class RMApp(App):
             self.neutral.disabled = True
             neutral = ""
         records = flat.showRecords()
-        self.feed.update(
+
+        if flat.note.strip() != "":
+            note = icon("icon-sticky-note") + " Заметка"
+        else:
+            note = icon("icon-sticky-note-o") + " Заметка"
+
+        self.displayed = Feed(
             title=self.flatTitle,
             message="Список посещений:",
             options=records,
             form="flatView",
+            note=note,
+            details=self.button["details"],
             positive= icon("icon-plus-circled-1") + " Новое посещение",
             neutral=neutral,
             negative=self.button["exit"]
         )
-        self.displayed = self.feed
 
         if call == False and self.flat.status == "": # всплывающее окно первого посещения
             self.popup(firstCall=True)
@@ -3167,8 +3146,6 @@ class RMApp(App):
                 self.scrollWidget.clear_widgets()
                 options2 = ["Имя и (или) описание человека:", "О чем говорили:"]
                 defaults = [self.flat.getName(), ""]
-                #if self.flat.status == "" and self.popupEntryPoint == False and "Интерес" in button:
-                #    self.flat.status = "1"
                 multilines = [False, True]
                 self.createMultipleInputBox(
                     title=self.flatTitle + " — первое посещение",
@@ -3180,7 +3157,7 @@ class RMApp(App):
                 if instance != None and "Интерес" in instance.text:
                     self.multipleBoxEntries[0].focus = True  # принудительная фокусировка ввода на первом тексте
             else:
-                self.update()
+                self.updateList()
 
             self.colorBtn = []
             for i, status in zip(range(6), ["0", "1", "2", "3", "4", "5"]):
@@ -3200,13 +3177,6 @@ class RMApp(App):
             colorBox.add_widget(self.colorBtn[5])
             self.mainList.add_widget(colorBox)
 
-            self.detailsButton.disabled = False
-
-            if flat.note.strip() != "":
-                self.note.text = icon("icon-sticky-note") + " Заметка"
-            else:
-                self.note.text = icon("icon-sticky-note-o") + " Заметка"
-
             if len(records) >= 10:
                 try:  # пытаемся всегда вернуться на последнюю запись посещения
                     self.scroll.scroll_to(widget=self.btn[self.clickedBtnIndex], padding=0, animate=False)
@@ -3223,7 +3193,6 @@ class RMApp(App):
             default = self.record.title,
             multiline=True
         )
-        self.positive.text = self.button["change"]
 
     # Диалоговые окна
 
@@ -3254,6 +3223,7 @@ class RMApp(App):
         """ Форма ввода данных с одним полем """
         self.mainList.clear_widgets()
         self.pageTitle.text = title
+        self.backButton.disabled = False
         self.positive.text = self.button["save"]
         self.negative.text = self.button["cancel"]
         if self.displayed.form != "flatView" and self.displayed.form != "flatDetails" and \
@@ -3337,12 +3307,10 @@ class RMApp(App):
 
         if form == None: # по умолчанию вывод делается на mainlist, но можно вручную указать другую форму
             form = self.mainList
-
         form.clear_widgets()
-
+        self.backButton.disabled = False
         if title != None:
             self.pageTitle.text = title
-
         self.positive.text = self.button["save"]
         self.negative.text = self.button["cancel"]
         if self.displayed.form != "flatView" and self.displayed.form != "flatDetails" and \
@@ -3537,7 +3505,6 @@ class RMApp(App):
         elif form == "set":
             self.settingsPressed()
         elif form == "search":
-            self.feed = self.lastFeed
             self.find()
         else:
             self.terPressed()
@@ -3837,7 +3804,7 @@ class RMApp(App):
             self.rep.checkNewMonth(forceDebug=True)
 
         elif input == "error":
-            self.update(5, 0)
+            self.updateList(5, 0)
 
         elif input != "":
             self.searchBar.text = "Ищем, подождите…"
@@ -4191,7 +4158,7 @@ class RMApp(App):
             return
         utils.settings[0][1] = pos
         utils.save()
-        self.update()
+        self.updateList()
 
     def onStartup(self):
 
@@ -4250,7 +4217,6 @@ class RMApp(App):
                 file.write(str(Window.top)+"\n")
                 file.write(str(Window.left))
             self.standardTextHeight = 40
-            self.loadForm(form=self.feed.form)
 
     def buttonFlash(self, instance=None, timeout=None):
 
