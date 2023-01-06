@@ -1198,7 +1198,7 @@ class RMApp(App):
         #try:
             #a/b
             self.stack = list(dict.fromkeys(self.stack))
-            print(self.stack)
+            #print(self.stack)
             self.mainList.clear_widgets()
             self.popupEntryPoint = 0
             if self.showSlider == False:
@@ -1695,22 +1695,25 @@ class RMApp(App):
         if len(self.stack) > 0:
             del self.stack[0]
 
-        if len(self.stack) > 0:#try:
-            print(f"looking: {self.stack[0]}")
-            if self.stack[0] == "ter":
-                self.terPressed()
-            elif self.stack[0] == "con":
-                self.conPressed()
-            elif self.stack[0] == "search":
-                self.find()
-            elif self.stack[0] == "houseView":
-                self.houseView()
-            elif self.stack[0] == "porchView":
-                self.porchView()
-            elif self.stack[0] == "flatView":
-                self.flatView()
-            elif self.stack[0] == "repLog":
-                self.repPressed()
+        if self.displayed.form == "repLog":
+            self.repPressed()
+
+        else:
+            if len(self.stack) > 0:#try:
+                if self.stack[0] == "ter":
+                    self.terPressed()
+                elif self.stack[0] == "con":
+                    self.conPressed()
+                elif self.stack[0] == "search":
+                    self.find()
+                elif self.stack[0] == "houseView":
+                    self.houseView()
+                elif self.stack[0] == "porchView":
+                    self.porchView()
+                elif self.stack[0] == "flatView":
+                    self.flatView()
+                #elif self.stack[0] == "repLog":
+                #    self.repPressed()
 
     def sortPressed(self, instance=None):
         self.dropSortMenu.clear_widgets()
@@ -2013,8 +2016,8 @@ class RMApp(App):
                 else:
                     utils.log("Отчет за прошлый месяц сохраняется автоматически в начале следующего месяца!")
 
-        elif self.displayed.form == "repLog":
-            self.repPressed()
+        #elif self.displayed.form == "repLog":
+        #    self.repPressed()
 
         # Настройки
 
@@ -3121,8 +3124,6 @@ class RMApp(App):
                 pass
 
     def flatView(self, flat=None, selectedFlat=None, call=True, instance=None):
-        #print(f"instance: {instance.text}")
-        print("run flatview")
         """ Вид квартиры - список записей посещения """
         if flat == None:
             flat = self.flat
@@ -3284,7 +3285,9 @@ class RMApp(App):
             grid.size_hint_y = 1
 
         self.inputBoxText = Label(text=message, color=self.standardTextColor, valign="center",
-                                  halign="center", text_size = (Window.size[0]*.9, None), size_hint_y=None)
+                                  halign="center", text_size = (Window.size[0]*.9, self.mainList.size[1] / 7),
+                                  height=self.mainList.size[1] / 7,
+                                  size_hint_y=None)
         grid.add_widget(self.inputBoxText)
 
         if input == True:
