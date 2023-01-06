@@ -2016,9 +2016,6 @@ class RMApp(App):
                 else:
                     utils.log("Отчет за прошлый месяц сохраняется автоматически в начале следующего месяца!")
 
-        #elif self.displayed.form == "repLog":
-        #    self.repPressed()
-
         # Настройки
 
         elif self.displayed.form == "set":
@@ -2089,7 +2086,6 @@ class RMApp(App):
         # Форма создания квартир/домов
 
         elif self.displayed.form == "porchView":
-            self.stack.insert(0, self.stack[0]) # дублирование последнего шага стека, чтобы предотвратить уход со страницы
             self.detailsButton.disabled = False
             self.sortButton.disabled = True
             self.neutral.disabled = True
@@ -2789,13 +2785,6 @@ class RMApp(App):
         report3.add_widget(b3)
         tab3.content = report3
         self.reportPanel.add_widget(tab3)
-
-        if self.firstRunFlag == True:
-            self.popupForm = "pioneerNorm"
-            self.popup(title="Rocket Ministry",
-                       message="Вы общий пионер? Тогда мы пропишем месячную норму часов. Ее можно ввести самостоятельно в настройках.",
-                       options=[self.button["yes"], self.button["no"]])
-            self.firstRunFlag = False
 
     def settingsPressed(self, instance=None):
         """ Настройки """
