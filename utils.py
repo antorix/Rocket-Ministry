@@ -9,16 +9,16 @@ def initializeDB():
         [1, 5, 0, 0, "с", 0, 10, 0, 1.5, 0, 1, 1, 1, 1, "", 1, 0, "", "0", "д", 0, 0, 1], # program settings: settings[0][0…], see set.preferences()
         "",# дата последнего обновления settings[1]
         # report:                       settings[2]
-        [0.0,       # [0] hours         settings[2][0…]
-         0.0,       # [1] credit
+        ["00:00",       # [0] hours         settings[2][0…]
+         "00:00",       # [1] credit
          0,         # [2] placements
          0,         # [3] videos
          0,         # [4] returns,
          0,         # [5] studies,
-         0,         # [6] startTime
+         "00:00",   # [6] startTime
          0,         # [7] endTime
-         0.0,       # [8] reportTime
-         0.0,       # [9] difTime
+         "00:00",   # [8] reportTime
+         "00:00",   # [9] difTime
          "",        # [10] note
          0,         # [11] to remind submit report (0: already submitted) - не используется с 2.0
          ""         # [12] отчет прошлого месяца
@@ -61,13 +61,6 @@ if platform == "android":
     UserPath = "../"#storage/emulated/0/Android/data/org.rocketministry/"
 else:
     UserPath = ""
-    try:
-        from docx import Document
-    except:
-        from subprocess import check_call
-        from sys import executable
-        check_call([executable, '-m', 'pip', 'install', 'python-docx'])
-        from docx import Document
 
 BackupFolderLocation = UserPath + "backup/"
 DataFile = "data.jsn"
@@ -76,11 +69,11 @@ import datetime
 import json
 import time
 import urllib.request
+import requests
 import shutil
 import app
 import os
 import house
-from kivy.core.clipboard import Clipboard
 import plyer
 
 Message = ""
@@ -197,23 +190,36 @@ def load(datafile=None, allowSave=True, forced=False, clipboard=None, silent=Fal
         try:
             print("Смотрим буфер обмена.")
             clipboard = str(clipboard).strip()
-            clipboard = clipboard[ clipboard.index("[\"Rocket Ministry") : ]
+
+            if "drive.google.com" in clipboard: # получена ссылка на Google Drive
+                URL = "https://docs.google.com/uc?export=download"
+                id = clipboard[ clipboard.index("/d/")+3 : clipboard.index("/view")]
+                session = requests.Session()
+                response = session.get(URL, params={'id': id}, stream=True)
+                with open("temp", "wb") as f:
+                    for chunk in response.iter_content(32768):
+                        if chunk:  # filter out keep-alive new chunks
+                            f.write(chunk)
+                            print("Данные получены из Google Drive и записаны во временный файл.")
+
+            else: # получен чистый текст
+                clipboard = clipboard[ clipboard.index("[\"Rocket Ministry") : ]
+                with open("temp", "w") as file:
+                    file.write(clipboard)
+                    print("Содержимое буфера обмена записано во временный файл.")
         except:
-            app.RM.popup("В буфере обмена нет данных для импорта. Нажмите «Помощь», чтобы узнать о том, как переносить данные Rocket Ministry.")
             return False
 
-        with open("temp", "w") as file:
-            file.write(clipboard)
-            print("Содержимое буфера обмена записано во временный файл.")
         try:
             with open("temp", "r") as file:
                 buffer = json.load(file)
             print("Буфер получен из буфера обмена.")
+            os.remove("temp")
         except:
-            print("Ошибка загрузки из временного файла.")
+            #app.RM.popup("Данные для импорта не найдены. Нажмите «Помощь», чтобы узнать о том, как переносить данные Rocket Ministry.")
             return False
 
-    elif forced==True: # импорт по запросу с конкретным файлом (txt или Word)
+    elif forced==True: # импорт по запросу с конкретным файлом
         try:
             with open(datafile, "r") as file:
                 buffer = json.load(file)
@@ -369,16 +375,15 @@ def save(backup=False, silent=True, export=False):
     # Экспорт в файл на ПК, если найден файл sync.ini, где прописан путь
 
     if export == True and Devmode == 0 and os.path.exists("sync.ini"):
-        with open("sync.ini", encoding='utf-8', mode="r") as f:
-            folder = f.read()
-        doc = Document()
-        doc.add_paragraph(str(json.dumps(output)))
         try:
-            doc.save(folder + "/Данные Rocket Ministry.docx")
+            with open("sync.ini", encoding='utf-8', mode="r") as f:
+                folder = f.read()
+            with open(folder + "/Данные Rocket Ministry.txt", "w") as file:
+                json.dump(output, file)
         except:
             print("Произведена неудачная попытка сохранить данные в расположение, указанное в файле sync.ini. Скорее всего, путь указан неверно. Проверьте содержимое этого файла.")
 
-def share(silent=False, clipboard=False, email=False, folder=None, doc=False):
+def share(silent=False, clipboard=False, email=False, folder=None, file=False):
     """ Sharing database """
 
     global UserPath, DataFile
@@ -406,20 +411,19 @@ def share(silent=False, clipboard=False, email=False, folder=None, doc=False):
         filename = "Данные Rocket Ministry от %s" % dated
         plyer.email.send(subject=filename, text=s, create_chooser=True)
 
-    elif doc == True: # экспорт в Word
+    elif file == True: # экспорт в текстовый файл на компьютере
         try:
             from tkinter import filedialog
             folder = filedialog.askdirectory()
-            doc = Document()
-            doc.add_paragraph(str(buffer))
             date = time.strftime("%d", time.localtime())
             month = monthName()[5]
             timeCur = time.strftime("%H.%M", time.localtime())
             dated = "%s %s %s" % (date, month, timeCur)
-            filename = folder + "/Данные Rocket Ministry от %s.docx" % dated
-            doc.save(filename)
+            filename = folder + "/Данные Rocket Ministry от %s.txt" % dated
+            with open(filename, "w") as file:
+                json.dump(output, file)
         except:
-            pass#app.RM.popup("Не удалось экспортировать файл данных!")
+            app.RM.popup("Ошибка экспорта!")
         else:
             app.RM.popup("Данные успешно экспортированы в файл «%s»." % filename)
 
@@ -555,8 +559,6 @@ def update():
             from subprocess import check_call
             from sys import executable
             check_call([executable, '-m', 'pip', 'install', 'kivy'])
-            check_call([executable, '-m', 'pip', 'install', 'python-docx'])
-            check_call([executable, '-m', 'pip', 'install', 'docx2txt'])
 
     else:
         print("Обновлений нет.")
@@ -832,8 +834,31 @@ def timeHHMMToFloat(mytime):
     else:
         return result1 + result2
 
-def timeFloatToHHMM(hours):
-    delta = str(datetime.timedelta(hours=hours)).strip()
+def sumHHMM(list=None, mode="+"):
+    """ Складывает два значения времени вида HH:MM, полученных в списке """
+    if list == None:
+        list = ['25:06', '9:31']
+
+    print(f"list: {list}")
+    mysum = datetime.timedelta()
+
+    for i in list:
+        (h, m) = i.split(':')
+        d = datetime.timedelta(hours=int(h), minutes=int(m))
+        if mode == "+":
+            mysum += d
+        else:
+            mysum -= d
+
+    print(f"mysum: {mysum}")
+
+    string = timeFloatToHHMM(delta=str(mysum))
+
+    return string
+
+def timeFloatToHHMM(hours=None, delta=None):
+    if delta == None:
+        delta = str(datetime.timedelta(hours=hours)).strip()
 
     if "." in delta:
         delta = delta[0: delta.index(".")]

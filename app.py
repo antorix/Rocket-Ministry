@@ -16,7 +16,7 @@ from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.floatlayout import FloatLayout
+#from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.anchorlayout import AnchorLayout
 #from kivy.uix.scatterlayout import ScatterLayout
 from kivy.uix.button import Button
@@ -37,21 +37,22 @@ from kivy import platform
 from kivy.clock import Clock
 from kivy.uix.slider import Slider
 from kivy.graphics import Color, RoundedRectangle
-from kivy.uix.modalview import ModalView
+#from kivy.uix.modalview import ModalView
 
 if platform == "android":
     from android.permissions import request_permissions, Permission
-    request_permissions([Permission.CALL_PHONE, Permission.INTERNET, "com.google.android.gms.permission.AD_ID"])
-                         #Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
-
-
-    #<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
-    #, Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE])
+    request_permissions([Permission.CALL_PHONE,
+                         Permission.INTERNET,
+                         #Permission.WRITE_EXTERNAL_STORAGE,
+                         #Permission.READ_EXTERNAL_STORAGE,
+                         #Permission.MANAGE_EXTERNAL_STORAGE,
+                         #Permission.ACCESS_MEDIA_LOCATION,
+                         #Permission.MANAGE_MEDIA,
+                         "com.google.android.gms.permission.AD_ID"
+                         ])
 
     # Кроме того, при обновлении целевой версии ОС до Android 13 или более поздней потребуется указывать в манифесте
     # приложения обычное разрешение для сервисов Google Play следующим образом:
-
     # <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
 
     import kvdroid
@@ -66,13 +67,12 @@ if platform == "android":
 
 else:
     try:
-        import docx2txt
+        import plyer
     except:
         from subprocess import check_call
         from sys import executable
-        check_call([executable, '-m', 'pip', 'install', 'docx2txt'])
         check_call([executable, '-m', 'pip', 'install', 'plyer'])
-        import docx2txt
+        import plyer
 
 #Builder.load_file('rm.kv')
 
@@ -148,7 +148,6 @@ class MyTextInput(TextInput):
                     if RM.reportBoxesAL in RM.mainList.children and RM.displayed.form != "flatView":
                         RM.reportBoxesAL.anchor_y = "bottom"
                 Clock.schedule_once(__getHeight, 0.2)
-                #Window.bind(on_key_down=__getHeight)
 
         else:
             self.hide_keyboard()
@@ -920,7 +919,7 @@ class RMApp(App):
                 pass
 
             def __dropFile(*args):
-                self.importDB(wordFile=args[1].decode())
+                self.importDB(file=args[1].decode())
                 self.terPressed()
             Window.bind(on_drop_file=__dropFile)
             def __close(*args):
@@ -1194,8 +1193,8 @@ class RMApp(App):
     def updateList(self):#, a=1, b=1):
         """Заполнение главного списка элементами"""
 
-        #if 1:#self.devmode==1:
-        try:
+        if 1:#self.devmode==1:
+        #try:
             #a/b
             self.stack = list(dict.fromkeys(self.stack))
             #print(self.stack)
@@ -1468,7 +1467,7 @@ class RMApp(App):
                                options=[self.button["yes"], self.button["no"]])
                 Clock.schedule_once(__onFirstRun, 2)
 
-        except: # в случае ошибки пытаемся восстановить последнюю резервную копию
+        """except: # в случае ошибки пытаемся восстановить последнюю резервную копию
             if self.restore < 10:
                 print(f"Файл базы данных поврежден, пытаюсь восстановить резервную копию {self.restore}.")
                 result = utils.backupRestore(restoreNumber = self.restore, allowSave=False)
@@ -1486,7 +1485,7 @@ class RMApp(App):
                 self.popupForm = "emergencyExport"
                 self.popup(title="Ошибка базы данных",
                        message="Программа не может продолжить работу. Попробуйте удалить объект, созданный последним. Если это не помогает, зайдите в настройки, сделайте экспорт данных в Google Диск и отправьте файл разработчикам для анализа проблемы. Также вы можете выполнить очистку данных и начать работу с нуля.")
-
+"""
     def sliderToggle(self, mode=""):
         utils.settings[0][7] = 0
         if mode == "off":
@@ -1840,7 +1839,6 @@ class RMApp(App):
                         options=["Служение", "Кредит"])
 
     def notePressed(self, instance=None):
-
         self.showSlider = False
         self.sliderToggle()
 
@@ -2016,6 +2014,9 @@ class RMApp(App):
                 else:
                     utils.log("Отчет за прошлый месяц сохраняется автоматически в начале следующего месяца!")
 
+        #elif self.displayed.form == "repLog":
+        #    self.repPressed()
+
         # Настройки
 
         elif self.displayed.form == "set":
@@ -2086,6 +2087,7 @@ class RMApp(App):
         # Форма создания квартир/домов
 
         elif self.displayed.form == "porchView":
+            #self.stack.insert(0, self.stack[0]) # дублирование последнего шага стека, чтобы предотвратить уход со страницы
             self.detailsButton.disabled = False
             self.sortButton.disabled = True
             self.neutral.disabled = True
@@ -2461,8 +2463,15 @@ class RMApp(App):
                 webbrowser.open(f"https://www.google.com/maps/place/{self.house.title}")
 
         elif icon("icon-phone-squared") in instance.text:
+            if platform == "android":
+                request_permissions([Permission.CALL_PHONE])
             if self.platform == "mobile":
-                plyer.call.makecall(tel=self.flat.phone)
+                try:
+                    plyer.call.makecall(tel=self.flat.phone)
+                except:
+                    Clipboard.copy(self.flat.phone)
+                    self.popup("Номер телефона %s скопирован в буфер обмена." % self.flat.phone)
+
             else:
                 Clipboard.copy(self.flat.phone)
                 self.popup("Номер телефона %s скопирован в буфер обмена." % self.flat.phone)
@@ -2747,11 +2756,14 @@ class RMApp(App):
 
         report3 = AnchorLayout(anchor_x="center", anchor_y="center")
 
-        b3 = BoxLayout(spacing=spacing, padding=self.padding)
-        mGrid = GridLayout(rows=12, cols=2, size_hint=(x, y), padding=self.padding, spacing=self.spacing,
+        scroll = ScrollView(scroll_type=['bars', 'content'])
+        b3 = BoxLayout(spacing=spacing, padding=self.padding, size_hint_y=None)
+        mGrid = GridLayout(cols=2, size_hint=(x, y), padding=self.padding, spacing=self.spacing,
                             row_force_default = row_force_default,
                             col_default_width=width, row_default_height = height,
-                            pos_hint={"center_y": .5})
+                            #pos_hint={"center_y": .5}
+                            pos_hint={"bottom": 1}
+                           )
         self.months = []
 
         for i, month in zip(range(12),
@@ -2772,17 +2784,22 @@ class RMApp(App):
                 MyTextInput(text=text, multiline=False, input_type="number", width=self.standardTextWidth * 1.1,
                             height=height, size_hint_x=None, size_hint_y=None, mode=mode, shrink=False))
             mGrid.add_widget(self.months[i])
-            self.analyticsMessage = Label(markup=True, color=self.standardTextColor, valign="center",
-                                          text_size=(Window.size[0] / 2, self.mainList.size[1]),
-                                          height=self.mainList.size[1],
-                                          width=Window.size[0] / 2, pos_hint={"center_y": .5})
+            self.analyticsMessage = Label(markup=True, color=self.standardTextColor, valign="top",
+                                          #size_hint_y=None,
+                                          text_size=(Window.size[0]/2, Window.size[1]),#(Window.size[0] / 2, b3.size[1]),
+                                          height=Window.size[1],
+                                          width=Window.size[0] / 2,
+                                          #pos_hint={"center_y": .5}
+                                          pos_hint={"bottom": 1}
+                                    )
             self.months[i].bind(focus=self.recalcServiceYear)
 
         self.recalcServiceYear()
 
         b3.add_widget(mGrid)
         b3.add_widget(self.analyticsMessage)
-        report3.add_widget(b3)
+        scroll.add_widget(b3)
+        report3.add_widget(scroll)
         tab3.content = report3
         self.reportPanel.add_widget(tab3)
 
@@ -2846,40 +2863,43 @@ class RMApp(App):
         tab2 = TTab(text="Данные")
         g = GridLayout(rows=2, cols=2, spacing="10dp", padding=[30, 30, 30, 30])
 
-        exportEmail = RButton(text=icon("icon-share-1") + " Экспорт", size=text_size)
+        importBtn = RButton(text=icon("icon-download-cloud") + " Импорт", size=text_size)
+        importBtn.bind(on_release=self.importDB)
+        g.add_widget(importBtn)
+
+        exportEmail = RButton(text=icon("icon-upload-cloud") + " Экспорт", size=text_size)
         def __export(instance):
             if self.platform == "mobile":
                 utils.share(email=True)
             else:
-                utils.share(doc=True)
+                utils.share(file=True)
         exportEmail.bind(on_release=__export)
         g.add_widget(exportEmail)
 
-        importBtn = RButton(text=icon("icon-download-1") + " Импорт", size=text_size)
-        importBtn.bind(on_release=self.importDB)
-        g.add_widget(importBtn)
-
         if self.platform == "desktop":
             g.rows += 1
-            importFile = RButton(text=icon("icon-folder-open") + " Импорт из файла", size=text_size)
+            importFile = RButton(text=icon("icon-folder-open") + " Открыть файл", size=text_size)
 
             def __importFile(instance):
-                #from tkinter import filedialog
-                #file = filedialog.askopenfilename()
-                def __handleSelection(selection):
-                    file = selection[0]
+                from tkinter import filedialog
+                file = filedialog.askopenfilename()
+                if file != "":
                     self.importDB(file=file)
-                plyer.filechooser.open_file(on_selection=__handleSelection)
+                """def __handleSelection(selection):
+                    if len(selection)>0:
+                        file = selection[0]
+                        self.importDB(file=file)
+                plyer.filechooser.open_file(on_selection=__handleSelection)"""
 
             importFile.bind(on_release=__importFile)
             g.add_widget(importFile)
 
         restoreBtn = RButton(text=icon("icon-upload-1") + " Восстановление", size=text_size)
         def __restore(instance):
-            result = utils.backupRestore(restoreWorking=True, silent=False)
-            if result == True:
-                self.rep = report.Report()
-                utils.save()
+            self.popup(
+                message="Будет загружена резервная копия данных, созданная перед последним сохранением. Продолжать?",
+                options=[self.button["yes"], self.button["no"]])
+            self.popupForm = "restoreData"
         restoreBtn.bind(on_release=__restore)
         g.add_widget(restoreBtn)
 
@@ -3166,6 +3186,7 @@ class RMApp(App):
                     defaults=[self.flat.getName(), ""],
                     multilines=[False, True],
                     note=note,
+                    details=self.button["details"],
                     allowStackDuplicate=False,
                     addCheckBoxes=True
                 )
@@ -3258,8 +3279,10 @@ class RMApp(App):
         self.backButton.disabled = False
         if note != None:
             self.note.text = note
+            self.note.disabled = False
         if details != None:
             self.detailsButton.text = details
+            self.detailsButton.disabled = False
         height = self.standardTextHeight
         pos_hint = {"top": 1}
         a = AnchorLayout(anchor_x="center", anchor_y="top")
@@ -3365,8 +3388,10 @@ class RMApp(App):
         self.backButton.disabled = False
         if note != None:
             self.note.text = note
+            self.note.disabled = False
         if details != None:
             self.detailsButton.text = details
+            self.detailsButton.disabled = False
 
         grid = GridLayout(rows=len(options), spacing=self.spacing, padding=self.padding*2, cols=2, pos_hint={"top": 1})
         self.multipleBoxLabels = []
@@ -3811,7 +3836,7 @@ class RMApp(App):
                 self.terPressed()
 
         elif input == "loadcb":
-            self.importDB()
+            self.importDB() # загрузка буфера обмена
 
         elif input == "green":
             utils.settings[0][5] = "green"
@@ -3823,6 +3848,17 @@ class RMApp(App):
 
         elif input == "error":
             self.updateList(5, 0)
+
+        elif input == "file":
+            def __handleSelection(selection):
+                if len(selection) > 0:
+                    file = selection[0]
+                    self.pageTitle.text = file
+                    self.importDB(file=file)
+            plyer.filechooser.open_file(on_selection=__handleSelection)
+
+        elif input[0:2] == "gd":
+            self.openFromGoogleDrive(input[2:])
 
         elif input != "":
             self.searchBar.text = "Ищем, подождите…"
@@ -3929,6 +3965,17 @@ class RMApp(App):
                 utils.removeFiles()
                 self.rep = report.Report()
 
+        elif self.popupForm == "restoreData":
+            if instance.text == self.button["yes"]:
+                result = utils.backupRestore(restoreWorking=True, silent=False)
+                if result == True:
+                    self.rep = report.Report()
+                    utils.save()
+
+        elif self.popupForm == "importHelp":
+            if instance.text == self.button["yes"]:
+                webbrowser.open("https://github.com/antorix/Rocket-Ministry/wiki#резервирование-и-синхронизация-данных")
+
         elif self.popupForm == "newMonth":
             self.repPressed()
             self.notePressed()
@@ -4012,12 +4059,12 @@ class RMApp(App):
             self.popupForm = "firstCall"
             title = self.flat.number
             if self.orientation == "v":
-                size_hint = (.9, .5)
+                size_hint = (.7, .5)
             else:
                 size_hint = (.5, .6)
             contentMain = BoxLayout(orientation="vertical", padding=self.padding)
-            content = GridLayout(rows=1, cols=2, padding=self.padding, spacing=self.spacing*2)
-            content2 = GridLayout(rows=1, cols=0, padding=self.padding, spacing=self.spacing*2)
+            content = GridLayout(rows=1, cols=1, padding=self.padding, spacing=self.spacing*2)
+            content2 = GridLayout(rows=1, cols=1, padding=self.padding, spacing=self.spacing*2)
 
             details = TableButton(text=icon("icon-pencil-1"), size_hint_x=None, size_hint_y=None, color="white",
                                 size=(self.standardTextHeight, self.standardTextHeight),
@@ -4124,19 +4171,21 @@ class RMApp(App):
                 time2 = str(self.pickedTime)[:5] # время, выбранное на пикере (HH:MM)
                 #time2F = utils.timeHHMMToFloat(time2) # это же время во float
                 if "служения" in title:
-                    #time1 = self.hours.get()  # исходное время на счетчике (HH:MM)
+                    time1 = self.hours.get()  # исходное время на счетчике (HH:MM)
                     if self.pickedTime != "00:00":
+                        self.time3 = utils.sumHHMM([time1, time2]) # сумма исходного и добавленного времени (HH:MM)
                         self.rep.modify(f"ч{time2}")
-                        self.hours.update(utils.timeFloatToHHMM(self.rep.hours))#time3)
+                        #self.hours.update(utils.timeFloatToHHMM(self.rep.hours))#time3)
+                        self.hours.update(self.time3)
                         self.backPressed()
                         self.counterChanged = False
                 else:
-                    #time1 = self.credit.get()  # исходное время на счетчике (HH:MM)
+                    time1 = self.credit.get()  # исходное время на счетчике (HH:MM)
                     #time3F = utils.timeHHMMToFloat(time1) + time2F  # сумма двух времен во float
-                    #time3 = utils.timeFloatToHHMM(time3F)  # сумма двух времен в HH:MM
+                    self.time3 = utils.sumHHMM([time1, time2])  # сумма двух времен в HH:MM
                     if self.pickedTime != "00:00":
                         self.rep.modify(f"р{time2}")
-                        self.credit.update(utils.timeFloatToHHMM(self.rep.credit))
+                        self.credit.update(self.time3)
                         self.backPressed()
                         self.counterChanged = False
             save.bind(on_release=__closeTimePicker)
@@ -4214,15 +4263,15 @@ class RMApp(App):
             success = utils.load(forced=True, datafile=file, silent=True) # сначала пытаемся загрузить текстовый файл
 
             if success == False: # файл не текстовый, пробуем загрузить Word-файл
-                try:
-                    clipboard = docx2txt.process(file) # имитация буфера обмена, но с Word-файлом
-                    success = utils.load(clipboard=clipboard)
-                except:
-                    self.popup("Не удалось загрузить файл. Скорее всего, он ошибочного формата или не содержит нужных данных.")
+                self.popup("Не удалось загрузить файл. Скорее всего, он ошибочного формата или не содержит нужных данных.")
 
         if success == True:
             self.rep = report.Report()
             self.popup("Данные успешно загружены!")
+        elif file == None:
+            self.popupForm = "importHelp"
+            self.popup("Для импорта данных нужно поместить в буфер обмена ссылку доступа к файлу на Google Диске. Ссылка должна иметь права на чтение файла.\n\nОткрыть более подробную инструкцию?",
+                       options=[self.button["yes"], self.button["no"]])
 
     def checkOrientation(self, window=None, width=None, height=None):
         """ Проверка ориентации экрана, и если она горизонтальная, адаптация интерфейса"""

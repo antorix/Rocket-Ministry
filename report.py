@@ -212,7 +212,14 @@ class Report(object):
                     self.hours += 1
                     self.saveReport("В отчет добавлен 1 час")
                 else:
-                    self.hours += utils.timeHHMMToFloat(input[1:])
+                    #time1 = utils.timeFloatToHHMM( self.hours + utils.timeHHMMToFloat(input[1:]) ) # коррекция ошибки погрешности
+                    time3 = app.RM.time3
+                    time2 = utils.timeFloatToHHMM( utils.timeHHMMToFloat(time3) )
+                    if utils.timeHHMMToFloat(time2) == utils.timeHHMMToFloat(time3):
+                        final = utils.timeHHMMToFloat(time2)
+                    else:
+                        final = utils.timeHHMMToFloat(time3) + 0.016
+                    self.hours = final
                     self.saveReport("В отчет добавлено %s ч." % input[1:])
 
             elif input[0]=="р":
@@ -220,7 +227,13 @@ class Report(object):
                     self.credit += 1
                     self.saveReport("В отчет добавлен 1 час кредита")
                 else:
-                    self.credit += utils.timeHHMMToFloat(input[1:])
+                    time3 = app.RM.time3
+                    time2 = utils.timeFloatToHHMM(utils.timeHHMMToFloat(time3))
+                    if utils.timeHHMMToFloat(time2) == utils.timeHHMMToFloat(time3):
+                        final = utils.timeHHMMToFloat(time2)
+                    else:
+                        final = utils.timeHHMMToFloat(time3) + 0.016
+                    self.credit = final
                     self.saveReport("В отчет добавлено %s ч. кредита" % input[1:])
             elif input[0]=="б":
                 if input=="б" or input=="б1":
