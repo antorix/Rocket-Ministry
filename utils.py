@@ -811,7 +811,8 @@ def monthName(monthCode=None, monthNum=None):
 
     return curMonthUp, curMonthLow, lastMonthUp, lastMonthLow, lastMonthEn, curMonthRuShort, monthNum, lastTheoMonthNum, curTheoMonthNum
 
-def timeHHMMToFloat(mytime):
+def timeHHMMToFloatUnadjusted(mytime):
+    """ Преобразование HH:MM во float без коррекции погрешности """
     if mytime == None:
         return None
     try:
@@ -834,12 +835,22 @@ def timeHHMMToFloat(mytime):
     else:
         return result1 + result2
 
+def timeHHMMToFloat(timeH):
+    """ Преобразование HH:MM во float с коррекцией минутной погрешности на основе предыдущей функции """
+    timeActualH2 = timeFloatToHHMM(timeHHMMToFloatUnadjusted(timeH))
+    if timeHHMMToFloatUnadjusted(timeActualH2) == timeHHMMToFloatUnadjusted(timeH):
+        corrected = timeHHMMToFloatUnadjusted(timeActualH2)
+    elif timeHHMMToFloatUnadjusted(timeActualH2) < timeHHMMToFloatUnadjusted(timeH):
+        corrected = timeHHMMToFloatUnadjusted(timeH) + 0.016
+    else:
+        corrected = timeHHMMToFloatUnadjusted(timeH) - 0.016
+    return corrected
+
 def sumHHMM(list=None, mode="+"):
     """ Складывает два значения времени вида HH:MM, полученных в списке """
     if list == None:
         list = ['25:06', '9:31']
 
-    print(f"list: {list}")
     mysum = datetime.timedelta()
 
     for i in list:
@@ -849,8 +860,6 @@ def sumHHMM(list=None, mode="+"):
             mysum += d
         else:
             mysum -= d
-
-    print(f"mysum: {mysum}")
 
     string = timeFloatToHHMM(delta=str(mysum))
 

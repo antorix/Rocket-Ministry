@@ -1193,8 +1193,8 @@ class RMApp(App):
     def updateList(self):#, a=1, b=1):
         """Заполнение главного списка элементами"""
 
-        if 1:#self.devmode==1:
-        #try:
+        #if 1:#self.devmode==1:
+        try:
             #a/b
             self.stack = list(dict.fromkeys(self.stack))
             #print(self.stack)
@@ -1467,7 +1467,7 @@ class RMApp(App):
                                options=[self.button["yes"], self.button["no"]])
                 Clock.schedule_once(__onFirstRun, 2)
 
-        """except: # в случае ошибки пытаемся восстановить последнюю резервную копию
+        except: # в случае ошибки пытаемся восстановить последнюю резервную копию
             if self.restore < 10:
                 print(f"Файл базы данных поврежден, пытаюсь восстановить резервную копию {self.restore}.")
                 result = utils.backupRestore(restoreNumber = self.restore, allowSave=False)
@@ -1485,7 +1485,7 @@ class RMApp(App):
                 self.popupForm = "emergencyExport"
                 self.popup(title="Ошибка базы данных",
                        message="Программа не может продолжить работу. Попробуйте удалить объект, созданный последним. Если это не помогает, зайдите в настройки, сделайте экспорт данных в Google Диск и отправьте файл разработчикам для анализа проблемы. Также вы можете выполнить очистку данных и начать работу с нуля.")
-"""
+
     def sliderToggle(self, mode=""):
         utils.settings[0][7] = 0
         if mode == "off":

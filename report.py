@@ -147,7 +147,7 @@ class Report(object):
         self.reminder = 1
         #self.lastMonth = ""
                 
-    def modify(self, input):
+    def modify(self, input=" "):
         """ Modifying report on external commands """
 
         self.checkNewMonth()
@@ -212,14 +212,8 @@ class Report(object):
                     self.hours += 1
                     self.saveReport("В отчет добавлен 1 час")
                 else:
-                    #time1 = utils.timeFloatToHHMM( self.hours + utils.timeHHMMToFloat(input[1:]) ) # коррекция ошибки погрешности
-                    time3 = app.RM.time3
-                    time2 = utils.timeFloatToHHMM( utils.timeHHMMToFloat(time3) )
-                    if utils.timeHHMMToFloat(time2) == utils.timeHHMMToFloat(time3):
-                        final = utils.timeHHMMToFloat(time2)
-                    else:
-                        final = utils.timeHHMMToFloat(time3) + 0.016
-                    self.hours = final
+                    #self.hours = self.correctedTimeF(timeActualH=app.RM.time3)
+                    self.hours = utils.timeHHMMToFloat(app.RM.time3)
                     self.saveReport("В отчет добавлено %s ч." % input[1:])
 
             elif input[0]=="р":
@@ -227,13 +221,7 @@ class Report(object):
                     self.credit += 1
                     self.saveReport("В отчет добавлен 1 час кредита")
                 else:
-                    time3 = app.RM.time3
-                    time2 = utils.timeFloatToHHMM(utils.timeHHMMToFloat(time3))
-                    if utils.timeHHMMToFloat(time2) == utils.timeHHMMToFloat(time3):
-                        final = utils.timeHHMMToFloat(time2)
-                    else:
-                        final = utils.timeHHMMToFloat(time3) + 0.016
-                    self.credit = final
+                    self.credit = utils.timeHHMMToFloat(app.RM.time3)
                     self.saveReport("В отчет добавлено %s ч. кредита" % input[1:])
             elif input[0]=="б":
                 if input=="б" or input=="б1":
