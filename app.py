@@ -2744,14 +2744,11 @@ class RMApp(App):
 
         report3 = AnchorLayout(anchor_x="center", anchor_y="center")
 
-        scroll = ScrollView(scroll_type=['bars', 'content'])
-        b3 = BoxLayout(spacing=spacing, padding=self.padding, size_hint_y=None)
-        mGrid = GridLayout(cols=2, size_hint=(x, y), padding=self.padding, spacing=self.spacing,
+        b3 = BoxLayout(spacing=spacing, padding=self.padding)
+        mGrid = GridLayout(rows=12, cols=2, size_hint=(x, y), padding=self.padding, spacing=self.spacing,
                             row_force_default = row_force_default,
                             col_default_width=width, row_default_height = height,
-                            #pos_hint={"center_y": .5}
-                            pos_hint={"bottom": 1}
-                           )
+                            pos_hint={"center_y": .5})
         self.months = []
 
         for i, month in zip(range(12),
@@ -2772,22 +2769,19 @@ class RMApp(App):
                 MyTextInput(text=text, multiline=False, input_type="number", width=self.standardTextWidth * 1.1,
                             height=height, size_hint_x=None, size_hint_y=None, mode=mode, shrink=False))
             mGrid.add_widget(self.months[i])
-            self.analyticsMessage = Label(markup=True, color=self.standardTextColor, valign="top",
-                                          #size_hint_y=None,
-                                          text_size=(Window.size[0]/2, Window.size[1]),#(Window.size[0] / 2, b3.size[1]),
-                                          height=Window.size[1],
-                                          width=Window.size[0] / 2,
-                                          #pos_hint={"center_y": .5}
-                                          pos_hint={"bottom": 1}
-                                    )
+            self.analyticsMessage = Label(markup=True, color=self.standardTextColor, valign="center",
+                                          text_size=(Window.size[0] / 2, self.mainList.size[1]),
+                                          height=self.mainList.size[1],
+                                          width=Window.size[0] / 2, pos_hint={"center_y": .5})
+            #self.months[i].bind(on_text_validate=self.recalcServiceYear)
             self.months[i].bind(focus=self.recalcServiceYear)
+            #Window.bind(on_key_down=self.recalcServiceYear)
 
         self.recalcServiceYear()
 
         b3.add_widget(mGrid)
         b3.add_widget(self.analyticsMessage)
-        scroll.add_widget(b3)
-        report3.add_widget(scroll)
+        report3.add_widget(b3)
         tab3.content = report3
         self.reportPanel.add_widget(tab3)
 
