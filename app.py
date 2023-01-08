@@ -5,7 +5,6 @@ import utils
 import house
 import report
 import time
-#import buffer
 import webbrowser
 import iconfonts
 from iconfonts import icon
@@ -64,15 +63,6 @@ if platform == "android":
     String = autoclass('java.lang.String')
     PythonActivity = autoclass('org.kivy.android.PythonActivity')
     mActivity = PythonActivity.mActivity
-
-else:
-    try:
-        import plyer
-    except:
-        from subprocess import check_call
-        from sys import executable
-        check_call([executable, '-m', 'pip', 'install', 'plyer'])
-        import plyer
 
 #Builder.load_file('rm.kv')
 
@@ -1711,8 +1701,6 @@ class RMApp(App):
                     self.porchView()
                 elif self.stack[0] == "flatView":
                     self.flatView()
-                #elif self.stack[0] == "repLog":
-                #    self.repPressed()
 
     def sortPressed(self, instance=None):
         self.dropSortMenu.clear_widgets()
@@ -3262,7 +3250,8 @@ class RMApp(App):
     def createInputBox(self, title="", message="", default="", hint="", checkbox=None, active=True, input=True,
                        note=None, details=None, multiline=False, addCheckBoxes=False):
         """ Форма ввода данных с одним полем """
-        self.stack.insert(0, self.stack[0]) # дублирование последнего шага стека, чтобы предотвратить уход со страницы
+        if self.stack[0] != "recordView":
+            self.stack.insert(0, self.stack[0]) # дублирование последнего шага стека, чтобы предотвратить уход со страницы
         self.mainList.clear_widgets()
         self.pageTitle.text = title
         self.positive.text = self.button["save"]
@@ -3360,14 +3349,13 @@ class RMApp(App):
             self.createReportBoxes(addReturn=True)
 
     def createMultipleInputBox(self, form=None, title=None, options=[], defaults=[], multilines=[],
-                               note=None, details=None, allowStackDuplicate=False, addCheckBoxes=False):
+                               note=None, details=None, addCheckBoxes=False):
         """ Форма ввода данных с несколькими полями """
 
         if form == None: # по умолчанию вывод делается на mainlist, но можно вручную указать другую форму
             form = self.mainList
         form.clear_widgets()
-        if 1:#allowStackDuplicate == True:
-            self.stack.insert(0, self.stack[0]) # дублирование последнего шага стека, чтобы предотвратить уход со страницы
+        self.stack.insert(0, self.stack[0]) # дублирование последнего шага стека, чтобы предотвратить уход со страницы
         if title != None:
             self.pageTitle.text = title
         self.positive.text = self.button["save"]
@@ -4270,7 +4258,7 @@ class RMApp(App):
             self.popup("Данные успешно загружены!")
         elif file == None:
             self.popupForm = "importHelp"
-            self.popup("Для импорта данных нужно поместить в буфер обмена ссылку доступа к файлу на Google Диске. Ссылка должна иметь права на чтение файла.\n\nОткрыть более подробную инструкцию?",
+            self.popup("Для импорта нужно поместить в буфер обмена ссылку доступа к файлу на Google Диске. Ссылка должна иметь права на чтение файла. Открыть более подробную инструкцию?",
                        options=[self.button["yes"], self.button["no"]])
 
     def checkOrientation(self, window=None, width=None, height=None):

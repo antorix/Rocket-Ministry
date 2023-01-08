@@ -9,16 +9,16 @@ def initializeDB():
         [1, 5, 0, 0, "с", 0, 10, 0, 1.5, 0, 1, 1, 1, 1, "", 1, 0, "", "0", "д", 0, 0, 1], # program settings: settings[0][0…], see set.preferences()
         "",# дата последнего обновления settings[1]
         # report:                       settings[2]
-        ["00:00",       # [0] hours         settings[2][0…]
-         "00:00",       # [1] credit
+        [0.0,       # [0] hours         settings[2][0…]
+         0.0,       # [1] credit
          0,         # [2] placements
          0,         # [3] videos
          0,         # [4] returns,
          0,         # [5] studies,
-         "00:00",   # [6] startTime
+         0,         # [6] startTime
          0,         # [7] endTime
-         "00:00",   # [8] reportTime
-         "00:00",   # [9] difTime
+         0.0,       # [8] reportTime
+         0.0,       # [9] difTime
          "",        # [10] note
          0,         # [11] to remind submit report (0: already submitted) - не используется с 2.0
          ""         # [12] отчет прошлого месяца
@@ -837,13 +837,17 @@ def timeHHMMToFloatUnadjusted(mytime):
 
 def timeHHMMToFloat(timeH):
     """ Преобразование HH:MM во float с коррекцией минутной погрешности на основе предыдущей функции """
-    timeActualH2 = timeFloatToHHMM(timeHHMMToFloatUnadjusted(timeH))
-    if timeHHMMToFloatUnadjusted(timeActualH2) == timeHHMMToFloatUnadjusted(timeH):
-        corrected = timeHHMMToFloatUnadjusted(timeActualH2)
-    elif timeHHMMToFloatUnadjusted(timeActualH2) < timeHHMMToFloatUnadjusted(timeH):
-        corrected = timeHHMMToFloatUnadjusted(timeH) + 0.016
+    timeHHMMToFloatUnadjusted_timeH = timeHHMMToFloatUnadjusted(timeH)
+    timeActualH2 = timeFloatToHHMM(timeHHMMToFloatUnadjusted_timeH)
+    timeHHMMToFloatUnadjusted_timeActualH2 = timeHHMMToFloatUnadjusted(timeActualH2)
+
+    if timeHHMMToFloatUnadjusted_timeActualH2 == timeHHMMToFloatUnadjusted_timeH:
+        corrected = timeHHMMToFloatUnadjusted_timeActualH2
+    elif timeHHMMToFloatUnadjusted_timeActualH2 < timeHHMMToFloatUnadjusted_timeH:
+        corrected = timeHHMMToFloatUnadjusted_timeH + 0.016
     else:
-        corrected = timeHHMMToFloatUnadjusted(timeH) - 0.016
+        corrected = timeHHMMToFloatUnadjusted_timeH - 0.016
+
     return corrected
 
 def sumHHMM(list=None, mode="+"):
