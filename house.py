@@ -52,7 +52,7 @@ class House(object):
         d2 = datetime.datetime.strptime(time.strftime("%Y-%m-%d", time.localtime()), "%Y-%m-%d")
         days_between = abs((d2 - d1).days)
 
-        if days_between > 123:
+        if days_between > 122:
             return True
         else:
             return False
@@ -400,12 +400,8 @@ class House(object):
                         options.append(self.flats[i].addFlatTolist())
                     i+=1
                 if len(options) == 0:
-                    if self.type=="отдел":
-                        options.append("Создайте одного или нескольких сотрудников (используя нумерацию для удобства)")
-                    elif self.type=="сегмент":
+                    if self.type=="сегмент":
                         options.append("Создайте один или несколько домов")
-                    elif self.type=="диапазон":
-                        options.append("Создайте один или несколько телефонных номеров")
                     else:
                         pass#options.append("Создайте квартиры подъезда")
                 return options
@@ -591,25 +587,14 @@ class House(object):
                 """ Функция для форматированного показа строки в режимах списков подъезда (полный и поэтажный) """
                 line=""
                 if not "." in self.number:
-                    if self.phone=="":
-                        phone=""
-                    else:
-                        phone = " " + icon("icon-phone-1") + "\u00A0" + self.phone #" т." + self.phone
-                    if self.note != "":
-                        note = " " + icon("icon-sticky-note") + "\u00A0" + self.note# " • " + self.note
-                    else:
-                        note = ""
                     if self.getName() == "":
                         name = ""
                     else:
                         name = self.getName().strip()
-
                     line += "%s [b]%s[/b] %s" % (
                         self.getStatus()[0],
                         self.number,
                         name,
-                        #phone,
-                        #note
                     )
                 return line
 

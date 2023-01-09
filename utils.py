@@ -33,32 +33,20 @@ def initializeDB():
     ]
 
 houses, settings, resources = initializeDB()
-Version = "2.1.1" # …14
+Version = "2.1.2" # …18
 Devmode = 0# DEVMODE!
 """
-* Добавление квартир с помощью списка номеров через запятую. Можно ввести вручную или скопировать из буфера.
-
-* Добавление времени в отчет с помощью циферблата с часами и минутами.
-
-* Сетка подъезда может быть не только в центре, но может прилипать к одной из 8 точек по краям экрана. Удобно сделать ближе к той руке, которой вы держите телефон.
-
-* В участке вместо простого показа карты теперь сразу запускается прокладка маршрута.  
-
-* Сортировка контактов по заметке.
-
-* Доработки дизайна и оптимизации.
-
-* Оптимизации под Windows/Linux:
-  - адаптация под ландшафтный режим интерфейса;
-  - программа запоминает размер и положение окна при выходе;
-  - загрузка файла простым перетаскиванием на окно программы;
-  - переключение между полями ввода клавишей Tab.
+* Исправлен баг, когда при обновлении времени отчета иногда пропадала одна минута.
+* Оптимизирована навигация внутри программы, более предсказуемое поведение кнопки «Назад».
+* Изменен механизм импорта данных: больше не обязательно копировать текст в буфер обмена, достаточно скопировать ссылку доступа на Google Диск.
 """
 
 DBCreatedTime = ""
 from kivy import platform
 if platform == "android":
     UserPath = "../"#storage/emulated/0/Android/data/org.rocketministry/"
+    #from android.storage import app_storage_path
+    #UserPath = app_storage_path()
 else:
     UserPath = ""
 
@@ -92,7 +80,7 @@ def log(message="", title="Внимание", timeout=3, forceNotify=False):
                 icon = ""#"icon.png"
             else:
                 icon = "icon.ico"
-            if 1:#Devmode==0:
+            if Devmode==0:
                 plyer.notification.notify(app_name="Rocket Ministry", title="Rocket Ministry", app_icon=icon,
                                   ticker="Rocket Ministry", message=message, timeout=timeout)
     except:
@@ -404,22 +392,22 @@ def share(silent=False, clipboard=False, email=False, folder=None, file=False):
 
     elif email == True: # экспорт в сообщении
         s = str(buffer)
-        date = time.strftime("%d", time.localtime())
-        month = monthName()[5]
-        timeCur = time.strftime("%H.%M", time.localtime())
-        dated = "%s %s %s" % (date, month, timeCur)
-        filename = "Данные Rocket Ministry от %s" % dated
+        #date = time.strftime("%d", time.localtime())
+        #month = monthName()[5]
+        #timeCur = time.strftime("%H.%M", time.localtime())
+        #dated = "%s %s %s" % (date, month, timeCur)
+        filename = "Данные Rocket Ministry"# от %s" % dated
         plyer.email.send(subject=filename, text=s, create_chooser=True)
 
     elif file == True: # экспорт в текстовый файл на компьютере
         try:
             from tkinter import filedialog
             folder = filedialog.askdirectory()
-            date = time.strftime("%d", time.localtime())
-            month = monthName()[5]
-            timeCur = time.strftime("%H.%M", time.localtime())
-            dated = "%s %s %s" % (date, month, timeCur)
-            filename = folder + "/Данные Rocket Ministry от %s.txt" % dated
+            #date = time.strftime("%d", time.localtime())
+            #month = monthName()[5]
+            #timeCur = time.strftime("%H.%M", time.localtime())
+            #dated = "%s %s %s" % (date, month, timeCur)
+            filename = folder + "/Данные Rocket Ministry"# от %s.txt" % dated
             with open(filename, "w") as file:
                 json.dump(output, file)
         except:
@@ -555,10 +543,6 @@ def update():
             shutil.rmtree(downloadedFolder)
         except:
             print("Не удалось загрузить обновление.")
-        else:
-            from subprocess import check_call
-            from sys import executable
-            check_call([executable, '-m', 'pip', 'install', 'kivy'])
 
     else:
         print("Обновлений нет.")
@@ -811,35 +795,36 @@ def monthName(monthCode=None, monthNum=None):
 
     return curMonthUp, curMonthLow, lastMonthUp, lastMonthLow, lastMonthEn, curMonthRuShort, monthNum, lastTheoMonthNum, curTheoMonthNum
 
-def timeHHMMToFloatUnadjusted(mytime):
-    """ Преобразование HH:MM во float без коррекции погрешности """
-    if mytime == None:
-        return None
-    try:
-        if ":" not in mytime:
-            result1 = abs(int(mytime.strip()))
-            result2 = 0
-        else:
-            hours = mytime[: mytime.index(":")]
-            minutes = mytime[mytime.index(":") + 1:]
-
-            result1 = abs(int(hours))
-
-            lis = ["00:%s" % minutes]
-            start_dt = datetime.datetime.strptime("00:00", '%H:%M')
-            result2 = \
-            [float('{:0.2f}'.format((datetime.datetime.strptime(mytime, '%H:%M') - start_dt).seconds / 3600)) for mytime
-             in lis][0]
-    except:
-        return None
-    else:
-        return result1 + result2
-
 def timeHHMMToFloat(timeH):
-    """ Преобразование HH:MM во float с коррекцией минутной погрешности на основе предыдущей функции """
-    timeHHMMToFloatUnadjusted_timeH = timeHHMMToFloatUnadjusted(timeH)
+    """ Преобразование HH:MM во float с коррекцией минутной погрешности """
+
+    def __timeHHMMToFloatUnadjusted(mytime):
+        """ Преобразование HH:MM во float без коррекции погрешности """
+        if mytime == None:
+            return None
+        try:
+            if ":" not in mytime:
+                result1 = abs(int(mytime.strip()))
+                result2 = 0
+            else:
+                hours = mytime[: mytime.index(":")]
+                minutes = mytime[mytime.index(":") + 1:]
+
+                result1 = abs(int(hours))
+
+                lis = ["00:%s" % minutes]
+                start_dt = datetime.datetime.strptime("00:00", '%H:%M')
+                result2 = \
+                [float('{:0.2f}'.format((datetime.datetime.strptime(mytime, '%H:%M') - start_dt).seconds / 3600)) for mytime
+                 in lis][0]
+        except:
+            return None
+        else:
+            return result1 + result2
+
+    timeHHMMToFloatUnadjusted_timeH = __timeHHMMToFloatUnadjusted(timeH)
     timeActualH2 = timeFloatToHHMM(timeHHMMToFloatUnadjusted_timeH)
-    timeHHMMToFloatUnadjusted_timeActualH2 = timeHHMMToFloatUnadjusted(timeActualH2)
+    timeHHMMToFloatUnadjusted_timeActualH2 = __timeHHMMToFloatUnadjusted(timeActualH2)
 
     if timeHHMMToFloatUnadjusted_timeActualH2 == timeHHMMToFloatUnadjusted_timeH:
         corrected = timeHHMMToFloatUnadjusted_timeActualH2

@@ -49,9 +49,21 @@ class Report(object):
             utils.save(backup=True, silent=True)
 
     def checkNewMonth(self, forceDebug=False):
+
         savedMonth = utils.settings[3]
         currentMonth = time.strftime("%b", time.localtime())
-        if savedMonth != currentMonth or forceDebug==True:
+        if savedMonth != currentMonth or forceDebug == True:
+            if app.RM.displayed.form == "rep":
+                app.RM.mainList.clear_widgets()
+                """for widget in app.RM.reportTab.children:
+                    try:
+                        widget.update("0")
+                    except:
+                        print(f"widget: {widget}, update error")
+                    else:
+                        print(f"widget: {widget}, update successful")"""
+
+            saveTimer = self.startTime
             utils.log("Начался новый месяц, давайте сдадим отчет!")
             time.sleep(2)
             rolloverHours, rolloverCredit = self.saveLastMonth()
@@ -60,8 +72,17 @@ class Report(object):
             self.reminder = 1
             app.RM.sendLastMonthReport()
             app.RM.repPressed()
-            #utils.save()
             self.saveReport(mute=True)
+
+            if app.RM.displayed.form == "rep":
+                app.RM.repPressed()
+
+            if saveTimer != 0: # если при окончании месяца работает таймер, принудительно выключаем его
+                self.startTime = saveTimer
+                def __stopTimer(*args):
+                    app.RM.timerPressed()
+                from kivy.clock import Clock
+                Clock.schedule_once(__stopTimer, 0.1)
 
     def toggleTimer(self):
         result = 0
@@ -150,8 +171,6 @@ class Report(object):
     def modify(self, input=" "):
         """ Modifying report on external commands """
 
-        self.checkNewMonth()
-
         if input == "(":  # start timer
             self.startTime = int(time.strftime("%H", time.localtime())) * 3600 + int(
             time.strftime("%M", time.localtime())) * 60 + int(time.strftime("%S", time.localtime()))
@@ -203,7 +222,6 @@ class Report(object):
                         message += ", "
                 if ret > 0:
                     message += "1 ПП"
-                #print(f"{message}: {pub}, {vid}, {ret}")
                 self.saveReport(message=message)
 
         elif "р" in input or "ж" in input or "ч" in input or "б" in input or "в" in input or "п" in input or "и" in input or "к" in input:
@@ -212,7 +230,6 @@ class Report(object):
                     self.hours += 1
                     self.saveReport("В отчет добавлен 1 час")
                 else:
-                    #self.hours = self.correctedTimeF(timeActualH=app.RM.time3)
                     self.hours = utils.timeHHMMToFloat(app.RM.time3)
                     self.saveReport("В отчет добавлено %s ч." % input[1:])
 
@@ -247,6 +264,8 @@ class Report(object):
             elif input=="и":
                 self.studies += 1
                 self.saveReport("В отчет добавлено 1 изучение")
+
+        self.checkNewMonth()
 
     def getLastMonthReport(self):
         """ Выдает отчет прошлого месяца """
