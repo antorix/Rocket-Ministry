@@ -115,7 +115,7 @@ class MyTextInput(TextInput):
         self.popup = popup
         self.focus = focus
         self.write_tab = False
-        self.hack = hack
+        self.hack = hack # альтернативный способ открыть клавиатуру с задержкой в on_focus
 
     def on_text_validate(self):
         if self.popup == False:
@@ -130,7 +130,6 @@ class MyTextInput(TextInput):
 
         if value:  # вызов клавиатуры
             if RM.model == "huawei" and (RM.inputForm == "multi" or self.hack == True):
-                #RM.pageTitle.text = f"{RM.model}, {RM.inputForm}, {self.hack}"
                 # решаем проблему с клавиатурным глюком только на устройствах huawei взамен на хаотичное открывание клавиатуры
                 Clock.schedule_once(self.create_keyboard, .1)
             else:
@@ -2655,7 +2654,7 @@ class RMApp(App):
         elif self.button["phone"] in instance.text:
             inform = self.msg[28] % self.flat.phone
             if self.flat.phone.strip() == "":
-                utils.log(self.msg[27] % self.button['cog'])
+                utils.log(self.msg[27])
             else:
                 if self.platform == "mobile":
                     try:
@@ -3131,13 +3130,17 @@ class RMApp(App):
 
     def searchPressed(self, instance=None):
         self.clearTable()
+        if self.platform == "desktop":# or self.model != "huawei":
+            focus = True
+        else:
+            focus = False
         self.createInputBox(
             title=self.msg[146],
             message=self.msg[147],
             multiline=False,
             positive=f"{self.button['search2']} {self.msg[148]}",
             details="",
-            focus=True
+            focus=focus
         )
 
     def find(self, instance=None):
@@ -4339,8 +4342,12 @@ class RMApp(App):
             if utils.settings[0][20] == 1:
                 self.keyboardCloseTime = .1
                 self.inputForm = "single"
+                if self.platform == "desktop":
+                    focus = True
+                else:
+                    focus = False
                 self.quickPhone = MyTextInput(size_hint_y=None, hint_text = self.msg[38], height=self.standardTextHeight,
-                                              multiline=False, input_type="text", popup=True, shrink=False, focus=True)
+                                              focus=focus, multiline=False, input_type="text", popup=True, shrink=False)
                 contentMain.add_widget(self.quickPhone)
                 def __getPhone(instance):
                     self.mypopup.dismiss()
