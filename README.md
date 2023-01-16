@@ -4,13 +4,13 @@ Track your territories, contacts, visits, and reports in the field service in a 
 
 * [Download from Google Play Market](https://play.google.com/store/apps/details?id=org.rocketministry)
 
-* [Features](https://github.com/antorix/Rocket-Ministry/wiki#возможности-приложения)
+* [Features](https://github.com/antorix/Rocket-Ministry/wiki#features)
 
 * [Install on Windows](https://github.com/antorix/Rocket-Ministry/wiki#windows)
  
 * [Install on Linux](https://github.com/antorix/Rocket-Ministry/wiki#linux)
  
-* [Frequently Asked Questions](https://github.com/antorix/Rocket-Ministry/wiki#часто-задаваемые-вопросы)
+* [Frequently Asked Questions](https://github.com/antorix/Rocket-Ministry/wiki#faq)
 
 * [Документация по-русски](https://github.com/antorix/Rocket-Ministry/wiki/ru)
 
