@@ -31,19 +31,11 @@ class House(object):
         return visited, interest
 
     def getPorchType(self):
-        """ Выдает тип своего подъезда [0],
-            существительное типа контакта в родительном падеже единственного числа [1],
-            в родительном падеже множественного числа [2],
-            в творительном падеже единственного числа [3]
-        напр. [1] "детали квартиры" [2] "сортировка домов" / [3] "информация о доме" """
+        """ Выдает название подъезда своего типа (всегда именительный падеж) """
         if self.type == "private":
-            return "сегмент", "дома", "домов", "доме"
-        elif self.type == "office":
-            return "отдел", "сотрудника", "сотрудников", "сотруднике"
-        elif self.type == "phone":
-            return "диапазон", "номера", "номеров", "номере"
+            return "сегмент", app.RM.msg[211] # сегмент - [0] для программы и [1] для пользователя
         else:
-            return "подъезд", "квартиры", "квартир", "квартире"
+            return "подъезд", app.RM.msg[212] # подъезд
 
     def due(self):
         """ Определяет, что участок просрочен """
@@ -68,12 +60,11 @@ class House(object):
             if self.type == "condo":
                 listIcon = icon('icon-login')
             else:
-                listIcon = icon('icon-location-1')
-                b1=b2=""
+                listIcon = icon('icon-location')
             list.append(f"{listIcon} [b]{self.porches[i].title}[/b]{self.porches[i].getFlatsRange()}")
 
         if self.type != "condo" and len(list) == 0:
-            list.append("Создайте %s участка" % self.getPorchType()[0])
+            list.append(app.RM.msg[213] % self.getPorchType()[1])
 
         if self.type == "condo":
             if len(list) == 0:
@@ -85,7 +76,11 @@ class House(object):
                 else:
                     number = None
             if number != None:
-                list.append("[i]Создать подъезд %d[/i]" % number)
+                if app.RM.language == "ru":
+                    list.append(f"[i]{app.RM.msg[6]} {number}[/i]")
+
+                elif len(list)==0: # для других языков динамическое добавление подъезда пока не работает
+                    list.append(f"{app.RM.msg[213]}" % app.RM.msg[212])
 
         return list
         
@@ -176,12 +171,10 @@ class House(object):
                 if "подъезд" in self.type:
                     result = self.shift(ind, restore=restore)
                     if result == "disableFloors":
-                        #utils.log("Удалено: %s" % self.flats[ind].title)
                         del self.flats[ind]
                         self.flatsLayout = "н"
                         self.sortFlats()
                 else:
-                    #utils.log("Удалено: %s" % self.flats[ind].title)
                     del self.flats[ind]
                 return "deleted"
 
@@ -233,7 +226,7 @@ class House(object):
             self.sortFlats()
 
             if status != "" and deletedFlat.number != number:
-                app.RM.popup("В этом подъезде больше нельзя уменьшать этажи, потому что последняя квартира с записью исчезнет! Но вы можете изменить диапазон квартир или кол-во этажей на экране «Квартиры».")
+                app.RM.popup(app.RM.msg[215])
 
             else:
                 if restore == True:
@@ -299,15 +292,12 @@ class House(object):
                 try:
                     self.flats.sort(key=lambda x: float(x.number))
                 except:
-                    #self.flatsLayout = "а"
-                    #self.flats.sort(key=lambda x: x.title)
                     self.flats.sort(key=lambda x: x.titleNumberized())
 
             elif self.flatsLayout == "о": # numeric by number reversed
                 try:
                     self.flats.sort(key=lambda x: float(x.number), reverse=True)
                 except:
-                    #self.flatsLayout = "а"
                     self.flats.sort(key=lambda x: x.titleNumberized(), reverse=True)
 
             elif self.flatsLayout=="с": # alphabetic by status character
@@ -383,9 +373,7 @@ class House(object):
                     self.rows = floors
                     self.sortFlats()
                     if warn==True:
-                        app.RM.popup(
-                            message="\nЗапрошено нестандартное соотношение квартир и этажей. Пришлось добавить %d квартир(ы), которые вам нужно вручную удалить на нужных этажах. Для этого нажмите на кнопку [b]%s Уменьшить этаж[/b] в деталях квартиры на соответствующем этаже." % (extraFlats, icon("icon-right-dir"))
-                        )
+                        app.RM.popup(message="\n" + app.RM.msg[216] % (extraFlats, app.RM.button['shrink']))
                     break
 
         def showFlats(self, countFloors=False):
@@ -401,9 +389,7 @@ class House(object):
                     i+=1
                 if len(options) == 0:
                     if self.type=="сегмент":
-                        options.append("Создайте один или несколько домов")
-                    else:
-                        pass#options.append("Создайте квартиры подъезда")
+                        options.append(app.RM.msg[217])
                 return options
 
             def showListOfFloors():
@@ -444,28 +430,6 @@ class House(object):
                 flats = showListOfFlats()
                 return flats
 
-        def getPreviouslyDeletedFlats(self):
-            """ Выдает список квартир, ранее удаленных в этом подъезде"""
-            numbers=[]
-            for flat in reversed(self.flats): # удаляем дубли номеров
-                if "." in flat.number:
-                    numbers.append(flat.number[ 0 : flat.number.index(".") ])
-            numbers = list(dict.fromkeys(numbers))
-            mylist = ""
-            if len(numbers)==0:
-                mylist += " (но их нет)"
-            else:
-                mylist += " (например, "
-                count = 0
-                for number in numbers:
-                    if count == 0:
-                        mylist += "%s" % str(int(number) + 1)
-                    else:
-                        mylist += ", %s" % str(int(number) + 1)
-                    count += 1
-                mylist += ")"
-            return mylist
-
         def addFlat(self, input, forcedDelete=False, silent=False, virtual=False):
             """Создает квартиру и возвращает ссылку на нее (экземпляр). Первый символ должен быть `+` """
             input=input.strip()
@@ -497,7 +461,7 @@ class House(object):
                             delete=True
                         else:
                             if silent==False:
-                                app.RM.popup(f"Нельзя создать № {self.flats[i].number} – этот номер уже существует, и в нем есть записи!")
+                                app.RM.popup(f"{app.RM.msg[218]} {self.flats[i].number} – {app.RM.msg[219]}")
                             del self.flats[last] # user reconsidered, delete the newly created empty flat
                             createdFlat = -1
                     break
@@ -578,10 +542,10 @@ class House(object):
                 self.note = ""
                 self.number = "virtual" # у адресных жильцов автоматически создается из первых символов title до запятой: "20";
                                         # у виртуальных автоматически присваивается "virtual", а обычного номера нет
-                self.status = "" # automatically generated from last symbol of last record
+                self.status = ""
                 self.phone = ""
-                self.meeting = ""
-                self.records = [] # list of Record instances, initially empty
+                self.meeting = "" # пока не используется
+                self.records = [] # список записей посещений
 
             def addFlatTolist(self):
                 """ Функция для форматированного показа строки в режимах списков подъезда (полный и поэтажный) """
@@ -642,25 +606,19 @@ class House(object):
                     newContact.title = newContact.getName()
                     newVirtualHouse.title = "%s-%s" % (title, tempFlatNumber)
                     newVirtualHouse.type = "virtual"
+                    newContact.number = "virtual"
                     newContact.records = deepcopy(self.records)
                     newContact.note = deepcopy(self.note)
                     newContact.status = deepcopy(self.status)
                     newContact.phone = deepcopy(self.phone)
                     newContact.meeting = deepcopy(self.meeting)
-                    #utils.log("Создан контакт %s" % newContact.getName())
                     return newContact.getName()
-
-            def output(self):
-                """ Для тестирования """
-                print("*******************")
-                print("КОНТАКТ «%s»" % self.title)
-                print("-------------------")
 
             def showRecords(self):
                 listIcon = icon("icon-chat")
                 options = []
                 if len(self.records)==0:
-                    options.append("Создайте первое посещение")
+                    options.append(app.RM.msg[220])
                 else:
                     for i in range(len(self.records)): # добавляем записи разговоров
                         options.append(f"{listIcon} {self.records[i].date}\n[i]{self.records[i].title}[/i]")
@@ -677,8 +635,6 @@ class House(object):
                 timeCur = time.strftime("%H:%M", time.localtime())
 
                 self.records[0].date = "%s %s %s" % (date, month, timeCur)
-
-                self.updateStatus()
 
                 return len(self.records)-1
 
@@ -730,7 +686,6 @@ class House(object):
             def hide(self):
                 """ Делает квартиру невидимой, не меняя этажность подъезда """
                 self.number = str ( float(self.number) + random() )
-                #self.wipe()
 
             def titleNumberized(self):
                 """ Убирает из заголовка квартиры все нечисловые символы, чтобы получилось отсортировать по номеру"""

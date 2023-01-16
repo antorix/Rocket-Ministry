@@ -55,16 +55,9 @@ class Report(object):
         if savedMonth != currentMonth or forceDebug == True:
             if app.RM.displayed.form == "rep":
                 app.RM.mainList.clear_widgets()
-                """for widget in app.RM.reportTab.children:
-                    try:
-                        widget.update("0")
-                    except:
-                        print(f"widget: {widget}, update error")
-                    else:
-                        print(f"widget: {widget}, update successful")"""
 
             saveTimer = self.startTime
-            utils.log("Начался новый месяц, давайте сдадим отчет!")
+            utils.log(app.RM.msg[221])
             time.sleep(2)
             rolloverHours, rolloverCredit = self.saveLastMonth()
             self.clear(rolloverHours, rolloverCredit)
@@ -125,22 +118,19 @@ class Report(object):
             self.credit = int(round(self.credit,2)-rolloverCredit)
 
         if utils.settings[0][2]==1:
-            credit = "кредит %s\n" % utils.timeFloatToHHMM(self.credit)[0 : utils.timeFloatToHHMM(self.credit).index(":")] # whether save credit to file
+            credit = f"{app.RM.msg[222]} {utils.timeFloatToHHMM(self.credit)[0 : utils.timeFloatToHHMM(self.credit).index(':')]}\n" # whether save credit to file
         else:
             credit = ""
 
         # Save file of last month
-        self.lastMonth = "[u]Отчет за %s:[/u]\n\nПубликации: [b]%d[/b]\nВидео: [b]%d[/b]\nЧасы: [b]%s[/b]\nПовторные посещения: [b]%d[/b]\nИзучения: [b]%d[/b]" % \
-                       (utils.monthName()[3],
-                        self.placements,
-                        self.videos,
-                        utils.timeFloatToHHMM(self.hours)[0 : utils.timeFloatToHHMM(self.hours).index(":")],
-                        self.returns,
-                        self.studies)
+        self.lastMonth =    f"[u]{app.RM.msg[223]}[/u]\n\n" % utils.monthName()[3] +\
+                            f"{app.RM.msg[102]}: [b]%d[/b]\n" % self.placements +\
+                            f"{app.RM.msg[103]}: [b]%d[/b]\n" % self.videos +\
+                            f"{app.RM.msg[104]}: [b]%s[/b]\n" % utils.timeFloatToHHMM(self.hours)[0 : utils.timeFloatToHHMM(self.hours).index(":")] +\
+                            f"{app.RM.msg[108]}: [b]%d[/b]\n" % self.returns + \
+                            f"{app.RM.msg[109]}: [b]%d[/b]\n" % self.studies
         if credit != "":
-            self.lastMonth += "\n[i]Примечание: %s[/i]" % credit
-
-        #self.saveReport(mute=True)
+            self.lastMonth += f"[i]{app.RM.msg[224]}: %s[/i]" % credit
         
         # Clear service year in October        
         if int(time.strftime("%m", time.localtime())) == 10: 
@@ -166,7 +156,6 @@ class Report(object):
         self.difTime = 0.0
         self.note = ""
         self.reminder = 1
-        #self.lastMonth = ""
                 
     def modify(self, input=" "):
         """ Modifying report on external commands """
@@ -178,7 +167,7 @@ class Report(object):
                 forceNotify = True
             else:
                 forceNotify = False
-            self.saveReport("Таймер запущен", forceNotify=forceNotify)
+            self.saveReport(app.RM.msg[225], forceNotify=forceNotify)
 
         elif input == ")":  # остановка таймера
             if self.startTime > 0:
@@ -189,7 +178,7 @@ class Report(object):
                     self.reportTime += 24  # if timer worked after 0:00
                 self.hours += self.reportTime
                 self.startTime = 0
-                self.saveReport("Таймер остановлен, в отчет добавлено: %s ч." % utils.timeFloatToHHMM(self.reportTime), save=False)
+                self.saveReport(app.RM.msg[226] % utils.timeFloatToHHMM(self.reportTime), save=False)
                 self.reportTime = 0.0
                 self.saveReport(mute=True, save=True) # после выключения секундомера делаем резервную копию принудительно
 
@@ -202,68 +191,68 @@ class Report(object):
                     self.reportTime += 24  # if timer worked after 0:00
                 self.credit += self.reportTime
                 self.startTime = 0
-                self.saveReport("Таймер остановлен, в отчет добавлено: %s ч. кредита" % utils.timeFloatToHHMM(self.reportTime), save=False)
+                self.saveReport(app.RM.msg[227] % utils.timeFloatToHHMM(self.reportTime), save=False)
                 self.reportTime = 0.0
                 self.saveReport(mute=True, save=True) # после выключения секундомера делаем резервную копию принудительно
 
         elif input[0] == "{": # отчет со счетчиков в посещениях
             if len(input) > 1:
-                message = "В отчет добавлено: "
+                message = f"{app.RM.msg[228]}: "
                 pub = input.count('б')
                 vid = input.count('в')
                 ret = input.count('п')
                 if pub > 0:
-                    message += f"{pub} публ."
+                    message += f"{pub} {app.RM.msg[229]}"
                     if vid > 0 or ret > 0:
                         message += ", "
                 if vid > 0:
-                    message += f"{vid} видео"
+                    message += f"{vid} {app.RM.msg[172]}"
                     if ret > 0:
                         message += ", "
                 if ret > 0:
-                    message += "1 ПП"
+                    message += f"1 {app.RM.msg[230]}"
                 self.saveReport(message=message)
 
         elif "р" in input or "ж" in input or "ч" in input or "б" in input or "в" in input or "п" in input or "и" in input or "к" in input:
             if input[0]=="ч":
                 if input=="ч":
                     self.hours += 1
-                    self.saveReport("В отчет добавлен 1 час")
+                    self.saveReport(app.RM.msg[231])
                 else:
                     self.hours = utils.timeHHMMToFloat(app.RM.time3)
-                    self.saveReport("В отчет добавлено %s ч." % input[1:])
+                    self.saveReport(app.RM.msg[232] % input[1:])
 
             elif input[0]=="р":
                 if input == "р":
                     self.credit += 1
-                    self.saveReport("В отчет добавлен 1 час кредита")
+                    self.saveReport(app.RM.msg[233])
                 else:
                     self.credit = utils.timeHHMMToFloat(app.RM.time3)
-                    self.saveReport("В отчет добавлено %s ч. кредита" % input[1:])
+                    self.saveReport(app.RM.msg[234] % input[1:])
             elif input[0]=="б":
                 if input=="б" or input=="б1":
                     self.placements += 1
-                    self.saveReport("В отчет добавлена 1 публикация")
+                    self.saveReport(app.RM.msg[235])
                 else:
                     self.placements += int(input[1:])
-                    self.saveReport("В отчет добавлено %d пуб." % int(input[1:]))
+                    self.saveReport(app.RM.msg[236] % int(input[1:]))
             elif input[0]=="в":
                 if input == "в" or input=="в1":
                     self.videos += 1
-                    self.saveReport("В отчет добавлено 1 видео")
+                    self.saveReport(app.RM.msg[237])
                 else:
                     self.videos += int(input[1:])
-                    self.saveReport("В отчет добавлено %d видео" % int(input[1:]))
+                    self.saveReport(app.RM.msg[238] % int(input[1:]))
             elif input[0]=="п":
                 if input == "п" or input=="п1":
                     self.returns += 1
-                    self.saveReport("В отчет добавлено 1 повторное посещение")
+                    self.saveReport(app.RM.msg[239])
                 else:
                     self.returns += int(input[1:])
-                    self.saveReport("В отчет добавлено %d повт. пос." % int(input[1:]))
+                    self.saveReport(app.RM.msg[240] % int(input[1:]))
             elif input=="и":
                 self.studies += 1
-                self.saveReport("В отчет добавлено 1 изучение")
+                self.saveReport(app.RM.msg[241])
 
         self.checkNewMonth()
 

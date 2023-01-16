@@ -1,0 +1,329 @@
+English
+Territories
+Contacts
+Report
+Save
+Add entrance
+Are you a pioneer? We will set up the monthly norm in settings. You may change it manually.
+Nothing found
+Database error
+The program cannot continue working. Try to delete the last created entity. If this does not help, open Settings, do Export to Google Drive, and send the file to the developers to analyze the issue. Alternatively, you can wipe all the data and begin from scratch.
+Add
+Here you will find
+Add one or more
+Territory name:
+Address:
+details
+Date taken:
+Note:
+Entrance number (name):
+Section name:
+Name
+Person name and/or description:
+Phone:
+Number:
+Here you will find the history of all report updates (max. 300 entries).
+Report log
+To make a call, enter the phone number in the apartment/contact details.
+Phone number %s copied into clipboard.
+Name
+Date
+Interested
+Worked
+Worked rev.
+Number
+Number rev.
+Status
+Note
+Phone
+Address
+Timer
+Where to log time?
+Service
+Credit
+Restore data
+Cannot restore a backup copy with this name. Likely it does not exist.
+Error in some of the fields, please check data!
+cred.: %s
+Saved manual changes: plac.: %d, videos: %d, hours: %s, %sRV: %d, BS: %d
+Service Year
+Last month's report is already saved and will remain here for the whole month!
+Last month's report is saved automatically at the beginning of the next month!
+Settings
+Settings saved
+Data
+Notepad
+Data saved, backup copy created
+Entrance apartments
+Apartments:
+
+to
+Floors:
+First floor number:
+Add houses
+Enter house number:
+Mass adding
+1 / 1a / red building
+Add territory
+Condominium
+Enter territory address:
+Park Way, 30
+A condominium-type territory has per-floor grid view, but requires only numerical values for apartment numbers.
+Enter entrance title:
+Number or description
+A condominium may have one or more entrances or blocks with separate sets of apartments.
+Enter new section title:
+1 / south part
+A territory may be divided into sections or zones for convenience. One section may be a street, side of a street, block, or anything else.
+Add
+Add contact
+Enter contact name and/or description:
+You are creating a standalone contact not associated with any territory. People from all your territories are listed in the contacts automatically if they are assigned the light-green status.
+add visit
+What was discussed:
+It did not work, please try again.
+A territory with this name already exists, try another one!
+Territory "%s" created
+A %s with this name already exists, try another one!
+All fields should be filled with numerical values. The number of floors should be more than 0. The last apartment of the range should have the number no less than the first one.
+Periods and commas are not allowed!
+Both values should be numerical, and the first one should not be greater than the second one!
+Contact %s created
+Date should have the format YYYY-MM-DD!\n\nFor example: 2023-03-25.
+This number already exists!
+Floors have not yet been enabled for this entrance. Set them up in the "Apartments" section.
+Add your first territory
+Contacts list:
+Territories list:
+Add territory
+You will find here all the interested persons from all your territories, as well as standalone contacts you can add using the button "Add contact."
+Add contact
+Log
+Placements
+Videos
+Hours
+How much time to add to service time?
+Credit (totally with hours %s)
+How much time to add to hourly credit?
+Return visits
+Bible studies
+Send
+You will find here your service report for the current month when it is over.
+Sep
+Oct
+Nov
+Dec
+Jan
+Feb
+Mar
+Apr
+May
+Jun
+Jul
+Aug
+Monthly hour norm
+{}"Not at home" with one click
+{}Transfer minutes to next month
+<>"Not interested" color
+{}Hourly credit
+{}Quick phone input
+{}Notification on timer start
+()Language
+Export
+Import
+Open
+Recover
+This will restore the last backup copy created before the last change. Proceed?
+Wipe
+All user data will be irreversibly deleted from the app! Are you sure you need to do it?
+About
+Multi-purpose manager
+Official Telegram channel
+Version of Rocket Ministry for Windows and Linux, FAQ, documentation, and source code at the
+official project's webpage on Github
+Help
+Any information in a free form
+Search contacts
+Enter name, address, or any other information about a person:
+Find
+Nothing found
+Search by "%s"
+Results:
+This territory was taken more than 4 months ago! You need to turn it back or prolong by updating its date in the details.
+Territory
+Add
+Apartments
+Add house
+entr.
+Contact
+Apartment
+Visits list:
+Add visit
+initial call
+Record
+visit on
+Enter territory name:
+River st.
+Enter the first and the last number of the range to add:
+Interface theme
+Shrink floor
+Don't show this tip anymore.
+This is a switch between the per-floor "grid" view and a simple list of apartments. It works only in condominium-type territories. The per-floor view well visualizes the block, while the list view has handy sorting and preview of flats' content.
+video(s)
+Delete
+Ahead of norm
+Behind norm
+Yearly Stats
+Months added
+Hours added
+Yearly norm
+Hours remaining
+Monthly average
+Equals 12 x monthly norm (from settings).
+Average number of hours to serve each month during the rest (not added) months.
+But take note that this will disable the per-floor view!
+Comma-separated list of numbers
+Paste from clipboard
+Here you can add new numbers using a list of numbers separated by commas.
+Add
+Input error. The added string should be a list of any numbers separated by commas. No other characters are allowed.
+Cancel
+List
+not interested
+Setting an apartment to the gray color will delete all its information! Proceed?
+Delete territory
+Before deleting the territory, make sure that all householders you want to keep have the green-light color. Otherwise they will be deleted along with the territory! Proceed with deletion?
+Delete entrance
+Delete section
+Are you sure you want to delete?
+Deleting
+Delete visit record
+Delete record from
+In brackets, you may see how much time you are ahead (+) or behind (-) your monthly norm for the current day of the month. For example, with the norm of 70 hours, if you have had no service for today, this value will decrease approximately by 2:20 tomorrow.
+Attention
+Phone saved!
+Not at home
+not at home
+Not interested
+Cannot load file. It likely has a wrong format or does not contain necessary data.
+Data successfully loaded!
+To import data, paste the share link to a Google Drive file into the clipboard. Then click this button again. Do you want to see a more detailed instruction?
+section
+entrance
+Add the first %s
+# 
+You cannot shrink floors in this block anymore, because the last apartment with content will disappear! But you can change the apartment numbers range or floors count on the "Apartments" screen.
+A non-standard relation between apartments and floors requested. We had to add %d apartment(s) that you now have to manually delete on corresponding floors. To do this, click on the button [b]%s Shrink floor[/b] in the details of [u]any apartment on this floor[/u].
+Add one or more houses
+You cannot add №
+this number already exists and has content inside!
+Add the first call
+It's a new month, let's turn in your report!
+credit
+Report for %s:
+Note
+Timer started
+Timer stopped, added to report: %s h.
+Timer stopped, added to report: %s h. of credit
+Added to report
+placement(s)
+RV
+1 hour added to report
+%s hour(s) added to report
+1 hour of credit added to report
+%s hour(s) of credit added to report
+1 placement added to report
+%d placement(s) added to report
+1 video added to report
+%d video(s) added to report
+1 return visit added to report
+%d return visit(s) added to report
+1 Bible study added to report
+Database wiped!
+There is a link to Google Drive in the clipboard, but there is no access to the file it leads to. Most likely, the link is not assigned public access rights.
+Failed to load data file. Most likely, it is damaged or of wrong format.
+Data file found, but it is empty. Trying to restore a backup copy.
+Loading database
+Tip
+Backup copy creation failed!
+Backup copy created.
+Database saved.
+Rocket Ministry Data
+Data successfully exported to file %s.
+Save failed!
+Data successfully saved to file %s.
+Database export failed!
+Data successfully exported to folder %s.
+No backup copies have been created so far!
+Backup copy from %s loaded successfully.
+January
+January
+December
+December
+February
+February
+January
+January
+March
+March
+February
+February
+April
+April
+March
+March
+May
+May
+April
+April
+June
+June
+May
+May
+July
+July
+June
+June
+August
+August
+July
+July
+September
+September
+August
+August
+October
+October
+September
+September
+November
+November
+October
+October
+December
+December
+November
+November
+h
+m
+Yes
+No
+Exit
+Pressing this button will decrease the amount of flats [u]on this floor[/u] by one with shift to the right and recount of all numbers in the block. But all apartments themselves will remain. This is a way to edit the amount of flats on each floor. If you have shrunk a floor by mistake, just re-create the apartments with the original numeration. Proceed with shrinking?
+Jan.
+Feb.
+Apr.
+Mar.
+May
+Jun.
+Jul.
+Aug.
+Sep.
+Oct.
+Nov.
+Dec.
+Using this button, you can adjust the size of the numbers grid using the slider above, as well as its position in one of the 9 points using the buttons in the bottom right corner. Click on the same button %s to finish editing.
+Service time has started! To finish your service session, just click on the timer button once again. The time will be added to your report automatically.
+Return visit
+Data wiped successfully
+You can disable the "Not at home" button in the app settings!
