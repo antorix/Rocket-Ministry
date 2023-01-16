@@ -12,6 +12,8 @@ Track your territories, contacts, visits, and reports in the field service in a 
  
 * [Frequently Asked Questions](https://github.com/antorix/Rocket-Ministry/wiki#faq)
 
+* [Support](https://github.com/antorix/Rocket-Ministry/wiki#support)
+
 * [Документация по-русски](https://github.com/antorix/Rocket-Ministry/wiki/ru)
 
 **Official Telegram channel: [t.me/rocketministry](https://t.me/rocketministry)**
