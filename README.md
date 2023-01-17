@@ -9,6 +9,8 @@ Track your territories, contacts, visits, and reports in the field service in a 
 * [Install on Windows](https://github.com/antorix/Rocket-Ministry/wiki#windows)
  
 * [Install on Linux](https://github.com/antorix/Rocket-Ministry/wiki#linux)
+
+* [Data synchronization and Backup](https://github.com/antorix/Rocket-Ministry/wiki#data-synchronization-and-backup)
  
 * [Frequently Asked Questions](https://github.com/antorix/Rocket-Ministry/wiki#faq)
 
