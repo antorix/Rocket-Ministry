@@ -1,4 +1,4 @@
-Track your territories, contacts, visits, and reports in the field service in a clean, ergonomic and non-cluttered design on Android, Windows and Linux.
+Keep track of your territories, contacts, visits, and reports in the ministry in a clean, ergonomic and non-cluttered design on Android, Windows and Linux.
 
 ![](https://play-lh.googleusercontent.com/MYfuV_kVjIQmpUbCbNmP1djn4Kax89H1loTh2WiLlQy5VSFSoQl8y16WA66brJIyTZo)
 
