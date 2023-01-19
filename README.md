@@ -1,6 +1,6 @@
-Keep track of your territories, contacts, visits, and reports in the ministry in a clean, ergonomic and non-cluttered design on Android, Windows and Linux.
+Keep track of your territories, contacts, visits, placements, and reports in your field service in a clean and non-cluttered design. The focus is on speed of all operations with minimum number of clicks, ease of use, and good ergonomics. This is also the only cross-platform ministry app that supports Android, Windows and Linux at the same time. English and Russian languages are supported at the moment, more languages are coming. If you want to help translate the app into your language, please send a message to the email specified on this page.
 
-![](https://play-lh.googleusercontent.com/MYfuV_kVjIQmpUbCbNmP1djn4Kax89H1loTh2WiLlQy5VSFSoQl8y16WA66brJIyTZo)
+![](https://play-lh.googleusercontent.com/1lGefLzP_8vflqNPkHEV0Km5TM3rJON9vMYhklLHz0ig8XHyZ3-fUvJgpX5e4BnsC1I)
 
 * [Download from Google Play](https://play.google.com/store/apps/details?id=org.rocketministry)
 
