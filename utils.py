@@ -3,7 +3,7 @@
 
 from sys import argv
 
-Version = "2.3.0" #..27
+Version = "2.3.0" #..28
 
 if "nodev" in argv:
     Devmode = 0
@@ -53,7 +53,7 @@ LastTimeBackedUp = int(time.strftime("%H", time.localtime())) * 3600 \
 Languages = {           # список всех установленных языков
     "en": "English",    
     "ru": "русский",    # должно совпадать с msg[1] для всех языков
-    "ge": "ქართული"
+    "ka": "ქართული"
 }
 
 def initializeDB():

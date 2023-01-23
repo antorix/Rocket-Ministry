@@ -113,7 +113,7 @@ class MyLabel(Label):
         if pos_hint != None:
             self.pos_hint = pos_hint
 
-        if RM.language == "ge": # шрифт - его нужно изменить только для грузинского, для остальных языков по умолчанию
+        if RM.language == "ka": # шрифт - его нужно изменить только для грузинского, для остальных языков по умолчанию
             self.font_name = 'DejaVuSans.ttf'
 
         self.text = text
@@ -153,7 +153,7 @@ class MyTextInput(TextInput):
         self.write_tab = False
         self.hack = hack # альтернативный способ открыть клавиатуру с задержкой в on_focus
 
-        if RM.language == "ge": # шрифт - его нужно изменить только для грузинского, для остальных языков по умолчанию
+        if RM.language == "ka": # шрифт - его нужно изменить только для грузинского, для остальных языков по умолчанию
             self.font_name = 'DejaVuSans.ttf'
 
     def on_text_validate(self):
@@ -246,7 +246,7 @@ class TTab(TabbedPanelHeader):
             self.background_down = "tab_background_green.png"
 
 
-        if RM.language == "ge": # шрифт - его нужно изменить только для грузинского, для остальных языков по умолчанию
+        if RM.language == "ka": # шрифт - его нужно изменить только для грузинского, для остальных языков по умолчанию
             self.font_name = 'DejaVuSans.ttf'
 
     def on_press(self):
@@ -269,7 +269,7 @@ class TopButton(Button):
         else:
             self.background_down = RM.buttonPressedBG
 
-        if RM.language == "ge": # шрифт - его нужно изменить только для грузинского, для остальных языков по умолчанию
+        if RM.language == "ka": # шрифт - его нужно изменить только для грузинского, для остальных языков по умолчанию
             self.font_name = 'DejaVuSans.ttf'
 
     def on_press(self):
@@ -326,7 +326,7 @@ class TableButton(Button):
         if font_name != None:
             self.font_name = font_name
 
-        if RM.language == "ge":
+        if RM.language == "ka":
             self.font_name = 'DejaVuSans.ttf'
 
     def on_press(self):
@@ -406,7 +406,7 @@ class RButton(Button):
             self.height = RM.standardTextHeight
             self.color = self.origColor = "white"
 
-        if RM.language == "ge":
+        if RM.language == "ka":
             self.font_name = 'DejaVuSans.ttf'
 
     def update_shape(self, *args):
@@ -437,7 +437,7 @@ class PopupNoAnimation(Popup):
     def __init__(self, **kwargs):
         super(PopupNoAnimation, self).__init__(**kwargs)
 
-        if RM.language == "ge":
+        if RM.language == "ka":
             self.title_font =  'DejaVuSans.ttf'
 
     def dismiss(self, *largs, **kwargs):
@@ -462,7 +462,7 @@ class SortListButton(Button):
         self.color = RM.textInputColor
         if font_name != None:
             self.font_name = font_name
-        if RM.language == "ge": # шрифт - его нужно изменить только для грузинского, для остальных языков по умолчанию
+        if RM.language == "ka": # шрифт - его нужно изменить только для грузинского, для остальных языков по умолчанию
             self.font_name = 'DejaVuSans.ttf'
 
     def on_press(self):
@@ -481,7 +481,7 @@ class ScrollButton(Button):
         self.halign = "center"
         self.valign = valign
         self.text_size = (Window.size[0]*.95, height)
-        if RM.language == "ge": # шрифт - его нужно изменить только для грузинского, для остальных языков по умолчанию
+        if RM.language == "ka": # шрифт - его нужно изменить только для грузинского, для остальных языков по умолчанию
             self.font_name = 'DejaVuSans.ttf'
 
         self.originalColor = ""
@@ -542,7 +542,7 @@ class FlatButton(Button):
         self.height = self.origHeight
         self.background_normal = ""
         self.background_color = RM.getColorForStatus(status)
-        if RM.language == "ge": # шрифт - его нужно изменить только для грузинского, для остальных языков по умолчанию
+        if RM.language == "ka": # шрифт - его нужно изменить только для грузинского, для остальных языков по умолчанию
             self.font_name = 'DejaVuSans.ttf'
 
         if RM.theme != "retro":
@@ -862,7 +862,7 @@ class MainMenuButton(Button):
         self.background_normal = ""
         self.color = RM.mainMenuButtonColor
 
-        if RM.language == "ge": # шрифт - его нужно изменить только для грузинского, для остальных языков по умолчанию
+        if RM.language == "ka": # шрифт - его нужно изменить только для грузинского, для остальных языков по умолчанию
             self.font_name = 'DejaVuSans.ttf'
 
     def on_press(self):
@@ -987,14 +987,14 @@ class RMApp(App):
                     from os import environ
                     DL = environ['LANG'][0:2]
                 except:
-                    DL = "ru"
+                    DL = "en"
             else:
-                DL = "ru"
+                DL = "en"
 
             if DL == "ru" or DL == "ua" or DL == "by" or DL == "kz":
                 self.language = "ru"
-            elif DL == "ge":
-                self.language = "ge"
+            elif DL == "ka":
+                self.language = "ka"
             else:
                 self.language = "en"
 
@@ -1062,12 +1062,10 @@ class RMApp(App):
             "cancel": self.msg[190]
         }
 
-        if reload == True: # при мягкой перезагрузке обновление переменных здесь заканчивается
-            return
-
         self.contactsEntryPoint = self.searchEntryPoint = self.popupEntryPoint = 0 # различные переменные
         self.porch = house.House().Porch()
-        self.stack = []
+        if reload == False: # при мягкой перезагрузке сохраняем стек
+            self.stack = []
         self.showSlider = False
         self.devmode = utils.Devmode
         self.restore = 0
@@ -1076,7 +1074,7 @@ class RMApp(App):
         self.onClickFlash = .08  # время появления теневого эффекта на кнопках
         self.buttonPressedBG = "button_background.png"
 
-        Window.fullscreen = False # переменные размеров и габаритов
+        Window.fullscreen = False # размеры и габариты
         self.spacing = Window.size[1]/400
         self.padding = Window.size[1]/300
         self.porchPos = [0, 0] # положение сетки подъезда без масштабирования
@@ -1085,7 +1083,6 @@ class RMApp(App):
         self.marginSizeHintY = 0.08
         self.bottomButtonsSizeHintY = 0.1
         self.counterHeight = self.standardTextHeight * 2.5 # размер счетчика в фиксированном состоянии
-        self.neutralDefaultSizeHintX = 0.1 # ширина нейтральной кнопки
         self.defaultKeyboardHeight = Window.size[1]*.4
 
         self.fontXXL =  int(Window.size[1] / 30) # размеры шрифтов
@@ -1151,15 +1148,15 @@ class RMApp(App):
         self.timerBox = BoxLayout(size_hint=(0.33, 1), spacing=self.spacing, padding=(self.padding, 0))
         self.timer = Timer()
         self.timerBox.add_widget(self.timer)
-        self.timerText = Label(halign="left", valign="center", font_size=self.fontXL,
-                               color=self.topButtonColor, width=self.standardTextWidth,
+        self.timerText = Label(halign="left", valign="center", #font_size=self.fontM,
+                               color=self.standardTextColor, width=self.standardTextWidth,
                                markup=True, size_hint=(None, None), pos_hint={"center_y": .5})
         self.timerBox.add_widget(self.timerText)
         self.boxHeader.add_widget(self.timerBox)
 
         # Заголовок таблицы
 
-        self.headBox = BoxLayout()
+        self.headBox = BoxLayout(spacing=self.spacing)
         self.pageTitle = MyLabel(text="", color=self.titleColor, halign="center", valign="center", markup=True,
                                  text_size=(Window.size[0] * .4, None))
         self.pageTitle.bind(on_ref_press=self.titlePressed)
@@ -1412,7 +1409,7 @@ class RMApp(App):
                 self.globalBGColor = [.2, .2, .2]
                 self.sliderImage = "slider_cursor_gray.png"
 
-            elif self.theme == "retro":
+            elif self.theme == "retro": # Ретро
                 self.titleColor = self.mainMenuActivated = [.5, 1, .5]
                 self.titleColor2 = "80FF80"
                 self.checkBoxColor = [.8, 1, .5]
@@ -1420,8 +1417,7 @@ class RMApp(App):
                 self.mainMenuButtonColor2 = "F2FFF2"
                 self.textInputBGColor = [.5, .5, .5, .9]
                 self.textInputColor = self.standardTextColor = [.95, .95, .95]
-                #self.standardTextColor = [.95, .95, .95]
-                self.globalBGColor = [.3, .3, .3]#[.95, .95, .95]  # (.98, .99, 1, 1)
+                self.globalBGColor = [.3, .3, .3]
 
         self.topButtonColor = [.75, .75, .75]  # "lightgray" # поиск, настройки и кнопки счетчиков
         self.topButtonColor2 = "BFBFBF"
@@ -1792,7 +1788,7 @@ class RMApp(App):
                     char = 19 # цифра должна точно соответствовать числу символов во фразе msg[6] + 3
                 elif self.language == "en":
                     char = 16
-                elif self.language == "ge":
+                elif self.language == "ka":
                     char = 23
                 text = instance.text[char:]
                 if "[/i]" in text:
@@ -2198,11 +2194,17 @@ class RMApp(App):
         else:
             self.time2 = updated + 24
         if utils.settings[2][6] > 0:
-            self.timerText.text = f"  [b]{utils.timeFloatToHHMM(self.time2)}[/b]"
+            if ":" in self.timerText.text:
+                mytime = utils.timeFloatToHHMM(self.time2)
+                mytime2 = mytime[: mytime.index(":")]
+                mytime3 = mytime[mytime.index(":") + 1:]
+                mytime4 = f"{mytime2} {mytime3}"
+                self.timerText.text = mytime4
+            else:
+                self.timerText.text = utils.timeFloatToHHMM(self.time2)
         else:
             self.timerText.text = ""
-
-        if ":" in self.timerText.text:
+        if self.timerText.text != "":
             self.timer.on()
         else:
             self.timer.off()
@@ -2271,6 +2273,9 @@ class RMApp(App):
                         self.pageTitle.text = file
                         self.importDB(file=file)
                 plyer.filechooser.open_file(on_selection=__handleSelection)
+
+            elif input == "restart":
+                self.restart("soft")
 
             elif input != "":
                 self.searchQuery = input
@@ -2595,7 +2600,7 @@ class RMApp(App):
                         break
                 else:
                     utils.addHouse(utils.houses, newTer, condo, forceUpper=True)
-                    if self.language == "ge":
+                    if self.language == "ka":
                         utils.log(self.msg[86] % newTer)
                     else:
                         utils.log(self.msg[86] % newTer.upper())
@@ -2716,7 +2721,7 @@ class RMApp(App):
         elif self.displayed.form == "houseDetails":  # детали участка
             self.displayed.form = "houseView"
             self.house.note = self.multipleBoxEntries[2].text.strip()
-            if self.language == "ge": # для грузинского без заглавных букв
+            if self.language == "ka": # для грузинского без заглавных букв
                 newTitle = self.multipleBoxEntries[0].text.strip()  # попытка изменить адрес - сначала проверяем, что нет дублей
             else:
                 newTitle = self.multipleBoxEntries[0].text.upper().strip()
@@ -3496,7 +3501,7 @@ class RMApp(App):
             noteButton = None
             sort = self.button["sort"]
 
-        if self.language == "ge": # для грузинского без заглавных букв
+        if self.language == "ka": # для грузинского без заглавных букв
             porch = f" {self.house.getPorchType()[1]}"
         else:
             porch = f" {self.house.getPorchType()[1][0].upper()}{self.house.getPorchType()[1][1:]}"
@@ -3979,7 +3984,7 @@ class RMApp(App):
             k = 4
         deleteBtn = TableButton(text=text, size_hint_x=None, size_hint_y=None, width=Window.size[0]/k, disabled=disabled,
                                 height=self.standardTextHeight, background_color=self.globalBGColor)
-        bin = AnchorLayout(anchor_x="right", anchor_y="top", size_hint_y=None, padding=(0, 0, self.padding*2, 0),
+        bin = AnchorLayout(anchor_x="right", anchor_y="top", size_hint_y=None, padding=(0, self.padding),
                            height=self.mainList.size[1]*.2)
         deleteBtn.bind(on_release=self.deletePressed)
         bin.add_widget(deleteBtn)
@@ -4244,7 +4249,7 @@ class RMApp(App):
             report += "в"
             self.rep.videos += 1
         try:
-            if self.addReturn.active == True:
+            if not self.msg[162] in self.pageTitle.text and self.addReturn.active == True:
                 report += "п"
                 self.rep.returns += 1
             self.addReturn.active = False
