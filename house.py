@@ -76,11 +76,7 @@ class House(object):
                 else:
                     number = None
             if number != None:
-                if app.RM.language == "ru":
-                    list.append(f"[i]{app.RM.msg[6]} {number}[/i]")
-
-                elif len(list)==0: # для других языков динамическое добавление подъезда пока не работает
-                    list.append(f"{app.RM.msg[213]}" % app.RM.msg[212])
+                list.append(f"[i]{app.RM.msg[6]} {number}[/i]")
 
         return list
         
@@ -373,7 +369,7 @@ class House(object):
                     self.rows = floors
                     self.sortFlats()
                     if warn==True:
-                        app.RM.popup(message="\n" + app.RM.msg[216] % (extraFlats, app.RM.button['shrink']))
+                        app.RM.popup(message="\n" + app.RM.msg[216] % (extraFlats, app.RM.button['shrink'], app.RM.msg[169]))
                     break
 
         def showFlats(self, countFloors=False):
@@ -389,7 +385,7 @@ class House(object):
                     i+=1
                 if len(options) == 0:
                     if self.type=="сегмент":
-                        options.append(app.RM.msg[217])
+                        options.append(app.RM.msg[12])
                 return options
 
             def showListOfFloors():
@@ -447,7 +443,6 @@ class House(object):
 
             self.flats[last].updateStatus()
 
-            createdFlat = last
             delete = False
 
             # Check if flat with such number already exists, it is deleted
@@ -463,14 +458,10 @@ class House(object):
                             if silent==False:
                                 app.RM.popup(f"{app.RM.msg[218]} {self.flats[i].number} – {app.RM.msg[219]}")
                             del self.flats[last] # user reconsidered, delete the newly created empty flat
-                            createdFlat = -1
                     break
 
             if delete==True: # deletion
                 del self.flats[i]
-                createdFlat = last-1
-
-            return self.flats[createdFlat]
 
         def addFlats(self, input):
             """ Массовое создание квартир через дефис или пробел """
@@ -567,7 +558,10 @@ class House(object):
                 if "," in self.title:
                     return self.title[self.title.index(",") + 1:].strip()
                 elif utils.ifInt(self.title)==True: # один номер
-                    return ""
+                    if self.number != "virtual":
+                        return ""
+                    else:
+                        return self.title
                 elif utils.ifInt(self.title)==False and self.number=="virtual": # что-то помимо номера, но не запятая
                     return self.title
                 else:

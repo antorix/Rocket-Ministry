@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import app
+from app import RM
 if __name__ == "__main__":
-    app.RM = app.RMApp()
-    app.RM.run()
+    RM.run()

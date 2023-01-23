@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import urllib.request
 from os import path
-import app
 
 installFile = "rm_install.py"
 
@@ -16,5 +15,5 @@ if not path.exists("main.py"):
     from rm_install import install
     install(standalone=False)
 
-app.RM = app.RMApp()
-app.RM.run()
+from app import RM
+RM.run()

@@ -62,6 +62,7 @@ from kivy.uix.label import Label
 
 from math import atan, pi, radians, sin, cos
 import datetime
+import app
 
 def map_number(x, in_min, in_max, out_min, out_max):
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
@@ -486,8 +487,7 @@ class CircularTimePicker(BoxLayout):
     # military = BooleanProperty(False)
     #time_format = StringProperty("[color={hours_color}][ref=hours]{hours}[/ref][/color]:[color={minutes_color}][ref=minutes]{minutes:02d}[/ref][/color]")
     #time_format = StringProperty("[color={hours_color}][ref=hours]{hours} ч[/ref][/color] [color={minutes_color}][ref=minutes]{minutes:02d} м[/ref][/color]")
-    import app
-    time_format = StringProperty("[color={hours_color}][ref=hours]{hours} %s[/ref][/color] [color={minutes_color}][ref=minutes]{minutes:02d} %s[/ref][/color]" % (app.RM.msg[307], app.RM.msg[308]))
+    time_format = StringProperty("[font=DejaVuSans][color={hours_color}][ref=hours]{hours} %s[/ref][/color] [color={minutes_color}][ref=minutes]{minutes:02d} %s[/ref][/color][/font]" % (app.RM.msg[295], app.RM.msg[296]))
     """String that will be formatted with the time and shown in the time label.
     Can be anything supported by :meth:`str.format`. Make sure you don't
     remove the refs. See the default for the arguments passed to format.
@@ -558,10 +558,12 @@ class CircularTimePicker(BoxLayout):
     _picker = AliasProperty(_get_picker, None)
 
     def _get_time_text(self):
+        self.selector_color = [app.RM.titleColor[0], app.RM.titleColor[1], app.RM.titleColor[2]]
         hc = rgb_to_hex(*self.selector_color) if self.picker == "hours" else rgb_to_hex(*self.color)
         mc = rgb_to_hex(*self.selector_color) if self.picker == "minutes" else rgb_to_hex(*self.color)
         h = self.hours # deleted the following to make hours 0 instead of 12 == 0 and 12 or self.hours <= 12 and self.hours or self.hours - 12
         m = self.minutes
+
         return self.time_format.format(hours_color=hc, minutes_color=mc, hours=h, minutes=m)
     time_text = AliasProperty(_get_time_text, None, bind=("hours", "minutes", "time_format", "picker"))
 

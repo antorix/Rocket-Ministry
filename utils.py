@@ -3,7 +3,7 @@
 
 from sys import argv
 
-Version = "2.2.0" #..23
+Version = "2.3.0" #..27
 
 if "nodev" in argv:
     Devmode = 0
@@ -11,8 +11,22 @@ else:
     Devmode = 0# DEVMODE!
 """
 
-   
 """
+
+try:
+    import kivy
+    import plyer
+except:
+    if Devmode == 1:
+        print("Модули kivy и (или) plyer не найдены, устанавливаю.")
+    from subprocess import check_call
+    from sys import executable
+    check_call([executable, '-m', 'pip', 'install', 'kivy'])
+    check_call([executable, '-m', 'pip', 'install', 'plyer'])
+else:
+    if Devmode == 1:
+        print("Модули kivy и plyer найдены.")
+
 import datetime
 import json
 import time
@@ -25,6 +39,8 @@ import house
 import plyer
 from kivy import platform
 
+# Глобальные переменные
+
 if platform == "android":
     UserPath = "../"
 else:
@@ -34,13 +50,18 @@ DataFile = "data.jsn"
 LastTimeBackedUp = int(time.strftime("%H", time.localtime())) * 3600 \
                 + int(time.strftime("%M", time.localtime())) * 60 \
                 + int(time.strftime("%S", time.localtime()))
+Languages = {           # список всех установленных языков
+    "en": "English",    
+    "ru": "русский",    # должно совпадать с msg[1] для всех языков
+    "ge": "ქართული"
+}
 
 def initializeDB():
     """ Возвращает изначальное значение houses, settings, resources как при создании базы заново"""
     import time
     return [],\
         [
-        [1, 5, 0, 0, "с", "", "", 0, 1.5, 0, 0, 1, 1, 1, "", 1, 0, "", "0", "д", 0, 0, 1], # program settings
+        [1, 5, 0, 0, "с", "default", "", 0, 1.5, 0, 0, 1, 1, 1, "", 1, 0, "", "0", "д", 0, 0, 1], # program settings
         "",# дата последнего обновления settings[1]
         # report:                       settings[2]
         [0.0,       # [0] hours         settings[2][0…]
@@ -75,7 +96,11 @@ def initializeDB():
             [],                                 # report log            resources[2]
     ]
 
+# Основная база данных
+
 houses, settings, resources = initializeDB()
+
+# Служебные функции
 
 def log(message="", title=None, timeout=2, forceNotify=False):
     """ Displaying and logging to file important system messages """
@@ -159,13 +184,16 @@ def load(datafile=None, allowSave=True, forced=False, clipboard=None, silent=Fal
     """ Loading houses and settings from JSON file """
 
     global DataFile, UserPath, houses, settings, resources
+
+    if Devmode == 1:
+        loadLanguages()
+
     if datafile == None:
         datafile = DataFile
     app.RM.popupForm = ""
     if os.path.exists("temp"):
         os.remove("temp")
-    if Devmode == 1:
-        print("Загружаю буфер.")
+    dprint("Загружаю буфер.")
 
     # Сначала получаем буфер
 
@@ -174,8 +202,7 @@ def load(datafile=None, allowSave=True, forced=False, clipboard=None, silent=Fal
     if clipboard != None: # берем буфер обмена
 
         badURLError = app.RM.msg[243]
-        if Devmode == 1:
-            print("Смотрим буфер обмена.")
+        dprint("Смотрим буфер обмена.")
         clipboard = str(clipboard).strip()
 
         if "drive.google.com" in clipboard: # получена ссылка на Google Drive
@@ -196,16 +223,14 @@ def load(datafile=None, allowSave=True, forced=False, clipboard=None, silent=Fal
                 clipboard = clipboard[ clipboard.index("[\"Rocket Ministry") : ]
                 with open("temp", "w") as file:
                     file.write(clipboard)
-                    if Devmode == 1:
-                        print("Содержимое буфера обмена записано во временный файл.")
+                    dprint("Содержимое буфера обмена записано во временный файл.")
             except:
                 return False
 
         try:
             with open("temp", "r") as file:
                 buffer = json.load(file)
-            if Devmode == 1:
-                print("Буфер получен из буфера обмена.")
+            dprint("Буфер получен из буфера обмена.")
 
         except:
             return badURLError
@@ -214,8 +239,7 @@ def load(datafile=None, allowSave=True, forced=False, clipboard=None, silent=Fal
         try:
             with open(datafile, "r") as file:
                 buffer = json.load(file)
-                if Devmode == 1:
-                    print("Буфер получен из импортированного файла.")
+                dprint("Буфер получен из импортированного файла.")
         except:
             if silent == False:
                 app.RM.popup(app.RM.msg[244])
@@ -225,76 +249,61 @@ def load(datafile=None, allowSave=True, forced=False, clipboard=None, silent=Fal
         if os.path.exists(UserPath + datafile):
             size = os.path.getsize(UserPath + datafile) # файл меньше 320 байт не загружаем
             if size < 320:
-                message = app.RM.msg[245]
-                if Devmode == 1:
-                    print(message)
-                if forced == True:
-                    app.RM.popup(title=app.RM.msg[246], message=message)
+                dprint("Файл данных найден, но пустой. Пытаюсь восстановить резервную копию.")
                 if backupRestore(restoreWorking=True, allowSave=allowSave) == True:
-                    if Devmode == 1:
-                        print("База успешно загружена.")
+                    dprint("База успешно загружена.")
                     if allowSave==True:
                         save(backup=True)  # успешный результат с загрузкой копии
-                        if Devmode == 1:
-                            print("База сохранена с резервированием.")
+                        dprint("База сохранена с резервированием.")
                     return True
                 else:
-                    if Devmode == 1:
-                        print("Не удалось восстановить непустую резервную копию (ее нет?).")
+                    dprint("Не удалось восстановить непустую резервную копию (ее нет?).")
             else:
                 with open(UserPath + datafile, "r") as file:
                     buffer = json.load(file)
-                if Devmode == 1:
-                    print("Буфер получен из файла data.jsn в стандартном местоположении.")
+                dprint("Буфер получен из файла data.jsn в стандартном местоположении.")
         else:
-            if Devmode == 1:
-                print("Файл базы данных %s не найден, пытаюсь восстановить резервную копию." % datafile)
+            dprint("Файл базы данных %s не найден, пытаюсь восстановить резервную копию." % datafile)
             if backupRestore(restoreWorking=True, allowSave=allowSave) == True:
-                if Devmode == 1:
-                    print("База успешно загружена.")
+                dprint("База успешно загружена.")
                 if allowSave == True:
                     save(backup=True)  # успешный результат с загрузкой копии
-                    if Devmode == 1:
-                        print("База сохранена с резервированием.")
+                    dprint("База сохранена с резервированием.")
                 return True
             else:
-                if Devmode == 1:
-                    print("Не удалось восстановить непустую резервную копию (ее нет?).")
+                dprint("Не удалось восстановить непустую резервную копию (ее нет?).")
 
     # Буфер получен, читаем из него
 
-    if len(buffer)==0:
-        if Devmode == 1:
-            print("Создаю новую базу.")
-        if allowSave == True:
-            save(backup=True)  # успешный результат
-            if Devmode == 1:
-                print("База сохранена с резервированием.")
-
-    elif "Rocket Ministry application data file." in buffer[0]:
-        if Devmode == 1:
-            print("База определена, контрольная строка совпадает.")
-        del buffer[0]
-        clearDB()
-        result = loadOutput(buffer)
-        if result == False:
-            if Devmode == 1:
-                print("Ошибочный импорт, восстанавливаем резервную копию.")
-            backupRestore(restoreWorking=True, allowSave=allowSave)
-        else:
+    try:
+        if len(buffer)==0:
+            dprint("Создаю новую базу.")
             if allowSave == True:
                 save(backup=True)  # успешный результат
-                if Devmode == 1:
-                    print("База сохранена с резервированием.")
-            return True
+                dprint("База сохранена с резервированием.")
 
-    else:
-        if Devmode == 1:
-            print("База получена, но контрольная строка не совпадает.")
-        if clipboard == None and forced == False:
-            if Devmode == 1:
-                print("Восстанавливаю резервную копию.")
-            backupRestore(restoreWorking=True)
+        elif "Rocket Ministry application data file." in buffer[0]:
+            dprint("База определена, контрольная строка совпадает.")
+            del buffer[0]
+            clearDB()
+            result = loadOutput(buffer)
+            if result == False:
+                dprint("Ошибочный импорт, восстанавливаем резервную копию.")
+                backupRestore(restoreWorking=True, allowSave=allowSave)
+            else:
+                if allowSave == True:
+                    save(backup=True)  # успешный результат
+                    dprint("База сохранена с резервированием.")
+                return True
+
+        else:
+            dprint("База получена, но контрольная строка не совпадает.")
+            if clipboard == None and forced == False:
+                dprint("Восстанавливаю резервную копию.")
+                backupRestore(restoreWorking=True)
+    except:
+        dprint("Ошибка проверки загруженного буфера.")
+        return False
 
 def houseRetrieve(containers, housesNumber, h, silent=False):
     """ Retrieves houses from JSON buffer into objects """
@@ -375,8 +384,7 @@ def save(backup=False, silent=True, export=False):
         if silent == False:
             app.RM.popup(app.RM.msg[250])
     except:
-        if Devmode == 1:
-            print("Ошибка записи!")
+        dprint("Ошибка записи!")
 
     # Экспорт в файл на ПК, если найден файл sync.ini, где прописан путь
 
@@ -387,8 +395,7 @@ def save(backup=False, silent=True, export=False):
             with open(folder + f"/{app.RM.msg[251]}.txt", "w") as file:
                 json.dump(output, file)
         except:
-            if Devmode == 1:
-                print("Произведена неудачная попытка сохранить данные в расположение, указанное в файле sync.ini. Скорее всего, путь указан неверно. Проверьте содержимое этого файла.")
+            dprint("Произведена неудачная попытка сохранить данные в расположение, указанное в файле sync.ini. Скорее всего, путь указан неверно. Проверьте содержимое этого файла.")
 
 def share(silent=False, clipboard=False, email=False, folder=None, file=False):
     """ Sharing database """
@@ -477,12 +484,10 @@ def backupRestore(silent=True, allowSave=True, delete=False, restoreNumber=None,
                 try:
                     load(forced=True, allowSave=allowSave, datafile=BackupFolderLocation + files[i])
                 except:
-                    if Devmode == 1:
-                        print("Непустая резервная копия не найдена.")
+                    dprint("Непустая резервная копия не найдена.")
                     return False
                 else:
-                    if Devmode == 1:
-                        print("Успешно загружена последняя непустая резервная копия.")
+                    dprint("Успешно загружена последняя непустая резервная копия.")
                     if silent == False:
                         app.RM.popup(app.RM.msg[258] % fileDates[i])
                     return True
@@ -490,8 +495,7 @@ def backupRestore(silent=True, allowSave=True, delete=False, restoreNumber=None,
     # Если выбран режим удаления лишних копий
 
     elif delete == True:
-        if Devmode == 1:
-            print("Обрабатываем резервные копии.")
+        dprint("Обрабатываем резервные копии.")
         limit = 10
         if len(files) > limit:  # лимит превышен, удаляем
             extra = len(files) - limit
@@ -511,24 +515,20 @@ def update():
     if app.RM.platform == "mobile":
         return # мобильная версия не проверяет обновления
     else:
-        if Devmode == 1:
-            print("Проверяем обновления настольной версии.")
+        dprint("Проверяем обновления настольной версии.")
 
     try: # подключаемся к GitHub
         for line in urllib.request.urlopen("https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/version"):
             newVersion = line.decode('utf-8').strip()
     except:
-        if Devmode == 1:
-            print("Не удалось подключиться к серверу.")
+        dprint("Не удалось подключиться к серверу.")
         return
     else: # успешно подключились, сохраняем сегодняшнюю дату последнего обновления
-        if Devmode == 1:
-            print("Версия на сайте: ", newVersion)
+        dprint("Версия на сайте: " + newVersion)
 
     if newVersion > Version:
         try:
-            if Devmode == 1:
-                print("Найдена новая версия, скачиваем.")
+            dprint("Найдена новая версия, скачиваем.")
             file = "files.zip"
             urllib.request.urlretrieve(
                 "https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip",
@@ -547,12 +547,10 @@ def update():
             os.remove(file)
             shutil.rmtree(downloadedFolder)
         except:
-            if Devmode == 1:
-                print("Не удалось загрузить обновление.")
+            dprint("Не удалось загрузить обновление.")
 
     else:
-        if Devmode == 1:
-            print("Обновлений нет.")
+        dprint("Обновлений нет.")
 
 def getCurTime():
     return int(time.strftime("%H", time.localtime())) * 3600 \
@@ -565,7 +563,7 @@ def ifInt(char):
     except: return False
     else: return True
 
-def addHouse(houses, input, type=True):
+def addHouse(houses, input, type=True, forceUpper=False):
     """ Adding new house """
     if type == True:
         type = "condo"
@@ -573,7 +571,10 @@ def addHouse(houses, input, type=True):
         type = "private"
     houses.append(house.House())
     newHouse = len(houses) - 1
-    houses[newHouse].title = (input.strip()).upper()
+    if forceUpper == False or app.RM.language == "ge":
+        houses[newHouse].title = input.strip()
+    else:
+        houses[newHouse].title = (input.strip()).upper()
     houses[newHouse].type = type
 
 def checkDate(date):
@@ -671,117 +672,117 @@ def monthName(monthCode=None, monthNum=None):
         lastMonthUp = app.RM.msg[261]
         lastMonthLow = app.RM.msg[262]
         lastMonthEn = "Dec"
-        curMonthRuShort = app.RM.msg[313]
+        curMonthRuShort = app.RM.msg[283]
         monthNum = 1
         lastTheoMonthNum = 4
         curTheoMonthNum = 5
     elif month == "Feb":
         curMonthUp = app.RM.msg[263]
         curMonthLow = app.RM.msg[264]
-        lastMonthUp = app.RM.msg[265]
-        lastMonthLow = app.RM.msg[266]
+        lastMonthUp = app.RM.msg[259]
+        lastMonthLow = app.RM.msg[260]
         lastMonthEn = "Jan"
-        curMonthRuShort = app.RM.msg[314]
+        curMonthRuShort = app.RM.msg[284]
         monthNum = 2
         lastTheoMonthNum = 5
         curTheoMonthNum = 6
     elif month == "Mar":
-        curMonthUp = app.RM.msg[267]
-        curMonthLow = app.RM.msg[268]
-        lastMonthUp = app.RM.msg[269]
-        lastMonthLow = app.RM.msg[270]
+        curMonthUp = app.RM.msg[265]
+        curMonthLow = app.RM.msg[266]
+        lastMonthUp = app.RM.msg[263]
+        lastMonthLow = app.RM.msg[264]
         lastMonthEn = "Feb"
-        curMonthRuShort = app.RM.msg[315]
+        curMonthRuShort = app.RM.msg[285]
         monthNum = 3
         lastTheoMonthNum = 6
         curTheoMonthNum = 7
     elif month == "Apr":
-        curMonthUp = app.RM.msg[271]
-        curMonthLow = app.RM.msg[272]
-        lastMonthUp = app.RM.msg[273]
-        lastMonthLow = app.RM.msg[274]
+        curMonthUp = app.RM.msg[267]
+        curMonthLow = app.RM.msg[268]
+        lastMonthUp = app.RM.msg[265]
+        lastMonthLow = app.RM.msg[266]
         lastMonthEn = "Mar"
-        curMonthRuShort = app.RM.msg[316]
+        curMonthRuShort = app.RM.msg[286]
         monthNum = 4
         lastTheoMonthNum = 7
         curTheoMonthNum = 8
     elif month == "May":
-        curMonthUp = app.RM.msg[275]
-        curMonthLow = app.RM.msg[276]
-        lastMonthUp = app.RM.msg[277]
-        lastMonthLow = app.RM.msg[278]
+        curMonthUp = app.RM.msg[269]
+        curMonthLow = app.RM.msg[270]
+        lastMonthUp = app.RM.msg[267]
+        lastMonthLow = app.RM.msg[268]
         lastMonthEn = "Apr"
-        curMonthRuShort = app.RM.msg[317]
+        curMonthRuShort = app.RM.msg[287]
         monthNum = 5
         lastTheoMonthNum = 8
         curTheoMonthNum = 9
     elif month == "Jun":
-        curMonthUp = app.RM.msg[279]
-        curMonthLow = app.RM.msg[280]
-        lastMonthUp = app.RM.msg[281]
-        lastMonthLow = app.RM.msg[282]
+        curMonthUp = app.RM.msg[271]
+        curMonthLow = app.RM.msg[272]
+        lastMonthUp = app.RM.msg[269]
+        lastMonthLow = app.RM.msg[270]
         lastMonthEn = "May"
-        curMonthRuShort = app.RM.msg[318]
+        curMonthRuShort = app.RM.msg[288]
         monthNum = 6
         lastTheoMonthNum = 9
         curTheoMonthNum = 10
     elif month == "Jul":
-        curMonthUp = app.RM.msg[283]
-        curMonthLow = app.RM.msg[284]
-        lastMonthUp = app.RM.msg[285]
-        lastMonthLow = app.RM.msg[286]
+        curMonthUp = app.RM.msg[273]
+        curMonthLow = app.RM.msg[274]
+        lastMonthUp = app.RM.msg[271]
+        lastMonthLow = app.RM.msg[272]
         lastMonthEn = "Jun"
-        curMonthRuShort = app.RM.msg[319]
+        curMonthRuShort = app.RM.msg[289]
         monthNum = 7
         lastTheoMonthNum = 10
         curTheoMonthNum = 11
     elif month == "Aug":
-        curMonthUp = app.RM.msg[287]
-        curMonthLow = app.RM.msg[288]
-        lastMonthUp = app.RM.msg[289]
-        lastMonthLow = app.RM.msg[290]
+        curMonthUp = app.RM.msg[275]
+        curMonthLow = app.RM.msg[276]
+        lastMonthUp = app.RM.msg[273]
+        lastMonthLow = app.RM.msg[274]
         lastMonthEn = "Jul"
-        curMonthRuShort = app.RM.msg[320]
+        curMonthRuShort = app.RM.msg[290]
         monthNum = 8
         lastTheoMonthNum = 11
         curTheoMonthNum = 12
     elif month == "Sep":
-        curMonthUp = app.RM.msg[291]
-        curMonthLow = app.RM.msg[292]
-        lastMonthUp = app.RM.msg[293]
-        lastMonthLow = app.RM.msg[294]
+        curMonthUp = app.RM.msg[277]
+        curMonthLow = app.RM.msg[278]
+        lastMonthUp = app.RM.msg[275]
+        lastMonthLow = app.RM.msg[276]
         lastMonthEn = "Aug"
-        curMonthRuShort = app.RM.msg[321]
+        curMonthRuShort = app.RM.msg[291]
         monthNum = 9
         lastTheoMonthNum = 12
         curTheoMonthNum = 1
     elif month == "Oct":
-        curMonthUp = app.RM.msg[295]
-        curMonthLow = app.RM.msg[296]
-        lastMonthUp = app.RM.msg[297]
-        lastMonthLow = app.RM.msg[298]
+        curMonthUp = app.RM.msg[279]
+        curMonthLow = app.RM.msg[280]
+        lastMonthUp = app.RM.msg[277]
+        lastMonthLow = app.RM.msg[278]
         lastMonthEn = "Sep"
-        curMonthRuShort = app.RM.msg[322]
+        curMonthRuShort = app.RM.msg[292]
         monthNum = 10
         lastTheoMonthNum = 1
         curTheoMonthNum = 2
     elif month == "Nov":
-        curMonthUp = app.RM.msg[299]
-        curMonthLow = app.RM.msg[300]
-        lastMonthUp = app.RM.msg[301]
-        lastMonthLow = app.RM.msg[302]
+        curMonthUp = app.RM.msg[281]
+        curMonthLow = app.RM.msg[282]
+        lastMonthUp = app.RM.msg[279]
+        lastMonthLow = app.RM.msg[280]
         lastMonthEn = "Oct"
-        curMonthRuShort = app.RM.msg[323]
+        curMonthRuShort = app.RM.msg[293]
         monthNum = 11
         lastTheoMonthNum = 2
         curTheoMonthNum = 3
-    else:
-        curMonthUp = app.RM.msg[303]
-        curMonthLow = app.RM.msg[304]
-        lastMonthUp = app.RM.msg[305]
-        lastMonthLow = app.RM.msg[306]
+    else: # Dec
+        curMonthUp = app.RM.msg[261]
+        curMonthLow = app.RM.msg[262]
+        lastMonthUp = app.RM.msg[281]
+        lastMonthLow = app.RM.msg[282]
         lastMonthEn = "Nov"
-        curMonthRuShort = app.RM.msg[324]
+        curMonthRuShort = app.RM.msg[294]
         monthNum = 12
         lastTheoMonthNum = 3
         curTheoMonthNum = 4
@@ -906,3 +907,35 @@ def timeFloatToHHMM(hours=None, delta=None):
         result = delta
 
     return result
+
+def dprint(text):
+    if Devmode == 1:
+        print(text)
+
+def loadLanguages():
+    """ Загружает csv-файл с языками, если есть"""
+    import csv
+    import glob
+    languages = []
+    for l in Languages.keys():
+        languages.append([])
+    dir = "c:\\Users\\antor\\Downloads\\"
+    filenames = glob.glob(dir + "Rocket Ministry localization sheet*.csv")
+    def generate(file, col):
+        with open(file, "w", encoding="utf-8") as f:
+            for row in languages[col]:
+                f.write(row + "\n")
+    try:
+        with open(filenames[0], newline='', encoding="utf8") as csvfile:
+            file = csv.reader(csvfile)
+            for row in file:
+                for col in range(len(languages)):
+                    languages[col].append(row[col])
+    except:
+        dprint("CSV-файл с локализациями не найден.")
+    else:
+        dprint("CSV-файл с локализациями найден, обновляю языковые файлы.")
+        for i in range(len(Languages.keys())):
+            generate(f"c:\\Users\\antor\\OneDrive - ИП Чивчалов А.Н\\Программы\\Rocket Ministry\\{list(Languages.keys())[i]}.lang", i)
+        for zippath in glob.iglob(os.path.join(dir, '*.csv')):
+            os.remove(zippath)

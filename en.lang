@@ -4,13 +4,13 @@ Contacts
 Report
 Save
 Add entrance
-Are you a pioneer? We will set up the monthly norm in settings. You may change it manually.
+Are you a pioneer? We will set up the monthly hour requirement in settings. You may change it manually.
 Nothing found
 Database error
 The program cannot continue working. Try to delete the last created entity. If this does not help, open Settings, do Export to Google Drive, and send the file to the developers to analyze the issue. Alternatively, you can wipe all the data and begin from scratch.
 Add
-Here you will find
-Add one or more
+Add one or more houses
+Return visit
 Territory name:
 Address:
 details
@@ -30,18 +30,18 @@ Name
 Date
 Interested
 Worked
-Worked rev.
+Address
 Number
-Number rev.
+Phone
 Status
 Note
-Phone
-Address
+Input error. The list must not contain periods!
+Close
 Timer
 Where to log time?
 Service
 Credit
-Restore data
+Data recovery
 Cannot restore a backup copy with this name. Likely it does not exist.
 Error in some of the fields, please check data!
 cred.: %s
@@ -60,27 +60,27 @@ Apartments:
 to
 Floors:
 First floor number:
-Add houses
+House
 Enter house number:
 Mass adding
-1 / 1a / red building
+Examples: 1 / 1a / red building
 Add territory
 Condominium
-Enter territory address:
-Park Way, 30
+Enter territory name:
+Example: Park Way, 30
 A condominium-type territory has per-floor grid view, but requires only numerical values for apartment numbers.
-Enter entrance title:
+Enter new entrance name:
 Number or description
 A condominium may have one or more entrances or blocks with separate sets of apartments.
-Enter new section title:
-1 / south part
+Enter new section name:
+Example: 1 / south part
 A territory may be divided into sections or zones for convenience. One section may be a street, side of a street, block, or anything else.
 Add
 Add contact
 Enter contact name and/or description:
 You are creating a standalone contact not associated with any territory. People from all your territories are listed in the contacts automatically if they are assigned the light-green status.
 add visit
-What was discussed:
+Visit info:
 It did not work, please try again.
 A territory with this name already exists, try another one!
 Territory "%s" created
@@ -121,26 +121,26 @@ May
 Jun
 Jul
 Aug
-Monthly hour norm
-{}"Not at home" with one click
-{}Transfer minutes to next month
-<>"Not interested" color
-{}Hourly credit
-{}Quick phone input
-{}Notification on timer start
-()Language
+Monthly hour requirement
+"%s" with one click
+Transfer minutes to next month
+"Not interested" color
+Hourly credit
+Quick phone input
+Notification on timer start
+Language
 Export
 Import
 Open
 Recover
-This will restore the last backup copy created before the last change. Proceed?
 Wipe
+This will restore the last backup copy created before the last change. Proceed?
 All user data will be irreversibly deleted from the app! Are you sure you need to do it?
 About
-Multi-purpose manager
+Multi-purpose organizer
 Official Telegram channel
-Version of Rocket Ministry for Windows and Linux, FAQ, documentation, and source code at the
-official project's webpage on Github
+Rocket Ministry for Windows and Linux, FAQ, documentation, and source code at the
+official project's webpage on %s Github
 Help
 Any information in a free form
 Search contacts
@@ -153,7 +153,7 @@ This territory was taken more than 4 months ago! You need to turn it back or pro
 Territory
 Add
 Apartments
-Add house
+Add houses
 entr.
 Contact
 Apartment
@@ -163,7 +163,7 @@ initial call
 Record
 visit on
 Enter territory name:
-River st.
+Example: River st.
 Enter the first and the last number of the range to add:
 Interface theme
 Shrink floor
@@ -171,39 +171,39 @@ Don't show this tip anymore.
 This is a switch between the per-floor "grid" view and a simple list of apartments. It works only in condominium-type territories. The per-floor view well visualizes the block, while the list view has handy sorting and preview of flats' content.
 video(s)
 Delete
-Ahead of norm
-Behind norm
+Ahead of requirement
+Behind requirement
 Yearly Stats
 Months added
 Hours added
-Yearly norm
+Yearly requirement
 Hours remaining
 Monthly average
-Equals 12 x monthly norm (from settings).
+Equals 12 x monthly requirement (from settings).
 Average number of hours to serve each month during the rest (not added) months.
 But take note that this will disable the per-floor view!
 Comma-separated list of numbers
 Paste from clipboard
 Here you can add new numbers using a list of numbers separated by commas.
 Add
-Input error. The added string should be a list of any numbers separated by commas. No other characters are allowed.
+Input error. This list should contain only numbers and commas. No other characters are allowed. If you need to use alphabetical characters, create a non-condominium type territory.
 Cancel
 List
-not interested
+Data wiped successfully
 Setting an apartment to the gray color will delete all its information! Proceed?
 Delete territory
 Before deleting the territory, make sure that all householders you want to keep have the green-light color. Otherwise they will be deleted along with the territory! Proceed with deletion?
 Delete entrance
 Delete section
-Are you sure you want to delete?
-Deleting
+Are you sure?
+Delete
 Delete visit record
-Delete record from
-In brackets, you may see how much time you are ahead (+) or behind (-) your monthly norm for the current day of the month. For example, with the norm of 70 hours, if you have had no service for today, this value will decrease approximately by 2:20 tomorrow.
+Delete record on
+In brackets, you may see how much time you are ahead (+) or behind (-) your monthly requirement for the current day of the month. For example, with the requirement of 70 hours, if you have had no service for today, this value will decrease approximately by 2:20 tomorrow.
 Attention
 Phone saved!
+You can disable the "%s" button in the app settings!
 Not at home
-not at home
 Not interested
 Cannot load file. It likely has a wrong format or does not contain necessary data.
 Data successfully loaded!
@@ -211,10 +211,10 @@ To import data, paste the share link to a Google Drive file into the clipboard. 
 section
 entrance
 Add the first %s
-# 
+#
 You cannot shrink floors in this block anymore, because the last apartment with content will disappear! But you can change the apartment numbers range or floors count on the "Apartments" screen.
-A non-standard relation between apartments and floors requested. We had to add %d apartment(s) that you now have to manually delete on corresponding floors. To do this, click on the button [b]%s Shrink floor[/b] in the details of [u]any apartment on this floor[/u].
-Add one or more houses
+A non-standard relation between apartments and floors requested. We had to add %d apartment(s) that you now have to manually delete on corresponding floors. To do this, click on the button [b]%s %s[/b] in the details of [u]any apartment on this floor[/u].
+Service time has started! To finish your service session, just click on the timer button once again. The time will be added to your report automatically.
 You cannot add №
 this number already exists and has content inside!
 Add the first call
@@ -240,9 +240,9 @@ RV
 %d return visit(s) added to report
 1 Bible study added to report
 Database wiped!
-There is a link to Google Drive in the clipboard, but there is no access to the file it leads to. Most likely, the link is not assigned public access rights.
+There is a link to Google Drive in the clipboard, but there is no access to the file it refers to. Most likely, the link is not assigned public access rights.
 Failed to load data file. Most likely, it is damaged or of wrong format.
-Data file found, but it is empty. Trying to restore a backup copy.
+It can be a list of random words, even addresses in different places.
 Loading database
 Tip
 Backup copy creation failed!
@@ -255,65 +255,35 @@ Data successfully saved to file %s.
 Database export failed!
 Data successfully exported to folder %s.
 No backup copies have been created so far!
-Backup copy from %s loaded successfully.
+Backup copy dated %s loaded successfully.
 January
 January
 December
 December
 February
 February
-January
-January
 March
 March
-February
-February
 April
 April
-March
-March
 May
 May
-April
-April
 June
 June
-May
-May
 July
 July
-June
-June
 August
 August
-July
-July
 September
 September
-August
-August
 October
 October
-September
-September
 November
 November
-October
-October
-December
-December
-November
-November
-h
-m
-Yes
-No
-Exit
-Pressing this button will decrease the amount of flats [u]on this floor[/u] by one with shift to the right and recount of all numbers in the block. But all apartments themselves will remain. This is a way to edit the amount of flats on each floor. If you have shrunk a floor by mistake, just re-create the apartments with the original numeration. Proceed with shrinking?
 Jan.
 Feb.
-Apr.
 Mar.
+Apr.
 May
 Jun.
 Jul.
@@ -322,8 +292,18 @@ Sep.
 Oct.
 Nov.
 Dec.
-Using this button, you can adjust the size of the numbers grid using the slider above, as well as its position in one of the 9 points using the buttons in the bottom right corner. Click on the same button %s to finish editing.
-Service time has started! To finish your service session, just click on the timer button once again. The time will be added to your report automatically.
-Return visit
-Data wiped successfully
-You can disable the "Not at home" button in the app settings!
+h
+m
+Yes
+No
+Pressing this button will decrease the amount of flats [u]on this floor[/u] by one with shift to the right and recount of all numbers in the block. But all apartments having any content will remain. This is a way to edit the amount of flats on each floor. If you have shrunk a floor by mistake, just re-create the apartments with the original numeration. Proceed with shrinking?
+Using this button, you can adjust the size of the numbers grid by moving the slider above, as well as its position in one of the 9 points with the buttons in the bottom right corner. Click on the same button %s to finish editing.
+Night
+Evening
+Retro
+Eco
+Teal
+Purple
+Clarity
+Want to help translate the app into your language? Email at
+1, 2b, Park St 1a, 5th Avenue 119
