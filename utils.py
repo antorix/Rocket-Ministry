@@ -3,7 +3,7 @@
 
 from sys import argv
 
-Version = "2.3.0" #..28
+Version = "2.3.1" #..33
 
 if "nodev" in argv:
     Devmode = 0
