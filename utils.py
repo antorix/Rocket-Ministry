@@ -392,8 +392,22 @@ def save(backup=False, silent=True, export=False):
         try:
             with open("sync.ini", encoding='utf-8', mode="r") as f:
                 folder = f.read()
-            with open(folder + f"/{app.RM.msg[251]}.txt", "w") as file:
-                json.dump(output, file)
+
+            if os.path.exists("word.ini"): # если есть файл word.ini, экспорт в Word-файл, а не txt
+                try:
+                    from docx import Document
+                except:
+                    from subprocess import check_call
+                    from sys import executable
+                    check_call([executable, '-m', 'pip', 'install', 'python-docx'])
+                    from docx import Document
+                doc = Document()
+                doc.add_paragraph(str(json.dumps(output)))
+                doc.save(folder + f"/{app.RM.msg[251]}.doc")
+
+            else: # иначе пишем в txt-файл
+                with open(folder + f"/{app.RM.msg[251]}.txt", "w") as file:
+                    json.dump(output, file)
         except:
             dprint("Произведена неудачная попытка сохранить данные в расположение, указанное в файле sync.ini. Скорее всего, путь указан неверно. Проверьте содержимое этого файла.")
 
@@ -507,13 +521,15 @@ def update():
 
     global Version
 
+    result = False
+
     today = str(datetime.datetime.strptime(time.strftime('%Y-%m-%d'), "%Y-%m-%d"))
     today = today[0: today.index(" ")]
     settings[1] = today
     save()
 
     if app.RM.platform == "mobile":
-        return # мобильная версия не проверяет обновления
+        return result # мобильная версия не проверяет обновления
     else:
         dprint("Проверяем обновления настольной версии.")
 
@@ -522,12 +538,13 @@ def update():
             newVersion = line.decode('utf-8').strip()
     except:
         dprint("Не удалось подключиться к серверу.")
-        return
+        return result
     else: # успешно подключились, сохраняем сегодняшнюю дату последнего обновления
         dprint("Версия на сайте: " + newVersion)
 
     if newVersion > Version:
-        try:
+        import _thread
+        def __update(threadName, delay):
             dprint("Найдена новая версия, скачиваем.")
             file = "files.zip"
             urllib.request.urlretrieve(
@@ -543,14 +560,19 @@ def update():
                 source = downloadedFolder + "/" + file_name
                 destination = file_name
                 if os.path.isfile(source):
-                    shutil.move(source, destination)
+                    try:
+                        shutil.move(source, destination)
+                    except:
+                        dprint("Не удалось переместить файл %s." % source)
             os.remove(file)
             shutil.rmtree(downloadedFolder)
-        except:
-            dprint("Не удалось загрузить обновление.")
+        _thread.start_new_thread(__update, ("Thread-Update", 0,))
+        result = True
 
     else:
         dprint("Обновлений нет.")
+
+    return result
 
 def getCurTime():
     return int(time.strftime("%H", time.localtime())) * 3600 \
