@@ -3972,7 +3972,10 @@ class RMApp(App):
             k = 0.4
         a = AnchorLayout(size_hint_x=k)
         self.dropThemeMenu = DropDown()
-        currentTheme = list({i for i in self.themes if self.themes[i] == self.theme})[0]
+        try:
+            currentTheme = list({i for i in self.themes if self.themes[i] == self.theme})[0]
+        except:
+            currentTheme = self.msg[307]
         options = list(self.themes.keys())
         for option in options:
             btn = SortListButton(text=option)
