@@ -6,7 +6,7 @@ Android, Windows, Linux are supported. Mac should work too, but not tested yet.
 
 The app speaks English, Russian and Georgian, more languages are coming. If you want to help translate the app into your language, please send a message to [antorix@outlook.com](mailto:antorix@outlook.com).
 
-![](https://play-lh.googleusercontent.com/1lGefLzP_8vflqNPkHEV0Km5TM3rJON9vMYhklLHz0ig8XHyZ3-fUvJgpX5e4BnsC1I)
+![](https://play-lh.googleusercontent.com/4k6DP-pK2LhTh_7bdxMie3TMZZC39bU-KWX1T8pP-2ql6YYBut-0KBaUlR-iTndiHJ8)
 
 * [Download from Google Play](https://play.google.com/store/apps/details?id=org.rocketministry)
 
