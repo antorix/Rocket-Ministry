@@ -60,7 +60,7 @@ class House(object):
             if self.type == "condo":
                 listIcon = icon('icon-login')
             else:
-                listIcon = icon('icon-location')
+                listIcon = icon('icon-pin')
             list.append(f"{listIcon} [b]{self.porches[i].title}[/b]{self.porches[i].getFlatsRange()}")
 
         if self.type != "condo" and len(list) == 0:
@@ -260,6 +260,10 @@ class House(object):
 
                 self.flatsLayout = flatsLayoutOriginal  # возвращаем исходную сортировку
                 self.sortFlats()
+                if utils.resources[0][1][8] == 0:
+                    app.RM.popup(title=app.RM.msg[247], message=app.RM.msg[319])
+                    utils.resources[0][1][8] = 1
+
             return result
 
         def getFirstAndLastNumbers(self):
@@ -369,7 +373,7 @@ class House(object):
                     self.rows = floors
                     self.sortFlats()
                     if warn==True:
-                        app.RM.popup(message="\n" + app.RM.msg[216] % (extraFlats, app.RM.button['shrink'], app.RM.msg[169]))
+                        app.RM.popup(message="\n" + app.RM.msg[216] % (extraFlats, app.RM.button['shrink']))
                     break
 
         def showFlats(self, countFloors=False):

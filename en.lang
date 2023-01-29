@@ -24,7 +24,7 @@ Phone:
 Number:
 Here you will find the history of all report updates (max. 300 entries).
 Report log
-To make a call, enter the phone number in the apartment/contact details.
+To make a call, enter the phone number in the contact details.
 Phone number %s copied into clipboard.
 Name
 Date
@@ -54,7 +54,7 @@ Settings saved
 Data
 Notepad
 Data saved, backup copy created
-Entrance apartments
+
 Apartments:
 
 to
@@ -161,7 +161,7 @@ Visits list:
 Add visit
 initial call
 Record
-visit on
+visit from
 Enter territory name:
 Example: River st.
 Enter the first and the last number of the range to add:
@@ -198,7 +198,7 @@ Delete section
 Are you sure?
 Delete
 Delete visit record
-Delete record on
+Delete record from
 In brackets, you may see how much time you are ahead (+) or behind (-) your monthly requirement for the current day of the month. For example, with the requirement of 70 hours, if you have had no service for today, this value will decrease approximately by 2:20 tomorrow.
 Attention
 Phone saved!
@@ -213,7 +213,7 @@ entrance
 Add the first %s
 #
 You cannot shrink floors in this block anymore, because the last apartment with content will disappear! But you can change the apartment numbers range or floors count on the "Apartments" screen.
-A non-standard relation between apartments and floors requested. We had to add %d apartment(s) that you now have to manually delete on corresponding floors. To do this, click on the button [b]%s %s[/b] in the details of [u]any apartment on this floor[/u].
+A non-standard relation between apartments and floors requested. We had to add %d apartment(s) that you now have to manually delete on corresponding floors. To do this, click on the button [b]%s[/b] in the details of [u]any apartment on this floor[/u].
 Service time has started! To finish your service session, just click on the timer button once again. The time will be added to your report automatically.
 You cannot add №
 this number already exists and has content inside!
@@ -296,7 +296,7 @@ h
 m
 Yes
 No
-Pressing this button will decrease the amount of flats [u]on this floor[/u] by one with shift to the right and recount of all numbers in the block. But all apartments having any content will remain. This is a way to edit the amount of flats on each floor. If you have shrunk a floor by mistake, just re-create the apartments with the original numeration. Proceed with shrinking?
+Pressing this button will decrease the amount of flats [u]on this floor[/u] by one with shift to the right and recount of all numbers in the unit except those with visits. All apartments having any content will remain. This is a way to edit the amount of flats on each floor. Proceed with shrinking?
 Using this button, you can adjust the size of the numbers grid by moving the slider above, as well as its position in one of the 9 points with the buttons in the bottom right corner. Click on the same button %s to finish editing.
 Night
 Evening
@@ -308,3 +308,12 @@ Clarity
 Want to help translate the app into your language? Email at
 1, 2b, Park St 1a, 5th Avenue 119
 New version found! It will be updated on the next program start.
+Re-arranging numbers and floors does not affect existing visits data.
+Export phones
+No phone numbers to export in this territory!
+Phone numbers on %s
+The new database will completely replace all existing data on your device, including reports, service year, and settings! Proceed?
+Congratulations, you have your first interested person! He/she will be automatically added to the Contacts screen due to the light-green color. Also, you can see the total amount of interested ones in Territories screen.
+Next to a territory, you can see its work progress percentage. This is a relation of all apartments with a color status to the total number of apartments in the territory.
+You are now on the first call screen. It appears only when you are visiting a person for the first time.
+You have successfully reduced the amount of flats on this floor! The number range is now 1 less. If you are not happy with the result, no problem: just restore the original numeration in the "Apartments" window and then try again.

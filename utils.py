@@ -3,22 +3,21 @@
 
 from sys import argv
 
-Version = "2.3.1" #..33
+Version = "2.3.2" #..36
+"""
+"""
 
 if "nodev" in argv:
     Devmode = 0
 else:
     Devmode = 0# DEVMODE!
-"""
-
-"""
 
 try:
     import kivy
     import plyer
 except:
     if Devmode == 1:
-        print("Модули kivy и (или) plyer не найдены, устанавливаю.")
+        print("Модуль kivy и (или) plyer не найдены, устанавливаю.")
     from subprocess import check_call
     from sys import executable
     check_call([executable, '-m', 'pip', 'install', 'kivy'])
@@ -50,9 +49,10 @@ DataFile = "data.jsn"
 LastTimeBackedUp = int(time.strftime("%H", time.localtime())) * 3600 \
                 + int(time.strftime("%M", time.localtime())) * 60 \
                 + int(time.strftime("%S", time.localtime()))
-Languages = {           # список всех установленных языков
-    "en": "English",    
-    "ru": "русский",    # должно совпадать с msg[1] для всех языков
+Languages = { # список всех установленных языков, value должно совпадать с msg[1] для всех языков
+    "en": "English",
+    "es": "español",
+    "ru": "русский",
     "ka": "ქართული"
 }
 
@@ -61,7 +61,7 @@ def initializeDB():
     import time
     return [],\
         [
-        [1, 5, 0, 0, "с", "default", "", 0, 1.5, 0, 0, 1, 1, 1, "", 1, 0, "", "0", "д", 0, 0, 1], # program settings
+        [1, 5, 0, 0, "с", "", "", 0, 1.5, 0, 0, 1, 1, 1, "", 1, 0, "", "0", "д", 0, 0, 1], # program settings
         "",# дата последнего обновления settings[1]
         # report:                       settings[2]
         [0.0,       # [0] hours         settings[2][0…]
@@ -86,11 +86,16 @@ def initializeDB():
              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]     # resources[0][1] = различные системные флаги
             ],
 
-               # resources[0][1][0] - показана подсказка про уменьшение этажа (когда показана, ставим 1)
-               # resources[0][1][1] - показана подсказка про масштабирование подъезда
-               # resources[0][1][2] - показана подсказка про таймер
-               # resources[0][1][3] - показана подсказка про переключение вида подъезда
-               # resources[0][1][4] - показана подсказка про кнопку "нет дома"
+                # resources[0][1][0] - показана подсказка про уменьшение этажа (когда показана, ставим 1)
+                # resources[0][1][1] - показана подсказка про масштабирование подъезда
+                # resources[0][1][2] - показана подсказка про таймер
+                # resources[0][1][3] - показана подсказка про переключение вида подъезда
+                # resources[0][1][4] - показана подсказка про кнопку "нет дома"
+                # resources[0][1][5] - показана подсказка про первого интересующегося
+                # resources[0][1][6] - показана подсказка про процент обработки
+                # resources[0][1][7] - показана подсказка про экран первого посещения
+                # resources[0][1][8] - показана подсказка после уменьшения этажа
+                # resources[0][1][9] - показан запрос про месячную норму
 
             [],                                 # standalone contacts   resources[1]
             [],                                 # report log            resources[2]
@@ -123,7 +128,6 @@ def log(message="", title=None, timeout=2, forceNotify=False):
 
 def clearDB(silent=True):
     """ Очистка базы данных """
-
     houses.clear()
     settings.clear()
     resources.clear()
@@ -391,9 +395,8 @@ def save(backup=False, silent=True, export=False):
     if export == True and Devmode == 0 and os.path.exists("sync.ini"):
         try:
             with open("sync.ini", encoding='utf-8', mode="r") as f:
-                folder = f.read()
-
-            if os.path.exists("word.ini"): # если есть файл word.ini, экспорт в Word-файл, а не txt
+                filename = f.read()
+            if ".doc" in filename: # если в расширении файла есть .doc, создаем Word-файл
                 try:
                     from docx import Document
                 except:
@@ -403,13 +406,12 @@ def save(backup=False, silent=True, export=False):
                     from docx import Document
                 doc = Document()
                 doc.add_paragraph(str(json.dumps(output)))
-                doc.save(folder + f"/{app.RM.msg[251]}.doc")
-
-            else: # иначе пишем в txt-файл
-                with open(folder + f"/{app.RM.msg[251]}.txt", "w") as file:
+                doc.save(filename)#folder + f"/{app.RM.msg[251]}.docx")
+            else: # иначе пишем в простой текст
+                with open(filename, "w") as file:
                     json.dump(output, file)
         except:
-            dprint("Произведена неудачная попытка сохранить данные в расположение, указанное в файле sync.ini. Скорее всего, путь указан неверно. Проверьте содержимое этого файла.")
+            print("File write error.")
 
 def share(silent=False, clipboard=False, email=False, folder=None, file=False):
     """ Sharing database """
@@ -520,13 +522,7 @@ def update():
     """ Проверяем новую версию и при наличии обновляем программу с GitHub """
 
     global Version
-
     result = False
-
-    today = str(datetime.datetime.strptime(time.strftime('%Y-%m-%d'), "%Y-%m-%d"))
-    today = today[0: today.index(" ")]
-    settings[1] = today
-    save()
 
     if app.RM.platform == "mobile":
         return result # мобильная версия не проверяет обновления
@@ -539,8 +535,12 @@ def update():
     except:
         dprint("Не удалось подключиться к серверу.")
         return result
-    else: # успешно подключились, сохраняем сегодняшнюю дату последнего обновления
+    else: # успешно подключились, сохраняем сегодняшнюю дату последнего обновления (пока не используется)
         dprint("Версия на сайте: " + newVersion)
+        today = str(datetime.datetime.strptime(time.strftime('%Y-%m-%d'), "%Y-%m-%d"))
+        today = today[0: today.index(" ")]
+        settings[1] = today
+        save()
 
     if newVersion > Version:
         import _thread
