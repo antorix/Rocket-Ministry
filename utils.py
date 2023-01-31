@@ -239,11 +239,24 @@ def load(datafile=None, allowSave=True, forced=False, clipboard=None, silent=Fal
         except:
             return badURLError
 
-    elif forced==True: # импорт по запросу с конкретным файлом
+    elif forced == True: # импорт по запросу с конкретным файлом
         try:
-            with open(datafile, "r") as file:
-                buffer = json.load(file)
-                dprint("Буфер получен из импортированного файла.")
+            if ".doc" in datafile:
+                try:
+                    import docx2txt
+                except:
+                    check_call([executable, '-m', 'pip', 'install', 'docx2txt'])
+                    check_call([executable, '-m', 'pip', 'install', 'plyer'])
+                    import docx2txt
+                string = docx2txt.process(datafile)
+                with open("temp", "w") as file:
+                    file.write(string)
+                with open("temp", "r") as file:
+                    buffer = json.load(file)
+            else:
+                with open(datafile, "r") as file:
+                    buffer = json.load(file)
+            dprint("Буфер получен из импортированного файла.")
         except:
             if silent == False:
                 app.RM.popup(app.RM.msg[244])

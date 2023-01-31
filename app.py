@@ -2936,7 +2936,7 @@ class RMApp(App):
             housesList.append( f"{listIcon} {house.title} ({utils.shortenDate(house.date)}) " +\
                                f"[i]{int(house.getProgress()[0] * 100)}%[/i]{interested}{houseDue}")
             if utils.resources[0][1][6] == 0 and int(house.getProgress()[0] * 100) > 0:
-                Clock.schedule_once(lambda x: self.popup(title=self.msg[247], message=self.msg[317]), 0)
+                Clock.schedule_once(lambda x: self.popup(title=self.msg[247], message=self.msg[317]), .1)
                 utils.resources[0][1][6] = 1
                 utils.save()
 
@@ -4874,7 +4874,7 @@ class RMApp(App):
         if success == True:
             self.restart("soft")
             self.terPressed()
-            Clock.schedule_once(lambda x: self.popup(self.msg[209]), 0)
+            Clock.schedule_once(lambda x: self.popup(self.msg[209]), 0.1)
         elif file == None:
             self.popupForm = "importHelp"
             if success == False:
