@@ -38,9 +38,6 @@ if platform == "android":
     from kvdroid import activity
     from kvdroid.jclass.android import Rect
     from jnius import autoclass
-    Intent = autoclass('android.content.Intent')
-    Uri = autoclass('android.net.Uri')
-    String = autoclass('java.lang.String')
     PythonActivity = autoclass('org.kivy.android.PythonActivity')
     mActivity = PythonActivity.mActivity
 
@@ -160,7 +157,19 @@ class MyTextInput(TextInput):
         if background_color != None:
             self.background_color = background_color
 
-
+    def insert_text(self, char, from_undo=False):
+        """ Делаем буквы заглавными """
+        def __capitalize():
+            string = self.text[: self.cursor_index()].strip()
+            l = len(string) - 1
+            if len(string) > 0 and (string[l] == "." or string[l] == "!" or string[l] == "?")\
+                    or self.cursor_col == 0:
+                return True  # можно
+            else:
+                return False  # нельзя
+        if RM.language != "ka" and __capitalize() == True and len(char) == 1 and RM.platform == "mobile":
+            char = char.upper()
+        return super().insert_text(char, from_undo=from_undo)
 
     def on_text_validate(self):
         if self.popup == False:
@@ -1068,7 +1077,6 @@ class RMApp(App):
         }
 
         if reload == False:  # при мягкой перезагрузке сохраняем стек и константы
-            self.myvalue = 35000
             self.contactsEntryPoint = self.searchEntryPoint = self.popupEntryPoint = 0 # различные переменные
             self.porch = house.House().Porch()
             self.stack = []
@@ -2247,6 +2255,8 @@ class RMApp(App):
             else:
                 dest = f"{self.house.title} {self.porch.title}"
             address = f"google.navigation:q={dest}"
+            Intent = autoclass('android.content.Intent')
+            Uri = autoclass('android.net.Uri')
             intent = Intent(Intent.ACTION_VIEW, Uri.parse(address))
             mActivity.startActivity(intent)
         except:
@@ -2388,11 +2398,13 @@ class RMApp(App):
                             )
                         )
                         self.pageTitle.text = f"[ref=report]{self.msg[4]}{self.rep.getCurrentHours()[2]}[/ref]"
+                        if utils.settings[0][2] == 1:
+                            self.creditLabel.text = self.msg[106] % self.rep.getCurrentHours()[0]
 
                     self.counterChanged = False
 
                 elif self.reportPanel.current_tab.text == self.msg[49]:
-                    self.recalcServiceYear()
+                    self.recalcServiceYear(allowSave=True)
 
                 else:
                     if self.rep.getLastMonthReport()[0] != "":
@@ -2905,7 +2917,6 @@ class RMApp(App):
             utils.houses.sort(key=lambda x: x.progress, reverse=True)
 
         housesList = []
-        showProgressTip = 0
 
         for house in utils.houses:  # check houses statistics
             if house.getHouseStats()[1] > 0:
@@ -2924,13 +2935,10 @@ class RMApp(App):
 
             housesList.append( f"{listIcon} {house.title} ({utils.shortenDate(house.date)}) " +\
                                f"[i]{int(house.getProgress()[0] * 100)}%[/i]{interested}{houseDue}")
-            if int(house.getProgress()[0] * 100) > 0 and utils.resources[0][1][6] == 0:
-                showProgressTip = 1
-
-        if showProgressTip == 1:
-            Clock.schedule_once(lambda x: self.popup(title=self.msg[247], message=self.msg[317]), 0)
-            utils.resources[0][1][6] = 1
-            utils.save()
+            if utils.resources[0][1][6] == 0 and int(house.getProgress()[0] * 100) > 0:
+                Clock.schedule_once(lambda x: self.popup(title=self.msg[247], message=self.msg[317]), 0)
+                utils.resources[0][1][6] = 1
+                utils.save()
 
         if len(housesList) == 0:
             housesList.append(self.msg[95])
@@ -2972,16 +2980,12 @@ class RMApp(App):
 
         for i in range(len(self.allcontacts)):
             if self.allcontacts[i][15] != "condo" and self.allcontacts[i][15] != "virtual":
-                porch = self.allcontacts[i][12] + ", "
+                porch = f"{self.allcontacts[i][12]}, "
                 gap = ", "
             else:
                 porch = gap = ""
-            if self.allcontacts[i][5] != "":
-                appointment = "%s " % self.allcontacts[i][5][0:5] # appointment
-            else:
-                appointment = ""
             if self.allcontacts[i][9] != "":
-                phone = "%s\u00A0%s " % (self.button['phone1'], self.allcontacts[i][9]) # phone
+                phone = f"{self.button['phone1']}\u00A0{self.allcontacts[i][9]}" # phone
             else:
                 phone = ""
             if "подъезд" in self.allcontacts[i][8]:
@@ -2989,26 +2993,12 @@ class RMApp(App):
             else:
                 hyphen = ""
             if self.allcontacts[i][2] != "":
-                address = "(%s%s%s%s%s) " % (self.allcontacts[i][2], gap, porch, hyphen, self.allcontacts[i][3])
+                address = f"({self.allcontacts[i][2]}{gap}{porch}{hyphen}{self.allcontacts[i][3]})"
             else:
                 address = ""
-            if self.allcontacts[i][11] != "":
-                note = self.button["note"] + "\u00A0" + self.allcontacts[i][11]
-            else:
-                note = ""
 
-            listIcon = f"[color=00BD80]" + self.button['user'] + "[/color]"
-            options.append(
-                "%s%s %s %s%s%s%s" % (
-                    self.allcontacts[i][1],
-                    listIcon,
-                    self.allcontacts[i][0],
-                    address,
-                    appointment,
-                    phone,
-                    note,
-                )
-            )
+            listIcon = f"[color=00BD80]{self.button['user']}[/color]"
+            options.append(f"{self.allcontacts[i][1]}{listIcon} {self.allcontacts[i][0][:25]} {address[:20]} {phone}")
 
         if len(options) == 0:
             tip = self.msg[99]
@@ -3104,8 +3094,9 @@ class RMApp(App):
         report.add_widget(self.hours)
 
         if utils.settings[0][2]==1:
-            report.add_widget(MyLabel(text=self.msg[106] % self.rep.getCurrentHours()[0], markup=True,
-                                    halign="center", valign="center", text_size = text_size, color=self.standardTextColor))
+            self.creditLabel = MyLabel(text=self.msg[106] % self.rep.getCurrentHours()[0], markup=True,
+                                    halign="center", valign="center", text_size = text_size, color=self.standardTextColor)
+            report.add_widget(self.creditLabel)
             self.credit = Counter(picker=self.msg[107], type="time",
                                   text=utils.timeFloatToHHMM(self.rep.credit), fixed=1, mode="pan")
             report.add_widget(self.credit)
@@ -3179,7 +3170,7 @@ class RMApp(App):
                                               width=Window.size[0] / 2, pos_hint={"center_y": .5})
                 self.months[i].bind(focus=self.recalcServiceYear)
 
-            self.recalcServiceYear()
+            self.recalcServiceYear(allowSave=False)
 
             b3.add_widget(mGrid)
             b3.add_widget(self.analyticsMessage)
@@ -3903,6 +3894,7 @@ class RMApp(App):
                     self.multipleBoxEntries[row].text = str(default)
                 else:
                     self.multipleBoxEntries[row].text = "–"
+
             else:
                 self.multipleBoxEntries.append(MyCheckBox(active=default, size_hint=(entrySize_hint[0], entrySize_hint[1]),
                                                           pos_hint = {"top": 1}, color=self.titleColor))
@@ -4195,7 +4187,7 @@ class RMApp(App):
 
     # Вспомогательные функции
 
-    def recalcServiceYear(self, instance=None, value=None):
+    def recalcServiceYear(self, instance=None, value=None, allowSave=True):
         """ Подсчет статистики служебного года """
 
         if value == 1:
@@ -4252,7 +4244,8 @@ class RMApp(App):
                                      "____\n" + \
                                      f"¹ {self.msg[182]}\n\n" + \
                                      f"² {self.msg[183]}"
-        utils.save()
+        if allowSave==True:
+            utils.save()
 
     def sendLastMonthReport(self, instance=None):
         """ Отправка отчета прошлого месяца """
@@ -4761,6 +4754,8 @@ class RMApp(App):
                         self.hours.update(self.time3)
                         self.counterChanged = False
                         self.pageTitle.text = f"[ref=report]{self.msg[4]}{self.rep.getCurrentHours()[2]}[/ref]"
+                        if utils.settings[0][2] == 1:
+                            self.creditLabel.text = self.msg[106] % self.rep.getCurrentHours()[0]
                 else:
                     time1 = self.credit.get()  # исходное время на счетчике (HH:MM)
                     self.time3 = utils.sumHHMM([time1, time2])  # сумма двух времен в HH:MM
@@ -4769,6 +4764,8 @@ class RMApp(App):
                         self.credit.update(self.time3)
                         self.counterChanged = False
                         self.pageTitle.text = f"[ref=report]{self.msg[4]}{self.rep.getCurrentHours()[2]}[/ref]"
+                        if utils.settings[0][2] == 1:
+                            self.creditLabel.text = self.msg[106] % self.rep.getCurrentHours()[0]
             save.bind(on_release=__closeTimePicker)
             pickerForm.add_widget(save)
             contentMain = pickerForm
@@ -4784,10 +4781,10 @@ class RMApp(App):
                     size_hint = (.9, .4)
             else:
                 if checkboxText != None:
-                    size_hint = (.5, .65)
+                    size_hint = (.6, .65)
                 else:
-                    size_hint = (.5, .45)
-            text_size = (Window.size[0] * size_hint[0] * .9, None)
+                    size_hint = (.6, .45)
+            text_size = (Window.size[0] * size_hint[0] * .92, None)
 
             contentMain = BoxLayout(orientation="vertical")
             contentMain.add_widget(MyLabel(text=message, halign="left", valign="center", text_size=text_size, markup=True))

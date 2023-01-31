@@ -543,18 +543,14 @@ class House(object):
                 self.records = [] # список записей посещений
 
             def addFlatTolist(self):
-                """ Функция для форматированного показа строки в режимах списков подъезда (полный и поэтажный) """
+                """ Функция для форматированного показа строки в списке подъезда """
                 line=""
                 if not "." in self.number:
                     if self.getName() == "":
                         name = ""
                     else:
                         name = self.getName().strip()
-                    line += "%s [b]%s[/b] %s" % (
-                        self.getStatus()[0],
-                        self.number,
-                        name,
-                    )
+                    line += f"{self.getStatus()[0]} [b]{self.number}[/b] {name[:30]}"
                 return line
 
             def getName(self):
