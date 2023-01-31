@@ -1,3 +1,4 @@
+
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
@@ -5,6 +6,7 @@ from sys import argv
 
 Version = "2.3.3" #..39
 """
+# временно отключено обновление и urllib.request для тестирования на маке
 """
 
 if "nodev" in argv:
@@ -29,7 +31,6 @@ else:
 import datetime
 import json
 import time
-import urllib.request
 import requests
 import shutil
 import app
@@ -543,7 +544,7 @@ def update():
         dprint("Проверяем обновления настольной версии.")
 
     try: # подключаемся к GitHub
-        for line in urllib.request.urlopen("https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/version"):
+        for line in requests.get("https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/version"):
             newVersion = line.decode('utf-8').strip()
     except:
         dprint("Не удалось подключиться к серверу.")
@@ -559,15 +560,15 @@ def update():
         import _thread
         def __update(threadName, delay):
             dprint("Найдена новая версия, скачиваем.")
-            file = "files.zip"
-            urllib.request.urlretrieve(
-                "https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip",
-                file
-            )
-            from zipfile import ZipFile
-            zip = ZipFile(file, "r")
-            zip.extractall("")
-            zip.close()
+            response = requests.get("https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip")
+            import tempfile
+            import zipfile
+            file = tempfile.TemporaryFile()
+            file.write(response.content)
+            fzip = zipfile.ZipFile(file)
+            fzip.extractall("")
+            file.close()
+            fzip.close()
             downloadedFolder = "Rocket-Ministry-master"
             for file_name in os.listdir(downloadedFolder):
                 source = downloadedFolder + "/" + file_name
@@ -581,7 +582,6 @@ def update():
             shutil.rmtree(downloadedFolder)
         _thread.start_new_thread(__update, ("Thread-Update", 0,))
         result = True
-
     else:
         dprint("Обновлений нет.")
 

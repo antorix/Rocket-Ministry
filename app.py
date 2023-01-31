@@ -4,6 +4,7 @@ import utils
 import house
 import report
 import time
+import os
 import webbrowser
 import iconfonts
 from iconfonts import icon
@@ -981,7 +982,7 @@ class RMApp(App):
 
     def setParameters(self, reload=False):
 
-        if platform == "win" or platform == "linux": # определение платформы
+        if platform == "win" or platform == "linux" or platform == "macosx": # определение платформы
             self.platform = "desktop"
         else:
             self.platform = "mobile"
@@ -1482,7 +1483,18 @@ class RMApp(App):
                 self.pageTitle.text = f"[ref=title]{self.displayed.title}[/ref]"
             else:
                 self.pageTitle.text = self.displayed.title
-            #self.pageTitle.text = str(self.DL)
+
+            if 0:#platform == "android":
+                try:
+                    activity = autoclass('org.kivy.android.PythonActivity')
+                    context = activity.mActivity
+                    auto_caps = context.getContentResolver()
+                    #self.pageTitle.text = str(auto_caps)
+                    Clipboard.copy(str(auto_caps))
+                except:
+                    utils.log("error")
+                else:
+                    utils.log("success")
 
             if self.displayed.positive != "":
                 self.positive.disabled = False
@@ -3001,7 +3013,7 @@ class RMApp(App):
             options.append(f"{self.allcontacts[i][1]}{listIcon} {self.allcontacts[i][0][:25]} {address[:20]} {phone}")
 
         if len(options) == 0:
-            tip = self.msg[99]
+            tip = self.msg[99] % self.msg[100]
         else:
             tip = None
 
@@ -4948,3 +4960,6 @@ class RMApp(App):
                 self.stop()
 
 RM = RMApp()
+
+if __name__ == "__main__":
+    RM.run()
