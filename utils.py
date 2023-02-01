@@ -5,7 +5,7 @@ from sys import argv
 
 Version = "2.3.3" #..39
 """
-# временно отключено обновление и urllib.request для тестирования на маке
+
 """
 
 if "nodev" in argv:
