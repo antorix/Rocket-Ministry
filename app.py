@@ -2319,8 +2319,8 @@ class RMApp(App):
             # Отчет
 
             elif self.displayed.form == "rep":
+                self.rep.checkNewMonth()  # для проверки нового месяца
                 if self.reportPanel.current_tab.text == utils.monthName()[0]:
-                    self.rep.modify()  # для проверки нового месяца
                     success = 1
                     change = 0
                     try:
@@ -3061,7 +3061,7 @@ class RMApp(App):
         self.pageTitle.text = f"[ref=report]{self.msg[4]}{self.rep.getCurrentHours()[2]}[/ref]"
 
         self.reportPanel = TabbedPanel(background_color=self.globalBGColor0, background_image="")
-        text_size = (Window.size[0] / 3, None)
+        text_size = (Window.size[0]*.4, None)
         self.mainList.clear_widgets()
 
         # Первая вкладка: отчет прошлого месяца
@@ -3086,25 +3086,30 @@ class RMApp(App):
         # Вторая вкладка: текущий месяц
 
         tab1 = TTab(text=utils.monthName()[0])
-        a = AnchorLayout(anchor_x="center", anchor_y="center")
-        report = GridLayout(cols=2, rows=7, spacing=self.spacing, padding=self.padding, pos_hint={"center_x": .7})
 
+        b = BoxLayout(orientation="vertical")
+        send = TableButton(text=self.button['share'], size_hint_y=None, size_hint_x=None,
+                           size=(self.standardTextHeight, self.standardTextHeight),
+                           background_color=self.globalBGColor, pos_hint={"right": 1})
+        send.bind(on_release=self.sendCurrentMonthReport)
+        b.add_widget(send)
+
+        a = AnchorLayout(anchor_x="center", anchor_y="center")
+        report = GridLayout(cols=2, rows=7, spacing=self.spacing,# padding=(self.padding, 0, self.padding, self.padding),
+                            pos_hint={"center_x": .7})
         report.add_widget(MyLabel(text=self.msg[102], halign="center", valign="center", text_size = text_size,
                                 color=self.standardTextColor, markup=True))
         self.placements = Counter(text = str(self.rep.placements), fixed=1, shrink=False)
         report.add_widget(self.placements)
-
         report.add_widget(MyLabel(text=self.msg[103], halign="center", valign="center", text_size = text_size,
                                 color=self.standardTextColor, markup=True))
         self.video = Counter(text=str(self.rep.videos), fixed=1, shrink=False)
         report.add_widget(self.video)
-
         report.add_widget(MyLabel(text=self.msg[104], halign="center", valign="center", text_size = text_size,
                                 color=self.standardTextColor, markup=True))
         self.hours = Counter(picker=self.msg[105], type="time",
                              text=utils.timeFloatToHHMM(self.rep.hours), fixed=1, shrink=False)
         report.add_widget(self.hours)
-
         if utils.settings[0][2]==1:
             self.creditLabel = MyLabel(text=self.msg[106] % self.rep.getCurrentHours()[0], markup=True,
                                     halign="center", valign="center", text_size = text_size, color=self.standardTextColor)
@@ -3112,19 +3117,17 @@ class RMApp(App):
             self.credit = Counter(picker=self.msg[107], type="time",
                                   text=utils.timeFloatToHHMM(self.rep.credit), fixed=1, mode="pan")
             report.add_widget(self.credit)
-
         report.add_widget(MyLabel(text=self.msg[108], halign="center", valign="center", text_size = text_size,
                                 color=self.standardTextColor, markup=True))
         self.returns = Counter(text = str(self.rep.returns), fixed=1, mode="pan")
         report.add_widget(self.returns)
-
         report.add_widget(MyLabel(text=self.msg[109], halign="center", valign="center", text_size = text_size,
                                 color=self.standardTextColor, markup=True))
         self.studies = Counter(text = str(self.rep.studies), fixed=1, mode="pan")
         report.add_widget(self.studies)
-
+        b.add_widget(a)
         a.add_widget(report)
-        tab1.content = a
+        tab1.content = b
         self.reportPanel.add_widget(tab1)
 
         # Третья вкладка: служебный год
@@ -3193,6 +3196,8 @@ class RMApp(App):
         self.mainList.add_widget(self.reportPanel)
 
         Clock.schedule_once(lambda dt: self.reportPanel.switch_to(tab1), 0)
+
+        self.rep.checkNewMonth()
 
         if utils.resources[0][1][9] == 0 and utils.settings[0][3] == 0:
             utils.resources[0][1][9] = 1
@@ -4045,12 +4050,12 @@ class RMApp(App):
             k = 2
         else:
             k = 4
-        btn = TableButton(text=f"{self.button['share']} {self.msg[312]}", size_hint_x=None, size_hint_y=None, width=Window.size[0]/k,
-                                height=self.standardTextHeight, background_color=self.globalBGColor)
+        btn = TableButton(text=f"{self.button['share']} {self.msg[312]}", size_hint_x=None, size_hint_y=None,
+                          width=Window.size[0]/k, height=self.standardTextHeight, background_color=self.globalBGColor)
         a = AnchorLayout(anchor_x="right", anchor_y="top", size_hint_y=None, padding=(0, self.padding),
                            height=self.mainList.size[1]*.2)
         def __export(instance):
-            string = f"{self.msg[314]}:" % self.house.title + "\n"
+            string = f"{self.msg[314]}: {self.house.title}\n\n"
             flats = []
             for porch in self.house.porches:
                 for flat in porch.flats:
@@ -4258,6 +4263,10 @@ class RMApp(App):
                                      f"² {self.msg[183]}"
         if allowSave==True:
             utils.save()
+
+    def sendCurrentMonthReport(self, instance=None):
+        """ Отправка отчета текущего месяца """
+        plyer.email.send(subject=self.msg[4], text=self.rep.getCurrentMonthReport(), create_chooser=True)
 
     def sendLastMonthReport(self, instance=None):
         """ Отправка отчета прошлого месяца """

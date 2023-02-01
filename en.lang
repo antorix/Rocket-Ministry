@@ -19,7 +19,7 @@ Note:
 Entrance number (name):
 Section name:
 Name
-Person name and/or description:
+Person (name, description):
 Phone:
 Number:
 Here you will find the history of all report updates (max. 300 entries).
@@ -96,7 +96,7 @@ Add your first territory
 Contacts list:
 Territories list:
 Add territory
-You will find here all the interested persons from all your territories, as well as standalone contacts you can add using the button "Add contact."
+You will find here all the interested persons from all your territories, as well as standalone contacts you can add using the button "%s."
 Add contact
 Log
 Placements
@@ -167,7 +167,7 @@ Example: River st.
 Enter the first and the last number of the range to add:
 Interface theme
 Shrink floor
-Don't show this tip anymore.
+Don't show this tip anymore
 This is a switch between the per-floor "grid" view and a simple list of apartments. It works only in condominium-type territories. The per-floor view well visualizes the block, while the list view has handy sorting and preview of flats' content.
 video(s)
 Delete

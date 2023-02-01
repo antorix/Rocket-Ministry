@@ -8,7 +8,6 @@ import app
 class Report(object):
 
     def __init__(self):
-        
         self.hours = utils.settings[2][0]
         self.credit = utils.settings[2][1]
         self.placements = utils.settings[2][2]
@@ -92,18 +91,15 @@ class Report(object):
         """ Выдает общее количество часов в этом месяце с кредитом (str) [0],
             запас/отставание (float) [1] и
             строку с текстом показа запаса/отставания (str) [2] """
-        gap = float(
-            (self.hours + self.credit) - int(time.strftime("%d", time.localtime())) *
-            utils.settings[0][3] / utils.days())
-
-        if gap >= 0:
+        value = self.hours + self.credit
+        gap = value - float(time.strftime("%d", time.localtime())) * \
+        utils.settings[0][3] / utils.days()
+        if utils.settings[0][3] == 0:
+            gap_str = ""
+        elif gap >= 0:
             gap_str = " (+%s)" % utils.timeFloatToHHMM(gap)
         else:
             gap_str = " (-%s)" % utils.timeFloatToHHMM(-gap)
-        if utils.settings[0][3] == 0:
-            gap_str = ""
-
-        value = self.hours + self.credit
         return utils.timeFloatToHHMM(value), gap, gap_str
 
     def saveLastMonth(self):
@@ -256,14 +252,35 @@ class Report(object):
 
         self.checkNewMonth()
 
+    def getCurrentMonthReport(self):
+        """ Выдает отчет текущего месяца"""
+        if utils.settings[0][2]==1:
+            credit = f"{app.RM.msg[222]} {utils.timeFloatToHHMM(self.credit)[0 : utils.timeFloatToHHMM(self.credit).index(':')]}\n" # whether save credit to file
+        else:
+            credit = ""
+        result =         f"[u]{app.RM.msg[223]}[/u]\n\n" % utils.monthName()[1] + \
+                         f"{app.RM.msg[102]}: [b]%d[/b]\n" % self.placements + \
+                         f"{app.RM.msg[103]}: [b]%d[/b]\n" % self.videos + \
+                         f"{app.RM.msg[104]}: [b]%s[/b]\n" % \
+                         utils.timeFloatToHHMM(self.hours)[0: utils.timeFloatToHHMM(self.hours).index(":")] + \
+                         f"{app.RM.msg[108]}: [b]%d[/b]\n" % self.returns + \
+                         f"{app.RM.msg[109]}: [b]%d[/b]\n" % self.studies
+        if credit != "":
+            result += f"[i]{app.RM.msg[224]}: %s[/i]" % credit
+        result = self.filterOutFormatting(result)
+        return result
+
     def getLastMonthReport(self):
         """ Выдает отчет прошлого месяца """
-
-        self.lastMonthNoFormatting = ""
-        self.lastMonthNoFormatting = self.lastMonth.replace('[u]', '')
-        self.lastMonthNoFormatting = self.lastMonthNoFormatting.replace('[/u]', '')
-        self.lastMonthNoFormatting = self.lastMonthNoFormatting.replace('[b]', '')
-        self.lastMonthNoFormatting = self.lastMonthNoFormatting.replace('[/b]', '')
-        self.lastMonthNoFormatting = self.lastMonthNoFormatting.replace('[i]', '')
-        self.lastMonthNoFormatting = self.lastMonthNoFormatting.replace('[/i]', '')
+        self.lastMonthNoFormatting = self.filterOutFormatting(self.lastMonth)
         return self.lastMonth, self.lastMonthNoFormatting, utils.monthName()[2], utils.monthName()[3]
+    
+    def filterOutFormatting(self, string):
+        """ Удаляет из отчета теги форматирования """
+        string = string.replace('[u]', '')
+        string = string.replace('[/u]', '')
+        string = string.replace('[b]', '')
+        string = string.replace('[/b]', '')
+        string = string.replace('[i]', '')
+        string = string.replace('[/i]', '')
+        return string
