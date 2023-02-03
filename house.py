@@ -222,7 +222,7 @@ class House(object):
             self.sortFlats()
 
             if status != "" and deletedFlat.number != number:
-                app.RM.popup(app.RM.msg[215])
+                app.RM.popup(app.RM.msg[215] % app.RM.msg[155])
 
             else:
                 if restore == True:
@@ -445,8 +445,6 @@ class House(object):
                 self.flats[last].title = input[1:].strip()
                 self.flats[last].number = "virtual"
 
-            self.flats[last].updateStatus()
-
             delete = False
 
             # Check if flat with such number already exists, it is deleted
@@ -550,7 +548,7 @@ class House(object):
                         name = ""
                     else:
                         name = self.getName().strip()
-                    line += f"{self.getStatus()[0]} [b]{self.number}[/b] {name[:30]}"
+                    line += f"{self.getStatus()[0]} [b]{self.number}[/b] {name[:int(40 / app.RM.fontScale())]}"
                 return line
 
             def getName(self):
@@ -642,7 +640,7 @@ class House(object):
 
             def updateStatus(self):
                 """ Обновление статуса квартиры после любой операции """
-                if len(self.records) == 0 and self.getName()=="" and self.note=="" and self.phone=="":  # нет никаких записей
+                if len(self.records) == 0 and self.status == "?" and self.getName()=="" and self.note=="" and self.phone=="":  # нет никаких записей
                     self.status = ""
                 elif self.status == "":
                     self.status = "?"

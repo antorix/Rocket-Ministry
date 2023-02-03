@@ -52,6 +52,7 @@ from circularlayout import CircularLayout
 # from kivy.garden.recycleview import RecycleView
 from kivy.graphics import Line, Color, Ellipse
 from kivy.lang import Builder
+from app import RM
 #from kivy.metrics import dp
 from kivy.properties import NumericProperty, BoundedNumericProperty,\
                             ObjectProperty, StringProperty, DictProperty,\
@@ -487,7 +488,7 @@ class CircularTimePicker(BoxLayout):
     # military = BooleanProperty(False)
     #time_format = StringProperty("[color={hours_color}][ref=hours]{hours}[/ref][/color]:[color={minutes_color}][ref=minutes]{minutes:02d}[/ref][/color]")
     #time_format = StringProperty("[color={hours_color}][ref=hours]{hours} ч[/ref][/color] [color={minutes_color}][ref=minutes]{minutes:02d} м[/ref][/color]")
-    time_format = StringProperty("[font=DejaVuSans][color={hours_color}][ref=hours]{hours} %s[/ref][/color] [color={minutes_color}][ref=minutes]{minutes:02d} %s[/ref][/color][/font]" % (app.RM.msg[295], app.RM.msg[296]))
+    time_format = StringProperty("[font=DejaVuSans][color={hours_color}][ref=hours]{hours} %s[/ref][/color] [color={minutes_color}][ref=minutes]{minutes:02d} %s[/ref][/color][/font]" % (RM.msg[295], RM.msg[296]))
     """String that will be formatted with the time and shown in the time label.
     Can be anything supported by :meth:`str.format`. Make sure you don't
     remove the refs. See the default for the arguments passed to format.
@@ -514,8 +515,7 @@ class CircularTimePicker(BoxLayout):
     defaults to "hours".
     """
 
-    from app import RM
-    selector_color = ListProperty([RM.titleColor[0], RM.titleColor[1], RM.titleColor[2]])#[.337, .439, .490])
+    selector_color = ListProperty([.8, .8, .8])#[RM.titleColor[0], RM.titleColor[1], RM.titleColor[2]])#[.337, .439, .490])
     """Color of the number selector and of the highlighted text. RGB.
 
     :attr:`selector_color` is a :class:`~kivy.properties.ListProperty` and

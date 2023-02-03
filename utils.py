@@ -3,9 +3,11 @@
 
 from sys import argv
 
-Version = "2.3.3" #..39
+Version = "2.3.4" #..42
 """
-
+* Возможность отправить отчет за текущий месяц, а не только прошедший.
+* При уходе со страницы первого посещения, если есть несохраненные изменения, программа предупреждает об этом.
+* Адаптация интерфейса под увеличенный размер шрифта в системе вплоть до максимального.
 """
 
 if "nodev" in argv:
@@ -49,11 +51,12 @@ DataFile = "data.jsn"
 LastTimeBackedUp = int(time.strftime("%H", time.localtime())) * 3600 \
                 + int(time.strftime("%M", time.localtime())) * 60 \
                 + int(time.strftime("%S", time.localtime()))
+SpecialFont = "DejaVuSans.ttf"
 Languages = { # список всех установленных языков, value должно совпадать с msg[1] для всех языков
-    "en": "English",
-    "es": "español",
-    "ru": "русский",
-    "ka": "ქართული"
+    "en": ["English", None],
+    "es": ["español", None],
+    "ru": ["русский", None],
+    "ka": ["ქართული", SpecialFont]
 }
 
 def initializeDB():
@@ -83,9 +86,8 @@ def initializeDB():
     ],\
         [
             ["",                                # resources[0][0] = notepad
-             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]     # resources[0][1] = различные системные флаги
+             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]     # resources[0][1] = флаги о подсказках
             ],
-
                 # resources[0][1][0] - показана подсказка про уменьшение этажа (когда показана, ставим 1)
                 # resources[0][1][1] - показана подсказка про масштабирование подъезда
                 # resources[0][1][2] - показана подсказка про таймер

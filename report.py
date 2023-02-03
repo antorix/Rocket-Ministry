@@ -48,26 +48,23 @@ class Report(object):
             utils.save(backup=True, silent=True)
 
     def checkNewMonth(self, forceDebug=False):
-
         savedMonth = utils.settings[3]
         currentMonth = time.strftime("%b", time.localtime())
         if savedMonth != currentMonth or forceDebug == True:
             if app.RM.displayed.form == "rep":
                 app.RM.mainList.clear_widgets()
-
             saveTimer = self.startTime
-            utils.log(app.RM.msg[221])
-            time.sleep(2)
+            #utils.log(app.RM.msg[221])
+            app.RM.popup(app.RM.msg[221], options=[app.RM.button["yes"], app.RM.button["no"]])
+            app.RM.popupForm = "submitReport"
             rolloverHours, rolloverCredit = self.saveLastMonth()
             self.clear(rolloverHours, rolloverCredit)
             utils.settings[3] = time.strftime("%b", time.localtime())
             self.reminder = 1
-            app.RM.sendLastMonthReport()
-            app.RM.repPressed()
             self.saveReport(mute=True)
 
-            if app.RM.displayed.form == "rep":
-                app.RM.repPressed()
+            #if app.RM.displayed.form == "rep":
+            #    app.RM.repPressed(jumpToPrevMonth=True)
 
             if saveTimer != 0: # если при окончании месяца работает таймер, принудительно выключаем его
                 self.startTime = saveTimer

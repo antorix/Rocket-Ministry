@@ -16,7 +16,7 @@ Address:
 details
 Date taken:
 Note:
-Entrance number (name):
+Entrance number:
 Section name:
 Name
 Person (name, description):
@@ -54,13 +54,13 @@ Settings saved
 Data
 Notepad
 Data saved, backup copy created
-
+House
 Apartments:
 
 to
 Floors:
-First floor number:
-House
+First floor
+number:
 Enter house number:
 Mass adding
 Examples: 1 / 1a / red building
@@ -68,7 +68,7 @@ Add territory
 Condominium
 Enter territory name:
 Example: Park Way, 30
-A condominium-type territory has per-floor grid view, but requires only numerical values for apartment numbers.
+Check the box if your territory has multiple entrances to different units.
 Enter new entrance name:
 Number or description
 A condominium may have one or more entrances or blocks with separate sets of apartments.
@@ -89,7 +89,7 @@ All fields should be filled with numerical values. The number of floors should b
 Periods and commas are not allowed!
 Both values should be numerical, and the first one should not be greater than the second one!
 Contact %s created
-Date should have the format YYYY-MM-DD!\n\nFor example: 2023-03-25.
+Date should have the format YYYY-MM-DD! For example: 2023-03-25.
 This number already exists!
 Floors have not yet been enabled for this entrance. Set them up in the "Apartments" section.
 Add your first territory
@@ -143,7 +143,7 @@ Rocket Ministry for Windows and Linux, FAQ, documentation, and source code at th
 official project's webpage on %s Github
 Help
 Any information in a free form
-Search contacts
+People search
 Enter name, address, or any other information about a person:
 Find
 Nothing found
@@ -212,13 +212,13 @@ section
 entrance
 Add the first %s
 #
-You cannot shrink floors in this block anymore, because the last apartment with content will disappear! But you can change the apartment numbers range or floors count on the "Apartments" screen.
+You cannot shrink floors in this block anymore, because the last apartment with content will disappear! But you can change the apartment numbers range or floors count on the "%s" screen.
 A non-standard relation between apartments and floors requested. We had to add %d apartment(s) that you now have to manually delete on corresponding floors. To do this, click on the button [b]%s[/b] in the details of [u]any apartment on this floor[/u].
 Service time has started! To finish your service session, just click on the timer button once again. The time will be added to your report automatically.
 You cannot add №
 this number already exists and has content inside!
 Add the first call
-It's a new month, let's turn in your report!
+It's a new month! Have you turned in your report already?
 credit
 Report for %s:
 Note
@@ -317,3 +317,4 @@ Congratulations, you have your first interested person! He/she will be automatic
 Next to a territory, you can see its work progress percentage. This is a relation of all apartments with a color status to the total number of apartments in the territory.
 You are now on the first call screen. It appears only when you are visiting a person for the first time.
 You have successfully reduced the amount of flats on this floor! The number range is now 1 less. If you are not happy with the result, no problem: just restore the original numeration in the "Apartments" window and then try again.
+There are unsaved changes at the page! Proceed without saving?
