@@ -51,10 +51,8 @@ class Report(object):
         savedMonth = utils.settings[3]
         currentMonth = time.strftime("%b", time.localtime())
         if savedMonth != currentMonth or forceDebug == True:
-            if app.RM.displayed.form == "rep":
-                app.RM.mainList.clear_widgets()
+            if app.RM.displayed.form == "rep": app.RM.mainList.clear_widgets()
             saveTimer = self.startTime
-            #utils.log(app.RM.msg[221])
             app.RM.popup(app.RM.msg[221], options=[app.RM.button["yes"], app.RM.button["no"]])
             app.RM.popupForm = "submitReport"
             rolloverHours, rolloverCredit = self.saveLastMonth()
@@ -62,10 +60,6 @@ class Report(object):
             utils.settings[3] = time.strftime("%b", time.localtime())
             self.reminder = 1
             self.saveReport(mute=True)
-
-            #if app.RM.displayed.form == "rep":
-            #    app.RM.repPressed(jumpToPrevMonth=True)
-
             if saveTimer != 0: # если при окончании месяца работает таймер, принудительно выключаем его
                 self.startTime = saveTimer
                 def __stopTimer(*args):
@@ -78,10 +72,7 @@ class Report(object):
         if self.startTime == 0:
             self.modify("(")
         else:
-            if utils.settings[0][2] == 0:  # если выключен кредит
-                result = 1
-            else:  # если в настройках включен кредит, спрашиваем:
-                result = 2
+            result = 1 if utils.settings[0][2] == 0 else 2 # если в настройках включен кредит, спрашиваем
         return result
 
     def getCurrentHours(self):
@@ -136,7 +127,6 @@ class Report(object):
         
     def clear(self, rolloverHours, rolloverCredit):
         """ Clears all fields of report """
-
         self.hours = 0.0 + rolloverHours
         self.credit = 0.0 + rolloverCredit
         self.placements = 0
@@ -156,10 +146,7 @@ class Report(object):
         if input == "(":  # start timer
             self.startTime = int(time.strftime("%H", time.localtime())) * 3600 + int(
             time.strftime("%M", time.localtime())) * 60 + int(time.strftime("%S", time.localtime()))
-            if utils.settings[0][0] == 1:
-                forceNotify = True
-            else:
-                forceNotify = False
+            forceNotify = True if utils.settings[0][0] == 1 else False
             self.saveReport(app.RM.msg[225], forceNotify=forceNotify)
 
         elif input == ")":  # остановка таймера
@@ -167,8 +154,7 @@ class Report(object):
                 self.endTime = int(time.strftime("%H", time.localtime())) * 3600 + int(
                     time.strftime("%M", time.localtime())) * 60 + int(time.strftime("%S", time.localtime()))
                 self.reportTime = (self.endTime - self.startTime) / 3600
-                if self.reportTime < 0:
-                    self.reportTime += 24  # if timer worked after 0:00
+                if self.reportTime < 0: self.reportTime += 24  # if timer worked after 0:00
                 self.hours += self.reportTime
                 self.startTime = 0
                 self.saveReport(app.RM.msg[226] % utils.timeFloatToHHMM(self.reportTime), save=False)
@@ -180,8 +166,7 @@ class Report(object):
                 self.endTime = int(time.strftime("%H", time.localtime())) * 3600 + int(
                     time.strftime("%M", time.localtime())) * 60 + int(time.strftime("%S", time.localtime()))
                 self.reportTime = (self.endTime - self.startTime) / 3600
-                if self.reportTime < 0:
-                    self.reportTime += 24  # if timer worked after 0:00
+                if self.reportTime < 0: self.reportTime += 24  # if timer worked after 0:00
                 self.credit += self.reportTime
                 self.startTime = 0
                 self.saveReport(app.RM.msg[227] % utils.timeFloatToHHMM(self.reportTime), save=False)
@@ -214,7 +199,6 @@ class Report(object):
                 else:
                     self.hours = utils.timeHHMMToFloat(app.RM.time3)
                     self.saveReport(app.RM.msg[232] % input[1:])
-
             elif input[0]=="р":
                 if input == "р":
                     self.credit += 1
@@ -246,7 +230,6 @@ class Report(object):
             elif input=="и":
                 self.studies += 1
                 self.saveReport(app.RM.msg[241])
-
         self.checkNewMonth()
 
     def getCurrentMonthReport(self):
@@ -262,8 +245,7 @@ class Report(object):
                          utils.timeFloatToHHMM(self.hours)[0: utils.timeFloatToHHMM(self.hours).index(":")] + \
                          f"{app.RM.msg[108]}: [b]%d[/b]\n" % self.returns + \
                          f"{app.RM.msg[109]}: [b]%d[/b]\n" % self.studies
-        if credit != "":
-            result += f"[i]{app.RM.msg[224]}: %s[/i]" % credit
+        if credit != "": result += f"[i]{app.RM.msg[224]}: %s[/i]" % credit
         result = self.filterOutFormatting(result)
         return result
 

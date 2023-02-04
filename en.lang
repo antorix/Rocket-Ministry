@@ -21,8 +21,8 @@ Section name:
 Name
 Person (name, description):
 Phone:
-Number:
-Here you will find the history of all report updates (max. 300 entries).
+Apartment number:
+Number/address:
 Report log
 To make a call, enter the phone number in the contact details.
 Phone number %s copied into clipboard.
@@ -66,7 +66,7 @@ Mass adding
 Examples: 1 / 1a / red building
 Add territory
 Condominium
-Enter territory name:
+-
 Example: Park Way, 30
 Check the box if your territory has multiple entrances to different units.
 Enter new entrance name:
@@ -83,7 +83,7 @@ add visit
 Visit info:
 It did not work, please try again.
 A territory with this name already exists, try another one!
-Territory "%s" created
+-
 A %s with this name already exists, try another one!
 All fields should be filled with numerical values. The number of floors should be more than 0. The last apartment of the range should have the number no less than the first one.
 Periods and commas are not allowed!
@@ -318,3 +318,4 @@ Next to a territory, you can see its work progress percentage. This is a relatio
 You are now on the first call screen. It appears only when you are visiting a person for the first time.
 You have successfully reduced the amount of flats on this floor! The number range is now 1 less. If you are not happy with the result, no problem: just restore the original numeration in the "Apartments" window and then try again.
 There are unsaved changes at the page! Proceed without saving?
+Here you will find the history of all report updates (max. 300 entries).

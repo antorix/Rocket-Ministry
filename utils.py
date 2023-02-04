@@ -3,11 +3,12 @@
 
 from sys import argv
 
-Version = "2.3.4" #..42
+Version = "2.3.4" #..43
 """
 * Возможность отправить отчет за текущий месяц, а не только прошедший.
 * При уходе со страницы первого посещения, если есть несохраненные изменения, программа предупреждает об этом.
 * Адаптация интерфейса под увеличенный размер шрифта в системе вплоть до максимального.
+* Оптимизации интерфейса и дизайна.
 """
 
 if "nodev" in argv:
@@ -38,14 +39,12 @@ import app
 import os
 import house
 import plyer
+import _thread
 from kivy import platform
 
 # Глобальные переменные
 
-if platform == "android":
-    UserPath = "../"
-else:
-    UserPath = ""
+UserPath = "../" if platform == "android" else ""
 BackupFolderLocation = UserPath + "backup/"
 DataFile = "data.jsn"
 LastTimeBackedUp = int(time.strftime("%H", time.localtime())) * 3600 \
@@ -118,11 +117,8 @@ def log(message="", title=None, timeout=2, forceNotify=False):
         if app.RM.platform == "mobile" and forceNotify == False:
             plyer.notification.notify(toast=True, message=message)
         else:
-            if app.RM.platform == "mobile":
-                icon = ""
-            else:
-                icon = "icon.ico"
-            if Devmode==0:
+            icon = "" if app.RM.platform == "mobile" else "icon.ico"
+            if Devmode == 0:
                 plyer.notification.notify(app_name="Rocket Ministry", title="Rocket Ministry", app_icon=icon,
                                   ticker="Rocket Ministry", message=message, timeout=timeout)
     except:
@@ -135,8 +131,7 @@ def clearDB(silent=True):
     resources.clear()
     settings[:] = initializeDB()[1][:]
     resources[:] = initializeDB()[2][:]
-    if silent==False:
-        log(app.RM.msg[242])
+    if silent==False: log(app.RM.msg[242])
 
 def removeFiles(keepDatafile=False):
     """ Удаление базы данных и резервной папки"""
@@ -191,14 +186,11 @@ def load(datafile=None, allowSave=True, forced=False, clipboard=None, silent=Fal
 
     global DataFile, UserPath, houses, settings, resources
 
-    if Devmode == 1:
-        loadLanguages()
+    if Devmode == 1: loadLanguages()
 
-    if datafile == None:
-        datafile = DataFile
+    if datafile == None: datafile = DataFile
     app.RM.popupForm = ""
-    if os.path.exists("temp"):
-        os.remove("temp")
+    if os.path.exists("temp"): os.remove("temp")
     dprint("Загружаю буфер.")
 
     # Сначала получаем буфер
@@ -219,23 +211,20 @@ def load(datafile=None, allowSave=True, forced=False, clipboard=None, silent=Fal
                 response = session.get(URL, params={'id': id}, stream=True)
                 with open("temp", "wb") as f:
                     for chunk in response.iter_content(32768):
-                        if chunk:
-                            f.write(chunk)
+                        if chunk: f.write(chunk)
             except:
                 return badURLError
 
         else: # получен чистый текст
             try:
                 clipboard = clipboard[ clipboard.index("[\"Rocket Ministry") : ]
-                with open("temp", "w") as file:
-                    file.write(clipboard)
-                    dprint("Содержимое буфера обмена записано во временный файл.")
+                with open("temp", "w") as file: file.write(clipboard)
+                dprint("Содержимое буфера обмена записано во временный файл.")
             except:
                 return False
 
         try:
-            with open("temp", "r") as file:
-                buffer = json.load(file)
+            with open("temp", "r") as file: buffer = json.load(file)
             dprint("Буфер получен из буфера обмена.")
 
         except:
@@ -251,17 +240,13 @@ def load(datafile=None, allowSave=True, forced=False, clipboard=None, silent=Fal
                     check_call([executable, '-m', 'pip', 'install', 'plyer'])
                     import docx2txt
                 string = docx2txt.process(datafile)
-                with open("temp", "w") as file:
-                    file.write(string)
-                with open("temp", "r") as file:
-                    buffer = json.load(file)
+                with open("temp", "w") as file: file.write(string)
+                with open("temp", "r") as file: buffer = json.load(file)
             else:
-                with open(datafile, "r") as file:
-                    buffer = json.load(file)
+                with open(datafile, "r") as file: buffer = json.load(file)
             dprint("Буфер получен из импортированного файла.")
         except:
-            if silent == False:
-                app.RM.popup(app.RM.msg[244])
+            if silent == False: app.RM.popup(app.RM.msg[244])
             return False
 
     else: # обычная загрузка
@@ -278,8 +263,7 @@ def load(datafile=None, allowSave=True, forced=False, clipboard=None, silent=Fal
                 else:
                     dprint("Не удалось восстановить непустую резервную копию (ее нет?).")
             else:
-                with open(UserPath + datafile, "r") as file:
-                    buffer = json.load(file)
+                with open(UserPath + datafile, "r") as file: buffer = json.load(file)
                 dprint("Буфер получен из файла data.jsn в стандартном местоположении.")
         else:
             dprint("Файл базы данных %s не найден, пытаюсь восстановить резервную копию." % datafile)
@@ -370,71 +354,73 @@ def getOutput():
 def save(backup=False, silent=True, export=False):
     """ Saving database to JSON file """
 
-    global DataFile, LastTimeBackedUp, UserPath
+    def __save(threadName, delay):
 
-    # Выгружаем все данные в список
+        global DataFile, LastTimeBackedUp, UserPath
 
-    output = getOutput()
+        # Выгружаем все данные в список
 
-    # Сначала резервируем раз в 5 минут
+        output = getOutput()
 
-    curTime = getCurTime()
+        # Сначала резервируем раз в 5 минут
 
-    if backup==True or (curTime - LastTimeBackedUp) > 300:
-        if os.path.exists(UserPath + DataFile):
-            if not os.path.exists(BackupFolderLocation):
-                try:
-                    os.makedirs(BackupFolderLocation)
-                except IOError:
-                    log(app.RM.msg[248])
-                    return
-            savedTime = time.strftime("%Y-%m-%d_%H%M%S", time.localtime())
-            with open(BackupFolderLocation + "data_" + savedTime + ".jsn", "w") as newbkfile:
-                json.dump(output, newbkfile)
-                if silent == False:
-                    app.RM.popup(app.RM.msg[249])
-                LastTimeBackedUp = curTime
+        curTime = getCurTime()
 
-    # Сохраняем
+        if backup==True or (curTime - LastTimeBackedUp) > 300:
+            if os.path.exists(UserPath + DataFile):
+                if not os.path.exists(BackupFolderLocation):
+                    try:
+                        os.makedirs(BackupFolderLocation)
+                    except IOError:
+                        log(app.RM.msg[248])
+                        return
+                savedTime = time.strftime("%Y-%m-%d_%H%M%S", time.localtime())
+                with open(BackupFolderLocation + "data_" + savedTime + ".jsn", "w") as newbkfile:
+                    json.dump(output, newbkfile)
+                    if silent == False:
+                        app.RM.popup(app.RM.msg[249])
+                    LastTimeBackedUp = curTime
 
-    try:
-        with open(UserPath + DataFile, "w") as file:
-            json.dump(output, file)
-        if silent == False:
-            app.RM.popup(app.RM.msg[250])
-    except:
-        dprint("Ошибка записи!")
+        # Сохраняем
 
-    # Экспорт в файл на ПК, если найден файл sync.ini, где прописан путь
+        while 1:
+            try:
+                with open(UserPath + DataFile, "w") as file: json.dump(output, file)
+            except: dprint("Ошибка записи!")
+            else:
+                dprint("База сохранена")
+                if silent == False: app.RM.popup(app.RM.msg[250])
+                break
 
-    if export == True and Devmode == 0 and os.path.exists("sync.ini"):
-        try:
-            with open("sync.ini", encoding='utf-8', mode="r") as f:
-                filename = f.read()
-            if ".doc" in filename: # если в расширении файла есть .doc, создаем Word-файл
-                try:
-                    from docx import Document
-                except:
-                    from subprocess import check_call
-                    from sys import executable
-                    check_call([executable, '-m', 'pip', 'install', 'python-docx'])
-                    from docx import Document
-                doc = Document()
-                doc.add_paragraph(str(json.dumps(output)))
-                doc.save(filename)#folder + f"/{app.RM.msg[251]}.docx")
-            else: # иначе пишем в простой текст
-                with open(filename, "w") as file:
-                    json.dump(output, file)
-        except:
-            print("File write error.")
+
+        # Экспорт в файл на ПК, если найден файл sync.ini, где прописан путь
+
+        if export == True and Devmode == 0 and os.path.exists("sync.ini"):
+            try:
+                with open("sync.ini", encoding='utf-8', mode="r") as f: filename = f.read()
+                if ".doc" in filename: # если в расширении файла есть .doc, создаем Word-файл
+                    try:
+                        from docx import Document
+                    except:
+                        from subprocess import check_call
+                        from sys import executable
+                        check_call([executable, '-m', 'pip', 'install', 'python-docx'])
+                        from docx import Document
+                    doc = Document()
+                    doc.add_paragraph(str(json.dumps(output)))
+                    doc.save(filename)
+                else: # иначе пишем в простой текст
+                    with open(filename, "w") as file: json.dump(output, file)
+            except:
+                dprint("File write error.")
+
+    _thread.start_new_thread(__save, ("Thread-Save", .1))
 
 def share(silent=False, clipboard=False, email=False, folder=None, file=False):
     """ Sharing database """
 
     global UserPath, DataFile
-
     output = getOutput()
-
     buffer = json.dumps(output)
 
     if clipboard == True: # копируем базу в буфер обмена - не используется
@@ -454,8 +440,7 @@ def share(silent=False, clipboard=False, email=False, folder=None, file=False):
             from tkinter import filedialog
             folder = filedialog.askdirectory()
             filename = folder + f"/{app.RM.msg[251]}"
-            with open(filename, "w") as file:
-                json.dump(output, file)
+            with open(filename, "w") as file: json.dump(output, file)
         except:
             pass
         else:
@@ -463,8 +448,7 @@ def share(silent=False, clipboard=False, email=False, folder=None, file=False):
 
     elif app.RM.devmode == 0 and folder != None: # экспорт в файл
         try:
-            with open(folder + "/data.jsn", "w") as file:
-                json.dump(output, file)
+            with open(folder + "/data.jsn", "w") as file: json.dump(output, file)
         except:
             app.RM.popup(app.RM.msg[253])
         else:
@@ -472,22 +456,18 @@ def share(silent=False, clipboard=False, email=False, folder=None, file=False):
 
     else:
         try:
-            with open(os.path.expanduser("~") + "/data_backup.jsn", "w") as file:
-                json.dump(output, file)
+            with open(os.path.expanduser("~") + "/data_backup.jsn", "w") as file: json.dump(output, file)
             path = os.path.expanduser("~")
         except:
-            if silent==False:
-                app.RM.popup(app.RM.msg[255])
+            if silent==False: app.RM.popup(app.RM.msg[255])
         else:
-            if silent==False:
-                app.RM.popup(app.RM.msg[256] % path)
+            if silent==False: app.RM.popup(app.RM.msg[256] % path)
 
 def backupRestore(silent=True, allowSave=True, delete=False, restoreNumber=None, restoreWorking=False):
     """ Восстановление файла из резервной копии """
 
     if os.path.exists(BackupFolderLocation)==False:
-        if silent == False:
-            app.RM.popup(title=app.RM.msg[135], message=app.RM.msg[257])
+        if silent == False: app.RM.popup(title=app.RM.msg[135], message=app.RM.msg[257])
         return
     files = [f for f in os.listdir(BackupFolderLocation) if os.path.isfile(os.path.join(BackupFolderLocation, f))]
     fileDates = []
@@ -519,8 +499,7 @@ def backupRestore(silent=True, allowSave=True, delete=False, restoreNumber=None,
                     return False
                 else:
                     dprint("Успешно загружена последняя непустая резервная копия.")
-                    if silent == False:
-                        app.RM.popup(app.RM.msg[258] % fileDates[i])
+                    if silent == False: app.RM.popup(app.RM.msg[258] % fileDates[i])
                     return True
 
     # Если выбран режим удаления лишних копий
@@ -558,7 +537,7 @@ def update():
         save()
 
     if newVersion > Version:
-        import _thread
+
         def __update(threadName, delay):
             dprint("Найдена новая версия, скачиваем.")
             response = requests.get("https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip")
@@ -593,24 +572,13 @@ def getCurTime():
               + int(time.strftime("%M", time.localtime())) * 60 \
               + int(time.strftime("%S", time.localtime()))
 
-def ifInt(char):
-    """ Checks if value is integer """
-    try: int(char) + 1
-    except: return False
-    else: return True
-
 def addHouse(houses, input, type=True, forceUpper=False):
     """ Adding new house """
-    if type == True:
-        type = "condo"
-    elif type == False:
-        type = "private"
+    if type == True: type = "condo"
+    elif type == False: type = "private"
     houses.append(house.House())
     newHouse = len(houses) - 1
-    if forceUpper == False or app.RM.language == "ge":
-        houses[newHouse].title = input.strip()
-    else:
-        houses[newHouse].title = (input.strip()).upper()
+    houses[newHouse].title = input.strip() if forceUpper == False or app.RM.language == "ge" else (input.strip()).upper()
     houses[newHouse].type = type
 
 def checkDate(date):
@@ -641,7 +609,6 @@ def shortenDate(longDate):
 
 def days():
     """ Returns number of days in current month """
-
     if time.strftime("%b", time.localtime()) == "Jan":
         return 31
     elif time.strftime("%b", time.localtime()) == "Feb":
@@ -839,9 +806,7 @@ def timeHHMMToFloat(timeH):
             else:
                 hours = mytime[: mytime.index(":")]
                 minutes = mytime[mytime.index(":") + 1:]
-
                 result1 = abs(int(hours))
-
                 lis = ["00:%s" % minutes]
                 start_dt = datetime.datetime.strptime("00:00", '%H:%M')
                 result2 = \
@@ -867,11 +832,8 @@ def timeHHMMToFloat(timeH):
 
 def sumHHMM(list=None, mode="+"):
     """ Складывает два значения времени вида HH:MM, полученных в списке """
-    if list == None:
-        list = ['25:06', '9:31']
-
+    if list == None: list = ['25:06', '9:31']
     mysum = datetime.timedelta()
-
     for i in list:
         (h, m) = i.split(':')
         d = datetime.timedelta(hours=int(h), minutes=int(m))
@@ -879,9 +841,7 @@ def sumHHMM(list=None, mode="+"):
             mysum += d
         else:
             mysum -= d
-
     string = timeFloatToHHMM(delta=str(mysum))
-
     return string
 
 def timeFloatToHHMM(hours=None, delta=None):
@@ -919,16 +879,16 @@ def timeFloatToHHMM(hours=None, delta=None):
         result = str("%d:%02d" % (hours, minutes))
 
     elif "days" in delta and len(delta) == 16 \
-            and ifInt(delta[0]) == True \
-            and ifInt(delta[1]) == False:           # "2 days, 12:00:00"
+            and delta[0].isnumeric() \
+            and not delta[1].isnumeric():           # "2 days, 12:00:00"
         days = int(delta[0]) * 24
         hours = days + int(delta[8:10])
         minutes = int(delta[11:13])
         result = str("%d:%02d" % (hours, minutes))
 
     elif "days" in delta and len(delta) == 16 \
-            and ifInt(delta[0]) == True \
-            and ifInt(delta[1]) == True:            # "12 days, 2:00:00"
+            and delta[0].isnumeric() \
+            and delta[1].isnumeric():            # "12 days, 2:00:00"
         days = int(delta[0:2]) * 24
         hours = days + int(delta[9:10])
         minutes = int(delta[12:13])
