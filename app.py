@@ -7,7 +7,7 @@ if "nodev" in argv:
 else:
     Devmode = 0# DEVMODE!
 
-Version = "2.3.4" #..44
+Version = "2.3.4" #..45
 """
 
 """
@@ -817,8 +817,8 @@ class ColorStatusButton(Button):
     def on_release(self, instance=None):
         if self.status == "1" and RM.resources[0][1][5] == 0:
             RM.popup(title=RM.msg[247], message=RM.msg[316])
-            self.resources[0][1][5] = 1
-            self.save()
+            RM.resources[0][1][5] = 1
+            RM.save()
         RM.colorBtnPressed(color=self.status)
 
 class MainMenuButton(Button):
@@ -2694,7 +2694,7 @@ class RMApp(App):
                     self.resources[1][len(self.resources[1]) - 1].addPorch(input="virtual", type="virtual")
                     self.resources[1][len(self.resources[1]) - 1].porches[0].addFlat("+" + name, virtual=True)
                     self.resources[1][len(self.resources[1]) - 1].porches[0].flats[0].status = "1"
-                    self.log(self.msg[91] % self.resources[1][len(self.resources[1]) - 1].porches[0].flats[0].getName())
+                    #self.log(self.msg[91] % self.resources[1][len(self.resources[1]) - 1].porches[0].flats[0].getName())
                     self.save()
                     self.conPressed()
                 else:
