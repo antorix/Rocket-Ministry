@@ -1,13 +1,44 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
+from sys import argv
+if "nodev" in argv:
+    Devmode = 0
+else:
+    Devmode = 0# DEVMODE!
+
+Version = "2.3.4" #..44
+"""
+
+"""
+
+try:
+    import kivy
+    import plyer
+except:
+    if Devmode == 1:
+        print("Модуль kivy и (или) plyer не найдены, устанавливаю.")
+    from subprocess import check_call
+    from sys import executable
+    check_call([executable, '-m', 'pip', 'install', 'kivy'])
+    check_call([executable, '-m', 'pip', 'install', 'plyer'])
+else:
+    if Devmode == 1:
+        print("Модули kivy и plyer найдены.")
+
 import utils
 import house
 import report
 import time
+import os
+import json
+import requests
+import shutil
+import datetime
+import _thread
 import webbrowser
 import iconfonts
 from iconfonts import icon
-import plyer
 
 from kivy.app import App
 from kivy.uix.label import Label
@@ -31,6 +62,7 @@ from kivy.uix.slider import Slider
 from kivy.uix.togglebutton import ToggleButton
 from kivy.graphics import Color, RoundedRectangle
 from kivy.utils import get_hex_from_color
+#Builder.load_file('rm.kv')
 
 if platform == "android":
     from android.permissions import request_permissions, Permission
@@ -40,8 +72,6 @@ if platform == "android":
     from jnius import autoclass
     PythonActivity = autoclass('org.kivy.android.PythonActivity')
     mActivity = PythonActivity.mActivity
-
-#Builder.load_file('rm.kv')
 
 class Feed(object):
     def __init__(self, message="", title="", form="", options=[], sort=None, details=None, resize=None,
@@ -366,7 +396,7 @@ class RButton(Button):
         if self.text == RM.button['lock']:
             self.radius = [RM.buttonRadius * radiusK, 0, 0, 0] # нет дома
         elif self.text == RM.button['record']: # подгонка радиуса под кнопки первого посещения
-            if utils.settings[0][13] == True: # если есть кнопка "нет дома"
+            if RM.settings[0][13] == True: # если есть кнопка "нет дома"
                 self.radius = [0, RM.buttonRadius * radiusK, 0, 0] # отказ
             else:
                 self.radius = [RM.buttonRadius * radiusK, RM.buttonRadius * radiusK, 0, 0]  # отказ
@@ -785,10 +815,10 @@ class ColorStatusButton(Button):
             self.bind(pos=self.update_shape, size=self.update_shape)
 
     def on_release(self, instance=None):
-        if self.status == "1" and utils.resources[0][1][5] == 0:
+        if self.status == "1" and RM.resources[0][1][5] == 0:
             RM.popup(title=RM.msg[247], message=RM.msg[316])
-            utils.resources[0][1][5] = 1
-            utils.save()
+            self.resources[0][1][5] = 1
+            self.save()
         RM.colorBtnPressed(color=self.status)
 
 class MainMenuButton(Button):
@@ -852,11 +882,11 @@ class MainMenuButton(Button):
 class RejectColorSelectButton(AnchorLayout):
     def __init__(self):
         super(RejectColorSelectButton, self).__init__()
-        if utils.settings[0][18] == "4":
+        if RM.settings[0][18] == "4":
             text1 = RM.button["dot"]
             text2 = ""
             text3 = ""
-        elif utils.settings[0][18] == "5":
+        elif RM.settings[0][18] == "5":
             text1 = ""
             text2 = ""
             text3 = RM.button["dot"]
@@ -906,7 +936,24 @@ class RMApp(App):
     def build(self):
         if platform == "android":
             request_permissions([Permission.CALL_PHONE, Permission.INTERNET, "com.google.android.gms.permission.AD_ID"])
-        utils.load()
+
+        self.UserPath = "../" if platform == "android" else "" # бывшие глобальные переменные
+        self.BackupFolderLocation = self.UserPath + "backup/"
+        self.DataFile = "data.jsn"
+        self.LastTimeBackedUp = int(time.strftime("%H", time.localtime())) * 3600 \
+                           + int(time.strftime("%M", time.localtime())) * 60 \
+                           + int(time.strftime("%S", time.localtime()))
+        self.MyFont = "DejaVuSans.ttf"
+        self.Languages = {  # список всех установленных языков, value должно совпадать с msg[1] для всех языков
+            "en": ["English", None],
+            "es": ["español", None],
+            "ru": ["русский", None],
+            "ka": ["ქართული", self.MyFont]
+        }
+
+        self.houses, self.settings, self.resources = self.initializeDB()
+        self.load()
+
         self.setParameters()
         self.setTheme()
         self.globalAnchor = AnchorLayout(anchor_x="center", anchor_y="top")
@@ -920,10 +967,12 @@ class RMApp(App):
 
     def setParameters(self, reload=False):
 
+        #global Languages
+
         # определение платформы
         self.platform = "desktop" if platform == "win" or platform == "linux" or platform == "macosx" else "mobile"
-        if utils.settings[0][6] in utils.Languages.keys():
-            self.language = utils.settings[0][6]
+        if self.settings[0][6] in self.Languages.keys():
+            self.language = self.settings[0][6]
         else: # определение языка при первом запуске
             if platform == "android":
                 from kvdroid.tools.lang import device_lang
@@ -949,8 +998,8 @@ class RMApp(App):
                 self.language = "ka"
             else:
                 self.language = "en"
-            utils.settings[0][6] = self.language
-            utils.save()
+            self.settings[0][6] = self.language
+            self.save()
 
         try:
             with open(f"{self.language}.lang", mode="r", encoding="utf-8") as file: # загрузка языкового файла
@@ -962,7 +1011,7 @@ class RMApp(App):
                 message="Не найден языковой файл! Переустановите приложение.\n\nLanguage file not found! Please re-install the app.")
             self.stop()
 
-        self.specialFont = utils.Languages[self.language][1]
+        self.specialFont = self.Languages[self.language][1]
 
         self.rep = report.Report() # инициализация отчета
 
@@ -1019,7 +1068,7 @@ class RMApp(App):
             self.porch = house.House().Porch()
             self.stack = []
             self.showSlider = False
-            self.devmode = utils.Devmode
+            self.devmode = Devmode
             self.restore = 0
             self.mypopup = PopupNoAnimation()
             EventLoop.window.bind(on_keyboard=self.hook_keyboard)
@@ -1073,7 +1122,7 @@ class RMApp(App):
             Window.bind(on_drop_file=__dropFile)
             def __close(*args):
                 utils.dprint("Выход из программы.")
-                utils.save(backup=True, export=True)
+                self.save(backup=True, export=True)
                 self.checkOrientation(width=args[0].size[0], height=args[0].size[1])
             Window.bind(on_request_close=__close)
             Window.bind(on_resize=self.checkOrientation)
@@ -1130,9 +1179,9 @@ class RMApp(App):
         self.search.bind(on_release=self.searchPressed)
         self.setBox.add_widget(self.search)
 
-        self.settings = TopButton(text=self.button["menu"])
-        self.settings.bind(on_release=self.settingsPressed)
-        self.setBox.add_widget(self.settings)
+        self.settingsButton = TopButton(text=self.button["menu"])
+        self.settingsButton.bind(on_release=self.settingsPressed)
+        self.setBox.add_widget(self.settingsButton)
         self.boxHeader.add_widget(self.setBox)
         self.interface.add_widget(self.boxHeader)
 
@@ -1173,8 +1222,10 @@ class RMApp(App):
         # Слайдер и джойстик выбора позиции
 
         self.sliderBox = BoxLayout()
+        value = self.settings[0][8]
+        image = self.sliderImage
         self.slider = Slider(pos=(0, Window.size[1] * .75), orientation='horizontal', min=0.4, max=2,
-                             padding=0, value=utils.settings[0][8], cursor_image=self.sliderImage)
+                             padding=0, value=value, cursor_image=image)
         self.sliderBox.add_widget(self.slider)
         self.posSelector = GridLayout(#pos=(Window.size[0]/3, Window.size[1]/3),
                                       rows=3, cols=3, size_hint=(None, None),
@@ -1273,18 +1324,18 @@ class RMApp(App):
 
         self.themeDefault = [0.93, 0.93, 0.93, .9], [0, .19, .35, .85], [.18, .65, .83, 1] # цвет фона таблицы, кнопок таблицы и title
 
-        self.theme = utils.settings[0][5]
+        self.theme = self.settings[0][5]
 
-        if utils.settings[0][5] == "": # определяем тему при первом запуске
+        if self.settings[0][5] == "": # определяем тему при первом запуске
             if platform == "android":
                 from kvdroid.tools.darkmode import dark_mode
                 if dark_mode() == True:
-                    self.theme = utils.settings[0][5] = "dark"
+                    self.theme = self.settings[0][5] = "dark"
                 else:
-                    self.theme = utils.settings[0][5] = "default"
+                    self.theme = self.settings[0][5] = "default"
             else:
-                self.theme = utils.settings[0][5] = "default"
-            utils.save()
+                self.theme = self.settings[0][5] = "default"
+            self.save()
 
         if self.devmode == 0 and self.platform == "desktop": # пытаемся получить тему из файла на ПК
             try:
@@ -1600,7 +1651,7 @@ class RMApp(App):
 
             # Вид подъезда с этажами
 
-            elif utils.settings[0][7] == 1: # поэтажная раскладка с масштабированием
+            elif self.settings[0][7] == 1: # поэтажная раскладка с масштабированием
 
                 spacing = self.spacing * 2
 
@@ -1622,8 +1673,8 @@ class RMApp(App):
 
             else: # без масштабирования
 
-                if utils.settings[0][8] != 0: # расчеты расстояний и зазоров
-                    size = self.standardTextHeight * utils.settings[0][8] * 1.5
+                if self.settings[0][8] != 0: # расчеты расстояний и зазоров
+                    size = self.standardTextHeight * self.settings[0][8] * 1.5
                 else:
                     size = self.standardTextHeight
 
@@ -1636,27 +1687,27 @@ class RMApp(App):
 
                 # Определение центровки
 
-                if utils.settings[0][1] == 1:
+                if self.settings[0][1] == 1:
                     self.noScalePadding = [0, 0, diffX, diffY / 2]  # влево вверху
-                elif utils.settings[0][1] == 2:
+                elif self.settings[0][1] == 2:
                     self.noScalePadding = [diffX / 2, 0, diffX / 2, diffY]  # по центру вверху
-                elif utils.settings[0][1] == 3:
+                elif self.settings[0][1] == 3:
                     self.noScalePadding = [diffX, 0, diffY, 0]  # справа вверху
-                elif utils.settings[0][1] == 4:
+                elif self.settings[0][1] == 4:
                     self.noScalePadding = [0, diffY / 2, diffX, diffY / 2] # влево по центру
-                elif utils.settings[0][1] == 6:
+                elif self.settings[0][1] == 6:
                     self.noScalePadding = [diffX, diffY / 2, 0, diffY / 2]  # справа по центру
-                elif utils.settings[0][1] == 7:
+                elif self.settings[0][1] == 7:
                     self.noScalePadding = [0, diffY, diffX, 0 / 2]  # влево внизу
-                elif utils.settings[0][1] == 8:
+                elif self.settings[0][1] == 8:
                     self.noScalePadding = [diffX/2, diffY, 0, diffX/2]  # снизу по центру
-                elif utils.settings[0][1] == 9:
+                elif self.settings[0][1] == 9:
                     self.noScalePadding = [diffX, diffY, 0, 0]  # справа снизу
                 else:
                     self.noScalePadding = [diffX / 2, diffY / 2, diffX / 2, diffY / 2]  # по центру
 
                 if self.noScalePadding[0] < 0 or self.noScalePadding[1] < 0: # если слишком большой подъезд, включаем масштабирование
-                    utils.settings[0][7]=1
+                    self.settings[0][7]=1
                     self.porchView()
                     return
 
@@ -1688,12 +1739,12 @@ class RMApp(App):
         except: # в случае ошибки пытаемся восстановить последнюю резервную копию
             if self.restore < 10:
                 utils.dprint(f"Файл базы данных поврежден, пытаюсь восстановить резервную копию {self.restore}.")
-                result = utils.backupRestore(restoreNumber = self.restore, allowSave=False)
+                result = self.backupRestore(restoreNumber = self.restore, allowSave=False)
                 if result != False:
                     utils.dprint("Резервная копия восстановлена.")
                     self.restore += 1
                     self.rep = report.Report()
-                    utils.save(backup=False)
+                    self.save(backup=False)
                     self.updateList()
                 else:
                     utils.dprint("Резервных копий больше нет.")
@@ -1703,7 +1754,7 @@ class RMApp(App):
                 Clock.schedule_once(lambda x: self.popup(title=self.msg[9], message=self.msg[10]), 0)
 
     def sliderToggle(self, mode=""):
-        utils.settings[0][7] = 0
+        self.settings[0][7] = 0
         if mode == "off":
             self.showSlider = False
         if self.showSlider == True and not self.sliderBox in self.boxHeader.children:
@@ -1720,7 +1771,7 @@ class RMApp(App):
             self.boxFooter.remove_widget(self.posSelector)
 
     def sliderGet(self, x, y):
-        utils.settings[0][8] = self.slider.value
+        self.settings[0][8] = self.slider.value
         self.porchView()
 
     def clickOnList(self, instance, mode=""):
@@ -1732,7 +1783,7 @@ class RMApp(App):
                 if "[/i]" in text:
                     text = text[ : text.index("[")]
                 self.house.addPorch(text.strip())
-                utils.save()
+                self.save()
                 self.houseView(instance=instance)
             elif self.msg[11] in instance.text: # "создайте"
                 self.positivePressed()
@@ -1752,7 +1803,7 @@ class RMApp(App):
                     self.choice = i
 
                     if self.displayed.form == "ter":
-                        self.house = utils.houses[i] # начиная отсюда знаем дом и его индекс
+                        self.house = self.houses[i] # начиная отсюда знаем дом и его индекс
                         self.selectedHouse = self.choice
                         self.houseView(instance=instance) # вход в дом
 
@@ -1811,9 +1862,9 @@ class RMApp(App):
                         p = self.allcontacts[self.selectedCon][7][1]
                         f = self.allcontacts[self.selectedCon][7][2]
                         if self.allcontacts[self.selectedCon][8] != "virtual":
-                            self.house = utils.houses[h]
+                            self.house = self.houses[h]
                         else:
-                            self.house = utils.resources[1][h] # заменяем дом на ресурсы для отдельных контактов
+                            self.house = self.resources[1][h] # заменяем дом на ресурсы для отдельных контактов
                         self.selectedHouse = h
                         self.porch = self.house.porches[p]
                         self.selectedPorch = p
@@ -1836,9 +1887,9 @@ class RMApp(App):
                         p = self.searchResults[self.selectedCon][0][1]
                         f = self.searchResults[self.selectedCon][0][2]
                         if self.searchResults[self.selectedCon][1] != "virtual":  # regular contacts
-                            self.house = utils.houses[h]
+                            self.house = self.houses[h]
                         else:
-                            self.house = utils.resources[1][h]
+                            self.house = self.resources[1][h]
                         self.selectedHouse = h
                         self.porch = self.house.porches[p]
                         self.selectedPorch = p
@@ -1889,7 +1940,7 @@ class RMApp(App):
         if value == "title":
             self.detailsPressed()
             Clock.schedule_once(__edit, .3)
-        elif value == "report" and utils.settings[0][3] > 0:
+        elif value == "report" and self.settings[0][3] > 0:
             self.popup(title=self.msg[247], message=self.msg[202])
         elif value == "note":
             self.detailsPressed()
@@ -1955,7 +2006,7 @@ class RMApp(App):
 
         elif self.displayed.form == "rep": # журнал отчета
             options=[]
-            for line in utils.resources[2]:
+            for line in self.resources[2]:
                 options.append(line)
             if len(options) == 0:
                 tip = self.msg[321]
@@ -2008,13 +2059,13 @@ class RMApp(App):
 
     def resizePressed(self, instance=None):
         """ слайдер """
-        if utils.resources[0][1][1] == 0:
-            utils.resources[0][1][1] = 1
-            utils.save()
+        if self.resources[0][1][1] == 0:
+            self.resources[0][1][1] = 1
+            self.save()
             self.popup(title=self.msg[247], message=self.msg[300] % self.button['resize'])
         if self.showSlider == True:
             self.showSlider = False
-            utils.save()
+            self.save()
         else:
             self.showSlider = True
         self.porchView()
@@ -2034,16 +2085,16 @@ class RMApp(App):
                 btn = SortListButton(text=sortTypes[i])
                 def __resortHouses(instance=None):
                     if instance.text == sortTypes[0]:
-                        utils.settings[0][19] = "н"
+                        self.settings[0][19] = "н"
                     elif instance.text == sortTypes[1]:
-                        utils.settings[0][19] = "д"
+                        self.settings[0][19] = "д"
                     elif instance.text == sortTypes[2]:
-                        utils.settings[0][19] = "и"
+                        self.settings[0][19] = "и"
                     elif instance.text == sortTypes[3]:
-                        utils.settings[0][19] = "п"
+                        self.settings[0][19] = "п"
                     elif instance.text == sortTypes[4]:
-                        utils.settings[0][19] = "о"
-                    utils.save()
+                        self.settings[0][19] = "о"
+                    self.save()
                     self.terPressed()
                 btn.bind(on_release=__resortHouses)
                 self.dropSortMenu.add_widget(btn)
@@ -2072,7 +2123,7 @@ class RMApp(App):
                             self.porch.flatsLayout = "з"
                         elif instance.text == sortTypes[4]:
                             self.porch.flatsLayout = "т"
-                        utils.save()
+                        self.save()
                         self.porchView(sort=True)
                     btn.bind(on_release=__resortFlats)
                     self.dropSortMenu.add_widget(btn)
@@ -2089,14 +2140,14 @@ class RMApp(App):
                 btn = SortListButton(text=sortTypes[i])
                 def __resortCons(instance=None):
                     if instance.text == sortTypes[0]:
-                        utils.settings[0][4] = "и"
+                        self.settings[0][4] = "и"
                     elif instance.text == sortTypes[1]:
-                        utils.settings[0][4] = "а"
+                        self.settings[0][4] = "а"
                     elif instance.text == sortTypes[2]:
-                        utils.settings[0][4] = "т"
+                        self.settings[0][4] = "т"
                     elif instance.text == sortTypes[3]:
-                        utils.settings[0][4] = "з"
-                    utils.save()
+                        self.settings[0][4] = "з"
+                    self.save()
                     self.conPressed()
                 btn.bind(on_release=__resortCons)
                 self.dropSortMenu.add_widget(btn)
@@ -2124,9 +2175,9 @@ class RMApp(App):
         """ Обновление таймера """
         endTime = int(time.strftime("%H", time.localtime())) * 3600 + int(
             time.strftime("%M", time.localtime())) * 60 + int(time.strftime("%S", time.localtime()))
-        updated = (endTime - utils.settings[2][6]) / 3600
+        updated = (endTime - self.settings[2][6]) / 3600
         self.time2 = updated if updated >= 0 else (updated + 24)
-        if utils.settings[2][6] > 0:
+        if self.settings[2][6] > 0:
             if ":" in self.timerText.text:
                 mytime = utils.timeFloatToHHMM(self.time2)
                 mytime2 = mytime[: mytime.index(":")]
@@ -2140,10 +2191,10 @@ class RMApp(App):
         self.timer.on() if self.timerText.text != "" else self.timer.off()
 
     def timerPressed(self, instance=None):
-        if utils.resources[0][1][2] == 0:
+        if self.resources[0][1][2] == 0:
             self.popup(title=self.msg[247], message=self.msg[217])
-            utils.resources[0][1][2] = 1
-            utils.save()
+            self.resources[0][1][2] = 1
+            self.save()
         self.updateTimer()
         result = self.rep.toggleTimer()
         if result == 1:
@@ -2184,7 +2235,7 @@ class RMApp(App):
                 if input[0:3] == "res" and input[3].isnumeric():  # восстановление резервных копий
                     copy = int(input[3])
                     utils.dprint("Восстанавливаю копию %d" % copy)
-                    result = utils.backupRestore(restoreNumber=copy, allowSave=False)
+                    result = self.backupRestore(restoreNumber=copy, allowSave=False)
                     if result == False:
                         self.popup(title=self.msg[44], message=self.msg[45])
                     else:
@@ -2195,8 +2246,8 @@ class RMApp(App):
                 elif input == "report000":
                     self.rep.checkNewMonth(forceDebug=True)
 
-                elif input == "error000":
-                    self.updateList(5, 0)
+                #elif input == "error000":
+                #    self.updateList(5, 0)
 
                 elif input == "file000":
                     def __handleSelection(selection):
@@ -2247,7 +2298,7 @@ class RMApp(App):
                         temp_hours = temp
 
                     try:
-                        if utils.settings[0][2]==1:
+                        if self.settings[0][2]==1:
                             temp = utils.timeHHMMToFloat(self.credit.get().strip())
                             if temp == None:
                                 5/0
@@ -2256,7 +2307,7 @@ class RMApp(App):
                     except:
                         success = 0
                     else:
-                        if utils.settings[0][2] == 1:
+                        if self.settings[0][2] == 1:
                             if temp != self.rep.credit:
                                 change = 1
                             temp_credit = temp
@@ -2288,7 +2339,7 @@ class RMApp(App):
                         self.rep.hours = temp_hours
                         self.rep.returns = temp_returns
                         self.rep.studies = temp_studies
-                        if utils.settings[0][2] == 1:
+                        if self.settings[0][2] == 1:
                             self.rep.credit = temp_credit
                             credit = f"{self.msg[47]}, " % utils.timeFloatToHHMM(self.rep.credit)
                         else:
@@ -2304,7 +2355,7 @@ class RMApp(App):
                             )
                         )
                         self.pageTitle.text = f"[ref=report]{self.msg[4]}{self.rep.getCurrentHours()[2]}[/ref]"
-                        if utils.settings[0][2] == 1:
+                        if self.settings[0][2] == 1:
                             self.creditLabel.text = self.msg[106] % self.rep.getCurrentHours()[0]
 
                     self.counterChanged = False
@@ -2313,46 +2364,46 @@ class RMApp(App):
                     self.recalcServiceYear(allowSave=True)
 
                 else:
-                    utils.log(self.msg[50]) if self.rep.getLastMonthReport()[0] != "" else utils.log(self.msg[51])
+                    self.log(self.msg[50]) if self.rep.getLastMonthReport()[0] != "" else self.log(self.msg[51])
 
             # Настройки
 
             elif self.displayed.form == "set":
 
                 if self.settingsPanel.current_tab.text == self.msg[52]:
-                    if utils.settings[0][7] == 1 and self.multipleBoxEntries[6].active == False:
-                        self.slider.value = utils.settings[0][8] = 1
+                    if self.settings[0][7] == 1 and self.multipleBoxEntries[6].active == False:
+                        self.slider.value = self.settings[0][8] = 1
                         self.showSlider = False
                     try:
-                        utils.settings[0][3] = 0 if self.multipleBoxEntries[0].text.strip() == "" \
+                        self.settings[0][3] = 0 if self.multipleBoxEntries[0].text.strip() == "" \
                             else int(self.multipleBoxEntries[0].text.strip()) # норма часов
                     except:
                         pass
-                    utils.settings[0][13] = self.multipleBoxEntries[1].active   # нет дома
-                    utils.settings[0][15] = self.multipleBoxEntries[2].active   # переносить минуты
-                    utils.settings[0][18] = self.multipleBoxEntries[3].get()    # цвет отказа
-                    utils.settings[0][2] = self.multipleBoxEntries[4].active    # кредит
-                    utils.settings[0][20] = self.multipleBoxEntries[5].active   # показывать телефон
-                    utils.settings[0][0] = self.multipleBoxEntries[6].active    # уведомление при запуске таймера
-                    for i in range(len(utils.Languages)):                       # язык
-                        if list(utils.Languages.values())[i][0] in self.languageButton.text:
-                            utils.settings[0][6] = list(utils.Languages.keys())[i]
+                    self.settings[0][13] = self.multipleBoxEntries[1].active   # нет дома
+                    self.settings[0][15] = self.multipleBoxEntries[2].active   # переносить минуты
+                    self.settings[0][18] = self.multipleBoxEntries[3].get()    # цвет отказа
+                    self.settings[0][2] = self.multipleBoxEntries[4].active    # кредит
+                    self.settings[0][20] = self.multipleBoxEntries[5].active   # показывать телефон
+                    self.settings[0][0] = self.multipleBoxEntries[6].active    # уведомление при запуске таймера
+                    for i in range(len(self.Languages)):                       # язык
+                        if list(self.Languages.values())[i][0] in self.languageButton.text:
+                            self.settings[0][6] = list(self.Languages.keys())[i]
                             break
 
-                    utils.settings[0][5] = self.themes[self.themeButton.text]   # тема
+                    self.settings[0][5] = self.themes[self.themeButton.text]   # тема
 
-                    utils.save()
-                    utils.log(self.msg[53])
+                    self.save()
+                    self.log(self.msg[53])
                     self.restart("soft")
                     Clock.schedule_once(self.settingsPressed, .1)
 
                 elif self.settingsPanel.current_tab.text == self.msg[54]:
-                    utils.save(backup=True)
-                    utils.log(self.msg[56])
+                    self.save(backup=True)
+                    self.log(self.msg[56])
 
                 elif self.settingsPanel.current_tab.text == self.msg[55]:
-                    utils.resources[0][0] = self.inputBoxEntry.text.strip()
-                    utils.save()
+                    self.resources[0][0] = self.inputBoxEntry.text.strip()
+                    self.save()
 
             # Форма создания квартир/домов
 
@@ -2506,14 +2557,14 @@ class RMApp(App):
                         self.porchView()
                     for entry in self.multipleBoxEntries:
                         entry.text = ""
-                    utils.save()
+                    self.save()
 
             elif self.displayed.form == "createNewRecord": # добавление новой записи посещения (повторное)
                 self.displayed.form = "flatView"
                 record = self.inputBoxEntry.text.strip()
                 self.flat.addRecord(record)
                 self.processReportCounters()
-                utils.save()
+                self.save()
                 self.flatView()
 
             # Формы сохранения
@@ -2525,7 +2576,7 @@ class RMApp(App):
                 if newTer == "":
                     self.inputBoxText.text = self.msg[84]
                 else:
-                    for house in utils.houses:
+                    for house in self.houses:
                         if newTer.strip() == house.title.strip():
                             self.popup(self.msg[85])
                             self.terPressed()
@@ -2533,10 +2584,10 @@ class RMApp(App):
                             break
                     else:
                         if self.language == "ka":
-                            utils.addHouse(utils.houses, newTer, condo, forceUpper=False)
+                            self.addHouse(self.houses, newTer, condo, forceUpper=False)
                         else:
-                            utils.addHouse(utils.houses, newTer, condo, forceUpper=True)
-                        utils.save()
+                            self.addHouse(self.houses, newTer, condo, forceUpper=True)
+                        self.save()
                         self.terPressed()
 
             elif self.displayed.form == "createNewPorch":  # сохранение подъезда
@@ -2556,7 +2607,7 @@ class RMApp(App):
                             break
                     else:
                         self.house.addPorch(newPorch, self.house.getPorchType()[0])
-                        utils.save()
+                        self.save()
                         self.houseView()
 
             elif self.displayed.form == "createNewFlat": # сохранение квартир
@@ -2596,7 +2647,7 @@ class RMApp(App):
                         self.porch.addFlats("+%d-%d[%d" % (start, finish, floors))
                         self.porch.flatsLayout = str(floors)
                         self.porch.floor1 = f1
-                        utils.save()
+                        self.save()
                         self.porchView()
 
                 else: # сохранение домов в сегменте универсального участка
@@ -2606,7 +2657,7 @@ class RMApp(App):
                     if self.checkbox.active == False:
                         if not "." in addFlat and not "," in addFlat:
                             self.porch.addFlat("+" + addFlat)
-                            utils.save()
+                            self.save()
                             self.porchView()
                         else:
                             self.popup(self.msg[89])
@@ -2625,26 +2676,26 @@ class RMApp(App):
                                 self.checkbox.active = True
                             Clock.schedule_once(__repeat, 0.5)
                         else:
-                            utils.save()
+                            self.save()
                             self.porchView()
 
             elif self.displayed.form == "recordView": # сохранение существующей записи посещения
                 self.displayed.form = "flatView"
                 newRec = self.inputBoxEntry.text.strip()
                 self.flat.editRecord(self.selectedRecord, newRec)
-                utils.save()
+                self.save()
                 self.flatView()
 
             elif self.displayed.form == "createNewCon": # сохранение контакта
                 self.displayed.form = "con"
                 name = self.inputBoxEntry.text.strip()
                 if name != "":
-                    utils.addHouse(utils.resources[1], "", "virtual")  # создается новый виртуальный дом
-                    utils.resources[1][len(utils.resources[1]) - 1].addPorch(input="virtual", type="virtual")
-                    utils.resources[1][len(utils.resources[1]) - 1].porches[0].addFlat("+" + name, virtual=True)
-                    utils.resources[1][len(utils.resources[1]) - 1].porches[0].flats[0].status = "1"
-                    utils.log(self.msg[91] % utils.resources[1][len(utils.resources[1]) - 1].porches[0].flats[0].getName())
-                    utils.save()
+                    self.addHouse(self.resources[1], "", "virtual")  # создается новый виртуальный дом
+                    self.resources[1][len(self.resources[1]) - 1].addPorch(input="virtual", type="virtual")
+                    self.resources[1][len(self.resources[1]) - 1].porches[0].addFlat("+" + name, virtual=True)
+                    self.resources[1][len(self.resources[1]) - 1].porches[0].flats[0].status = "1"
+                    self.log(self.msg[91] % self.resources[1][len(self.resources[1]) - 1].porches[0].flats[0].getName())
+                    self.save()
                     self.conPressed()
                 else:
                     self.inputBoxText.text = self.msg[84]
@@ -2661,13 +2712,13 @@ class RMApp(App):
                 if newTitle == "":
                     newTitle = self.house.title
                 allow = True
-                for i in range(len(utils.houses)):
-                    if utils.houses[i].title == newTitle and i != self.selectedHouse:
+                for i in range(len(self.houses)):
+                    if self.houses[i].title == newTitle and i != self.selectedHouse:
                         allow = False
                         break
                 if allow == True:
                     self.house.title = newTitle
-                    utils.save()
+                    self.save()
                     self.houseView()
                 else:
                     self.detailsPressed()
@@ -2678,7 +2729,7 @@ class RMApp(App):
                 newDate = self.multipleBoxEntries[1].text.strip()
                 if utils.checkDate(newDate)==True:
                     self.house.date = newDate
-                    utils.save()
+                    self.save()
                     self.houseView()
                 else:
                     self.detailsPressed()
@@ -2698,7 +2749,7 @@ class RMApp(App):
                         break
                 if allow == True and newTitle:
                     self.porch.title = newTitle
-                    utils.save()
+                    self.save()
                     self.porchView()
                 else:
                     self.detailsPressed()
@@ -2730,7 +2781,7 @@ class RMApp(App):
                         self.multipleBoxEntries[3].text = newNumber
                         self.popup(self.msg[93])
                 if success == True:
-                    utils.save()
+                    self.save()
                     if self.popupEntryPoint == 0:
                         self.flatView()
                     else:
@@ -2744,23 +2795,23 @@ class RMApp(App):
         self.sliderToggle()
 
         if self.displayed.form == "porchView":
-            if utils.resources[0][1][3] == 0:
+            if self.resources[0][1][3] == 0:
                 self.popup(title=self.msg[247], message=self.msg[171])
-                utils.resources[0][1][3] = 1
-                utils.save()
+                self.resources[0][1][3] = 1
+                self.save()
             if self.porch.floors() == True:
                 self.porch.flatsLayout = "н"
             elif self.porch.floors() == False:
                 self.porch.flatsLayout = self.porch.type[7:] # определение этажей по цифре в типе подъезда
                 if self.porch.flatsLayout == "":
                     self.popup(self.msg[94])
-            utils.save()
+            self.save()
             self.porchView(sort=True)
 
         elif self.button["phone"] in instance.text:
             inform = self.msg[28] % self.flat.phone
             if self.flat.phone.strip() == "":
-                utils.log(self.msg[27])
+                self.log(self.msg[27])
             else:
                 if self.platform == "mobile":
                     try:
@@ -2804,39 +2855,38 @@ class RMApp(App):
         self.contactsEntryPoint = 0
         self.searchEntryPoint = 0
 
-        if utils.settings[0][19] == "д":  # first sort - by date
-            utils.houses.sort(key=lambda x: x.date, reverse=False)
-        elif utils.settings[0][19] == "н":  # alphabetic by title
-            utils.houses.sort(key=lambda x: x.title, reverse=False)
-        elif utils.settings[0][19] == "и":  # by number of interested persons
-            for i in range(len(utils.houses)):
-                utils.houses[i].interest = utils.houses[i].getHouseStats()[1]
-            utils.houses.sort(key=lambda x: x.interest, reverse=True)
-        elif utils.settings[0][19] == "п":  # by progress
-            for i in range(len(utils.houses)):
-                utils.houses[i].progress = utils.houses[i].getProgress()[0]
-            utils.houses.sort(key=lambda x: x.progress, reverse=False)
-        elif utils.settings[0][19] == "о":  # by progress reversed
-            for i in range(len(utils.houses)):
-                utils.houses[i].progress = utils.houses[i].getProgress()[0]
-            utils.houses.sort(key=lambda x: x.progress, reverse=True)
+        if self.settings[0][19] == "д":  # first sort - by date
+            self.houses.sort(key=lambda x: x.date, reverse=False)
+        elif self.settings[0][19] == "н":  # alphabetic by title
+            self.houses.sort(key=lambda x: x.title, reverse=False)
+        elif self.settings[0][19] == "и":  # by number of interested persons
+            for i in range(len(self.houses)):
+                self.houses[i].interest = self.houses[i].getHouseStats()[1]
+            self.houses.sort(key=lambda x: x.interest, reverse=True)
+        elif self.settings[0][19] == "п":  # by progress
+            for i in range(len(self.houses)):
+                self.houses[i].progress = self.houses[i].getProgress()[0]
+            self.houses.sort(key=lambda x: x.progress, reverse=False)
+        elif self.settings[0][19] == "о":  # by progress reversed
+            for i in range(len(self.houses)):
+                self.houses[i].progress = self.houses[i].getProgress()[0]
+            self.houses.sort(key=lambda x: x.progress, reverse=True)
 
         housesList = []
-        for house in utils.houses:  # check houses statistics
+        for house in self.houses:  # check houses statistics
             interested = f" [color={self.interestColor}][b]%d[/b][/color] " % house.getHouseStats()[1] \
                 if house.getHouseStats()[1] > 0 else " "
             houseDue = "[color=F4CA16]" + self.button['warn']+" [/color]" if house.due() == True else ""
             listIcon = icon('icon-building-filled') if house.type == "condo" else icon('icon-home-1')
             housesList.append( f"{listIcon} {house.title[:self.listItemCharLimit()]} ({utils.shortenDate(house.date)}) " +\
                                f"[i]{int(house.getProgress()[0] * 100)}%[/i]{interested}{houseDue}")
-            if utils.resources[0][1][6] == 0 and int(house.getProgress()[0] * 100) > 0:
+            if self.resources[0][1][6] == 0 and int(house.getProgress()[0] * 100) > 0:
                 Clock.schedule_once(lambda x: self.popup(title=self.msg[247], message=self.msg[317]), .1)
-                utils.resources[0][1][6] = 1
-                utils.save()
+                self.resources[0][1][6] = 1
+                self.save()
         housesList.append(self.msg[95]) if len(housesList) == 0 else None
-
         self.displayed = Feed(  # display list of houses and options
-            title=f"{self.msg[2]} ({len(utils.houses)})",
+            title=f"{self.msg[2]} ({len(self.houses)})",
             message=self.msg[97],
             options=housesList,
             form="ter",
@@ -2864,11 +2914,11 @@ class RMApp(App):
         options = []
 
         # Sort
-        if utils.settings[0][4] == "и":     self.allcontacts.sort(key=lambda x: x[0]) # by name
-        elif utils.settings[0][4] == "с":   self.allcontacts.sort(key=lambda x: x[16]) # by status
-        elif utils.settings[0][4] == "а":   self.allcontacts.sort(key=lambda x: x[2], reverse=True) # by address
-        elif utils.settings[0][4] == "т":   self.allcontacts.sort(key=lambda x: x[9], reverse=True) # by phone number
-        elif utils.settings[0][4] == "з":   self.allcontacts.sort(key=lambda x: x[11], reverse=True) # by note
+        if self.settings[0][4] == "и":     self.allcontacts.sort(key=lambda x: x[0]) # by name
+        elif self.settings[0][4] == "с":   self.allcontacts.sort(key=lambda x: x[16]) # by status
+        elif self.settings[0][4] == "а":   self.allcontacts.sort(key=lambda x: x[2], reverse=True) # by address
+        elif self.settings[0][4] == "т":   self.allcontacts.sort(key=lambda x: x[9], reverse=True) # by phone number
+        elif self.settings[0][4] == "з":   self.allcontacts.sort(key=lambda x: x[11], reverse=True) # by note
 
         for i in range(len(self.allcontacts)):
             if self.allcontacts[i][15] != "condo" and self.allcontacts[i][15] != "virtual":
@@ -2987,7 +3037,7 @@ class RMApp(App):
         self.hours = Counter(picker=self.msg[105], type="time",
                              text=utils.timeFloatToHHMM(self.rep.hours), fixed=1, shrink=False)
         report.add_widget(self.hours)
-        if utils.settings[0][2]==1:
+        if self.settings[0][2]==1:
             self.creditLabel = MyLabel(text=self.msg[106] % self.rep.getCurrentHours()[0], markup=True,
                                     halign="center", valign="center", text_size = text_size, color=self.standardTextColor)
             report.add_widget(self.creditLabel)
@@ -3009,7 +3059,7 @@ class RMApp(App):
 
         # Третья вкладка: служебный год
 
-        if utils.settings[0][3] > 0:
+        if self.settings[0][3] > 0:
             tab3 = TTab(text=self.msg[49])
 
             if self.orientation == "v":
@@ -3045,14 +3095,8 @@ class RMApp(App):
                 mGrid.add_widget(MyLabel(text=month, halign="center", valign="center", width=width, height=height,
                                        text_size=(width, height), pos_hint={"center_y": .5},
                                        color=self.standardTextColor))
-                if utils.settings[4][i] != None:
-                    text = str(utils.settings[4][i])
-                else:
-                    text = ""
-                if i<6:
-                    mode = ""
-                else:
-                    mode = "pan"
+                text = str(self.settings[4][i]) if self.settings[4][i] != None else ""
+                mode = "" if i<6 else "pan"
                 self.months.append(
                     MyTextInput(text=text, multiline=False, input_type="number", width=self.standardTextWidth * 1.1,
                                 height=height, size_hint_x=None, size_hint_y=None, mode=mode, shrink=False))
@@ -3080,9 +3124,9 @@ class RMApp(App):
 
         self.rep.checkNewMonth()
 
-        if utils.resources[0][1][9] == 0 and utils.settings[0][3] == 0:
-            utils.resources[0][1][9] = 1
-            utils.save()
+        if self.resources[0][1][9] == 0 and self.settings[0][3] == 0:
+            self.resources[0][1][9] = 1
+            self.save()
             self.popupForm = "pioneerNorm"
             self.popup(message=self.msg[7], options=[self.button["yes"], self.button["no"]])
 
@@ -3115,24 +3159,24 @@ class RMApp(App):
                 "()" + self.msg[131], # язык () = togglebutton
             ],
             defaults=[
-                utils.settings[0][3],   # норма часов
-                utils.settings[0][13],  # нет дома
-                utils.settings[0][15],  # переносить минуты
-                utils.settings[0][18],  # цвет отказа
-                utils.settings[0][2],   # кредит часов
-                utils.settings[0][20],  # показывать телефон
-                utils.settings[0][0],   # уведомление при запуске таймера
-                utils.settings[0][6]    # язык
+                self.settings[0][3],   # норма часов
+                self.settings[0][13],  # нет дома
+                self.settings[0][15],  # переносить минуты
+                self.settings[0][18],  # цвет отказа
+                self.settings[0][2],   # кредит часов
+                self.settings[0][20],  # показывать телефон
+                self.settings[0][0],   # уведомление при запуске таймера
+                self.settings[0][6]    # язык
             ],
             multilines=[False, False, False, False, False, False, False, False]
         )
 
         """ Также заняты настройки:
-        utils.settings[0][1] - позиция подъезда в окне
-        utils.settings[0][4] - сортировка контактов
-        utils.settings[0][5] - тема интерфейса
-        utils.settings[0][7] - масштабирование подъезда
-        utils.settings[0][8] - значение слайдера        
+        self.settings[0][1] - позиция подъезда в окне
+        self.settings[0][4] - сортировка контактов
+        self.settings[0][5] - тема интерфейса
+        self.settings[0][7] - масштабирование подъезда
+        self.settings[0][8] - значение слайдера        
         """
 
         # Первая вкладка: настройки
@@ -3151,7 +3195,7 @@ class RMApp(App):
 
         exportEmail = RButton(text=f"{self.button['export']} {self.msg[132]}", size=text_size, radiusK=radiusK)
         def __export(instance):
-            utils.share(email=True) if self.platform == "mobile" else utils.share(file=True)
+            self.share(email=True) if self.platform == "mobile" else self.share(file=True)
         exportEmail.bind(on_release=__export)
         g.add_widget(exportEmail)
 
@@ -3202,7 +3246,7 @@ class RMApp(App):
         a = AnchorLayout(anchor_x="center", anchor_y="center")
         linkColor = get_hex_from_color(self.linkColor)
         aboutBtn = MyLabel(text=
-                          f"[color={self.titleColor2}][b]Rocket Ministry {utils.Version}[/b][/color]\n\n" +\
+                          f"[color={self.titleColor2}][b]Rocket Ministry {Version}[/b][/color]\n\n" +\
                           f"{self.msg[140]}\n\n" + \
                           f"{self.msg[141]}:\n[ref=telegram][color={linkColor}]{icon('icon-telegram')} [u]RocketMinistry[/u][/color][/ref]\n\n" +\
                           f"{self.msg[142]} [ref=web][color={linkColor}][u]{self.msg[143]}[/u][/color][/ref]\n\n" % icon('icon-github') +\
@@ -3243,7 +3287,7 @@ class RMApp(App):
         self.sliderToggle()
         self.createInputBox(
             form=a4,
-            default=utils.resources[0][0],
+            default=self.resources[0][0],
             multiline=True,
             details=f"{self.button['help']} {self.msg[144]}",
             hint=self.msg[145]
@@ -3283,21 +3327,21 @@ class RMApp(App):
                 found = True
 
             if allContacts[i][8] != "virtual":
-                for r in range(len(utils.houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[
+                for r in range(len(self.houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[
                                        allContacts[i][7][2]].records)):  # in records in flats
-                    if self.searchQuery in utils.houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[
+                    if self.searchQuery in self.houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[
                         allContacts[i][7][2]].records[r].title.lower():
                         found = True
-                    if self.searchQuery in utils.houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[
+                    if self.searchQuery in self.houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[
                         allContacts[i][7][2]].records[r].date.lower():
                         found = True
             else:
-                for r in range(len(utils.resources[1][allContacts[i][7][0]].porches[0].flats[
+                for r in range(len(self.resources[1][allContacts[i][7][0]].porches[0].flats[
                                        0].records)):  # in records in contacts
-                    if self.searchQuery in utils.resources[1][allContacts[i][7][0]].porches[0].flats[0].records[
+                    if self.searchQuery in self.resources[1][allContacts[i][7][0]].porches[0].flats[0].records[
                         r].title.lower():
                         found = True
-                    if self.searchQuery in utils.resources[1][allContacts[i][7][0]].porches[0].flats[0].records[
+                    if self.searchQuery in self.resources[1][allContacts[i][7][0]].porches[0].flats[0].records[
                         r].date.lower():
                         found = True
 
@@ -3308,16 +3352,16 @@ class RMApp(App):
         for i in range(len(self.searchResults)):  # save results
             number = "%d) " % (i + 1)
             if self.searchResults[i][1] != "virtual":  # for regular flats
-                options.append("%s%s-%s" % (number, utils.houses[self.searchResults[i][0][0]].title,
-                                             utils.houses[self.searchResults[i][0][0]].porches[self.searchResults[i][0][1]].flats[
+                options.append("%s%s-%s" % (number, self.houses[self.searchResults[i][0][0]].title,
+                                             self.houses[self.searchResults[i][0][0]].porches[self.searchResults[i][0][1]].flats[
                                                  self.searchResults[i][0][2]].title))
             else:  # for standalone contacts
-                title = "" if utils.resources[1][self.searchResults[i][0][0]].title == "" else \
-                    utils.resources[1][self.searchResults[i][0][0]].title + ", "
+                title = "" if self.resources[1][self.searchResults[i][0][0]].title == "" else \
+                    self.resources[1][self.searchResults[i][0][0]].title + ", "
                 options.append("%s%s%s" % (
                     number,
                     title,
-                    utils.resources[1][self.searchResults[i][0][0]].porches[0].flats[0].title))
+                    self.resources[1][self.searchResults[i][0][0]].porches[0].flats[0].title))
 
         if len(options) == 0:
             options.append(self.msg[149])
@@ -3351,7 +3395,7 @@ class RMApp(App):
             return
 
         if house == None: house = self.house
-        if selectedHouse != None: house = utils.houses[selectedHouse]
+        if selectedHouse != None: house = self.houses[selectedHouse]
         note = self.house.note if self.house.note != "" else None
         self.mainListsize1 = self.mainList.size[1]
 
@@ -3463,10 +3507,10 @@ class RMApp(App):
 
         else:
             if len(self.flat.records) == 0:  # если нет посещения, открывается специальное окно первого посещения
-                if utils.resources[0][1][7] == 0 and instance != None:#= self.button['record']:
+                if self.resources[0][1][7] == 0 and instance != None:#= self.button['record']:
                     self.popup(title=self.msg[247], message=self.msg[318])
-                    utils.resources[0][1][7] = 1
-                    utils.save()
+                    self.resources[0][1][7] = 1
+                    self.save()
                 self.scrollWidget.clear_widgets()
                 self.navButton.disabled = False
                 self.navButton.text = self.button['nav']
@@ -3487,7 +3531,7 @@ class RMApp(App):
                     self.stack.insert(0, self.displayed.form)
                 self.updateList()
 
-            if self.contactsEntryPoint == 0 and self.searchEntryPoint == 0:
+            if self.house.type != "virtual" and self.contactsEntryPoint == 0:# and self.searchEntryPoint == 0:
                 self.colorBtn = []
                 for i, status in zip(range(7), ["0", "1", "2", "3", "4", "5", ""]):
                     self.colorBtn.append(ColorStatusButton(status))
@@ -3833,15 +3877,15 @@ class RMApp(App):
         """ Выбор языка для настроек """
         a = AnchorLayout()
         self.dropLangMenu = DropDown()
-        options = list(utils.Languages.values())
+        options = list(self.Languages.values())
 
         del options[1] # временно удаляем испанский язык
 
         for option in options:
-            btn = SortListButton(font_name=utils.SpecialFont, text=option[0])
+            btn = SortListButton(font_name=self.MyFont, text=option[0])
             btn.bind(on_release=lambda btn: self.dropLangMenu.select(btn.text))
             self.dropLangMenu.add_widget(btn)
-        self.languageButton = TableButton(font_name=utils.SpecialFont, text=self.msg[1], size_hint_x=1, size_hint_y=.6)
+        self.languageButton = TableButton(font_name=self.MyFont, text=self.msg[1], size_hint_x=1, size_hint_y=.6)
         self.dropLangMenu.bind(on_select=lambda instance, x: setattr(self.languageButton, 'text', x))
         self.languageButton.bind(on_release=self.dropLangMenu.open)
         a.add_widget(self.languageButton)
@@ -3976,19 +4020,19 @@ class RMApp(App):
         """ Returns list of all contacts (house contacts: with records and status other than 0 and 9 """
 
         contacts = []
-        for h in range(len(utils.houses)):
-            for p in range(len(utils.houses[h].porches)):
-                for f in range(len(utils.houses[h].porches[p].flats)):
-                    flat = utils.houses[h].porches[p].flats[f]
+        for h in range(len(self.houses)):
+            for p in range(len(self.houses[h].porches)):
+                for f in range(len(self.houses[h].porches[p].flats)):
+                    flat = self.houses[h].porches[p].flats[f]
                     if forSearch == False:  # поиск для списка контактов - только светло-зеленые жильцы и все отдельные контакты
                         if flat.status == "1" or flat.number == "virtual":
-                            self.retrieve(utils.houses, h, p, f, contacts)
+                            self.retrieve(self.houses, h, p, f, contacts)
                     else:  # поиск для поиска - все контакты вне зависимости от статуса
                         if not "." in flat.number:
-                            self.retrieve(utils.houses, h, p, f, contacts)
+                            self.retrieve(self.houses, h, p, f, contacts)
 
-        for h in range(len(utils.resources[1])):
-            self.retrieve(utils.resources[1], h, 0, 0, contacts)  # отдельные контакты - все
+        for h in range(len(self.resources[1])):
+            self.retrieve(self.resources[1], h, 0, 0, contacts)  # отдельные контакты - все
 
         return contacts
 
@@ -4022,6 +4066,34 @@ class RMApp(App):
 
     # Вспомогательные функции
 
+    def log(self, message="", title=None, timeout=2, forceNotify=False):
+        """ Displaying and logging to file important system messages """
+
+        if title == None:
+            title = self.msg[203]
+        try:
+            if self.platform == "mobile" and forceNotify == False:
+                plyer.notification.notify(toast=True, message=message)
+            else:
+                icon = "" if self.platform == "mobile" else "icon.ico"
+                if Devmode == 0:
+                    plyer.notification.notify(app_name="Rocket Ministry", title="Rocket Ministry", app_icon=icon,
+                                              ticker="Rocket Ministry", message=message, timeout=timeout)
+        except:
+            print(message)
+
+    def addHouse(self, houses, input, type=True, forceUpper=False):
+        """ Adding new house """
+        if type == True:
+            type = "condo"
+        elif type == False:
+            type = "private"
+        houses.append(house.House())
+        newHouse = len(houses) - 1
+        houses[newHouse].title = input.strip() if forceUpper == False or self.language == "ge" else (
+            input.strip()).upper()
+        houses[newHouse].type = type
+
     def recalcServiceYear(self, instance=None, value=None, allowSave=True):
         """ Подсчет статистики служебного года """
 
@@ -4031,10 +4103,10 @@ class RMApp(App):
             month = self.months[i]
             month.text = month.text.strip()
             if month.text.isnumeric():
-                utils.settings[4][i] = int(month.text)
-                if int(month.text) < utils.settings[0][3]:
+                self.settings[4][i] = int(month.text)
+                if int(month.text) < self.settings[0][3]:
                     month.background_color = self.getColorForStatus("5")
-                elif int(month.text) == utils.settings[0][3]:
+                elif int(month.text) == self.settings[0][3]:
                     if self.theme != "green" and self.theme != "retro":
                         month.background_color = self.titleColor
                     else:
@@ -4046,17 +4118,17 @@ class RMApp(App):
                         month.background_color = self.getColorForStatus("1")
                 month.background_color[3] = 0.4
             else:
-                utils.settings[4][i] = None
+                self.settings[4][i] = None
                 month.background_color = self.textInputBGColor
 
         hourSum = 0.0  # total sum of hours
         monthNumber = 0  # months entered
-        for i in range(len(utils.settings[4])):
-            if utils.settings[4][i] != None:
-                hourSum += utils.settings[4][i]
+        for i in range(len(self.settings[4])):
+            if self.settings[4][i] != None:
+                hourSum += self.settings[4][i]
                 monthNumber += 1
-        yearNorm = float(utils.settings[0][3]) * 12  # other stats
-        gap = (12 - monthNumber) * float(utils.settings[0][3]) - (yearNorm - hourSum)
+        yearNorm = float(self.settings[0][3]) * 12  # other stats
+        gap = (12 - monthNumber) * float(self.settings[0][3]) - (yearNorm - hourSum)
         average = (yearNorm - hourSum) / (12 - monthNumber) if monthNumber != 12 else (yearNorm - hourSum)
         if gap >= 0:
             gapEmo = icon("icon-smile")
@@ -4079,7 +4151,7 @@ class RMApp(App):
                                      "____\n" + \
                                      f"¹ {self.msg[182]}\n{br}" + \
                                      f"² {self.msg[183]}"
-        if allowSave==True: utils.save()
+        if allowSave==True: self.save()
 
     def sendCurrentMonthReport(self, instance=None):
         """ Отправка отчета текущего месяца """
@@ -4129,7 +4201,7 @@ class RMApp(App):
                 self.porch.flatsLayout = "н"
             for flat in flats:
                 self.porch.addFlat(f"+{flat}")
-            utils.save()
+            self.save()
             modal.dismiss()
             self.backPressed()
         btnSave.bind(on_release=__save)
@@ -4167,8 +4239,8 @@ class RMApp(App):
         if fromPopup == True:
             record = self.msg[207][0].lower() + self.msg[207][1:] # отказ
             self.flat.addRecord(record)
-        self.flat.status = utils.settings[0][18] # "0"
-        utils.save()
+        self.flat.status = self.settings[0][18] # "0"
+        self.save()
         self.porchView()
 
     def colorBtnPressed(self, color):
@@ -4179,7 +4251,7 @@ class RMApp(App):
             if self.multipleBoxEntries[1].text.strip() != "":
                 self.flat.addRecord(self.multipleBoxEntries[1].text.strip())
             self.processReportCounters()
-        if color == utils.settings[0][18]:  # отказ
+        if color == self.settings[0][18]:  # отказ
             self.quickReject()
         for i in ["0", "1", "2", "3", "4", "5", ""]:
             if color == "":
@@ -4189,7 +4261,7 @@ class RMApp(App):
             elif color == i:
                 self.flat.status = i
                 break
-        utils.save()
+        self.save()
         if self.contactsEntryPoint == 1:
             self.conPressed()
         elif self.searchEntryPoint == 1:
@@ -4248,22 +4320,22 @@ class RMApp(App):
 
         elif self.displayed.form == "noteForFlat":
             self.flat.note = ""
-            utils.save()
+            self.save()
             self.flatView()
 
         elif self.displayed.form == "noteForPorch":
             self.porch.note = ""
-            utils.save()
+            self.save()
             self.porchView()
 
         elif self.displayed.form == "noteForHouse":
             self.house.note = ""
-            utils.save()
+            self.save()
             self.houseView()
 
         elif self.displayed.form == "notes":
-            utils.resources[0][0] = ""
-            utils.save()
+            self.resources[0][0] = ""
+            self.save()
             if self.contactsEntryPoint == 1:
                 self.conPressed()
             elif self.searchEntryPoint == 1:
@@ -4302,18 +4374,18 @@ class RMApp(App):
 
         elif self.popupForm == "clearData":
             if instance.text == self.button["yes"]:
-                utils.clearDB()
-                utils.removeFiles()
+                self.clearDB()
+                self.removeFiles()
                 self.restart("soft")
-                utils.log(self.msg[192])
+                self.log(self.msg[192])
                 self.terPressed()
 
         elif self.popupForm == "restoreData":
             if instance.text == self.button["yes"]:
-                result = utils.backupRestore(restoreWorking=True, silent=False)
+                result = self.backupRestore(restoreWorking=True, silent=False)
                 if result == True:
                     self.rep = report.Report()
-                    utils.save()
+                    self.save()
 
         elif self.popupForm == "importData":
             if instance.text == self.button["yes"]:
@@ -4339,20 +4411,20 @@ class RMApp(App):
         elif self.popupForm == "confirmDeleteRecord":
             if instance.text == self.button["yes"]:
                 self.flat.deleteRecord(self.selectedRecord)
-                utils.save()
+                self.save()
                 self.flatView()
 
         elif self.popupForm == "confirmDeleteFlat":
             if instance.text == self.button["yes"]:
                 if self.house.type == "virtual":
-                    del utils.resources[1][self.selectedHouse]
+                    del self.resources[1][self.selectedHouse]
                     if self.contactsEntryPoint == 1:
                         self.conPressed()
                     elif self.searchEntryPoint == 1:
                         self.find(instance=instance)
                 elif self.house.type == "condo":
                     if self.contactsEntryPoint == 0 and self.searchEntryPoint == 0:
-                        if utils.resources[0][1][0] == 0:
+                        if self.resources[0][1][0] == 0:
                             self.popupForm = "confirmShrinkFloor"
                             self.popup(title=self.msg[247], message=self.msg[299], checkboxText=self.msg[170],
                                        options=[self.button["yes"], self.button["no"]])
@@ -4374,19 +4446,19 @@ class RMApp(App):
                         self.find(instance=instance)
                     else:
                         self.porchView()
-                utils.save()
+                self.save()
 
         elif self.popupForm == "confirmShrinkFloor":
             if instance.text == self.button["yes"]:
                 self.porch.shrinkFloor(self.selectedFlat)
                 self.porchView()
-                if self.popupCheckbox.active == True: utils.resources[0][1][0] = 1
-                utils.save()
+                if self.popupCheckbox.active == True: self.resources[0][1][0] = 1
+                self.save()
 
         elif self.popupForm == "confirmDeletePorch":
             if instance.text == self.button["yes"]:
                 del self.house.porches[self.selectedPorch]
-                utils.save()
+                self.save()
                 self.houseView()
 
         elif self.popupForm == "confirmDeleteHouse":
@@ -4397,14 +4469,14 @@ class RMApp(App):
                         if flat.status == "1":
                             if flat.getName() == "": flat.updateName("?")
                             flat.clone(toStandalone=True, title=self.house.title)
-                del utils.houses[self.selectedHouse]
-                utils.save()
+                del self.houses[self.selectedHouse]
+                self.save()
                 self.terPressed()
 
         elif self.popupForm == "pioneerNorm":
             if instance.text == self.button["yes"]:
-                utils.settings[0][3] = 70
-                utils.save()
+                self.settings[0][3] = 70
+                self.save()
                 self.repPressed()
 
         elif self.popupForm == "restart":
@@ -4414,7 +4486,7 @@ class RMApp(App):
         elif self.popupForm == "resetFlatToGray":
             if instance.text == self.button["yes"]:
                 if self.flat.number == "virtual":
-                    del utils.resources[1][self.selectedHouse]
+                    del self.resources[1][self.selectedHouse]
                 else:
                     self.flat.wipe()
                 if self.contactsEntryPoint == 1:
@@ -4423,7 +4495,7 @@ class RMApp(App):
                     self.find(instance=True)
                 else:
                     self.porchView()
-                utils.save()
+                self.save()
             else:
                 self.colorBtn[6].text = ""
                 for i, status in zip(range(7), ["0", "1", "2", "3", "4", "5", ""]):
@@ -4473,7 +4545,7 @@ class RMApp(App):
             details.bind(on_release=__details)
             contentMain.add_widget(details)
 
-            if utils.settings[0][20] == 1:
+            if self.settings[0][20] == 1:
                 self.keyboardCloseTime = .1
                 focus = True if self.platform == "desktop" else False
                 self.quickPhone = MyTextInput(size_hint_y=None, hint_text = self.msg[35], height=self.standardTextHeight,
@@ -4484,7 +4556,7 @@ class RMApp(App):
                     self.quickPhone.hint_text = self.msg[204]
                     self.popupForm = "quickPhone"
                     self.flat.editPhone(self.quickPhone.text.strip())
-                    utils.save()
+                    self.save()
                     self.quickPhone.text = ""
                     self.buttonFlash(instance=details, timeout=5)
                     self.porchView()
@@ -4496,7 +4568,7 @@ class RMApp(App):
                 if self.platform == "desktop": # на компьютере закрываем попап при дефокусе строки поиска
                     self.quickPhone.bind(focus=__dismiss)
 
-            if utils.settings[0][13] == 1:  # кнопка нет дома
+            if self.settings[0][13] == 1:  # кнопка нет дома
                 content.cols += 1
                 colorBG = "" if self.theme == "retro" else [.25, .25, .25]
                 firstCallNotAtHome = RButton(text=self.button['lock'], color="white",
@@ -4504,12 +4576,12 @@ class RMApp(App):
                 def __quickNotAtHome(instance):
                     self.mypopup.dismiss()
                     self.flat.addRecord(self.msg[206][0].lower()+self.msg[206][1:])
-                    utils.save()
+                    self.save()
                     self.porchView()
-                    if utils.resources[0][1][4] == 0:
+                    if self.resources[0][1][4] == 0:
                         self.popup(title=self.msg[247], message=self.msg[205] % self.msg[206])
-                        utils.resources[0][1][4] = 1
-                        utils.save()
+                        self.resources[0][1][4] = 1
+                        self.save()
                 firstCallNotAtHome.bind(on_release=__quickNotAtHome)
                 content.add_widget(firstCallNotAtHome)
 
@@ -4536,11 +4608,11 @@ class RMApp(App):
             firstCallBtnCall.bind(on_release=__firstCall)
             content.add_widget(firstCallBtnCall)
 
-            rejectColor = self.getColorForStatus(utils.settings[0][18])  # кнопка отказ
+            rejectColor = self.getColorForStatus(self.settings[0][18])  # кнопка отказ
             if rejectColor == self.lightGrayFlat:
                 rejectColor = self.getColorForStatus("0")
-                utils.settings[0][18] = "0"
-                utils.save()
+                self.settings[0][18] = "0"
+                self.save()
             if self.theme == "retro":
                 color = rejectColor
                 colorBG = ""
@@ -4589,7 +4661,7 @@ class RMApp(App):
                         self.hours.update(self.time3)
                         self.counterChanged = False
                         self.pageTitle.text = f"[ref=report]{self.msg[4]}{self.rep.getCurrentHours()[2]}[/ref]"
-                        if utils.settings[0][2] == 1:
+                        if self.settings[0][2] == 1:
                             self.creditLabel.text = self.msg[106] % self.rep.getCurrentHours()[0]
                 else:
                     time1 = self.credit.get()  # исходное время на счетчике (HH:MM)
@@ -4599,7 +4671,7 @@ class RMApp(App):
                         self.credit.update(self.time3)
                         self.counterChanged = False
                         self.pageTitle.text = f"[ref=report]{self.msg[4]}{self.rep.getCurrentHours()[2]}[/ref]"
-                        if utils.settings[0][2] == 1:
+                        if self.settings[0][2] == 1:
                             self.creditLabel.text = self.msg[106] % self.rep.getCurrentHours()[0]
             save.bind(on_release=__closeTimePicker)
             pickerForm.add_widget(save)
@@ -4656,16 +4728,16 @@ class RMApp(App):
         """ Центровка подъезда по кнопке на джойстике """
         if self.noScalePadding[0] < 0 or self.noScalePadding[1] < 0:
             return
-        utils.settings[0][1] = pos
-        #utils.save()
+        self.settings[0][1] = pos
+        #self.save()
         self.updateList()
 
     def onStartup(self):
         """ Запускается каждый раз в начале работы """
         def __do(*args):
-            utils.backupRestore(delete=True, silent=True)
+            self.backupRestore(delete=True, silent=True)
 
-            updated = utils.update()
+            updated = self.update()
             if updated == True:
                 self.popup(self.msg[310], dismiss=False)
 
@@ -4674,13 +4746,45 @@ class RMApp(App):
 
             limit = 300
             utils.dprint("Оптимизируем размер журнала отчета.")
-            if len(utils.resources[2]) > limit:
-                extra = len(utils.resources[2]) - limit
+            if len(self.resources[2]) > limit:
+                extra = len(self.resources[2]) - limit
                 for i in range(extra):
-                    del utils.resources[2][len(utils.resources[2]) - 1]
+                    del self.resources[2][len(self.resources[2]) - 1]
 
         if self.devmode == 0:
             Clock.schedule_once(__do, 2)
+
+    def loadLanguages(self):
+        """ Загружает csv-файл с языками, если есть"""
+        import csv
+        import glob
+        languages = []
+        for l in Languages.keys():
+            languages.append([])
+        dir = "c:\\Users\\antor\\Downloads\\"
+        filenames = glob.glob(dir + "Rocket Ministry localization sheet*.csv")
+
+        def generate(file, col):
+            with open(file, "w", encoding="utf-8") as f:
+                for row in languages[col]:
+                    f.write(row + "\n")
+
+        try:
+            with open(filenames[0], newline='', encoding="utf8") as csvfile:
+                file = csv.reader(csvfile)
+                for row in file:
+                    for col in range(len(languages)):
+                        languages[col].append(row[col])
+        except:
+            utils.dprint("CSV-файл с локализациями не найден.")
+        else:
+            utils.dprint("CSV-файл с локализациями найден, обновляю языковые файлы.")
+            for i in range(len(Languages.keys())):
+                generate(
+                    f"c:\\Users\\antor\\OneDrive - ИП Чивчалов А.Н\\Программы\\Rocket Ministry\\{list(Languages.keys())[i]}.lang",
+                    i)
+            for zippath in glob.iglob(os.path.join(dir, '*.csv')):
+                os.remove(zippath)
 
     def importDB(self, instance=None, file=None, skipConfirm=True):
         """ Импорт данных из буфера обмена либо файла """
@@ -4692,9 +4796,9 @@ class RMApp(App):
 
         if file == None:
             clipboard = Clipboard.paste()
-            success = utils.load(clipboard=clipboard)
+            success = self.load(clipboard=clipboard)
         else:
-            success = utils.load(forced=True, datafile=file, silent=True) # сначала пытаемся загрузить текстовый файл
+            success = self.load(forced=True, DataFile=file, silent=True) # сначала пытаемся загрузить текстовый файл
 
             if success == False: # файл не текстовый, пробуем загрузить Word-файл
                 self.popup(self.msg[208])
@@ -4784,7 +4888,7 @@ class RMApp(App):
         if mode == "soft": # простая перерисовка интерфейса
             self.setParameters(reload=True)
             self.globalAnchor.clear_widgets()
-            utils.load()
+            self.load()
             self.setTheme()
             self.createInterface()
         else: # полная перезагрузка приложения
@@ -4797,7 +4901,493 @@ class RMApp(App):
             else:
                 self.stop() # просто выход
 
-RM = RMApp()
+    # Работа с базой данных
 
-if __name__ == "__main__":
-    RM.run()
+    def initializeDB(self):
+        """ Возвращает изначальное значение houses, settings, resources как при создании базы заново"""
+        import time
+        return [], \
+               [
+                   [1, 5, 0, 0, "с", "", "", 0, 1.5, 0, 0, 1, 1, 1, "", 1, 0, "", "0", "д", 0, 0, 1],
+                   # program settings
+                   "",  # дата последнего обновления settings[1]
+                   # report:                       settings[2]
+                   [0.0,  # [0] hours         settings[2][0…]
+                    0.0,  # [1] credit
+                    0,  # [2] placements
+                    0,  # [3] videos
+                    0,  # [4] returns,
+                    0,  # [5] studies,
+                    0,  # [6] startTime
+                    0,  # [7] endTime
+                    0.0,  # [8] reportTime
+                    0.0,  # [9] difTime
+                    "",  # [10] note
+                    0,  # [11] to remind submit report (0: already submitted) - не используется с 2.0
+                    ""  # [12] отчет прошлого месяца
+                    ],
+                   time.strftime("%b", time.localtime()),  # month of last save: settings[3]
+                   [None, None, None, None, None, None, None, None, None, None, None, None]  # service year: settings[4]
+               ], \
+               [
+                   ["",  # resources[0][0] = notepad
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]  # resources[0][1] = флаги о подсказках
+                    ],
+                   # resources[0][1][0] - показана подсказка про уменьшение этажа (когда показана, ставим 1)
+                   # resources[0][1][1] - показана подсказка про масштабирование подъезда
+                   # resources[0][1][2] - показана подсказка про таймер
+                   # resources[0][1][3] - показана подсказка про переключение вида подъезда
+                   # resources[0][1][4] - показана подсказка про кнопку "нет дома"
+                   # resources[0][1][5] - показана подсказка про первого интересующегося
+                   # resources[0][1][6] - показана подсказка про процент обработки
+                   # resources[0][1][7] - показана подсказка про экран первого посещения
+                   # resources[0][1][8] - показана подсказка после уменьшения этажа
+                   # resources[0][1][9] - показан запрос про месячную норму
+
+                   [],  # standalone contacts   resources[1]
+                   [],  # report log            resources[2]
+               ]
+
+    def load(self, DataFile=None, allowSave=True, forced=False, clipboard=None, silent=False):
+        """ Loading houses and settings from JSON file """
+        if Devmode == 1: self.loadLanguages()
+
+        if DataFile == None: DataFile = self.DataFile
+        self.popupForm = ""
+        if os.path.exists("temp"): os.remove("temp")
+        utils.dprint("Загружаю буфер.")
+
+        # Сначала получаем буфер
+
+        buffer = []
+
+        if clipboard != None:  # берем буфер обмена
+
+            badURLError = self.msg[243]
+            utils.dprint("Смотрим буфер обмена.")
+            clipboard = str(clipboard).strip()
+
+            if "drive.google.com" in clipboard:  # получена ссылка на Google Drive
+                try:
+                    URL = "https://docs.google.com/uc?export=download"
+                    id = clipboard[clipboard.index("/d/") + 3: clipboard.index("/view")]
+                    session = requests.Session()
+                    response = session.get(URL, params={'id': id}, stream=True)
+                    with open("temp", "wb") as f:
+                        for chunk in response.iter_content(32768):
+                            if chunk: f.write(chunk)
+                except:
+                    return badURLError
+
+            else:  # получен чистый текст
+                try:
+                    clipboard = clipboard[clipboard.index("[\"Rocket Ministry"):]
+                    with open("temp", "w") as file:
+                        file.write(clipboard)
+                    utils.dprint("Содержимое буфера обмена записано во временный файл.")
+                except:
+                    return False
+
+            try:
+                with open("temp", "r") as file:
+                    buffer = json.load(file)
+                utils.dprint("Буфер получен из буфера обмена.")
+
+            except:
+                return badURLError
+
+        elif forced == True:  # импорт по запросу с конкретным файлом
+            try:
+                if ".doc" in DataFile:
+                    try:
+                        import docx2txt
+                    except:
+                        check_call([executable, '-m', 'pip', 'install', 'docx2txt'])
+                        check_call([executable, '-m', 'pip', 'install', 'plyer'])
+                        import docx2txt
+                    string = docx2txt.process(DataFile)
+                    with open("temp", "w") as file:
+                        file.write(string)
+                    with open("temp", "r") as file:
+                        buffer = json.load(file)
+                else:
+                    with open(DataFile, "r") as file:
+                        buffer = json.load(file)
+                utils.dprint("Буфер получен из импортированного файла.")
+            except:
+                if silent == False: self.popup(self.msg[244])
+                return False
+
+        else:  # обычная загрузка
+            if os.path.exists(self.UserPath + DataFile):
+                size = os.path.getsize(self.UserPath + DataFile)  # файл меньше 320 байт не загружаем
+                if size < 320:
+                    utils.dprint("Файл данных найден, но пустой. Пытаюсь восстановить резервную копию.")
+                    if self.backupRestore(restoreWorking=True, allowSave=allowSave) == True:
+                        utils.dprint("База успешно загружена.")
+                        if allowSave == True:
+                            self.save(backup=True)  # успешный результат с загрузкой копии
+                            utils.dprint("База сохранена с резервированием.")
+                        return True
+                    else:
+                        utils.dprint("Не удалось восстановить непустую резервную копию (ее нет?).")
+                else:
+                    with open(self.UserPath + DataFile, "r") as file:
+                        buffer = json.load(file)
+                    utils.dprint("Буфер получен из файла data.jsn в стандартном местоположении.")
+            else:
+                utils.dprint("Файл базы данных %s не найден, пытаюсь восстановить резервную копию." % DataFile)
+                if self.backupRestore(restoreWorking=True, allowSave=allowSave) == True:
+                    utils.dprint("База успешно загружена.")
+                    if allowSave == True:
+                        self.save(backup=True)  # успешный результат с загрузкой копии
+                        utils.dprint("База сохранена с резервированием.")
+                    return True
+                else:
+                    utils.dprint("Не удалось восстановить непустую резервную копию (ее нет?).")
+
+        # Буфер получен, читаем из него
+
+        try:
+            if len(buffer) == 0:
+                utils.dprint("Создаю новую базу.")
+                if allowSave == True:
+                    self.save(backup=True)  # успешный результат
+                    utils.dprint("База сохранена с резервированием.")
+
+            elif "Rocket Ministry application data file." in buffer[0]:
+                utils.dprint("База определена, контрольная строка совпадает.")
+                del buffer[0]
+                self.clearDB()
+                result = self.loadOutput(buffer)
+                if result == False:
+                    utils.dprint("Ошибочный импорт, восстанавливаем резервную копию.")
+                    self.backupRestore(restoreWorking=True, allowSave=allowSave)
+                else:
+                    if allowSave == True:
+                        self.save(backup=True)  # успешный результат
+                        utils.dprint("База сохранена с резервированием.")
+                    return True
+
+            else:
+                utils.dprint("База получена, но контрольная строка не совпадает.")
+                if clipboard == None and forced == False:
+                    utils.dprint("Восстанавливаю резервную копию.")
+                    self.backupRestore(restoreWorking=True)
+        except:
+            utils.dprint("Ошибка проверки загруженного буфера.")
+            return False
+
+    def backupRestore(self, silent=True, allowSave=True, delete=False, restoreNumber=None, restoreWorking=False):
+        """ Восстановление файла из резервной копии """
+
+        if os.path.exists(self.BackupFolderLocation) == False:
+            if silent == False: self.popup(title=self.msg[135], message=self.msg[257])
+            return
+        files = [f for f in os.listdir(self.BackupFolderLocation) if os.path.isfile(os.path.join(self.BackupFolderLocation, f))]
+        fileDates = []
+        for i in range(len(files)):
+            fileDates.append(str("{:%d.%m.%Y, %H:%M:%S}".format(
+                datetime.datetime.strptime(time.ctime((os.path.getmtime(self.BackupFolderLocation + files[i]))),
+                                           "%a %b %d %H:%M:%S %Y"))))
+
+        if restoreNumber != None:  # восстановление файла по номеру
+            files.sort(reverse=True)
+            fileDates.sort(reverse=True)
+            try:
+                self.load(forced=True, allowSave=allowSave, DataFile=self.BackupFolderLocation + files[restoreNumber])
+            except:
+                return False
+            else:
+                return fileDates[restoreNumber]  # в случае успеха возвращает дату и время восстановленной копии
+
+        elif restoreWorking == True:  # восстановление самой последней непустой копии
+            files.sort(reverse=True)
+            fileDates.sort(reverse=True)
+            for i in range(len(files)):
+                size = os.path.getsize(self.BackupFolderLocation + files[i])
+                if size > 320:
+                    try:
+                        self.load(forced=True, allowSave=allowSave, DataFile=self.BackupFolderLocation + files[i])
+                    except:
+                        utils.dprint("Непустая резервная копия не найдена.")
+                        return False
+                    else:
+                        utils.dprint("Успешно загружена последняя непустая резервная копия.")
+                        if silent == False: self.popup(self.msg[258] % fileDates[i])
+                        return True
+
+        # Если выбран режим удаления лишних копий
+
+        elif delete == True:
+            utils.dprint("Обрабатываем резервные копии.")
+            limit = 10
+            if len(files) > limit:  # лимит превышен, удаляем
+                extra = len(files) - limit
+                for i in range(extra):
+                    os.remove(self.BackupFolderLocation + files[i])
+
+    def save(self, backup=False, silent=True, export=False):
+        """ Saving database to JSON file """
+
+        output = self.getOutput()
+
+        # Сначала резервируем раз в 5 минут
+
+        curTime = utils.getCurTime()
+        if backup == True or (curTime - self.LastTimeBackedUp) > 300:
+            if os.path.exists(self.UserPath + self.DataFile):
+                if not os.path.exists(self.BackupFolderLocation):
+                    try:
+                        os.makedirs(self.BackupFolderLocation)
+                    except IOError:
+                        self.log(self.msg[248])
+                        return
+                savedTime = time.strftime("%Y-%m-%d_%H%M%S", time.localtime())
+                with open(self.BackupFolderLocation + "data_" + savedTime + ".jsn", "w") as newbkfile:
+                    json.dump(output, newbkfile)
+                    if silent == False:
+                        self.popup(self.msg[249])
+                    self.LastTimeBackedUp = curTime
+
+        # Сохраняем
+
+        while 1:
+            try:
+                with open(self.UserPath + self.DataFile, "w") as file:
+                    json.dump(output, file)
+            except:
+                utils.dprint("Ошибка записи!")
+            else:
+                utils.dprint("База сохранена")
+                if silent == False: self.popup(self.msg[250])
+                break
+
+        # Экспорт в файл на ПК, если найден файл sync.ini, где прописан путь
+
+        if export == True and self.devmode == 0 and os.path.exists("sync.ini"):
+            try:
+                with open("sync.ini", encoding='utf-8', mode="r") as f:
+                    filename = f.read()
+                if ".doc" in filename:  # если в расширении файла есть .doc, создаем Word-файл
+                    try:
+                        from docx import Document
+                    except:
+                        from subprocess import check_call
+                        from sys import executable
+                        check_call([executable, '-m', 'pip', 'install', 'python-docx'])
+                        from docx import Document
+                    doc = Document()
+                    doc.add_paragraph(str(json.dumps(output)))
+                    doc.save(filename)
+                else:  # иначе пишем в простой текст
+                    with open(filename, "w") as file:
+                        json.dump(output, file)
+            except:
+                utils.dprint("Ошибка записи в файл.")
+
+    def getOutput(self):
+        """ Возвращает строку со всеми данными программы, которые затем либо сохраняются локально, либо экспортируются"""
+        output = ["Rocket Ministry application data file. Do NOT edit manually!"] + [self.settings] + \
+                 [[self.resources[0], [self.resources[1][i].export() for i in range(len(self.resources[1]))], self.resources[2]]]
+        for house in self.houses:
+            output.append(house.export())
+        return output
+
+    def update(self):
+        """ Проверяем новую версию и при наличии обновляем программу с GitHub """
+
+        result = False
+
+        if self.platform == "mobile":
+            return result  # мобильная версия не проверяет обновления
+        else:
+            utils.dprint("Проверяем обновления настольной версии.")
+
+        try:  # подключаемся к GitHub
+            for line in requests.get("https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/version"):
+                newVersion = line.decode('utf-8').strip()
+        except:
+            utils.dprint("Не удалось подключиться к серверу.")
+            return result
+        else:  # успешно подключились, сохраняем сегодняшнюю дату последнего обновления (пока не используется)
+            utils.dprint("Версия на сайте: " + newVersion)
+            today = str(datetime.datetime.strptime(time.strftime('%Y-%m-%d'), "%Y-%m-%d"))
+            today = today[0: today.index(" ")]
+            self.settings[1] = today
+            self.save()
+
+        if newVersion > Version:
+
+            def __update(threadName, delay):
+                utils.dprint("Найдена новая версия, скачиваем.")
+                response = requests.get("https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip")
+                import tempfile
+                import zipfile
+                file = tempfile.TemporaryFile()
+                file.write(response.content)
+                fzip = zipfile.ZipFile(file)
+                fzip.extractall("")
+                file.close()
+                fzip.close()
+                downloadedFolder = "Rocket-Ministry-master"
+                for file_name in os.listdir(downloadedFolder):
+                    source = downloadedFolder + "/" + file_name
+                    destination = file_name
+                    if os.path.isfile(source):
+                        try:
+                            shutil.move(source, destination)
+                        except:
+                            utils.dprint("Не удалось переместить файл %s." % source)
+                os.remove(file)
+                shutil.rmtree(downloadedFolder)
+
+            _thread.start_new_thread(__update, ("Thread-Update", 0,))
+            result = True
+        else:
+            utils.dprint("Обновлений нет.")
+
+        return result
+
+    def houseRetrieve(self, containers, housesNumber, h, silent=False):
+        """ Retrieves houses from JSON buffer into objects """
+
+        for a in range(housesNumber):
+
+            self.addHouse(containers, h[a][0], h[a][4])  # creating house and writing its title and type
+            containers[a].porchesLayout = h[a][1]
+            containers[a].date = h[a][2]
+            containers[a].note = h[a][3]
+
+            porchesNumber = len(h[a][5])  # counting porches
+            for b in range(porchesNumber):
+                containers[a].addPorch(h[a][5][b][0])  # creating porch and writing its title and layout
+                containers[a].porches[b].status = h[a][5][b][1]
+                containers[a].porches[b].flatsLayout = h[a][5][b][2]
+                containers[a].porches[b].floor1 = h[a][5][b][3]
+                containers[a].porches[b].note = h[a][5][b][4]
+                containers[a].porches[b].type = h[a][5][b][5]
+
+                flatsNumber = len(h[a][5][b][6])  # counting flats
+                for c in range(flatsNumber):
+                    containers[a].porches[b].flats.append(
+                        containers[a].porches[b].Flat())  # creating flat and writing its title
+                    containers[a].porches[b].flats[c].title = h[a][5][b][6][c][0]
+                    containers[a].porches[b].flats[c].note = h[a][5][b][6][c][1]
+                    containers[a].porches[b].flats[c].number = h[a][5][b][6][c][2]
+                    containers[a].porches[b].flats[c].status = h[a][5][b][6][c][3]
+                    containers[a].porches[b].flats[c].phone = h[a][5][b][6][c][4]
+                    containers[a].porches[b].flats[c].meeting = h[a][5][b][6][c][5]
+
+                    visitNumber = len(h[a][5][b][6][c][6])  # counting visits
+                    for d in range(visitNumber):
+                        containers[a].porches[b].flats[c].records.append(containers[a].porches[b].flats[c].Record())
+                        containers[a].porches[b].flats[c].records[d].date = h[a][5][b][6][c][6][d][0]
+                        containers[a].porches[b].flats[c].records[d].title = h[a][5][b][6][c][6][d][1]
+
+    def loadOutput(self, buffer):
+        """ Загружает данные из буфера"""
+
+        #self.houses = []
+        #self.settings = []
+        #self.resources = []
+
+        try:
+            self.settings[0] = buffer[0][0]  # загружаем настройки
+            self.settings[1] = buffer[0][1]
+            self.settings[2] = buffer[0][2]
+            self.settings[3] = buffer[0][3]
+            self.settings[4] = buffer[0][4]
+
+            self.resources[0] = buffer[1][0]  # загружаем блокнот
+
+            self.resources[1] = []  # загружаем отдельные контакты
+            virHousesNumber = int(len(buffer[1][1]))
+            hr = []
+            for s in range(virHousesNumber):
+                hr.append(buffer[1][1][s])
+            self.houseRetrieve(self.resources[1], virHousesNumber, hr, silent=True)
+
+            self.resources[2] = buffer[1][2]  # загружаем журнал отчета
+
+            housesNumber = int(len(buffer)) - 2  # загружаем участки
+            h = []
+            for s in range(2, housesNumber + 2):
+                h.append(buffer[s])
+            self.houseRetrieve(self.houses, housesNumber, h, silent=True)
+
+            if len(self.resources[0]) == 1:
+                self.resources[0].append([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])  # добавляем для новой версии новый массив
+
+        except:
+            success = False
+        else:
+            success = True
+        return success
+
+    def clearDB(self, silent=True):
+        """ Очистка базы данных """
+        self.houses.clear()
+        self.settings.clear()
+        self.resources.clear()
+        self.settings[:] = self.initializeDB()[1][:]
+        self.resources[:] = self.initializeDB()[2][:]
+        if silent == False: self.log(self.msg[242])
+
+    def removeFiles(keepDatafile=False):
+        """ Удаление базы данных и резервной папки"""
+        if os.path.exists(self.UserPath + self.DataFile) and keepDatafile == False:
+            os.remove(self.UserPath + self.DataFile)
+        if os.path.exists(self.BackupFolderLocation):
+            from shutil import rmtree
+            rmtree(self.BackupFolderLocation)
+
+    def share(self, silent=False, clipboard=False, email=False, folder=None, file=False):
+        """ Sharing database """
+        output = self.getOutput()
+        buffer = json.dumps(output)
+
+        if clipboard == True:  # копируем базу в буфер обмена - не используется
+            try:
+                s = str(buffer)
+                Clipboard.copy(s)
+            except:
+                return
+
+        elif email == True:  # экспорт в сообщении
+            s = str(buffer)
+            filename = self.msg[251]
+            plyer.email.send(subject=filename, text=s, create_chooser=True)
+
+        elif file == True:  # экспорт в текстовый файл на компьютере
+            try:
+                from tkinter import filedialog
+                folder = filedialog.askdirectory()
+                filename = folder + f"/{self.msg[251]}"
+                with open(filename, "w") as file:
+                    json.dump(output, file)
+            except:
+                pass
+            else:
+                self.popup(self.msg[252] % filename)
+
+        elif self.devmode == 0 and folder != None:  # экспорт в файл
+            try:
+                with open(folder + "/data.jsn", "w") as file:
+                    json.dump(output, file)
+            except:
+                self.popup(self.msg[253])
+            else:
+                self.popup(self.msg[254] % folder + "/data.jsn")
+
+        else:
+            try:
+                with open(os.path.expanduser("~") + "/data_backup.jsn", "w") as file:
+                    json.dump(output, file)
+                path = os.path.expanduser("~")
+            except:
+                if silent == False: self.popup(self.msg[255])
+            else:
+                if silent == False: self.popup(self.msg[256] % path)
+
+RM = RMApp()

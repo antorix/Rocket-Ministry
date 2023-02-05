@@ -116,15 +116,6 @@ class House(object):
             self.flats = [] # list of Flat instances, initially empty
             self.type = ""
 
-        def showStatus(self):
-            """ Выдает статус подъезда в виде графики или цифр в зависимости от режима вывода """
-            if utils.settings[0][21]==False: return ""
-            result="?"
-            for i in range(len(utils.getPorchStatuses()[0])):
-                if self.status==utils.getPorchStatuses()[0][i] or self.status==utils.getPorchStatuses()[1][i]:
-                    result=utils.getPorchStatuses()[0][i] if utils.settings[0][1]==False else utils.getPorchStatuses()[1][i]
-            return result
-
         def shrinkFloor(self, selectedFlat):
             """ Определяет самую левую квартиру этажа и отправляет ее на удаление, чтобы уменьшить этаж"""
             all = self.showFlats()
@@ -236,9 +227,9 @@ class House(object):
 
                 self.flatsLayout = flatsLayoutOriginal  # возвращаем исходную сортировку
                 self.sortFlats()
-                if utils.resources[0][1][8] == 0:
+                if app.RM.resources[0][1][8] == 0:
                     app.RM.popup(title=app.RM.msg[247], message=app.RM.msg[319])
-                    utils.resources[0][1][8] = 1
+                    app.RM.resources[0][1][8] = 1
 
             return result
 
@@ -500,8 +491,8 @@ class House(object):
 
                 else:  # создаем отдельный контакт
                     tempFlatNumber = self.title[0: self.title.index(",")] if "," in self.title else self.title
-                    utils.resources[1].append(House())  # create house address
-                    newVirtualHouse = utils.resources[1][len(utils.resources[1]) - 1]
+                    app.RM.resources[1].append(House())  # create house address
+                    newVirtualHouse = app.RM.resources[1][len(app.RM.resources[1]) - 1]
                     newVirtualHouse.addPorch(type="virtual")  # create virtual porch ***
                     newVirtualHouse.porches[0].addFlat("+" + self.getName(), virtual=True)  # create flat
                     newContact = newVirtualHouse.porches[0].flats[0]
