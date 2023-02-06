@@ -1,66 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-Circular Date & Time Picker for Kivy
-====================================
-
-(currently only time, date coming soon)
-
-Based on [CircularLayout](https://github.com/kivy-garden/garden.circularlayout).
-The main aim is to provide a date and time selector similar to the
-one found in Android KitKat+.
-
-Simple usage
-------------
-
-Import the widget with
-
-```python
-from kivy.garden.circulardatetimepicker import CircularTimePicker
-```
-
-then use it! That's it!
-
-```python
-c = CircularTimePicker()
-c.bind(time=self.set_time)
-root.add_widget(c)
-```
-
-in Kv language:
-
-```
-<TimeChooserPopup@Popup>:
-    BoxLayout:
-        orientation: "vertical"
-
-        CircularTimePicker
-
-        Button:
-            text: "Dismiss"
-            size_hint_y: None
-            height: "40dp"
-            on_release: root.dismiss()
-```
-"""
-
 from kivy.animation import Animation
 from kivy.clock import Clock
-#from kivy.garden.circularlayout import CircularLayout
 from circularlayout import CircularLayout
-# from kivy.garden.recycleview import RecycleView
 from kivy.graphics import Line, Color, Ellipse
 from kivy.lang import Builder
-from app import RM
-#from kivy.metrics import dp
 from kivy.properties import NumericProperty, BoundedNumericProperty,\
                             ObjectProperty, StringProperty, DictProperty,\
                             ListProperty, OptionProperty, BooleanProperty,\
                             ReferenceListProperty, AliasProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
-
 from math import atan, pi, radians, sin, cos
 import datetime
 import app
@@ -488,7 +439,7 @@ class CircularTimePicker(BoxLayout):
     # military = BooleanProperty(False)
     #time_format = StringProperty("[color={hours_color}][ref=hours]{hours}[/ref][/color]:[color={minutes_color}][ref=minutes]{minutes:02d}[/ref][/color]")
     #time_format = StringProperty("[color={hours_color}][ref=hours]{hours} ч[/ref][/color] [color={minutes_color}][ref=minutes]{minutes:02d} м[/ref][/color]")
-    time_format = StringProperty("[font=DejaVuSans][color={hours_color}][ref=hours]{hours} %s[/ref][/color] [color={minutes_color}][ref=minutes]{minutes:02d} %s[/ref][/color][/font]" % (RM.msg[295], RM.msg[296]))
+    time_format = StringProperty("[font=DejaVuSans][color={hours_color}][ref=hours]{hours} %s[/ref][/color] [color={minutes_color}][ref=minutes]{minutes:02d} %s[/ref][/color][/font]" % (app.RM.msg[295], app.RM.msg[296]))
     """String that will be formatted with the time and shown in the time label.
     Can be anything supported by :meth:`str.format`. Make sure you don't
     remove the refs. See the default for the arguments passed to format.
@@ -575,7 +526,7 @@ class CircularTimePicker(BoxLayout):
 
     def __init__(self, **kw):
         super(CircularTimePicker, self).__init__(**kw)
-        
+
         if self.hours >= 12:
             self._am = False
         self.bind(time_list=self.on_time_list, picker=self._switch_picker, _am=self.on_ampm)
@@ -654,7 +605,7 @@ class CircularTimePicker(BoxLayout):
                        "color":          picker.setter("color"),
                        "selector_alpha": picker.setter("selector_alpha")}
         self.bind(**self._bound)
-        
+
         if len(container._bound) > 0:
             container.unbind(**container._bound)
         container._bound = {"size": picker.setter("size"),
@@ -686,16 +637,3 @@ class CircularTimePicker(BoxLayout):
             container.add_widget(picker)
             anim = Animation(scale=1, d=.2, t="out_back") & Animation(opacity=1, d=.2, t="out_cubic")
             Clock.schedule_once(lambda *a: anim.start(picker), .2)
-
-# class CalendarMonthView(GridLayout):
-#     month = BoundedNumericProperty(datetime.date.today().month, min=1, max=12)
-#     year = BoundedNumericProperty(datetime.date.today().year, min=1, max=9999)
-#     first_day_of_week = BoundedNumericProperty(0, min=0, max=6)
-
-
-if __name__ == "__main__":
-    from kivy.base import runTouchApp
-
-    c = CircularTimePicker()
-    runTouchApp(c)
-

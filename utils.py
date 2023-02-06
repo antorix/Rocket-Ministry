@@ -3,7 +3,6 @@
 
 import datetime
 import time
-import app
 
 def getCurTime():
     return int(time.strftime("%H", time.localtime())) * 3600 \
@@ -64,162 +63,6 @@ def days():
         return 31
     else:
         return 30.5
-
-def monthName(monthCode=None, monthNum=None):
-    """ Returns names of current and last months in lower and upper cases """
-
-    if monthCode != None:
-        month = monthCode
-    elif monthNum != None:
-        if monthNum == 1:
-            month = "Jan"
-        elif monthNum == 2:
-            month = "Feb"
-        elif monthNum == 3:
-            month = "Mar"
-        elif monthNum == 4:
-            month = "Apr"
-        elif monthNum == 5:
-            month = "May"
-        elif monthNum == 6:
-            month = "Jun"
-        elif monthNum == 7:
-            month = "Jul"
-        elif monthNum == 8:
-            month = "Aug"
-        elif monthNum == 9:
-            month = "Sep"
-        elif monthNum == 10:
-            month = "Oct"
-        elif monthNum == 11:
-            month = "Nov"
-        elif monthNum == 12:
-            month = "Dec"
-    else:
-        month = time.strftime("%b", time.localtime())
-
-    if month == "Jan":
-        curMonthUp = app.RM.msg[259]
-        curMonthLow = app.RM.msg[260]
-        lastMonthUp = app.RM.msg[261]
-        lastMonthLow = app.RM.msg[262]
-        lastMonthEn = "Dec"
-        curMonthRuShort = app.RM.msg[283]
-        monthNum = 1
-        lastTheoMonthNum = 4
-        curTheoMonthNum = 5
-    elif month == "Feb":
-        curMonthUp = app.RM.msg[263]
-        curMonthLow = app.RM.msg[264]
-        lastMonthUp = app.RM.msg[259]
-        lastMonthLow = app.RM.msg[260]
-        lastMonthEn = "Jan"
-        curMonthRuShort = app.RM.msg[284]
-        monthNum = 2
-        lastTheoMonthNum = 5
-        curTheoMonthNum = 6
-    elif month == "Mar":
-        curMonthUp = app.RM.msg[265]
-        curMonthLow = app.RM.msg[266]
-        lastMonthUp = app.RM.msg[263]
-        lastMonthLow = app.RM.msg[264]
-        lastMonthEn = "Feb"
-        curMonthRuShort = app.RM.msg[285]
-        monthNum = 3
-        lastTheoMonthNum = 6
-        curTheoMonthNum = 7
-    elif month == "Apr":
-        curMonthUp = app.RM.msg[267]
-        curMonthLow = app.RM.msg[268]
-        lastMonthUp = app.RM.msg[265]
-        lastMonthLow = app.RM.msg[266]
-        lastMonthEn = "Mar"
-        curMonthRuShort = app.RM.msg[286]
-        monthNum = 4
-        lastTheoMonthNum = 7
-        curTheoMonthNum = 8
-    elif month == "May":
-        curMonthUp = app.RM.msg[269]
-        curMonthLow = app.RM.msg[270]
-        lastMonthUp = app.RM.msg[267]
-        lastMonthLow = app.RM.msg[268]
-        lastMonthEn = "Apr"
-        curMonthRuShort = app.RM.msg[287]
-        monthNum = 5
-        lastTheoMonthNum = 8
-        curTheoMonthNum = 9
-    elif month == "Jun":
-        curMonthUp = app.RM.msg[271]
-        curMonthLow = app.RM.msg[272]
-        lastMonthUp = app.RM.msg[269]
-        lastMonthLow = app.RM.msg[270]
-        lastMonthEn = "May"
-        curMonthRuShort = app.RM.msg[288]
-        monthNum = 6
-        lastTheoMonthNum = 9
-        curTheoMonthNum = 10
-    elif month == "Jul":
-        curMonthUp = app.RM.msg[273]
-        curMonthLow = app.RM.msg[274]
-        lastMonthUp = app.RM.msg[271]
-        lastMonthLow = app.RM.msg[272]
-        lastMonthEn = "Jun"
-        curMonthRuShort = app.RM.msg[289]
-        monthNum = 7
-        lastTheoMonthNum = 10
-        curTheoMonthNum = 11
-    elif month == "Aug":
-        curMonthUp = app.RM.msg[275]
-        curMonthLow = app.RM.msg[276]
-        lastMonthUp = app.RM.msg[273]
-        lastMonthLow = app.RM.msg[274]
-        lastMonthEn = "Jul"
-        curMonthRuShort = app.RM.msg[290]
-        monthNum = 8
-        lastTheoMonthNum = 11
-        curTheoMonthNum = 12
-    elif month == "Sep":
-        curMonthUp = app.RM.msg[277]
-        curMonthLow = app.RM.msg[278]
-        lastMonthUp = app.RM.msg[275]
-        lastMonthLow = app.RM.msg[276]
-        lastMonthEn = "Aug"
-        curMonthRuShort = app.RM.msg[291]
-        monthNum = 9
-        lastTheoMonthNum = 12
-        curTheoMonthNum = 1
-    elif month == "Oct":
-        curMonthUp = app.RM.msg[279]
-        curMonthLow = app.RM.msg[280]
-        lastMonthUp = app.RM.msg[277]
-        lastMonthLow = app.RM.msg[278]
-        lastMonthEn = "Sep"
-        curMonthRuShort = app.RM.msg[292]
-        monthNum = 10
-        lastTheoMonthNum = 1
-        curTheoMonthNum = 2
-    elif month == "Nov":
-        curMonthUp = app.RM.msg[281]
-        curMonthLow = app.RM.msg[282]
-        lastMonthUp = app.RM.msg[279]
-        lastMonthLow = app.RM.msg[280]
-        lastMonthEn = "Oct"
-        curMonthRuShort = app.RM.msg[293]
-        monthNum = 11
-        lastTheoMonthNum = 2
-        curTheoMonthNum = 3
-    else: # Dec
-        curMonthUp = app.RM.msg[261]
-        curMonthLow = app.RM.msg[262]
-        lastMonthUp = app.RM.msg[281]
-        lastMonthLow = app.RM.msg[282]
-        lastMonthEn = "Nov"
-        curMonthRuShort = app.RM.msg[294]
-        monthNum = 12
-        lastTheoMonthNum = 3
-        curTheoMonthNum = 4
-
-    return curMonthUp, curMonthLow, lastMonthUp, lastMonthLow, lastMonthEn, curMonthRuShort, monthNum, lastTheoMonthNum, curTheoMonthNum
 
 def timeHHMMToFloat(timeH):
     """ Преобразование HH:MM во float с коррекцией минутной погрешности """
@@ -332,10 +175,6 @@ def timeFloatToHHMM(hours=None, delta=None):
         result = delta
 
     return result
-
-def dprint(text):
-    if app.Devmode == 1:
-        print(text)
 
 def filterOutFormatting(string):
     """ Удаляет из отчета теги форматирования """
