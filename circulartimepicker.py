@@ -509,7 +509,8 @@ class CircularTimePicker(BoxLayout):
     _picker = AliasProperty(_get_picker, None)
 
     def _get_time_text(self):
-        self.selector_color = [app.RM.titleColor[0], app.RM.titleColor[1], app.RM.titleColor[2]]
+        self.selector_color = [app.RM.titleColor[0], app.RM.titleColor[1], app.RM.titleColor[2]] if app.RM.theme != "purple" \
+            else [.56, .42, .77]
         hc = rgb_to_hex(*self.selector_color) if self.picker == "hours" else rgb_to_hex(*self.color)
         mc = rgb_to_hex(*self.selector_color) if self.picker == "minutes" else rgb_to_hex(*self.color)
         h = self.hours # deleted the following to make hours 0 instead of 12 == 0 and 12 or self.hours <= 12 and self.hours or self.hours - 12

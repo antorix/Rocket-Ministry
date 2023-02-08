@@ -185,3 +185,6 @@ def filterOutFormatting(string):
     string = string.replace('[i]', '')
     string = string.replace('[/i]', '')
     return string
+
+def dprint(devmode, text):
+    if devmode == 1: print(text)
