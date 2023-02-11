@@ -1,6 +1,6 @@
 Home of Rocket Ministry, the only cross-platform ministry app in the world!
 
-Keep track of your territories, contacts, visits, placements, and reports in your field service in a clean and non-cluttered design. The focus is on speed of all operations with minimum number of clicks, ease of use, and good ergonomics. This is the only ministry app on Google Play Store with per-floor visualisation and the only mobile app that allows taking notes in a door-to-door work really quickly and easily. The most powerful and versatile handling of apartment buildings with multiple entrances.
+Keep track of your territories, contacts, visits, placements, and reports in your field service in a clean and non-cluttered design. The focus is on speed of all operations with minimum number of clicks, ease of use, and good ergonomics. The only ministry app on Google Play Store with a per-floor view and multiple entrances in apartment buildings.
 
 Android, Windows, Linux are supported. Mac should work too, but not tested yet.
 
