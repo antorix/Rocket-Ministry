@@ -66,7 +66,7 @@ Mass adding
 Examples: 1 / 1a / red building
 Add territory
 Condominium
-
+The new database will completely replace all existing data on your device, including reports, service year, and settings! Proceed?
 Example: Park Way, 30
 Check the box if your territory has multiple entrances to different units.
 Enter new entrance name:
@@ -312,10 +312,10 @@ Re-arranging numbers and floors does not affect existing visits data.
 Export phones
 No phone numbers to export in this territory!
 Phone numbers on %s
-The new database will completely replace all existing data on your device, including reports, service year, and settings! Proceed?
+Include into export apartments without phone numbers?
 Congratulations, you have your first interested person! He/she will be automatically added to the Contacts screen due to the light-green color. Also, you can see the total amount of interested ones in Territories screen.
 Next to a territory, you can see its work progress percentage. This is a relation of all apartments with a color status to the total number of apartments in the territory.
 You are now on the first call screen. It appears only when you are visiting a person for the first time.
 You have successfully reduced the amount of flats on this floor! The number range is now 1 less. If you are not happy with the result, no problem: just restore the original numeration in the "%s" window and then try again.
 There are unsaved changes at the page! Proceed without saving?
-Here you will find the history of all report updates (max. 300 entries).
+Here you will find the history of all report updates (max. %s entries).

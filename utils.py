@@ -187,4 +187,4 @@ def filterOutFormatting(string):
     return string
 
 def dprint(devmode, text):
-    if devmode == 1: print(text)
+    if devmode: print(text)
