@@ -4,19 +4,13 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.4.0"
+Version = "2.4.1"
 """
-* Перевод на испанский язык.
-* Повышено быстродействие операций c непосещенными квартирами (отказ, нет дома, запись).
-* Редизайн логотипа приложения.
-* Исправлен баг, из-за которого приложение могло вылетать при клике по подъезду.
-* Оптимизации интерфейса.
 """
 
 import utils as ut
 import time
 import os
-#from sys import getsizeof
 import json
 import requests
 import shutil
@@ -74,6 +68,7 @@ if platform == "android":
     from jnius import autoclass
     PythonActivity = autoclass('org.kivy.android.PythonActivity')
     mActivity = PythonActivity.mActivity
+    from android.storage import app_storage_path
 
 # Классы объектов участка
 
@@ -98,11 +93,9 @@ class House(object):
         return visited, interest
 
     def getPorchType(self):
-        """ Выдает название подъезда своего типа (всегда именительный падеж) """
-        if self.type == "private":
-            return "сегмент", RM.msg[211] # сегмент - [0] для программы и [1] для пользователя
-        else:
-            return "подъезд", RM.msg[212] # подъезд
+        """ Выдает название подъезда своего типа (всегда именительный падеж), [0] для программы и [1] для пользователя """
+        if self.type == "private": return "сегмент", RM.msg[211]
+        else: return "подъезд", RM.msg[212]
 
     def due(self):
         """ Определяет, что участок просрочен """
@@ -115,7 +108,7 @@ class House(object):
     def showPorches(self):
         list = []
         try:    self.porches.sort(key=lambda x: float(x.title), reverse=False) # сначала пытаемся сортировать по номеру
-        except: self.porches.sort(key=lambda x: x.title, reverse=False) # если не получается, алфавитно
+        except: self.porches.sort(key=lambda x: ut.numberize(x.title), reverse=False) # если не получается, алфавитно
 
         for i in range(len(self.porches)):
             listIcon = icon('icon-login') if self.type == "condo" else icon('icon-pin')
@@ -299,20 +292,20 @@ class Porch(object):
         """Сортировка квартир"""
         if self.flatsLayout == "н":  # numeric by number
             try: self.flats.sort(key=lambda x: float(x.number))
-            except: self.flats.sort(key=lambda x: x.titleNumberized())
+            except: self.flats.sort(key=lambda x: ut.numberize(x.title))
 
         elif self.flatsLayout == "о": # numeric by number reversed
             try: self.flats.sort(key=lambda x: float(x.number), reverse=True)
-            except: self.flats.sort(key=lambda x: x.titleNumberized(), reverse=True)
+            except: self.flats.sort(key=lambda x: ut.numberize(x.title), reverse=True)
 
         elif self.flatsLayout=="с": # alphabetic by status character
             try: self.flats.sort(key=lambda x: float(x.number))
-            except: self.flats.sort(key=lambda x: x.titleNumberized(), reverse=True)
+            except: self.flats.sort(key=lambda x: ut.numberize(x.title), reverse=True)
             self.flats.sort(key=lambda x: x.getStatus()[1])
 
         elif self.flatsLayout=="т": # by phone number
             try: self.flats.sort(key=lambda x: float(x.number))
-            except: self.flats.sort(key=lambda x: x.titleNumberized(), reverse=True)
+            except: self.flats.sort(key=lambda x: ut.numberize(x.title), reverse=True)
             self.flats.sort(key=lambda x: x.phone, reverse=True)
 
         elif self.flatsLayout=="з": # by note
@@ -508,6 +501,9 @@ class Flat(object):
         self.status = self.note = self.phone = self.meeting = ""
         self.title = self.number
         if self.title == "virtual": self.title = ""
+        RM.oldOutputLen = RM.newOutputLen  # переменные для предотвращения ошибки раздвоения базы данных
+        RM.newOutputLen = len(str(RM.output))
+        #print(RM.oldOutputLen, RM.newOutputLen)
 
     def clone(self, flat2=None, title="", toStandalone=False):
         # Делает из себя копию полученной квартиры
@@ -548,6 +544,10 @@ class Flat(object):
         return options
 
     def addRecord(self, input):
+
+        #if RM.oldOutputLen == RM.newOutputLen: RM.restart()
+
+        RM.recordAdded = 1
         self.records.insert(0, Record())
         self.records[0].title = input
         if len(self.records)==1 and self.status == "" and self.number != "virtual": # при первой записи ставим статус ?
@@ -603,17 +603,6 @@ class Flat(object):
         """ Делает квартиру невидимой, не меняя этажность подъезда """
         self.number = str ( float(self.number) + random() )
 
-    def titleNumberized(self):
-        """ Убирает из заголовка квартиры все нечисловые символы, чтобы получилось отсортировать по номеру"""
-        result = 0
-        l = len(self.title)
-        while l > 0:
-            if self.title[:l].isnumeric():
-                result = int(self.title[:l])
-                break
-            else: l -= 1
-        return result
-
     def getStatus(self):
         """ Возвращает иконку и сортировочное значение статуса в int """
         if self.status == "0":
@@ -640,7 +629,6 @@ class Flat(object):
         else:
             string = "{ }"
             value = 9
-
         return string, value
 
     def export(self):
@@ -662,8 +650,7 @@ class Record(object):
         self.title = ""
 
     def export(self):
-        export = copy([self.date, self.title])
-        return export
+        return copy([self.date, self.title])
 
 # Класс отчета
 
@@ -707,8 +694,7 @@ class Report(object):
                 int(time.strftime("%Y", time.localtime())) - 2000)
             time2 = time.strftime("%H:%M:%S", time.localtime())
             RM.resources[2].insert(0, f"\n{date} {time2}: {message}")
-        if save == True:
-            RM.save(backup=True, silent=True)
+        if save == True: RM.save(backup=True, silent=True)
 
     def checkNewMonth(self, forceDebug=False):
         savedMonth = RM.settings[3]
@@ -1718,7 +1704,12 @@ class RMApp(App):
         if platform == "android":
             request_permissions([Permission.CALL_PHONE, Permission.INTERNET, "com.google.android.gms.permission.AD_ID"])
 
-        self.UserPath = "../" if platform == "android" else "" # бывшие глобальные переменные
+        self.UserPath = app_storage_path() if platform == "android" else "" # бывшие глобальные переменные
+
+        ### Перенос данных из старого местоположения на Android в новое. Удалить в июле 2023
+        if platform == "android" and os.path.exists("../data.jsn"):
+            shutil.move("../data.jsn", self.UserPath + "data.jsn")
+
         self.BackupFolderLocation = self.UserPath + "backup/"
         self.DataFile = "data.jsn"
         self.LastTimeBackedUp = int(time.strftime("%H", time.localtime())) * 3600 \
@@ -1731,8 +1722,13 @@ class RMApp(App):
             "ru": ["русский", None],
             "ka": ["ქართული", self.MyFont]
         }
+
+        #self.oldOutputLen = -1 # отладочные переменные
+        self.newOutputLen = 0
+        self.recordAdded = 0
+        self.outputFrozen = 0
+
         self.houses, self.settings, self.resources = self.initializeDB()
-        self.block_save = False
         self.load()
         self.setParameters()
         self.setTheme()
@@ -2237,6 +2233,7 @@ class RMApp(App):
 
         #if 1:
         try:
+            #self.oldOutputLen = 0
             self.stack = list(dict.fromkeys(self.stack))
             self.mainList.clear_widgets()
             self.popupEntryPoint = 0
@@ -2255,14 +2252,6 @@ class RMApp(App):
             auto_caps = settings.getString(context.getContentResolver(), "text_auto_caps")"""
 
             #self.pageTitle.text = str(self.DL)
-
-            if self.block_save:
-                totallen = 0
-                for house in self.houses:
-                    for porch in house.porches:
-                        for flat in porch.flats:
-                            totallen += len(flat.status)
-                self.buttonTer.text = str(totallen)
 
             if self.displayed.positive != "":
                 self.positive.disabled = False
@@ -2510,8 +2499,7 @@ class RMApp(App):
                                                         width=floorLabelWidth, font_size=self.fontXS*floorK, height=size,
                                                         size_hint=(None, None),
                                                         color=self.standardTextColor))
-                    elif "." in label:
-                        self.floorview.add_widget(Widget())
+                    elif "." in label: self.floorview.add_widget(Widget())
                     else:
                         status = label[label.index("{")+1 : label.index("}")] # определение цвета по статусу
                         b = FlatButton(text=label[label.index("}")+1 : ], status=status, width=size, height=size,
@@ -2540,8 +2528,7 @@ class RMApp(App):
 
     def sliderToggle(self, mode=""):
         self.settings[0][7] = 0
-        if mode == "off":
-            self.showSlider = False
+        if mode == "off": self.showSlider = False
         if self.showSlider == True and not self.sliderBox in self.boxHeader.children:
             self.boxHeader.remove_widget(self.timerBox)
             self.boxHeader.remove_widget(self.headBox)
@@ -2969,6 +2956,9 @@ class RMApp(App):
             self.timerText.text = ""
         self.timer.on() if self.timerText.text != "" else self.timer.off()
 
+        if self.outputFrozen: self.restart() # перезапускаем приложение, потому что сломалась база.
+        # Убрать этот механизм через месяц-два, если проблема не повторяется
+
     def timerPressed(self, instance=None):
         if self.resources[0][1][2] == 0:
             self.popup(title=self.msg[247], message=self.msg[217])
@@ -3028,9 +3018,6 @@ class RMApp(App):
                 elif input == "report000":
                     self.rep.checkNewMonth(forceDebug=True)
 
-                elif input == "load000":
-                    self.load()
-
                 elif input == "file000":
                     def __handleSelection(selection):
                         if len(selection) > 0:
@@ -3038,14 +3025,6 @@ class RMApp(App):
                             self.pageTitle.text = file
                             self.importDB(file=file)
                     plyer.filechooser.open_file(on_selection=__handleSelection)
-
-                elif input == "block save":
-                    if self.block_save == False:
-                        self.block_save = True
-                        self.log("blocked")
-                    else:
-                        self.block_save = False
-                        self.log("unblocked")
 
                 elif input != "":
                     self.searchQuery = input
@@ -3270,7 +3249,7 @@ class RMApp(App):
                     active=active,
                     message=self.msg[165],
                     sort="",
-                    hint=hint + self.ruTerHint,
+                    hint=hint,# + self.ruTerHint,
                     tip=self.msg[71] + ruList
                 )
 
@@ -3338,7 +3317,7 @@ class RMApp(App):
 
             # Формы сохранения
 
-            elif self.displayed.form == "createNewHouse":  # сохранение участка
+            elif self.displayed.form == "createNewHouse":  # сохранение нового участка
                 self.displayed.form = "ter"
                 newTer = self.inputBoxEntry.text.strip()
                 condo = self.checkbox.active
@@ -3361,7 +3340,7 @@ class RMApp(App):
                         self.save()
                         self.terPressed()
 
-            elif self.displayed.form == "createNewPorch":  # сохранение подъезда
+            elif self.displayed.form == "createNewPorch":  # сохранение нового подъезда
                 self.displayed.form = "houseView"
                 newPorch = self.inputBoxEntry.text.strip()
                 if newPorch == None:
@@ -3383,7 +3362,7 @@ class RMApp(App):
                         self.save()
                         self.houseView()
 
-            elif self.displayed.form == "createNewFlat": # сохранение квартир
+            elif self.displayed.form == "createNewFlat": # сохранение новых квартир
                 self.displayed.form = "porchView"
                 if self.house.type == "condo": # многоквартирный подъезд
                     try:
@@ -3459,7 +3438,7 @@ class RMApp(App):
                 self.save()
                 self.flatView()
 
-            elif self.displayed.form == "createNewCon": # сохранение контакта
+            elif self.displayed.form == "createNewCon": # сохранение нового контакта
                 self.displayed.form = "con"
                 name = self.inputBoxEntry.text.strip()
                 if name != "":
@@ -3840,7 +3819,7 @@ class RMApp(App):
             else:
                 x = .3
                 y = 1
-                k = .87
+                k = .85
                 row_force_default = True
 
             width = self.standardTextWidth
@@ -3890,8 +3869,6 @@ class RMApp(App):
             Clock.schedule_once(lambda dt: self.reportPanel.switch_to(tab2), 0)
         else:
             Clock.schedule_once(lambda dt: self.reportPanel.switch_to(tab1), 0)
-
-        #self.rep.checkNewMonth()
 
         if self.resources[0][1][9] == 0 and self.settings[0][3] == 0:
             self.resources[0][1][9] = 1
@@ -4144,43 +4121,39 @@ class RMApp(App):
 
     # Функции по обработке участков
 
-    def houseView(self, house=None, selectedHouse=None, instance=None):
+    def houseView(self, instance=None):
         """ Вид участка - список подъездов """
         if "virtual" in self.house.type: # страховка от захода в виртуальный дом
             if self.contactsEntryPoint == 1: self.conPressed()
             elif self.searchEntryPoint == 1: self.find(instance=instance)
             return
         self.updateMainMenuButtons()
-        if house == None: house = self.house
-        if selectedHouse != None: house = self.houses[selectedHouse]
         note = self.house.note if self.house.note != "" else None
         self.mainListsize1 = self.mainList.size[1]
 
         self.displayed.update(
             form="houseView",
-            title=f"{house.title}",
-            options=house.showPorches(),
+            title=f"{self.house.title}",
+            options=self.house.showPorches(),
             details=f"{self.button['cog']} {self.msg[153]}",
-            positive=f"{self.button['plus']} {self.msg[154]} {house.getPorchType()[1]}",
+            positive=f"{self.button['plus']} {self.msg[154]} {self.house.getPorchType()[1]}",
             tip=[note, "note"]
         )
         if instance != None: self.stack.insert(0, self.displayed.form)
         self.updateList()
-        if house.due() == True:
+        if self.house.due() == True:
             self.mainList.add_widget(self.tip(text=self.msg[152], icon="warn"))
             self.mainList.add_widget(Widget(size_hint_y=None))
 
-    def porchView(self, porch=None, selectedPorch=None, instance=None, sortFlats=False):
+    def porchView(self, instance=None, sortFlats=False):
         """ Вид подъезда - список квартир или этажей """
         if "virtual" in self.porch.type: # страховка от захода в виртуальный подъезд
             if self.contactsEntryPoint == 1: self.conPressed()
             elif self.searchEntryPoint == 1: self.find(instance=instance)
             return
         self.updateMainMenuButtons()
-        if porch == None: porch = self.porch
         self.blockFirstCall = 0
-        if selectedPorch != None: porch = self.house[selectedPorch]
-        positive = f" {self.msg[155]}" if "подъезд" in porch.type else f" {self.msg[156]}"
+        positive = f" {self.msg[155]}" if "подъезд" in self.porch.type else f" {self.msg[156]}"
         segment = f", {self.msg[157]} {self.porch.title}" if "подъезд" in self.porch.type else f", {self.porch.title}"
         if self.house.type != "condo": neutral = ""
         elif self.porch.floors() == True: neutral = self.button['fgrid']
@@ -4200,7 +4173,7 @@ class RMApp(App):
 
         self.displayed.update(
             title=self.house.title+segment,
-            options=porch.showFlats(sort=sortFlats),
+            options=self.porch.showFlats(sort=sortFlats),
             form="porchView",
             sort=sort,
             resize=noteButton,
@@ -4221,15 +4194,13 @@ class RMApp(App):
                 self.scroll.scroll_to(widget=self.btn[self.clickedBtnIndex], padding=0, animate=False)
             except: pass
 
-    def flatView(self, flat=None, selectedFlat=None, call=True, instance=None):
+    def flatView(self, call=True, instance=None):
         """ Вид квартиры - список записей посещения """
         self.updateMainMenuButtons()
-        if flat == None: flat = self.flat
-        if selectedFlat != None: flat = self.porch[selectedFlat]
-        number = " " if flat.number == "virtual" else flat.number + " " # прячем номера отдельных контактов
+        number = " " if self.flat.number == "virtual" else self.flat.number + " " # прячем номера отдельных контактов
         flatPrefix = f"{self.msg[214]} "if "подъезд" in self.porch.type else ""
-        self.flatTitle = (flatPrefix + number + flat.getName()).strip()
-        records = flat.showRecords()
+        self.flatTitle = (flatPrefix + number + self.flat.getName()).strip()
+        records = self.flat.showRecords()
         if self.flat.number == "virtual" or self.contactsEntryPoint == 1: self.flatType = f" {self.msg[158]}"
         elif self.house.type == "condo":
             self.flatType = f" Apart." if self.language == "es" and self.fontScale() > 1.2 else f" {self.msg[159]}"
@@ -4672,7 +4643,7 @@ class RMApp(App):
             if len(flats) == 0: self.popup(self.msg[313])
             else:
                 try:    flats.sort(key=lambda x: float(x.number))
-                except: flats.sort(key=lambda x: x.titleNumberized())
+                except: flats.sort(key=lambda x: ut.numberize(x.title))
                 for flat in flats:
                     string += f"{flat.number}. {flat.phone}\n"
                 plyer.email.send(subject=self.msg[314] % "", text=string, create_chooser=True)
@@ -4697,8 +4668,9 @@ class RMApp(App):
         k = .75
         if len(text) > self.listItemCharLimit() * k: size_hint_y = .4
         if hint_y != False: size_hint_y = hint_y
+        if self.platform == "desktop": size_hint_y = .1
         tip = MyLabel(color=self.standardTextColor, markup=True, size_hint_y=size_hint_y,
-                        text=f"[ref=note][color={color}]{self.button[icon]}[/color] {text[:200]}[/ref]",
+                        text=f"[ref=note][color={color}]{self.button[icon]}[/color] {text[:180]}[/ref]",
                         text_size=(self.mainList.size[0] * k, None), valign="center")
         if icon == "note" or icon == "warn": tip.bind(on_ref_press=self.titlePressed)
         return tip
@@ -5286,13 +5258,12 @@ class RMApp(App):
                     self.popupForm = "quickPhone"
                     self.flat.editPhone(self.quickPhone.text)
                     self.save()
-                    self.clickedInstance.colorize()
+                    self.porchView()
                     self.quickPhone.text = ""
                 self.quickPhone.bind(on_text_validate=__getPhone)
 
                 def __dismiss(instance, value):
-                    if value == 0:
-                        self.mypopup.dismiss()
+                    if value == 0: self.mypopup.dismiss()
                 if self.platform == "desktop": # на компьютере закрываем попап при дефокусе строки поиска
                     self.quickPhone.bind(focus=__dismiss)
 
@@ -5476,7 +5447,7 @@ class RMApp(App):
 
             self.rep.optimizeReportLog()
 
-            self.save(backup=True)
+            #self.save(backup=True)
 
         if Devmode == 0: Clock.schedule_once(__do, 1)
 
@@ -5607,8 +5578,8 @@ class RMApp(App):
         if mode == "soft": # простая перерисовка интерфейса
             self.setParameters(reload=True)
             self.globalAnchor.clear_widgets()
-            if load == True and not self.block_save: self.load()
             self.setTheme()
+            #self.load()
             self.createInterface()
         else: # полная перезагрузка приложения
             if platform == "android":
@@ -5895,7 +5866,7 @@ class RMApp(App):
                     if self.backupRestore(restoreWorking=True, allowSave=allowSave) == True:
                         ut.dprint(Devmode, "База восстановлена из резервной копии.")
                         if allowSave == True:
-                            self.save(backup=True)  # успешный результат с загрузкой копии
+                            self.save(backup=True) # успешный результат с загрузкой копии и выход
                             ut.dprint(Devmode, "База сохранена с резервированием.")
                         return True
                     else:
@@ -5908,7 +5879,7 @@ class RMApp(App):
                         if self.backupRestore(restoreWorking=True, allowSave=allowSave) == True:
                             ut.dprint(Devmode, "База восстановлена из резервной копии.")
                             if allowSave:
-                                self.save(backup=True)  # успешный результат с загрузкой копии
+                                self.save(backup=True)  # успешный результат с загрузкой копии и выход
                                 ut.dprint(Devmode, "База сохранена с резервированием.")
                             return True
                         else:
@@ -5920,7 +5891,7 @@ class RMApp(App):
                 if self.backupRestore(restoreWorking=True, allowSave=allowSave) == True:
                     ut.dprint(Devmode, "База восстановлена из резервной копии.")
                     if allowSave:
-                        self.save(backup=True)  # успешный результат с загрузкой копии
+                        self.save(backup=True)  # успешный результат с загрузкой копии и выход
                         ut.dprint(Devmode, "База сохранена с резервированием.")
                     return True
                 else:
@@ -6013,17 +5984,9 @@ class RMApp(App):
     def save(self, backup=False, silent=True, export=False, manual=False):
         """ Saving database to JSON file """
 
-        if self.block_save:
-            totallen = 0
-            for house in self.houses:
-                for porch in house.porches:
-                    for flat in porch.flats:
-                        totallen += len(flat.status)
-            self.buttonTer.text = str(totallen)
-            return
-
         def __save(*args):
             output = self.getOutput()
+
             # Сначала резервируем раз в 5 минут
 
             curTime = ut.getCurTime()
@@ -6075,15 +6038,19 @@ class RMApp(App):
                     ut.dprint(Devmode, "Ошибка записи в файл.")
 
         if export or manual: __save()
-        else: _thread.start_new_thread(__save, ("Thread-Save", .1,))
+        else: _thread.start_new_thread(__save, ("Thread-Save", .01,))
 
     def getOutput(self):
         """ Возвращает строку со всеми данными программы, которые затем либо сохраняются локально, либо экспортируются"""
-        output = ["Rocket Ministry application data file. Do NOT edit manually!"] + [self.settings] + \
+        self.oldOutputLen = self.newOutputLen  # переменные для предотвращения ошибки раздвоения базы данных
+        self.output = ["Rocket Ministry application data file. Do NOT edit manually!"] + [self.settings] + \
                  [[self.resources[0], [self.resources[1][i].export() for i in range(len(self.resources[1]))], self.resources[2]]]
-        for house in self.houses:
-            output.append(house.export())
-        return output
+        for house in self.houses: self.output.append(house.export())
+        self.newOutputLen = len(str(self.output))
+        if self.newOutputLen == self.oldOutputLen and self.recordAdded:
+            self.outputFrozen = 1 # флаг о том, что база сломалась и нужно сделать перезапуск (из updatetimer)
+        self.recordAdded = 0
+        return self.output
 
     def update(self):
         """ Проверяем новую версию и при наличии обновляем программу с GitHub """

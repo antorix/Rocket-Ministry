@@ -188,3 +188,14 @@ def filterOutFormatting(string):
 
 def dprint(devmode, text):
     if devmode: print(text)
+
+def numberize(line):
+    """ Убирает из слова все нечисловые символы, чтобы получилось отсортировать по номеру """
+    result = 0
+    l = len(line)
+    while l > 0:
+        if line[:l].isnumeric():
+            result = int(line[:l])
+            break
+        else: l -= 1
+    return result
