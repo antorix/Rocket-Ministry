@@ -185,23 +185,58 @@ class Porch(object):
                 break
 
     def deleteFlat(self, ind):
-        answer = True
-        restore = False
-        if self.flats[ind].status != "":  # проверка, что квартира не пустая
-            if not "подъезд" in self.type:  # выбрано удаление квартиры на обычном участке
-                answer = True
-            else:  # удаление в подъезде с этажами
-                restore = True
-        if answer == True:
-            if "подъезд" in self.type:
-                result = self.shift(ind, restore=restore)
-                if result == "disableFloors":
-                    del self.flats[ind]
-                    self.flatsLayout = "н"
-                    self.sortFlats()
+        """ Удаление квартиры - переводит на сдвиг (если подъезд) или простое удаление (если не подъезд) """
+        if "подъезд" in self.type: # если подъезд, делаем сдвиг
+
+            deletedFlat = self.flats[ind]
+            flatsLayoutOriginal = self.flatsLayout  # определяем, нет ли в конце списка квартиры с записями, которую нельзя сдвигать
+            self.flatsLayout = "о"
+            self.sortFlats()
+            for flat in self.flats:
+                if not "." in flat.number:
+                    number = flat.number
+                    status = flat.status
+                    break
+            self.flatsLayout = flatsLayoutOriginal
+            self.sortFlats()
+
+            if status != "" and deletedFlat.number != number:
+                RM.popup(RM.msg[215])
+
             else:
-                del self.flats[ind]
-            return "deleted"
+                deletedFlatClone = deepcopy(deletedFlat)
+                deletedFlat.hide()  # скрываем удаленную квартиру
+
+                self.flatsLayout = "н"
+                self.sortFlats()  # временно сортируем по номеру
+
+                porch2 = deepcopy(self.flats)  # создаем клон подъезда и очищаем исходный подъезд
+                for flat in self.flats:
+                    flat.wipe()
+
+                for flat in self.flats:  # понижаем номера всех квартир
+                    if float(flat.number) >= float(deletedFlat.number):
+                        flat.number = str(float(flat.number) - 1)
+                        if float(flat.number).is_integer() == True: flat.number = flat.number[0: flat.number.index(".")]
+                        if flat.getName() != "":
+                            flat.title = flat.number + ", " + flat.getName()
+                        else:
+                            flat.title = flat.number
+
+                for flat1 in self.flats:  # возвращаем исходные квартиры подъезда с данными
+                    for flat2 in porch2:
+                        if flat1.number == flat2.number and flat2.status != "":
+                            flat1.clone(flat2)
+
+                for flat in self.flats:  # восстанавливаем на новом месте квартиры с содержимым
+                    if flat.number == deletedFlatClone.number:
+                        flat.clone(deletedFlatClone)
+                        break
+
+                self.flatsLayout = flatsLayoutOriginal  # возвращаем исходную сортировку
+                self.sortFlats()
+
+        else: del self.flats[ind] # если не подъезд, простое удаление
 
     def getFlatsRange(self):
         """ Выдает диапазон квартир в подъезде многоквартирного дома"""
@@ -224,64 +259,6 @@ class Porch(object):
                 last = len(self.flats)-1
                 range = f" [i]{self.flats[0].number}–{self.flats[last].number}[/i]"
         return range
-
-    def shift(self, ind, restore=False):
-        """ Сдвиг квартир вниз после удаления из этажной раскладки """
-
-        deletedFlat = self.flats[ind]
-        result = None
-
-        flatsLayoutOriginal = self.flatsLayout  # определяем, нет ли в конце списка квартиры с записями, которую нельзя сдвигать
-        self.flatsLayout = "о"
-        self.sortFlats()
-        for flat in self.flats:
-            if not "." in flat.number:
-                number = flat.number
-                status = flat.status
-                break
-        self.flatsLayout = flatsLayoutOriginal
-        self.sortFlats()
-
-        if status != "" and deletedFlat.number != number:
-            self.popup(self.msg[215])
-
-        else:
-            if restore == True:
-                deletedFlatClone = copy(deletedFlat)
-            deletedFlat.hide()  # скрываем удаленную квартиру
-            result = "deleted"
-
-            self.flatsLayout = "н"
-            self.sortFlats()  # временно сортируем по номеру
-
-            porch2 = deepcopy(self.flats) # создаем клон подъезда и очищаем исходный подъезд
-            for flat in self.flats:
-                flat.wipe()
-
-            for flat in self.flats:  # понижаем номера всех квартир
-                if float(flat.number) >= float(deletedFlat.number):
-                    flat.number = str(float(flat.number) - 1)
-                    if float(flat.number).is_integer() == True:
-                        flat.number = flat.number[0: flat.number.index(".")]
-                    if flat.getName() != "":
-                        flat.title = flat.number + ", " + flat.getName()
-                    else:
-                        flat.title = flat.number
-
-            for flat1 in self.flats:  # возвращаем исходные квартиры подъезда с данными
-                for flat2 in porch2:
-                    if flat1.number == flat2.number and flat2.status != "":
-                        flat1.clone(flat2)
-
-            if restore == True:  # если была удалена квартира с содержимым, восстанавливаем ее на новом месте
-                for flat in self.flats:
-                    if flat.number == deletedFlatClone.number:
-                        flat.clone(deletedFlatClone)
-                        break
-
-            self.flatsLayout = flatsLayoutOriginal  # возвращаем исходную сортировку
-            self.sortFlats()
-        return result
 
     def getFirstAndLastNumbers(self):
         """Возвращает первый и последний номера в подъезде и кол-во этажей"""
@@ -2040,9 +2017,9 @@ class RMApp(App):
     def setTheme(self):
         self.themes = {
             #"Rocket Mania": "darkR",
+            "3D":           "3D",
             self.msg[301]:  "dark",
             self.msg[302]:  "gray",
-            "3D":           "3D",
             #self.msg[303]:  "sepia",
             self.msg[304]:  "green",
             self.msg[305]:  "teal",
@@ -2114,7 +2091,7 @@ class RMApp(App):
             self.createNewPorchButton = "dimgray"
             self.textInputBGColor = [.95, .95, .95, .95]
             self.interestColor = get_hex_from_color(self.getColorForStatus("1"))
-            self.tabColors = RM.linkColor, "tab_background_blue.png"
+            self.tabColors = [self.linkColor, "tab_background_blue.png"]
             self.sliderImage = "slider_cursor.png"
 
             if self.theme == "purple": # Пурпур
@@ -2122,7 +2099,7 @@ class RMApp(App):
                 self.titleColor = self.tableColor = self.mainMenuActivated = [.36, .24, .53, 1]
                 self.textInputBGColor = [.95, .95, .95]
                 self.tableBGColor = [0.83, 0.83, 0.83, .9]
-                self.tabColors = RM.linkColor, "tab_background_purple.png"
+                self.tabColors = self.linkColor, "tab_background_purple.png"
                 self.sliderImage = "slider_cursor_purple.png"
 
             elif self.theme == "green": # Эко
@@ -2133,7 +2110,7 @@ class RMApp(App):
                 self.mainMenuActivated = [self.mainMenuButtonColor[0] * k, self.mainMenuButtonColor[1] * k,
                                           self.mainMenuButtonColor[2] * k, 1]
                 self.tableBGColor = [0.92, 0.94, 0.92, .9]
-                self.tabColors = RM.linkColor, "tab_background_green.png"
+                self.tabColors = self.linkColor, "tab_background_green.png"
                 self.sliderImage = "slider_cursor_green.png"
 
             elif self.theme == "teal": # Бирюза
@@ -2144,7 +2121,7 @@ class RMApp(App):
                 self.tableColor = "white"
                 self.tableBGColor = [0.2, 0.7, 0.8, .85]
                 self.checkBoxColor = [1, 1, .95]
-                self.tabColors = RM.linkColor, "tab_background_teal.png"
+                self.tabColors = self.linkColor, "tab_background_teal.png"
 
             elif self.theme == "gray": # Вечер
                 self.globalBGColor = [.2, .2, .2]
@@ -2156,7 +2133,7 @@ class RMApp(App):
                 self.scrollButtonBackgroundColor = [.22, .22, .22]
                 self.textInputBGColor = [.31, .3, .3, .95]
                 self.linkColor = [1, 1, 1]
-                self.tabColors = RM.linkColor, "tab_background_gray.png"
+                self.tabColors = self.linkColor, "tab_background_gray.png"
 
             elif self.theme == "3D" or self.theme == "retro": # 3D
                 self.globalBGColor = [.2, .2, .2]
@@ -2168,15 +2145,16 @@ class RMApp(App):
                 self.textInputBGColor = [.4, .4, .4, .95]
                 self.textInputColor = self.standardTextColor = [.95, .95, .95]
                 self.interestColor = get_hex_from_color(self.titleColor)
-                self.tabColors = RM.linkColor, "tab_background_3d.png"
+                self.tabColors = self.linkColor, "tab_background_3d.png"
                 self.sliderImage = "slider_cursor_green.png"
 
             elif self.theme == "sepia":  # Sepia
-                self.globalBGColor = (.88, .88, .88)
-                self.standardTextColor = self.textInputColor = [.28, .26, .24]
-                self.tableBGColor = [.85, .83, .81, .95]
-                self.scrollButtonBackgroundColor = [.88, .86, .84, .95]
-                self.textInputBGColor = [.86, .85, .85, .95]
+                self.linkColor = self.tableColor = self.mainMenuButtonColor = [.28, .25, .3, 1]
+                self.tabColors[0] = self.linkColor
+                self.standardTextColor = self.textInputColor = [.35, .34, .34]
+                self.tableBGColor = [.95, .94, .93, .95]
+                self.scrollButtonBackgroundColor = [.98, .97, .97, .95]
+                self.textInputBGColor = [.91, .9, .89, .95]
                 self.topButtonColor = [.7, .69, .69]
 
         self.standardScrollColor = "white"
@@ -2549,8 +2527,7 @@ class RMApp(App):
         def __do(*args): # действие всегда выполняется с запаздыванием, чтобы отобразилась анимация на кнопке
             if self.msg[6] in instance.text: # "создать подъезд"
                 text = instance.text[len(self.msg[6])+4 : ] # число символов во фразе msg[6] + 4 (на форматирование)
-                if "[/i]" in text:
-                    text = text[ : text.index("[")]
+                if "[/i]" in text: text = text[ : text.index("[")]
                 self.house.addPorch(text.strip())
                 self.save()
                 self.houseView(instance=instance)
