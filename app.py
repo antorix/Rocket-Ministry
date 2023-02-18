@@ -4,8 +4,11 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.4.2"
+Version = "2.4.3"
 """
+* Тема «Ретро» немного изменена и переименована в «3D».
+* Две новые темы: «Сепия» и «Rocket Mania» (шуточная).
+* Исправления багов
 """
 
 import utils as ut
@@ -235,6 +238,9 @@ class Porch(object):
 
                 self.flatsLayout = flatsLayoutOriginal  # возвращаем исходную сортировку
                 self.sortFlats()
+                if RM.resources[0][1][8] == 0:
+                    RM.popup(title=RM.msg[247], message=RM.msg[319] % RM.msg[155])
+                    RM.resources[0][1][8] = 1
 
         else: del self.flats[ind] # если не подъезд, простое удаление
 
@@ -2016,11 +2022,11 @@ class RMApp(App):
 
     def setTheme(self):
         self.themes = {
-            #"Rocket Mania": "darkR",
+            "Rocket Mania": "darkR",
             "3D":           "3D",
             self.msg[301]:  "dark",
             self.msg[302]:  "gray",
-            #self.msg[303]:  "sepia",
+            self.msg[303]:  "sepia",
             self.msg[304]:  "green",
             self.msg[305]:  "teal",
             self.msg[306]:  "purple",
@@ -2029,7 +2035,7 @@ class RMApp(App):
 
         self.themeDefault = [0.93, 0.93, 0.93, .9], [.16, .32, .46, 1], [.18, .65, .83, 1] # цвет фона таблицы, кнопок таблицы и title
 
-        self.theme = self.settings[0][5]
+        self.theme = self.settings[0][5] if isinstance(self.settings[0][5], str) else "default"
 
         if self.settings[0][5] == "": # определяем тему при первом запуске
             if platform == "android":
@@ -2045,11 +2051,7 @@ class RMApp(App):
             except: ut.dprint(Devmode, "Не удалось прочитать файл theme.ini.")
             else: ut.dprint(Devmode, "Тема переопределена из файла theme.ini.")
 
-        self.topButtonColor = [.75, .75, .75]  # "lightgray" # поиск, настройки и кнопки счетчиков
-
-        try:
-            if "dark" in self.theme: pass # для обратной совместимости с версией 1.0.8
-        except: self.theme = "default"
+        self.topButtonColor = [.75, .75, .75] # "lightgray" # поиск, настройки и кнопки счетчиков
 
         if "dark" in self.theme: # темная тема
             self.globalBGColor = [0, 0, 0]#self.themeDark # фон программы
@@ -6043,8 +6045,17 @@ class RMApp(App):
                 h.append(buffer[s])
             self.houseRetrieve(self.houses, housesNumber, h)
 
+            if len(self.resources[0]) == 0: # конвертация заметок блокнота версии 1.x
+                self.resources[0].append("")
+            elif len(self.resources[0]) > 1 and isinstance(self.resources[0][1], str):
+                notes = ""
+                for note in self.resources[0]:
+                    notes += note + "\n"
+                del self.resources[0][:]
+                self.resources[0].append(notes)
+
             if len(self.resources[0]) == 1:
-                self.resources[0].append([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])  # добавляем для новой версии новый массив
+                self.resources[0].append([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) # добавляем для новой версии новый массив
 
         except: return False
         else: return True
