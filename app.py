@@ -6,9 +6,8 @@ Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
 Version = "2.4.3"
 """
-* Тема «Ретро» немного изменена и переименована в «3D».
-* Две новые темы: «Сепия» и «Rocket Mania» (шуточная).
-* Исправления багов
+* Тема «Ретро» переименована в «3D».
+* Мелкие исправления и оптимизации.
 """
 
 import utils as ut
@@ -1329,7 +1328,6 @@ class FlatButton(Button):
         self.halign = "center"
         self.valign = "middle"
         self.pos_hint = pos_hint
-        self.color = RM.standardScrollColor
         self.text_size = (Window.size[0]*.95, height)
         self.size_hint_x = size_hint_x
         self.size_hint_y = size_hint_y
@@ -1594,8 +1592,10 @@ class MainMenuButton(Button):
         self.text = text
 
         if RM.theme != "darkR":
-            self.iconTer1 = 'icon-building'
+            self.iconTer1 = 'icon-map'
+            self.iconTer1ru = 'icon-building-filled'
             self.iconTer2 = 'icon-map-o'
+            self.iconTer2ru = 'icon-building'
             self.iconCon1 = 'icon-address-book-1'
             self.iconCon2 = 'icon-address-book-o'
             self.iconRep1 = 'icon-doc-text-inv'
@@ -1622,15 +1622,15 @@ class MainMenuButton(Button):
     def activate(self):
         col = get_hex_from_color(RM.mainMenuActivated)
         if RM.msg[2] in self.text:
-            self.text = f"[color={col}][size={self.iconFont}]{icon(self.iconTer1)}[/size]\n{RM.msg[2]}[/color]" if RM.language == "ru" \
-                else f"[color={col}][size={self.iconFont}]{icon(self.iconTer2)}[/size]\n{RM.msg[2]}[/color]"
+            self.text = f"[color={col}][size={self.iconFont}]{icon(self.iconTer1ru)}[/size]\n{RM.msg[2]}[/color]" if RM.language == "ru" \
+                else f"[color={col}][size={self.iconFont}]{icon(self.iconTer1)}[/size]\n{RM.msg[2]}[/color]"
         elif RM.msg[3] in self.text: self.text = f"[color={col}][size={self.iconFont}]{icon(self.iconCon1)}[/size]\n{RM.msg[3]}[/color]"
         elif RM.msg[4] in self.text: self.text = f"[color={col}][size={self.iconFont}]{icon(self.iconRep1)}[/size]\n{RM.msg[4]}[/color]"
 
     def deactivate(self):
         col = get_hex_from_color(RM.mainMenuButtonColor)
         if RM.msg[2] in self.text:
-            self.text = f"[color={col}][size={self.iconFont}]{icon(self.iconTer1)}[/size][/color]\n{RM.msg[2]}" if RM.language == "ru" \
+            self.text = f"[color={col}][size={self.iconFont}]{icon(self.iconTer2ru)}[/size][/color]\n{RM.msg[2]}" if RM.language == "ru" \
                 else f"[color={col}][size={self.iconFont}]{icon(self.iconTer2)}[/size]\n{RM.msg[2]}[/color]"
         elif RM.msg[3] in self.text: self.text = f"[color={col}][size={self.iconFont}]{icon(self.iconCon2)}[/size]\n{RM.msg[3]}[/color]"
         elif RM.msg[4] in self.text: self.text = f"[color={col}][size={self.iconFont}]{icon(self.iconRep2)}[/size]\n{RM.msg[4]}[/color]"
@@ -2022,11 +2022,11 @@ class RMApp(App):
 
     def setTheme(self):
         self.themes = {
-            "Rocket Mania": "darkR",
+            #"Rocket Mania": "darkR",
             "3D":           "3D",
             self.msg[301]:  "dark",
             self.msg[302]:  "gray",
-            self.msg[303]:  "sepia",
+            #self.msg[303]:  "sepia",
             self.msg[304]:  "green",
             self.msg[305]:  "teal",
             self.msg[306]:  "purple",
@@ -2036,6 +2036,8 @@ class RMApp(App):
         self.themeDefault = [0.93, 0.93, 0.93, .9], [.16, .32, .46, 1], [.18, .65, .83, 1] # цвет фона таблицы, кнопок таблицы и title
 
         self.theme = self.settings[0][5] if isinstance(self.settings[0][5], str) else "default"
+
+        if self.theme == "retro": self.theme = "3D" # убрать в мае
 
         if self.settings[0][5] == "": # определяем тему при первом запуске
             if platform == "android":
@@ -2075,7 +2077,7 @@ class RMApp(App):
             if self.theme == "darkR": # Rocket Mania
                 self.tableBGColor = self.globalBGColor
                 self.scrollButtonBackgroundColor = [.15, .15, .16, .9]#[.4, .9, 1, .15]
-                self.textInputBGColor = [.29, .29, .32, .95]
+                self.textInputBGColor = [.29, .29, .3, .95]
 
         else: # "default"
             self.globalBGColor = (1, 1, 1)
@@ -2156,10 +2158,8 @@ class RMApp(App):
                 self.standardTextColor = self.textInputColor = [.35, .34, .34]
                 self.tableBGColor = [.95, .94, .93, .95]
                 self.scrollButtonBackgroundColor = [.98, .97, .97, .95]
-                self.textInputBGColor = [.91, .9, .89, .95]
                 self.topButtonColor = [.7, .69, .69]
 
-        self.standardScrollColor = "white"
         self.mainMenuButtonColor2 = get_hex_from_color(self.mainMenuButtonColor)
         self.titleColor2 = get_hex_from_color(self.titleColor)
         Window.clearcolor = self.globalBGColor
@@ -2392,6 +2392,7 @@ class RMApp(App):
                                 k = (len(self.flat.records[0].title) + 175) / 2150
                                 if k > .3: k = .3
                                 lastRec = MyTextInput(text=self.flat.records[0].title, size_hint_y=None, multiline=True,
+                                                      color=self.standardTextColor, background_color=self.globalBGColor,
                                                       disabled=True, height=Window.size[1]*k)
                                 button = self.btn[len(self.btn) - 1]
                                 button.text = button.text[: button.text.index("\n")]
