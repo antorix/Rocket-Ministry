@@ -4,7 +4,7 @@ Keep track of your territories, contacts, visits, placements, and reports in you
 
 Android, Windows, Linux are supported. Mac should work too, but not tested yet.
 
-The app speaks English, Russian and Georgian, more languages are coming. If you want to help translate the app into your language, please send a message to [antorix@outlook.com](mailto:antorix@outlook.com).
+The app is translated into English, Spanish, Russian and Georgian, more languages are coming. If you want to help translate the app into your language, please send a message to [antorix@outlook.com](mailto:antorix@outlook.com).
 
 ![](https://play-lh.googleusercontent.com/4k6DP-pK2LhTh_7bdxMie3TMZZC39bU-KWX1T8pP-2ql6YYBut-0KBaUlR-iTndiHJ8)
 
