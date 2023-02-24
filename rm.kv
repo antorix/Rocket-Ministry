@@ -1,0 +1,28 @@
+<TextInputCutCopyPaste>:
+    but_cut: cut.__self__
+    but_copy: copy.__self__
+    but_paste: paste.__self__
+    but_selectall: selectall.__self__
+
+    size_hint: None, None
+    size: app.textContextMenuSize
+    BubbleButton:
+        id: cut
+        font_name: app.specialFont if app.specialFont != None else "Roboto-Regular"
+        text: app.msg[322]
+        on_release: root.do('cut')
+    BubbleButton:
+        id: copy
+        font_name: app.specialFont if app.specialFont != None else "Roboto-Regular"
+        text: app.msg[323]
+        on_release: root.do('copy')
+    BubbleButton:
+        id: paste
+        font_name: app.specialFont if app.specialFont != None else "Roboto-Regular"
+        text: app.msg[324]
+        on_release: root.do('paste')
+    BubbleButton:
+        id: selectall
+        font_name: app.specialFont if app.specialFont != None else "Roboto-Regular"
+        text: app.msg[325]
+        on_release: root.do('selectall')
