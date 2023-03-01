@@ -4,8 +4,14 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.4.5"
+Version = "2.5.0"
 """
+* Для новых пользователей-пионеров норма по умолчанию составляет 50 часов.
+* Новые темы «Сепия» и «Rocket Mania» (шуточная).
+* Более корректный ввод текста в режиме Flow и при копировании из буфера.
+* Настройка «Новое предложение с заглавной».
+* При загрузке адресов списком их можно разделять переносом строки, также теперь допустимы точки (но они заменяются на точку с запятой, потому что точка зарезервирована алгоритмом).
+* Разрешение на звонки запрашивается перед первым звонком, а не при первом запуске приложения.
 * Исправления и оптимизации.
 """
 
@@ -347,7 +353,7 @@ class Porch(object):
                 warn=True
                 try: lastNumber = int( self.flats[ len(self.flats)-1 ].number) + 1
                 except: return
-                self.addFlat("+%d" % lastNumber)
+                self.addFlat("%d" % lastNumber)
                 extraFlats += 1
                 continue
             else:
@@ -389,15 +395,15 @@ class Porch(object):
         return options
 
     def addFlat(self, input, forcedDelete=False, silent=False, virtual=False):
-        """Создает квартиру и возвращает ссылку на нее (экземпляр). Первый символ должен быть `+` """
+        """ Создает квартиру """
         input=input.strip()
-        if input == "+": return None
+        if input == "": return None
         self.flats.append(Flat())
         last = len(self.flats)-1
         if virtual == False:
-            self.flats[last].title = self.flats[last].number = input[1:].strip()  # ***
+            self.flats[last].title = self.flats[last].number = input.strip()  # ***
         else:
-            self.flats[last].title = input[1:].strip()
+            self.flats[last].title = input.strip()
             self.flats[last].number = "virtual"
 
         delete = False
@@ -428,7 +434,7 @@ class Porch(object):
             if input[i]=="[":
                 f=i
                 floors = input[f+1:] # извлекаем кол-во этажей из цифры после [
-        try: start = int(input[1:s])
+        try: start = int(input[0:s])
         except: start=success=0 # ошибочный ввод из-за дефиса не в том месте
         try:
             end = int(input[s+1:]) if f == 0 else int(input[s+1:f])
@@ -436,7 +442,7 @@ class Porch(object):
             end=success=0 # ошибочный ввод из-за дефиса не в том месте
         if success==True:
             for i in range(start, end+1):
-                self.addFlat("+%s" % (str(i)), silent=True)
+                self.addFlat("%s" % (str(i)), silent=True)
             if f!=0: self.flatsLayout = input[f+1:]
         else: success=0
         if "подъезд" in self.type:
@@ -465,7 +471,7 @@ class Flat(object):
                                 # у виртуальных автоматически присваивается "virtual", а обычного номера нет
         self.status = ""
         self.phone = ""
-        self.meeting = "" # пока не используется
+        self.meeting = ""
         self.records = [] # список записей посещений
 
     def addFlatTolist(self):
@@ -510,7 +516,7 @@ class Flat(object):
             RM.resources[1].append(House())  # create house address
             newVirtualHouse = RM.resources[1][len(RM.resources[1]) - 1]
             newVirtualHouse.addPorch(type="virtual")  # create virtual porch ***
-            newVirtualHouse.porches[0].addFlat("+" + self.getName(), virtual=True)  # create flat
+            newVirtualHouse.porches[0].addFlat(self.getName(), virtual=True)  # create flat
             newContact = newVirtualHouse.porches[0].flats[0]
             newContact.title = newContact.getName()
             newVirtualHouse.title = "%s-%s" % (title, tempFlatNumber)
@@ -533,7 +539,6 @@ class Flat(object):
         return options
 
     def addRecord(self, input):
-        RM.recordAdded = 1
         self.records.insert(0, Record())
         self.records[0].title = input
         if len(self.records)==1 and self.status == "" and self.number != "virtual": # при первой записи ставим статус ?
@@ -1001,7 +1006,6 @@ class MyTextInput(TextInput):
             self.background_color = background_color
 
     def insert_text(self, char, from_undo=False):
-
         """ Делаем буквы заглавными """
         def __capitalize():
             string = self.text[: self.cursor_index()].strip()
@@ -1009,9 +1013,9 @@ class MyTextInput(TextInput):
             if len(string) > 0 and (string[l] == "." or string[l] == "!" or string[l] == "?") or self.cursor_col == 0:
                 return True # можно
             else: return False # нельзя
-        if __capitalize() and RM.language != "ka" and RM.platform == "mobile":
+        if __capitalize() and RM.language != "ka" and RM.settings[0][11] and RM.platform == "mobile":
             if len(char) == 1: char = char.upper()
-            else: char = char[0].upper() + char[1:].lower()
+            else: char = char[0].upper() + char[1:]
         return super().insert_text(char, from_undo=from_undo)
 
     def on_text_validate(self):
@@ -1036,6 +1040,10 @@ class MyTextInput(TextInput):
                     RM.boxHeader.size_hint_y = 0
                     RM.titleBox.size_hint_y = 0
                     RM.bottomButtons.size_hint_y = RM.bottomButtonsSizeHintY * 1.5
+
+                    #RM.mainList.remove_widget(RM.bin())
+                    #except: pass
+
                 Clock.schedule_once(__shrinkWidgets, .07)#.12)
 
         else:
@@ -1190,7 +1198,7 @@ class RButton(Button):
         self.valign = valign
         self.text_size = text_size
         self.radius = [RM.buttonRadius * radiusK]
-        self.k = .2 if quickFlash == True else 1
+        self.k = .5 if quickFlash == True else 1
         if self.text == RM.button['lock']:
             self.radius = [RM.buttonRadius * radiusK, 0, 0, 0] # нет дома
         elif self.text == RM.button['record']: # подгонка радиуса под кнопки первого посещения
@@ -1714,11 +1722,11 @@ class RejectColorSelectButton(AnchorLayout):
 
 class RMApp(App):
     def build(self):
-        if platform == "android":
-            request_permissions([Permission.CALL_PHONE, Permission.INTERNET, "com.google.android.gms.permission.AD_ID"])
+        if platform == "android": request_permissions([Permission.INTERNET, "com.google.android.gms.permission.AD_ID"])
 
         self.UserPath = app_storage_path() if platform == "android" else "" # бывшие глобальные переменные
-        ### Перенос данных из старого местоположения на Android в новое. Удалить в мае 2023
+
+        ### Перенос данных из старого местоположения на Android в новое. Удалить в июле 2023
         if platform == "android" and os.path.exists("../data.jsn"):
             shutil.move("../data.jsn", self.UserPath + "data.jsn")
             try: shutil.rmtree("../backup")
@@ -1736,10 +1744,6 @@ class RMApp(App):
             "ru": ["русский", None],
             "ka": ["ქართული", self.MyFont]
         }
-
-        self.newOutputLen = 0 # отладочные переменные
-        self.recordAdded = 0
-        self.outputFrozen = 0
 
         self.houses, self.settings, self.resources = self.initializeDB()
         self.load()
@@ -1794,10 +1798,7 @@ class RMApp(App):
                 message="Не найден языковой файл! Переустановите приложение.\n\nLanguage file not found! Please re-install the app.")
             self.stop()
 
-        if self.language == "en": # размер контекстного меню текста в зависимости от языка
-            self.textContextMenuSize = ('150sp', '50sp')
-        else:
-            self.textContextMenuSize = ('250sp', '50sp')
+        self.textContextMenuSize = ('150sp', '50sp') if self.language == "en" else ('250sp', '50sp') # размер контекстного меню текста в зависимости от языка
 
         self.specialFont = self.Languages[self.language][1]
 
@@ -1846,7 +1847,6 @@ class RMApp(App):
             Config.set('input', 'mouse', 'mouse,disable_multitouch')
             Config.write()
             #self.mousePos = MousePos()
-            self.model = "pc"
             self.title = 'Rocket Ministry'
             Window.icon = "icon.png"
             self.icon = "icon.png"
@@ -1876,14 +1876,7 @@ class RMApp(App):
             Window.bind(mouse_pos=__getpos)
             self.mousepos = MousePos()"""
 
-        elif platform == "android":
-            from kvdroid.tools.deviceinfo import device_info
-            self.model = device_info("manufacturer").lower()
-            plyer.orientation.set_portrait()
-
-        elif platform == "mobile":
-            self.model = "unknown"
-            plyer.orientation.set_portrait()
+        else: plyer.orientation.set_portrait()
 
         rad = 37  # коэффициент закругления овальных кнопок, которое рассчитывается с учетом размера экрана
         self.buttonRadius = (Window.size[0] * Window.size[1]) / (Window.size[0] * rad)
@@ -1977,8 +1970,7 @@ class RMApp(App):
         self.slider = Slider(pos=(0, Window.size[1] * .75), orientation='horizontal', min=0.4, max=2,
                              padding=0, value=value, cursor_image=image)
         self.sliderBox.add_widget(self.slider)
-        self.posSelector = GridLayout(#pos=(Window.size[0]/3, Window.size[1]/3),
-                                      rows=3, cols=3, size_hint=(None, None),
+        self.posSelector = GridLayout(rows=3, cols=3, size_hint=(None, None),
                                       padding=self.padding,
                                       size=(Window.size[0]/2.5, Window.size[1]/3.5))
         buttons = []
@@ -2062,11 +2054,11 @@ class RMApp(App):
 
     def setTheme(self):
         self.themes = {
-            #"Rocket Mania": "darkR",
+            "Rocket Mania": "darkR",
             "3D":           "3D",
             self.msg[301]:  "dark",
             self.msg[302]:  "gray",
-            #self.msg[303]:  "sepia",
+            self.msg[303]:  "sepia",
             self.msg[304]:  "green",
             self.msg[305]:  "teal",
             self.msg[306]:  "purple",
@@ -2936,14 +2928,9 @@ class RMApp(App):
                 mytime3 = mytime[mytime.index(":") + 1:]
                 mytime4 = f"{mytime2} {mytime3}"
                 self.timerText.text = mytime4
-            else:
-                self.timerText.text = ut.timeFloatToHHMM(self.time2)
-        else:
-            self.timerText.text = ""
+            else: self.timerText.text = ut.timeFloatToHHMM(self.time2)
+        else: self.timerText.text = ""
         self.timer.on() if self.timerText.text != "" else self.timer.off()
-
-        if self.outputFrozen: self.restart() # перезапускаем приложение, потому что сломалась база.
-        # Убрать этот механизм в марте-апреле, если проблема не повторяется
 
     def timerPressed(self, instance=None):
         if self.resources[0][1][2] == 0:
@@ -3112,7 +3099,7 @@ class RMApp(App):
                         self.showSlider = False
                     try:
                         self.settings[0][3] = 0 if self.multipleBoxEntries[0].text.strip() == "" \
-                            else int(self.multipleBoxEntries[0].text.strip()) # норма часов
+                            else int(self.multipleBoxEntries[0].text.strip())  # норма часов
                     except: pass
                     self.settings[0][13] = self.multipleBoxEntries[1].active   # нет дома
                     self.settings[0][15] = self.multipleBoxEntries[2].active   # переносить минуты
@@ -3124,6 +3111,8 @@ class RMApp(App):
                         if list(self.Languages.values())[i][0] in self.languageButton.text:
                             self.settings[0][6] = list(self.Languages.keys())[i]
                             break
+                    if self.platform == "mobile":
+                        self.settings[0][11] = self.multipleBoxEntries[8].active # новое предложение с заглавной
 
                     self.settings[0][5] = self.themes[self.themeButton.text]   # тема
 
@@ -3196,7 +3185,7 @@ class RMApp(App):
                     self.floor1 = Counter(text=str(self.porch.floor1), size_hint=(.7, .5), fixed=True, shrink=False)
                     grid.add_widget(self.floor1)
                     grid.add_widget(Widget())
-                    grid.add_widget(self.flatListButton(short=True))
+                    grid.add_widget(self.flatListButton())
                     a.add_widget(grid)
                     self.mainList.add_widget(a)
                     if len(self.porch.flats) > 0:
@@ -3211,7 +3200,7 @@ class RMApp(App):
                         active=False,
                         hint=self.msg[66]
                     )
-                    self.mainList.add_widget(self.flatListButton(short=True))
+                    self.mainList.add_widget(self.flatListButton())
 
             # Формы добавления
 
@@ -3369,7 +3358,7 @@ class RMApp(App):
                                 if self.porch.flats[i].number == number:
                                     del self.porch.flats[i]
                                     break
-                        self.porch.addFlats("+%d-%d[%d" % (start, finish, floors))
+                        self.porch.addFlats("%d-%d[%d" % (start, finish, floors))
                         self.porch.flatsLayout = str(floors)
                         self.porch.floor1 = f1
                         self.save()
@@ -3381,7 +3370,7 @@ class RMApp(App):
                         addFlat2 = self.inputBoxEntry2.text.strip()
                     if self.checkbox.active == False:
                         if not "." in addFlat and not "," in addFlat:
-                            self.porch.addFlat("+" + addFlat)
+                            self.porch.addFlat(addFlat)
                             self.save()
                             self.porchView()
                         else:
@@ -3391,7 +3380,7 @@ class RMApp(App):
                     else:
                         try:
                             if int(addFlat) > int(addFlat2): 5/0
-                            self.porch.addFlats("+%d-%d" % (int(addFlat), int(addFlat2)))
+                            self.porch.addFlats("%d-%d" % (int(addFlat), int(addFlat2)))
                         except:
                             self.popup(self.msg[90])
                             def __repeat(*args):
@@ -3416,7 +3405,7 @@ class RMApp(App):
                 if name == "": name = f"{self.msg[158]} {len(self.resources[1])+1}"
                 self.addHouse(self.resources[1], "", "virtual")  # создается новый виртуальный дом
                 self.resources[1][len(self.resources[1]) - 1].addPorch(input="virtual", type="virtual")
-                self.resources[1][len(self.resources[1]) - 1].porches[0].addFlat("+" + name, virtual=True)
+                self.resources[1][len(self.resources[1]) - 1].porches[0].addFlat(name, virtual=True)
                 self.resources[1][len(self.resources[1]) - 1].porches[0].flats[0].status = "1"
                 self.save()
                 self.conPressed()
@@ -3526,17 +3515,14 @@ class RMApp(App):
             self.porchView(sortFlats=True)
 
         elif self.button["phone"] in instance.text:
-            inform = self.msg[28] % self.flat.phone
-            if self.flat.phone.strip() == "": self.log(self.msg[27])
+            if platform == "android": request_permissions([Permission.CALL_PHONE])
+            if self.flat.phone.strip() == "" and self.platform == "mobile": self.log(self.msg[27])
             else:
-                if self.platform == "mobile":
-                    try: plyer.call.makecall(tel=self.flat.phone)
-                    except:
+                try: plyer.call.makecall(tel=self.flat.phone)
+                except:
+                    if self.platform != "mobile" and self.flat.phone.strip() != "":
                         Clipboard.copy(self.flat.phone)
-                        self.popup(inform)
-                else:
-                    Clipboard.copy(self.flat.phone)
-                    self.popup(inform)
+                        self.popup(self.msg[28] % self.flat.phone)
 
     def updateMainMenuButtons(self, deactivateAll=False):
         """ Обновляет статус трех главных кнопок """
@@ -3841,6 +3827,8 @@ class RMApp(App):
         self.mainList.clear_widgets()
         box = BoxLayout(orientation="vertical")
         self.settingsPanel = TabbedPanel(background_color=self.globalBGColor, background_image="")
+        multilines = [False, False, False, False, False, False, False, False, False]
+        if self.platform == "desktop": del multilines[0] # удаляем лишнюю настройку (предложения с заглавной) на ПК
         self.createMultipleInputBox(
             form=box,
             title="",#"Настройки",
@@ -3853,6 +3841,7 @@ class RMApp(App):
                 "{}" + self.msg[129], # быстрый ввод телефона
                 "{}" + self.msg[130], # уведомление при таймере
                 "()" + self.msg[131], # язык () = togglebutton
+                "{}" + self.msg[86] if self.platform == "mobile" else "" # новое предложение с заглавной
             ],
             defaults=[
                 self.settings[0][3],   # норма часов
@@ -3862,9 +3851,10 @@ class RMApp(App):
                 self.settings[0][2],   # кредит часов
                 self.settings[0][20],  # показывать телефон
                 self.settings[0][0],   # уведомление при запуске таймера
-                self.settings[0][6]    # язык
+                self.settings[0][6],   # язык
+                self.settings[0][11] if self.platform == "mobile" else None  # новое предложение с заглавной
             ],
-            multilines=[False, False, False, False, False, False, False, False]
+            multilines=multilines
         )
 
         """ Также заняты настройки:
@@ -3991,7 +3981,7 @@ class RMApp(App):
         """ Нажата кнопка поиск """
         self.func = self.searchPressed
         if self.confirmNonSave() == True: return
-
+        self.displayed.form = "search"
         self.clearTable()
         focus = True
         self.createInputBox(
@@ -4322,22 +4312,19 @@ class RMApp(App):
 
         if tip != None: # добавление подсказки
             tipText = self.tip(tip)
-            if self.orientation == "v":
-                grid.rows += 3
-                grid.add_widget(Widget())
-                grid.add_widget(tipText)
-                grid.add_widget(Widget())
-            else:
-                grid.rows += 1
-                grid.add_widget(tipText)
+            grid.rows += 3
+            grid.add_widget(Widget())
+            grid.add_widget(tipText)
+            grid.add_widget(Widget())
         elif addCheckBoxes == True: # добавление галочек нового посещения
             grid.rows += 1
             grid.add_widget(self.reportBoxes(addReturn=True))
-            self.inputBoxText.size_hint_y = .3
-        elif message != "": # поиск и детали посещения
-            self.inputBoxText.size_hint_y = .3
-            grid.rows += 1
-            grid.add_widget(Widget())
+            self.inputBoxText.size_hint_y = .2
+        elif message != "":
+            self.inputBoxText.size_hint_y = .2 # поиск и детали посещения
+            if checkbox != None: # добавление домов
+                grid.rows += 1
+                grid.add_widget(Widget())
 
         form.add_widget(grid)
 
@@ -4428,11 +4415,9 @@ class RMApp(App):
             textbox = BoxLayout(size_hint=entrySize_hint, padding=(self.padding, 0, 0, 0),
                                 height=height, pos_hint={"center_x": .5})
 
-            if colorSelect == True:
-                self.multipleBoxEntries.append(RejectColorSelectButton())
+            if colorSelect == True: self.multipleBoxEntries.append(RejectColorSelectButton())
 
-            elif langSelect == True:
-                self.multipleBoxEntries.append(self.languageSelector())
+            elif langSelect == True: self.multipleBoxEntries.append(self.languageSelector())
 
             elif checkbox == False:
                 input_type = "number" if self.displayed.form == "set" or self.msg[17] in self.multipleBoxLabels[row].text \
@@ -4442,8 +4427,7 @@ class RMApp(App):
                                                            input_type = input_type, disabled=disable,
                                                            pos_hint={"top": 1}, height=height*.9))
                 self.multipleBoxEntries[row].text = str(default) if default != "virtual" else "–"
-            else:
-                self.multipleBoxEntries.append(MyCheckBox(active=default, size_hint=(entrySize_hint[0], entrySize_hint[1]),
+            else: self.multipleBoxEntries.append(MyCheckBox(active=default, size_hint=(entrySize_hint[0], entrySize_hint[1]),
                                                           pos_hint = {"top": 1}, color=self.titleColor))
             if default != "virtual":
                 textbox.add_widget(self.multipleBoxEntries[row])
@@ -4491,8 +4475,8 @@ class RMApp(App):
     # Генераторы интерфейсных элементов
     
     def reportBoxes(self, addReturn=False):
-        """ Счетчики и галочка повторных посещений для первого и повторного посещений"""
-        a = AnchorLayout(anchor_x="center", anchor_y="center", size_hint_y=.7)  # для счетчиков в новом посещении
+        """ Счетчики и галочка повторных посещений для первого и повторного посещений """
+        a = AnchorLayout(anchor_x="center", anchor_y="center", size_hint_y=.7) # для счетчиков в новом посещении
         grid2 = GridLayout(rows=3, cols=2, size_hint_y=None, padding=self.padding)
         if addReturn == True: grid2.cols += 1
         grid2.add_widget(MyLabel(text=self.msg[102], halign="center", valign="center", color=self.standardTextColor))
@@ -4506,7 +4490,7 @@ class RMApp(App):
         if addReturn == True:
             self.addReturn = MyCheckBox(active=True)
             grid2.add_widget(self.addReturn)
-        grid2.height = self.counterHeight + self.standardTextHeight
+        grid2.height = self.counterHeight + self.standardTextHeight*1.2
         a.add_widget(grid2)
         return a
     
@@ -4621,17 +4605,15 @@ class RMApp(App):
         if icon == "note" or icon == "warn": tip.bind(on_ref_press=self.titlePressed)
         return tip
 
-    def flatListButton(self, short=False):
+    def flatListButton(self):
         """ Кнопка создания квартир/домов списком"""
         height = self.standardTextHeight
         addList = TableButton(text=f"{self.button['list']} {self.msg[191]}", size_hint_x=None, size_hint_y=None,
                               size=(Window.size[0] / 4, self.standardTextHeight),
                               height=height, background_color=self.globalBGColor)
-        AL = AnchorLayout(anchor_x="right", anchor_y="center", padding=self.padding, size_hint_y=None)
-        if short == True:
-            try: self.inputBoxText.size_hint_y = .5
-            except: pass
-            AL.size_hint_y = .3
+        AL = AnchorLayout(anchor_x="right", anchor_y="center", padding=self.padding, size_hint_y=.3)
+        try: self.inputBoxText.size_hint_y = .5
+        except: pass
         addList.bind(on_release=self.addList)
         AL.add_widget(addList)
         return AL
@@ -4812,13 +4794,13 @@ class RMApp(App):
 
     def addList(self, instance):
         """ Добавление квартир списком"""
-        size_hint = (.9, .7) if self.orientation == "v" else (.6, .7)
+        size_hint = (.9, .6 * self.fontScale()) if self.orientation == "v" else (.6, .6 * self.fontScale())
         width = self.mainList.width * size_hint[0]*.9
         box = BoxLayout(orientation="vertical", size_hint=(.95, .95), padding=self.padding)
         warning = f" {self.msg[184]}" if self.house.type == "condo" else f" {self.msg[245]}"
         hint = self.msg[185] if self.house.type == "condo" else self.msg[309]
         text = MyTextInput(hint_text=hint, multiline=True, size_hint_y=None,
-                           height=self.standardTextHeight * 3, shrink=False)
+                           height=self.standardTextHeight * 5, shrink=False)
         box.add_widget(text)
         btnPaste = TableButton(text=self.msg[186], size_hint_x=1, size_hint_y=None, width=width, height=self.standardTextHeight,
                            background_color=self.textInputBGColor)
@@ -4834,22 +4816,26 @@ class RMApp(App):
         btnSave = RButton(text=self.msg[188], onPopup=True, radiusK=.4)
         def __save(instance):
             flats = text.text.strip()
-            if "." in flats:
-                description.text = self.msg[38]
-                return
-            elif self.house.type == "private":
-                flats = [x for x in flats.split(',')]
+            newstr = ""
+            for char in flats:
+                if char == "\n":  newstr += ","
+                elif char == ".": newstr += ";"
+                else:             newstr += char
+            if self.house.type == "private":
+                flats = [x for x in newstr.split(',')]
             else:
-                try:
-                    flats = [int(x) for x in flats.split(',')]
-                except:
+                flats = []
+                for x in newstr.split(','):
+                    try: flats.append(int(x))
+                    except: pass
+                if len(flats) == 0:
                     description.text = self.msg[189]
                     return
             if "подъезд" in self.porch.type: # отключение поэтажного вида
                 self.porch.type = "подъезд"
                 self.porch.flatsLayout = "н"
             for flat in flats:
-                self.porch.addFlat(f"+{flat}")
+                self.porch.addFlat(f"{flat}")
             self.save()
             modal.dismiss()
             self.backPressed()
@@ -4989,12 +4975,8 @@ class RMApp(App):
         self.mypopup.dismiss()
 
         if self.popupForm == "timerType":
-            if instance.text == self.msg[42]:
-                self.rep.modify(")")
-            else:
-                self.rep.modify("$")
-            if self.displayed.form == "rep":
-                self.repPressed()
+            self.rep.modify(")" if instance.text == self.msg[42] else "$")
+            if self.displayed.form == "rep": self.repPressed()
 
         elif self.popupForm == "clearData":
             if instance.text == self.button["yes"]:
@@ -5043,10 +5025,8 @@ class RMApp(App):
             if instance.text == self.button["yes"]:
                 if self.house.type == "virtual":
                     del self.resources[1][self.selectedHouse]
-                    if self.contactsEntryPoint == 1:
-                        self.conPressed()
-                    elif self.searchEntryPoint == 1:
-                        self.find(instance=instance)
+                    if self.contactsEntryPoint == 1: self.conPressed()
+                    elif self.searchEntryPoint == 1: self.find(instance=instance)
                 elif self.house.type == "condo":
                     if self.contactsEntryPoint == 0 and self.searchEntryPoint == 0:
                         if self.resources[0][1][0] == 0:
@@ -5059,18 +5039,13 @@ class RMApp(App):
                             self.porchView()
                     else:
                         self.flat.wipe()
-                        if self.contactsEntryPoint == 1:
-                            self.conPressed()
-                        elif self.searchEntryPoint == 1:
-                            self.find(instance=instance)
+                        if self.contactsEntryPoint == 1: self.conPressed()
+                        elif self.searchEntryPoint == 1: self.find(instance=instance)
                 else:
                     self.porch.deleteFlat(self.selectedFlat)
-                    if self.contactsEntryPoint == 1:
-                        self.conPressed()
-                    elif self.searchEntryPoint == 1:
-                        self.find(instance=instance)
-                    else:
-                        self.porchView()
+                    if self.contactsEntryPoint == 1: self.conPressed()
+                    elif self.searchEntryPoint == 1: self.find(instance=instance)
+                    else:                            self.porchView()
                 self.save()
 
         elif self.popupForm == "confirmShrinkFloor":
@@ -5100,7 +5075,7 @@ class RMApp(App):
 
         elif self.popupForm == "pioneerNorm":
             if instance.text == self.button["yes"]:
-                self.settings[0][3] = 70 # 50 - также msg[202] !
+                self.settings[0][3] = 50
                 self.save()
                 self.repPressed()
 
@@ -5110,16 +5085,11 @@ class RMApp(App):
 
         elif self.popupForm == "resetFlatToGray":
             if instance.text == self.button["yes"]:
-                if self.flat.number == "virtual":
-                    del self.resources[1][self.selectedHouse]
-                else:
-                    self.flat.wipe()
-                if self.contactsEntryPoint == 1:
-                    self.conPressed()
-                elif self.searchEntryPoint == 1:
-                    self.find(instance=True)
-                else:
-                    self.porchView()
+                if self.flat.number == "virtual": del self.resources[1][self.selectedHouse]
+                else:                             self.flat.wipe()
+                if self.contactsEntryPoint == 1:  self.conPressed()
+                elif self.searchEntryPoint == 1:  self.find(instance=True)
+                else:                             self.porchView()
                 self.save()
             else:
                 self.colorBtn[6].text = ""
@@ -5311,7 +5281,7 @@ class RMApp(App):
         else:
             radiusK = .4
             if self.orientation == "v":
-                size_hint = (.9, .4 * (self.fontScale()*1.2)) if checkboxText != None else (.9, .3 * (self.fontScale()*1.2))
+                size_hint = (.9, .35 * (self.fontScale()*1.7)) if checkboxText != None else (.9, .25 * (self.fontScale()*1.7))
             else:
                 size_hint = (.6, .65) if checkboxText != None else (.6, .45)
             text_size = (Window.size[0] * size_hint[0] * .92, None)
@@ -5942,14 +5912,9 @@ class RMApp(App):
 
     def getOutput(self):
         """ Возвращает строку со всеми данными программы, которые затем либо сохраняются локально, либо экспортируются"""
-        self.oldOutputLen = self.newOutputLen  # переменные для предотвращения ошибки раздвоения базы данных
         output = ["Rocket Ministry application data file. Do NOT edit manually!"] + [self.settings] + \
                  [[self.resources[0], [self.resources[1][i].export() for i in range(len(self.resources[1]))], self.resources[2]]]
         for house in self.houses: output.append(house.export())
-        self.newOutputLen = len(str(output))
-        if self.newOutputLen == self.oldOutputLen and self.recordAdded:
-            self.outputFrozen = 1 # флаг о том, что база сломалась (раздвоилась) и нужно сделать перезапуск (из updatetimer)
-        self.recordAdded = 0
         return output
 
     def update(self):
@@ -6024,7 +5989,7 @@ class RMApp(App):
                     containers[a].porches[b].flats[c].number = h[a][5][b][6][c][2]
                     containers[a].porches[b].flats[c].status = h[a][5][b][6][c][3]
                     containers[a].porches[b].flats[c].phone = h[a][5][b][6][c][4]
-                    containers[a].porches[b].flats[c].meeting = h[a][5][b][6][c][5]
+                    #containers[a].porches[b].flats[c].meeting = h[a][5][b][6][c][5]
 
                     visitNumber = len(h[a][5][b][6][c][6])  # counting visits
                     for d in range(visitNumber):

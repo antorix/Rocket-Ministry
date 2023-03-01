@@ -81,9 +81,9 @@ Enter contact name and/or description:
 You are creating a standalone contact not associated with any territory. People from all your territories are listed in the contacts automatically if they are assigned the light-green status.
 add visit
 Visit info:
-It did not work, please try again.
-A territory with this name already exists, try another one!
 
+A territory with this name already exists, try another one!
+Capitalize the first word of a sentence
 A %s with this name already exists, try another one!
 All fields should be filled with numerical values. The number of floors should be more than 0. The last apartment of the range should have the number no less than the first one.
 Periods and commas are not allowed!
@@ -182,9 +182,9 @@ Monthly average
 Equals 12 x monthly requirement (from settings).
 Average number of hours to serve each month during the rest (not added) months.
 But take note that this will disable the per-floor view!
-Comma-separated list of numbers
+List of numbers
 Paste from clipboard
-Here you can add new numbers using a list of numbers separated by commas.
+Here you can add new numbers using a list of numbers separated by commas or line breaks.
 Add
 Input error. This list should contain only numbers and commas. No other characters are allowed. If you need to use alphabetical characters, create a non-condominium type territory.
 Cancel
@@ -199,7 +199,7 @@ Are you sure?
 Delete
 Delete visit record
 Delete record from
-In brackets, you may see how much time you are ahead (+) or behind (-) your monthly requirement for the current day of the month. For example, with the requirement of 70 hours, if you have had no service for today, this value will decrease approximately by 2:20 tomorrow.
+In brackets, you may see how much time you are ahead (+) or behind (-) your monthly requirement for the current day of the month. For example, with the requirement of 50 hours, if you have had no service for today, this value will decrease approximately by 1:40 tomorrow.
 Attention
 Phone saved!
 You can disable the "%s" button in the app settings!
