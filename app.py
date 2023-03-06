@@ -4,15 +4,10 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.5.0"
+Version = "2.5.1"
+
 """
-* Для новых пользователей-пионеров норма по умолчанию составляет 50 часов.
-* Новые темы «Сепия» и «Rocket Mania» (шуточная).
-* Более корректный ввод текста в режиме Flow и при копировании из буфера.
-* Настройка «Новое предложение с заглавной».
-* При загрузке адресов списком их можно разделять переносом строки, также теперь допустимы точки (но они заменяются на точку с запятой, потому что точка зарезервирована алгоритмом).
-* Разрешение на звонки запрашивается перед первым звонком, а не при первом запуске приложения.
-* Исправления и оптимизации.
+* Небольшие исправления и оптимизации.
 """
 
 import utils as ut
@@ -207,7 +202,7 @@ class Porch(object):
             self.sortFlats()
 
             if status != "" and deletedFlat.number != number:
-                RM.popup(RM.msg[215])
+                RM.popup(RM.msg[215] % RM.msg[155])
 
             else:
                 deletedFlatClone = deepcopy(deletedFlat)
@@ -721,7 +716,7 @@ class Report(object):
         """ Выдает общее количество часов в этом месяце с кредитом (str) [0],
             запас/отставание (float) [1] и
             строку с текстом показа запаса/отставания (str) [2] """
-        value = self.hours + self.credit
+        value = self.hours + (self.credit if RM.settings[0][2] else 0)
         gap = value - float(time.strftime("%d", time.localtime())) * RM.settings[0][3] / ut.days()
         if RM.settings[0][3] == 0: gap_str = ""
         elif gap >= 0: gap_str = " (+%s)" % ut.timeFloatToHHMM(gap)
@@ -739,7 +734,7 @@ class Report(object):
             rolloverCredit = round(self.credit, 2) - int(round(self.credit, 2))
             self.credit = int(round(self.credit, 2) - rolloverCredit)
 
-        if RM.settings[0][2] == 1:
+        if RM.settings[0][2]:
             credit = f"{RM.msg[222]} {ut.timeFloatToHHMM(self.credit)[0: ut.timeFloatToHHMM(self.credit).index(':')]}\n"
         else: credit = ""
 
@@ -1007,16 +1002,18 @@ class MyTextInput(TextInput):
 
     def insert_text(self, char, from_undo=False):
         """ Делаем буквы заглавными """
-        def __capitalize():
-            string = self.text[: self.cursor_index()].strip()
-            l = len(string) - 1
-            if len(string) > 0 and (string[l] == "." or string[l] == "!" or string[l] == "?") or self.cursor_col == 0:
-                return True # можно
-            else: return False # нельзя
-        if __capitalize() and RM.language != "ka" and RM.settings[0][11] and RM.platform == "mobile":
-            if len(char) == 1: char = char.upper()
-            else: char = char[0].upper() + char[1:]
-        return super().insert_text(char, from_undo=from_undo)
+        if self.input_type != "text": return super().insert_text(char, from_undo=from_undo)
+        else:
+            def __capitalize():
+                string = self.text[: self.cursor_index()].strip()
+                l = len(string) - 1
+                if len(string) > 0 and (string[l] == "." or string[l] == "!" or string[l] == "?") or self.cursor_col == 0:
+                    return True # можно
+                else: return False # нельзя
+            if __capitalize() and RM.language != "ka" and RM.settings[0][11] and RM.platform == "mobile":
+                if len(char) == 1: char = char.upper()
+                else: char = char[0].upper() + char[1:]
+            return super().insert_text(char, from_undo=from_undo)
 
     def on_text_validate(self):
         if self.popup == False:# and RM.platform == "desktop":
@@ -1264,9 +1261,6 @@ class RButton(Button):
                 self.bind(pos=self.update_shape, size=self.update_shape)
         if RM.theme != "3D": self.color = self.origColor
 
-    def saveModeUpdate(self, *args):
-        self.color = RM.mainMenuActivated if RM.msg[5] in self.text else RM.tableColor
-
 class PopupNoAnimation(Popup):
     """ Попап, в котором отключена анимация при закрытии"""
     def __init__(self, **kwargs):
@@ -1464,8 +1458,11 @@ class Counter(AnchorLayout):
                 try:
                     if self.input.text[0] == "-": self.input.text = self.input.text[1:]
                 except: pass
-            if value == 0 and self.input.text.strip() == "":
-                self.input.text = "0"
+            if not value:
+                if self.input.text.strip() == "":
+                    self.input.text = "0"
+                elif picker != None and not ":" in self.input.text:
+                    self.input.text += ":00"
         self.input.bind(focus=focus)
 
         if fixed != False: # можно задать фиксированную высоту счетчика
@@ -1671,6 +1668,9 @@ class MainMenuButton(Button):
     def on_release(self):
         RM.updateMainMenuButtons()
 
+    def hide(self):
+        self.background_color = RM.globalBGColor
+
 class RejectColorSelectButton(AnchorLayout):
     def __init__(self):
         super(RejectColorSelectButton, self).__init__()
@@ -1813,8 +1813,7 @@ class RMApp(App):
             self.showSlider = False
             self.restore = 0
             self.blockFirstCall = 0
-            self.mytest = ""
-            self.mypopup = PopupNoAnimation()
+            self.importHelp = 0
             EventLoop.window.bind(on_keyboard=self.hook_keyboard)
 
             Window.fullscreen = False # размеры и визуальные элементы
@@ -2103,6 +2102,7 @@ class RMApp(App):
             self.textInputBGColor = [.3, .3, .3, .95]
             self.buttonPressedOnDark = [.3, .3, .3, 1] # цвет только в темной теме, определяющий засветление фона кнопки
             self.interestColor = get_hex_from_color(self.getColorForStatus("1"))  # "00BC7F"  # "00CA94" # должен соответствовать зеленому статусу или чуть светлее
+            self.saveColor = "00E79E"
             self.tabColors = self.linkColor, "tab_background_teal.png"  # основной цвет вкладки и фон
             self.sliderImage = "slider_cursor.png"
 
@@ -2127,6 +2127,7 @@ class RMApp(App):
             self.createNewPorchButton = "dimgray"
             self.textInputBGColor = [.95, .95, .95, .95]
             self.interestColor = get_hex_from_color(self.getColorForStatus("1"))
+            self.saveColor = "008E61"
             self.tabColors = [self.linkColor, "tab_background_blue.png"]
             self.sliderImage = "slider_cursor.png"
 
@@ -2146,6 +2147,7 @@ class RMApp(App):
                 self.mainMenuActivated = [self.mainMenuButtonColor[0] * k, self.mainMenuButtonColor[1] * k,
                                           self.mainMenuButtonColor[2] * k, 1]
                 self.tableBGColor = [0.92, 0.94, 0.92, .9]
+                self.saveColor = get_hex_from_color(self.titleColor)
                 self.tabColors = self.linkColor, "tab_background_green.png"
                 self.sliderImage = "slider_cursor_green.png"
 
@@ -2156,6 +2158,7 @@ class RMApp(App):
                 self.mainMenuActivated = [1, 1, 1]
                 self.tableColor = "white"
                 self.tableBGColor = [0.2, 0.7, 0.8, .85]
+                self.saveColor = "A0FFA0"#"6EFF00"
                 self.checkBoxColor = [1, 1, .95]
                 self.tabColors = self.linkColor, "tab_background_teal.png"
 
@@ -2168,6 +2171,7 @@ class RMApp(App):
                 self.tableBGColor = [.12, .3, .5, .95]
                 self.scrollButtonBackgroundColor = [.22, .22, .22]
                 self.textInputBGColor = [.31, .3, .3, .95]
+                self.saveColor = "00E79E"
                 self.linkColor = [1, 1, 1]
                 self.tabColors = self.linkColor, "tab_background_gray.png"
 
@@ -2181,6 +2185,7 @@ class RMApp(App):
                 self.textInputBGColor = [.4, .4, .4, .95]
                 self.textInputColor = self.standardTextColor = [.95, .95, .95]
                 self.interestColor = get_hex_from_color(self.titleColor)
+                self.saveColor = get_hex_from_color(self.titleColor)
                 self.tabColors = self.linkColor, "tab_background_3d.png"
                 self.sliderImage = "slider_cursor_green.png"
 
@@ -2202,7 +2207,7 @@ class RMApp(App):
         elif self.theme == "purple" or self.theme == "green": colNN = get_hex_from_color(self.tableColor)
         else: colNN = None
         self.button = { # кнопки с иконками
-            "save": f" {icon('icon-ok-circled') if RM.theme != 'darkR' else icon('icon-floppy')} {self.msg[5]}",
+            "save": f" [color={self.saveColor}]{icon('icon-ok-circled' if self.theme != 'darkR' else 'icon-floppy')} {self.msg[5]}[/color]",
             "plus":     icon("icon-plus-circled"),
             "ok":       icon("icon-ok-1") + " OK",
             "back":     icon("icon-left-2"),
@@ -2783,7 +2788,7 @@ class RMApp(App):
                 title=self.msg[26],
                 options=options,
                 form="repLog",
-                positive="",
+                #positive="",
                 tip=tip
             )
             if instance != None: self.stack.insert(0, self.displayed.form)
@@ -3002,6 +3007,9 @@ class RMApp(App):
                 elif input != "":
                     self.searchQuery = input
                     self.find(instance=instance)
+
+            elif self.msg[84] in self.positive.text: # Новый поиск
+                self.searchPressed()
 
             # Отчет
 
@@ -4049,7 +4057,8 @@ class RMApp(App):
             form="search",
             title=f"{self.msg[150]}" % self.searchQuery,
             message=self.msg[151],
-            options=options
+            options=options,
+            positive=f" {self.button['search2']} {self.msg[84]}"
         )
         if instance != None: self.stack.insert(0, self.displayed.form)
         self.mypopup.dismiss()
@@ -4599,8 +4608,9 @@ class RMApp(App):
         if len(text) > self.listItemCharLimit() * k: size_hint_y = .4
         if hint_y != False: size_hint_y = hint_y
 
+        textlen = int(180/self.fontScale()) # размер текста уменьшается пропорционально размеру шрифта
         tip = MyLabel(color=self.standardTextColor, markup=True, size_hint_y=size_hint_y,
-                        text=f"[ref=note][color={color}]{self.button[icon]}[/color] {text[:180]}[/ref]",
+                        text=f"[ref=note][color={color}]{self.button[icon]}[/color] {text[:textlen]}[/ref]",
                         text_size=(self.mainList.size[0] * k, None), valign="center")
         if icon == "note" or icon == "warn": tip.bind(on_ref_press=self.titlePressed)
         return tip
@@ -4794,7 +4804,7 @@ class RMApp(App):
 
     def addList(self, instance):
         """ Добавление квартир списком"""
-        size_hint = (.9, .6 * self.fontScale()) if self.orientation == "v" else (.6, .6 * self.fontScale())
+        size_hint = (.9, .6 * self.fontScale()) if self.orientation == "v" else (.6, .8)
         width = self.mainList.width * size_hint[0]*.9
         box = BoxLayout(orientation="vertical", size_hint=(.95, .95), padding=self.padding)
         warning = f" {self.msg[184]}" if self.house.type == "condo" else f" {self.msg[245]}"
@@ -4838,7 +4848,7 @@ class RMApp(App):
                 self.porch.addFlat(f"{flat}")
             self.save()
             modal.dismiss()
-            self.backPressed()
+            self.porchView()
         btnSave.bind(on_release=__save)
         btnClose = RButton(text=self.msg[190], onPopup=True, radiusK=.4)
         grid.add_widget(btnSave)
@@ -4973,7 +4983,6 @@ class RMApp(App):
     def popupPressed(self, instance=None):
         """ Действия при нажатии на кнопки всплывающего окна self.popup """
         self.mypopup.dismiss()
-
         if self.popupForm == "timerType":
             self.rep.modify(")" if instance.text == self.msg[42] else "$")
             if self.displayed.form == "rep": self.repPressed()
@@ -4997,13 +5006,6 @@ class RMApp(App):
         elif self.popupForm == "importData":
             if instance.text == self.button["yes"]:
                 self.importDB()
-
-        elif self.popupForm == "importHelp" or self.mytest == "qwerty":
-            if instance.text == self.button["yes"]:
-                if self.language == "ru":
-                    webbrowser.open("https://github.com/antorix/Rocket-Ministry/wiki/ru#синхронизация-и-резервирование-данных")
-                else:
-                    webbrowser.open("https://github.com/antorix/Rocket-Ministry/wiki#data-synchronization-and-backup")
 
         elif self.popupForm == "newMonth":
             self.repPressed()
@@ -5105,6 +5107,14 @@ class RMApp(App):
 
         elif self.popupForm == "includeWithoutNumbers":
             self.exportPhones(includeWithoutNumbers = True if instance.text == self.button["yes"] else False)
+
+        elif self.importHelp:
+            if instance.text == self.button["yes"]:
+                if self.language == "ru":
+                    webbrowser.open("https://github.com/antorix/Rocket-Ministry/wiki/ru#синхронизация-и-резервирование-данных")
+                else:
+                    webbrowser.open("https://github.com/antorix/Rocket-Ministry/wiki#data-synchronization-and-backup")
+            self.importHelp = 0
 
         self.popupForm = ""
 
@@ -5246,8 +5256,7 @@ class RMApp(App):
             picker.bind(time=__setTime)
             pickerForm.add_widget(picker)
 
-            save = RButton(text=self.msg[188], onPopup=1, size_hint_y=None, #background_color=self.themeDark[0], color="white",
-                           radiusK=radiusK)  # кнопка сохранения
+            save = RButton(text=self.msg[188], onPopup=1, size_hint_y=None, radiusK=radiusK)  # кнопка сохранения
 
             def __closeTimePicker(instance):
                 self.mypopup.dismiss()
@@ -5255,23 +5264,24 @@ class RMApp(App):
                 if title == self.msg[105]:
                     time1 = self.hours.get()  # исходное время на счетчике (HH:MM)
                     if self.pickedTime != "00:00":
-                        self.time3 = ut.sumHHMM([time1, time2]) # сумма исходного и добавленного времени (HH:MM)
-                        self.rep.modify(f"ч{time2}")
-                        self.hours.update(self.time3)
-                        self.counterChanged = False
-                        self.pageTitle.text = f"[ref=report]{self.msg[4]}{self.rep.getCurrentHours()[2]}[/ref]"
-                        if self.settings[0][2] == 1:
-                            self.creditLabel.text = self.msg[106] % self.rep.getCurrentHours()[0]
+                        try:
+                            self.time3 = ut.sumHHMM([time1, time2]) # сумма исходного и добавленного времени (HH:MM)
+                            self.rep.modify(f"ч{time2}")
+                            self.hours.update(self.time3)
+                            self.counterChanged = False
+                        except: self.popup(self.msg[46])
+                        else: self.repPressed()
                 else:
                     time1 = self.credit.get()  # исходное время на счетчике (HH:MM)
                     self.time3 = ut.sumHHMM([time1, time2])  # сумма двух времен в HH:MM
                     if self.pickedTime != "00:00":
-                        self.rep.modify(f"р{time2}")
-                        self.credit.update(self.time3)
-                        self.counterChanged = False
-                        self.pageTitle.text = f"[ref=report]{self.msg[4]}{self.rep.getCurrentHours()[2]}[/ref]"
-                        if self.settings[0][2] == 1:
-                            self.creditLabel.text = self.msg[106] % self.rep.getCurrentHours()[0]
+                        try:
+                            self.rep.modify(f"р{time2}")
+                            self.credit.update(self.time3)
+                            self.counterChanged = False
+                            self.repPressed()
+                        except: self.popup(self.msg[46])
+                        else: self.repPressed()
             save.bind(on_release=__closeTimePicker)
             pickerForm.add_widget(save)
             contentMain = pickerForm
@@ -5281,9 +5291,10 @@ class RMApp(App):
         else:
             radiusK = .4
             if self.orientation == "v":
-                size_hint = (.9, .35 * (self.fontScale()*1.7)) if checkboxText != None else (.9, .25 * (self.fontScale()*1.7))
+                size_hint = (.9, .3 * (self.fontScale()*2)) if checkboxText != None else (.9, .2 * (self.fontScale()*2))
             else:
-                size_hint = (.6, .65) if checkboxText != None else (.6, .45)
+                size_hint = (.6, .6) if checkboxText != None else (.6, .4)
+
             text_size = (Window.size[0] * size_hint[0] * .92, None)
             contentMain = BoxLayout(orientation="vertical")
             contentMain.add_widget(MyLabel(text=message, halign="left", valign="center", text_size=text_size, markup=True))
@@ -5395,8 +5406,7 @@ class RMApp(App):
             Clock.schedule_once(lambda x: self.popup(self.msg[209]), 0.2)
         elif file == None:
             if success == False:
-                self.popupForm = "importHelp"
-                self.mytest = "qwerty" # бред
+                self.importHelp = 1
                 self.popup(self.msg[210], options=[self.button["yes"], self.button["no"]])
 
             else: # тоже неудачно, но другой вид ошибки
