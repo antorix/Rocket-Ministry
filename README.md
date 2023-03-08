@@ -1,4 +1,4 @@
-Home of Rocket Ministry, the only cross-platform ministry app in the world!
+Home of Rocket Ministry, the only cross-platform ministry app in the world.
 
 Keep track of your territories, contacts, visits, placements, and reports in your field service in a clean and non-cluttered design. The focus is on speed of all operations with minimum number of clicks, ease of use, and good ergonomics. The only ministry app on Google Play Store with a per-floor view and multiple entrances in apartment buildings.
 
@@ -23,6 +23,3 @@ The app is translated into English, Spanish, Russian and Georgian, more language
 * [Support](https://github.com/antorix/Rocket-Ministry/wiki#support)
 
 * [Документация по-русски](https://github.com/antorix/Rocket-Ministry/wiki/ru)
-
-**Official Telegram channel: [t.me/rocketministry](https://t.me/rocketministry)**
-
