@@ -56,7 +56,7 @@ Notepad
 Data saved, backup copy created
 House
 Apartments:
-
+from
 to
 Floors:
 First floor
@@ -138,9 +138,9 @@ This will restore the last backup copy created before the last change. Proceed?
 All user data will be irreversibly deleted from the app! Are you sure you need to do it?
 About
 Multi-purpose organizer
-Official Telegram channel
-Rocket Ministry for Windows and Linux, FAQ, documentation, and source code at the
-official project's webpage on %s Github
+Rocket Ministry for Windows and Linux, documentation, source code:
+Questions, user support:
+Back to top
 Help
 Any information in a free form
 People search
@@ -305,7 +305,7 @@ Eco
 Teal
 Purple
 Clarity
-Want to help translate the app into your language? Email at
+
 1, 2b, Park St 1a, 5th Avenue 119
 New version found! It will be updated on the next program start.
 Re-arranging numbers and floors does not affect existing visits data.
