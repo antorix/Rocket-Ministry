@@ -4,10 +4,11 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.5.2"
+Version = "2.6.0"
 
 """
-* Мелкие оптимизации.
+* Армянский язык.
+* Мелкие исправления и оптимизации.
 """
 
 import utils as ut
@@ -740,13 +741,13 @@ class Report(object):
 
         # Save file of last month
         self.lastMonth = f"[u]{RM.msg[223]}[/u]\n\n" % RM.monthName()[3] + \
-                         f"{RM.msg[102]}: [b]%d[/b]\n" % self.placements + \
-                         f"{RM.msg[103]}: [b]%d[/b]\n" % self.videos + \
-                         f"{RM.msg[104]}: [b]%s[/b]\n" % ut.timeFloatToHHMM(self.hours)[
+                         f"{RM.msg[102]}{RM.col} [b]%d[/b]\n" % self.placements + \
+                         f"{RM.msg[103]}{RM.col} [b]%d[/b]\n" % self.videos + \
+                         f"{RM.msg[104]}{RM.col} [b]%s[/b]\n" % ut.timeFloatToHHMM(self.hours)[
                                                              0: ut.timeFloatToHHMM(self.hours).index(":")] + \
-                         f"{RM.msg[108]}: [b]%d[/b]\n" % self.returns + \
-                         f"{RM.msg[109]}: [b]%d[/b]\n" % self.studies
-        if credit != "": self.lastMonth += f"[i]{RM.msg[224]}: %s[/i]" % credit
+                         f"{RM.msg[108]}{RM.col} [b]%d[/b]\n" % self.returns + \
+                         f"{RM.msg[109]}{RM.col} [b]%d[/b]\n" % self.studies
+        if credit != "": self.lastMonth += f"[i]{RM.msg[224]}{RM.col} %s[/i]" % credit
 
         # Clear service year in October        
         if int(time.strftime("%m", time.localtime())) == 10:
@@ -876,13 +877,13 @@ class Report(object):
             credit = f"{RM.msg[222]} {ut.timeFloatToHHMM(self.credit)[0: ut.timeFloatToHHMM(self.credit).index(':')]}\n"  # whether save credit to file
         else: credit = ""
         result = f"[u]{RM.msg[223]}[/u]\n\n" % RM.monthName()[1] + \
-                 f"{RM.msg[102]}: [b]%d[/b]\n" % self.placements + \
-                 f"{RM.msg[103]}: [b]%d[/b]\n" % self.videos + \
-                 f"{RM.msg[104]}: [b]%s[/b]\n" % \
+                 f"{RM.msg[102]}{RM.col} [b]%d[/b]\n" % self.placements + \
+                 f"{RM.msg[103]}{RM.col} [b]%d[/b]\n" % self.videos + \
+                 f"{RM.msg[104]}{RM.col} [b]%s[/b]\n" % \
                  ut.timeFloatToHHMM(self.hours)[0: ut.timeFloatToHHMM(self.hours).index(":")] + \
-                 f"{RM.msg[108]}: [b]%d[/b]\n" % self.returns + \
-                 f"{RM.msg[109]}: [b]%d[/b]\n" % self.studies
-        if credit != "": result += f"[i]{RM.msg[224]}: %s[/i]" % credit
+                 f"{RM.msg[108]}{RM.col} [b]%d[/b]\n" % self.returns + \
+                 f"{RM.msg[109]}{RM.col} [b]%d[/b]\n" % self.studies
+        if credit != "": result += f"[i]{RM.msg[224]}{RM.col} %s[/i]" % credit
         result = ut.filterOutFormatting(result)
         return result
 
@@ -1086,6 +1087,19 @@ class MyCheckBox(CheckBox):
         self.size_hint = size_hint
         self.color = RM.checkBoxColor
         if pos_hint != None: self.pos_hint = pos_hint
+
+        #self.background_checkbox_normal = "checkbox_blue.png"
+        #self.background_checkbox_down = "checkbox_blue_empty.png"
+
+"""class MyCheckBoxSim(Label):
+    def __init__(self, active=False, size_hint=(1, 1), pos_hint=None, *args, **kwargs):
+        super(MyCheckBoxSim, self).__init__()
+        self.active = active
+        self.size_hint = size_hint
+        self.color = RM.checkBoxColor
+        if pos_hint != None: self.pos_hint = pos_hint
+
+        self.text = icon("icon-check-1") if self.active else icon("icon-check-empty-1")"""
 
 class TTab(TabbedPanelHeader):
     """ Вкладки панелей """
@@ -1316,7 +1330,8 @@ class ScrollButton(Button):
         self.halign = "left"
         self.valign = valign
         self.markup = True
-        self.text_size = (Window.size[0]*.95, self.height)
+        #self.text_size = (Window.size[0]*.95, self.height) # было в v2.5.1/2 - у Аллы баг
+        self.text_size = (Window.size[0] * .95, None) # стало - не должно быть бага
         if RM.specialFont != None: self.font_name = RM.specialFont
         self.originalColor = ""
         self.originalColor = RM.linkColor
@@ -1739,7 +1754,8 @@ class RMApp(App):
             "en": ["English", None],
             "es": ["español", None],
             "ru": ["русский", None],
-            "ka": ["ქართული", self.MyFont]
+            "ka": ["ქართული", self.MyFont],
+            "hy": ["Հայերեն", self.MyFont],
         }
 
         self.houses, self.settings, self.resources = self.initializeDB()
@@ -1780,6 +1796,7 @@ class RMApp(App):
             if DL == "ru" or DL == "ua" or DL == "by" or DL == "kz": self.language = "ru"
             elif DL == "es": self.language = "es"
             elif DL == "ka": self.language = "ka"
+            elif DL == "hy": self.language = "hy"
             else: self.language = "en"
             self.settings[0][6] = self.language
             self.save()
@@ -1794,6 +1811,8 @@ class RMApp(App):
                 title="Error",
                 message="Не найден языковой файл! Переустановите приложение.\n\nLanguage file not found! Please re-install the app.")
             self.stop()
+
+        self.col = ":" if self.language != "hy" else "" # для армянского языка убираем двоеточия в разделе отчета
 
         self.textContextMenuSize = ('150sp', '50sp') if self.language == "en" else ('250sp', '50sp') # размер контекстного меню текста в зависимости от языка
 
@@ -2278,7 +2297,9 @@ class RMApp(App):
             context = autoclass('org.kivy.android.PythonActivity').mActivity
             auto_caps = settings.getString(context.getContentResolver(), "text_auto_caps")"""
 
-            #self.pageTitle.text = str(self.mousePos.coords)
+            """from kvdroid.tools.lang import device_lang
+            DL = device_lang()
+            self.pageTitle.text = str(DL)"""
 
             if self.displayed.positive != "":
                 self.positive.disabled = False
@@ -3133,9 +3154,9 @@ class RMApp(App):
                     self.settings[0][5] = self.themes[self.themeButton.text]   # тема
 
                     self.save()
-                    self.log(self.msg[53])
                     self.restart("soft")
                     Clock.schedule_once(self.settingsPressed, .1)
+                    self.log(self.msg[53])
 
                 elif self.settingsPanel.current_tab.text == self.msg[54]:
                     self.save(backup=True)
@@ -4218,7 +4239,7 @@ class RMApp(App):
     def recordView(self, instance=None, focus=False):
         self.displayed.form = "recordView"
         self.createInputBox(
-            title = f"{self.msg[164]} {self.record.date}",
+            title = f"{self.msg[164]} {self.record.date}" if self.language != "hy" else f"{self.record.date} {self.msg[164]}",
             message = self.msg[83],
             default = self.record.title,
             multiline=True,
@@ -4284,7 +4305,7 @@ class RMApp(App):
             grid.rows += 1
             gridCB = GridLayout(rows=2)
             gridCB.size_hint_y = .5 if self.orientation == "v" else .3
-            self.checkbox = MyCheckBox(active=active)
+            self.checkbox = MyCheckBox(active=active) if self.fontScale() == 1 else MyCheckBoxSim(active=active)
             gridCB.add_widget(self.checkbox)
 
             def __on_checkbox_active(checkbox, value): # что происходит при активированной галочке
@@ -4791,12 +4812,12 @@ class RMApp(App):
         if self.platform == "mobile":
             self.analyticsMessage.font_size = self.fontXS * self.fontScale() if self.fontScale() < 1.2 else self.fontM
         self.analyticsMessage.text = f"[b]{self.msg[176]}[/b]\n\n" + \
-                                     f"{self.msg[177]}: [b]%d[/b]\n{br}" % monthNumber + \
-                                     f"{self.msg[178]}: [b]%d[/b]\n{br}" % hourSum + \
-                                     f"{self.msg[179]}¹: [b]%d[/b]\n{br}" % yearNorm + \
-                                     f"{self.msg[180]}: [b]%d[/b]\n{br}" % (yearNorm - hourSum) + \
-                                     f"%s: [b]%d[/b] %s\n{br}" % (gapWord, abs(gap), gapEmo) + \
-                                     f"{self.msg[181]}²: [b]%0.f[/b]\n{br}" % average + \
+                                     f"{self.msg[177]}{self.col} [b]%d[/b]\n{br}" % monthNumber + \
+                                     f"{self.msg[178]}{self.col} [b]%d[/b]\n{br}" % hourSum + \
+                                     f"{self.msg[179]}¹{self.col} [b]%d[/b]\n{br}" % yearNorm + \
+                                     f"{self.msg[180]}{self.col} [b]%d[/b]\n{br}" % (yearNorm - hourSum) + \
+                                     f"%s{self.col} [b]%d[/b] %s\n{br}" % (gapWord, abs(gap), gapEmo) + \
+                                     f"{self.msg[181]}²{self.col} [b]%0.f[/b]\n{br}" % average + \
                                      "____\n" + \
                                      f"¹ {self.msg[182]}\n{br}" + \
                                      f"² {self.msg[183]}"
