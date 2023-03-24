@@ -4,11 +4,10 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.6.0"
+Version = "2.6.1"
 
 """
-* Армянский язык.
-* Мелкие исправления и оптимизации.
+* Исправления и оптимизации.
 """
 
 import utils as ut
@@ -72,6 +71,10 @@ if platform == "android":
     mActivity = PythonActivity.mActivity
     from android.storage import app_storage_path
 
+elif platform == "win" and not Devmode: # убираем консоль
+    import ctypes
+    ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+
 # Классы объектов участка
 
 class House(object):
@@ -114,7 +117,7 @@ class House(object):
 
         for i in range(len(self.porches)):
             listIcon = icon('icon-login') if self.type == "condo" else icon('icon-pin')
-            list.append(f"{listIcon} [b]{self.porches[i].title}[/b]{self.porches[i].getFlatsRange()}")
+            list.append(f"{listIcon} [b]{self.porches[i].title[:RM.listItemCharLimit()]}[/b]{self.porches[i].getFlatsRange()}")
 
         if self.type != "condo" and len(list) == 0: list.append(RM.msg[213] % self.getPorchType()[1])
 
@@ -531,7 +534,8 @@ class Flat(object):
         if len(self.records)==0: options.append(RM.msg[220])
         else:
             for i in range(len(self.records)): # добавляем записи разговоров
-                options.append(f"{listIcon} {self.records[i].date}\n[i]{self.records[i].title}[/i]")
+                title = self.records[i].title[:RM.listItemCharLimit()] if i != 0 else self.records[i].title
+                options.append(f"{listIcon} {self.records[i].date}\n[i]{title}[/i]")
         return options
 
     def addRecord(self, input):
@@ -1330,8 +1334,10 @@ class ScrollButton(Button):
         self.halign = "left"
         self.valign = valign
         self.markup = True
-        #self.text_size = (Window.size[0]*.95, self.height) # было в v2.5.1/2 - у Аллы баг
-        self.text_size = (Window.size[0] * .95, None) # стало - не должно быть бага
+        if RM.orientation == "v":
+            self.text_size = (Window.size[0] * .95, None)  # стало - не должно быть бага
+        else:
+            self.text_size = (Window.size[0]*.95, self.height) # было в v2.5.1/2 - у Аллы баг
         if RM.specialFont != None: self.font_name = RM.specialFont
         self.originalColor = ""
         self.originalColor = RM.linkColor
@@ -4618,6 +4624,7 @@ class RMApp(App):
 
     def tip(self, text="", icon="info", hint_y=False):
         """ Подсказка """
+        k = .75
         if icon == "warn":
             color = "F4CA16" # желтый
             size_hint_y = None
@@ -4630,16 +4637,15 @@ class RMApp(App):
             for char in text:
                 if char != "\n": text2 += char
                 else: text2 += " "
-            text = text2
+            limit = int(self.listItemCharLimit() * k)
+            text = text2[:limit]
             size_hint_y = .1 if self.platform == "desktop" else None
 
-        k = .75
-        if len(text) > self.listItemCharLimit() * k: size_hint_y = .4
         if hint_y != False: size_hint_y = hint_y
 
-        textlen = int(180/self.fontScale()) # размер текста уменьшается пропорционально размеру шрифта
+        #textlen = int(180/self.fontScale()) # размер текста уменьшается пропорционально размеру шрифта
         tip = MyLabel(color=self.standardTextColor, markup=True, size_hint_y=size_hint_y,
-                        text=f"[ref=note][color={color}]{self.button[icon]}[/color] {text[:textlen]}[/ref]",
+                        text=f"[ref=note][color={color}]{self.button[icon]}[/color] {text}[/ref]",
                         text_size=(self.mainList.size[0] * k, None), valign="center")
         if icon == "note" or icon == "warn": tip.bind(on_ref_press=self.titlePressed)
         return tip
@@ -5336,7 +5342,7 @@ class RMApp(App):
                                     text_size=text_size))
                 contentMain.add_widget(CL)
 
-            if len(options) > 0: # заданы кнопки да/нет
+            if len(options) > 0: # заданы кнопки
                 grid = GridLayout(rows=1, cols=1, size_hint_y=None)
                 self.confirmButtonPositive = RButton(text=options[0], onPopup=True, pos_hint={"bottom": 1}, radiusK=radiusK)
                 self.confirmButtonPositive.bind(on_release=self.popupPressed)
@@ -5344,7 +5350,7 @@ class RMApp(App):
                     grid.rows += 1
                     grid.add_widget(Widget())
                 grid.add_widget(self.confirmButtonPositive)
-                if len(options) > 1:
+                if len(options) > 1: # если кнопок несколько
                     grid.cols=3
                     grid.add_widget(Widget())
                     self.confirmButtonNegative = RButton(text=options[1], onPopup=True, radiusK=radiusK)
@@ -5505,7 +5511,10 @@ class RMApp(App):
 
     def listItemCharLimit(self):
         """ Возвращает лимит символов в пункте списка в зависимости от размера экрана """
-        return int(80 / (self.fontScale()*1.5))
+        if self.orientation == "v":
+            return int(80 / (self.fontScale()*1.7))
+        else:
+            return 99999
 
     def restart(self, mode="hard", load=True):
         """ Перезапуск либо перерисовка """
