@@ -4,7 +4,7 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.6.1"
+Version = "2.6.2"
 
 """
 * Исправления и оптимизации.
@@ -1091,19 +1091,6 @@ class MyCheckBox(CheckBox):
         self.size_hint = size_hint
         self.color = RM.checkBoxColor
         if pos_hint != None: self.pos_hint = pos_hint
-
-        #self.background_checkbox_normal = "checkbox_blue.png"
-        #self.background_checkbox_down = "checkbox_blue_empty.png"
-
-"""class MyCheckBoxSim(Label):
-    def __init__(self, active=False, size_hint=(1, 1), pos_hint=None, *args, **kwargs):
-        super(MyCheckBoxSim, self).__init__()
-        self.active = active
-        self.size_hint = size_hint
-        self.color = RM.checkBoxColor
-        if pos_hint != None: self.pos_hint = pos_hint
-
-        self.text = icon("icon-check-1") if self.active else icon("icon-check-empty-1")"""
 
 class TTab(TabbedPanelHeader):
     """ Вкладки панелей """
@@ -4311,7 +4298,7 @@ class RMApp(App):
             grid.rows += 1
             gridCB = GridLayout(rows=2)
             gridCB.size_hint_y = .5 if self.orientation == "v" else .3
-            self.checkbox = MyCheckBox(active=active) if self.fontScale() == 1 else MyCheckBoxSim(active=active)
+            self.checkbox = MyCheckBox(active=active)
             gridCB.add_widget(self.checkbox)
 
             def __on_checkbox_active(checkbox, value): # что происходит при активированной галочке
@@ -5512,7 +5499,8 @@ class RMApp(App):
     def listItemCharLimit(self):
         """ Возвращает лимит символов в пункте списка в зависимости от размера экрана """
         if self.orientation == "v":
-            return int(80 / (self.fontScale()*1.7))
+            return int(80 / (self.fontScale()*1.5))
+            #return int(40 / self.fontScale())
         else:
             return 99999
 
