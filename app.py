@@ -4637,7 +4637,7 @@ class RMApp(App):
             for char in text:
                 if char != "\n": text2 += char
                 else: text2 += " "
-            limit = int(self.listItemCharLimit() * k)
+            limit = int(self.listItemCharLimit() * k) if self.orientation == "v" else 200
             text = text2[:limit]
             size_hint_y = .1 if self.platform == "desktop" else None
 
