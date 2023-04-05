@@ -45,9 +45,9 @@ Data recovery
 Cannot restore a backup copy with this name. Likely it does not exist.
 Error in some of the fields, please check data!
 cred.: %s
-Saved manual changes: plac.: %d, videos: %d, hours: %s, %sRV: %d, BS: %d
+Saved changes: plac.: %d, videos: %d, hours: %s, %sRV: %d, BS: %d
 Service Year
-Last month's report is already saved and will remain here for the whole month!
+Export all data or only territory %s?
 Last month's report is saved automatically at the beginning of the next month!
 Settings
 Settings saved
@@ -66,7 +66,7 @@ Mass adding
 Examples: 1 / 1a / red building
 Add territory
 Condominium
-The new database will completely replace all existing data on your device, including reports, service year, and settings! Proceed?
+All
 Example: Park Way, 30
 Check the box if this territory is an apartment complex.
 Enter new entrance name:
@@ -297,7 +297,7 @@ m
 Yes
 No
 Pressing this button will decrease the amount of flats [u]on this floor[/u] by one with shift to the right and recount of all numbers in the unit except those with visits. All apartments having any content will remain. This is a way to edit the amount of flats on each floor. Proceed with shrinking?
-Using this button, you can adjust the size of the numbers grid by moving the slider above, as well as its position in one of the 9 points with the buttons in the bottom right corner. Click on the same button %s to finish editing.
+Using this button, you can adjust the size of the flat grid by moving the slider above, as well as its position in one of the 9 points with the buttons in the bottom right corner. Click on the same button %s to finish editing.
 Night
 Evening
 Sepia
@@ -305,7 +305,7 @@ Eco
 Teal
 Purple
 Clarity
-
+Export failed! The territory name may contain invalid characters.
 1, 2b, Park St 1a, 5th Avenue 119
 New version found! It will be updated on the next program start.
 Re-arranging numbers and floors does not affect existing visits data.

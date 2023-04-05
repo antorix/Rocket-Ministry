@@ -45,9 +45,9 @@ Recuperación de datos
 No se puede restaurar una copia de seguridad con este nombre. Es probable que no exista.
 Error en algunos de los campos, ¡por favor, compruebe los datos!
 crédito: %s
-Cambios manuales guardados: col.: %d, vídeos: %d, horas: %s, %sRV: %d, EB: %d
+Cambios guardados: col.: %d, vídeos: %d, horas: %s, %sRV: %d, EB: %d
 Año de Serv.
-¡El informe del mes pasado ya está guardado y permanecerá aquí durante todo el mes!
+Exportar todos los datos o solo territorio %s?
 ¡El informe del mes anterior se guarda automáticamente a principios del mes siguiente!
 Ajustes
 Ajustes guardados
@@ -66,7 +66,7 @@ Adición masiva
 Ejemplos: 1 / 1a / edificio rojo
 Añadir territorio
 Condominio
-La nueva base de datos sustituirá por completo todos los datos existentes en tu dispositivo, incluidos los informes, el año de servicio y los ajustes. ¿Continuar?
+Todos
 Ejemplo: Avenida del Parque, 30
 Marque la casilla si este territorio es un complejo de apartamentos.
 Introduzca el nombre de la nueva entrada:
@@ -305,7 +305,7 @@ Eco
 Verde azulado
 Morado
 Claridad
-
+¡Exportación fallida! El nombre del territorio puede contener caracteres no válidos.
 1, 2b, calle del parque 1a, Quinta Avenida 119
 ¡Nueva versión encontrada! Se actualizará en el próximo inicio del programa.
 La reordenación de números y plantas no afecta a los datos de visitas existentes.

@@ -4,10 +4,12 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.6.2"
+Version = "2.6.3"
 
 """
-* Исправления и оптимизации.
+* Редактирование отчета за прошлый месяц.
+* Экспорт и импорт отдельных участков.
+* Небольшие исправления и оптимизации.
 """
 
 import utils as ut
@@ -138,7 +140,7 @@ class House(object):
         self.title = input[3:].upper()
 
     def getProgress(self):
-        """ Выдает показатель обработки участка в виде доли от 0 до 1 [0] и только обработанные квартиры [1]"""
+        """ Выдает показатель обработки участка в виде доли от 0 до 1 [0] и только обработанные квартиры [1] """
         totalFlats = workedFlats = 0
         for porch in self.porches:
             for flat in porch.flats:
@@ -149,14 +151,14 @@ class House(object):
         else: return 0, 0
 
     def export(self):
-        export = copy([
+        export = [
             self.title,
             self.porchesLayout,
             self.date,
             self.note,
             self.type,
             [porch.export() for porch in self.porches]
-        ])
+        ]
         return export
 
 class Porch(object):
@@ -450,7 +452,7 @@ class Porch(object):
         return success
 
     def export(self):
-        export = copy([
+        export = [
             self.title,
             self.status,
             self.flatsLayout,
@@ -458,7 +460,7 @@ class Porch(object):
             self.note,
             self.type,
             [flat.export() for flat in self.flats]
-        ])
+        ]
         return export
 
 class Flat(object):
@@ -629,7 +631,7 @@ class Flat(object):
         return string, value
 
     def export(self):
-        export = copy([
+        export = [
             self.title,
             self.note,
             self.number,
@@ -637,7 +639,7 @@ class Flat(object):
             self.phone,
             self.meeting,
             [record.export() for record in self.records]
-        ])
+        ]
         return export
 
 class Record(object):
@@ -647,7 +649,7 @@ class Record(object):
         self.title = ""
 
     def export(self):
-        return copy([self.date, self.title])
+        return [self.date, self.title]
 
 # Класс отчета
 
@@ -685,13 +687,13 @@ class Report(object):
             self.reminder,
             self.lastMonth
         ]
-        if mute == False:
+        if not mute:
             RM.log(message, forceNotify=forceNotify)
             date = time.strftime("%d.%m", time.localtime()) + "." + str(
                 int(time.strftime("%Y", time.localtime())) - 2000)
             time2 = time.strftime("%H:%M:%S", time.localtime())
             RM.resources[2].insert(0, f"\n{date} {time2}: {message}")
-        if save == True: RM.save(backup=True, silent=True)
+        if save: RM.save(backup=True, silent=True)
 
     def checkNewMonth(self, forceDebug=False):
         savedMonth = RM.settings[3]
@@ -744,14 +746,14 @@ class Report(object):
         else: credit = ""
 
         # Save file of last month
-        self.lastMonth = f"[u]{RM.msg[223]}[/u]\n\n" % RM.monthName()[3] + \
-                         f"{RM.msg[102]}{RM.col} [b]%d[/b]\n" % self.placements + \
-                         f"{RM.msg[103]}{RM.col} [b]%d[/b]\n" % self.videos + \
-                         f"{RM.msg[104]}{RM.col} [b]%s[/b]\n" % ut.timeFloatToHHMM(self.hours)[
+        self.lastMonth = f"{RM.msg[223]}\n\n" % RM.monthName()[3] + \
+                         f"{RM.msg[102]}{RM.col} %d\n" % self.placements + \
+                         f"{RM.msg[103]}{RM.col} %d\n" % self.videos + \
+                         f"{RM.msg[104]}{RM.col} %s\n" % ut.timeFloatToHHMM(self.hours)[
                                                              0: ut.timeFloatToHHMM(self.hours).index(":")] + \
-                         f"{RM.msg[108]}{RM.col} [b]%d[/b]\n" % self.returns + \
-                         f"{RM.msg[109]}{RM.col} [b]%d[/b]\n" % self.studies
-        if credit != "": self.lastMonth += f"[i]{RM.msg[224]}{RM.col} %s[/i]" % credit
+                         f"{RM.msg[108]}{RM.col} %d\n" % self.returns + \
+                         f"{RM.msg[109]}{RM.col} %d\n" % self.studies
+        if credit != "": self.lastMonth += f"{RM.msg[224]}{RM.col} %s" % credit
 
         # Clear service year in October        
         if int(time.strftime("%m", time.localtime())) == 10:
@@ -880,21 +882,15 @@ class Report(object):
         if RM.settings[0][2] == 1:
             credit = f"{RM.msg[222]} {ut.timeFloatToHHMM(self.credit)[0: ut.timeFloatToHHMM(self.credit).index(':')]}\n"  # whether save credit to file
         else: credit = ""
-        result = f"[u]{RM.msg[223]}[/u]\n\n" % RM.monthName()[1] + \
-                 f"{RM.msg[102]}{RM.col} [b]%d[/b]\n" % self.placements + \
-                 f"{RM.msg[103]}{RM.col} [b]%d[/b]\n" % self.videos + \
-                 f"{RM.msg[104]}{RM.col} [b]%s[/b]\n" % \
+        result = f"{RM.msg[223]}\n\n" % RM.monthName()[1] + \
+                 f"{RM.msg[102]}{RM.col} %d\n" % self.placements + \
+                 f"{RM.msg[103]}{RM.col} %d\n" % self.videos + \
+                 f"{RM.msg[104]}{RM.col} %s\n" % \
                  ut.timeFloatToHHMM(self.hours)[0: ut.timeFloatToHHMM(self.hours).index(":")] + \
-                 f"{RM.msg[108]}{RM.col} [b]%d[/b]\n" % self.returns + \
-                 f"{RM.msg[109]}{RM.col} [b]%d[/b]\n" % self.studies
-        if credit != "": result += f"[i]{RM.msg[224]}{RM.col} %s[/i]" % credit
-        result = ut.filterOutFormatting(result)
+                 f"{RM.msg[108]}{RM.col} %d\n" % self.returns + \
+                 f"{RM.msg[109]}{RM.col} %d\n" % self.studies
+        if credit != "": result += f"{RM.msg[224]}{RM.col} %s" % credit
         return result
-
-    def getLastMonthReport(self):
-        """ Выдает отчет прошлого месяца """
-        self.lastMonthNoFormatting = ut.filterOutFormatting(self.lastMonth)
-        return self.lastMonth, self.lastMonthNoFormatting, RM.monthName()[2], RM.monthName()[3]
 
 # Классы интерфейса
 
@@ -1103,9 +1099,6 @@ class TTab(TabbedPanelHeader):
         self.background_normal = "void.png"
         self.color, self.background_down = RM.tabColors
 
-    def on_press(self):
-        RM.buttonFlash(instance=self)
-
 class TopButton(Button):
     """ Кнопки поиска и настроек"""
     def __init__(self, text=""):
@@ -1183,6 +1176,10 @@ class RButton(Button):
                  markup=True, background_down="", onPopup=False, quickFlash=False,
                  radiusK = 1, **kwargs):
         super(RButton, self).__init__()
+
+        if RM.platform == "mobile":
+            self.font_size = RM.fontXS * RM.fontScale() if RM.fontScale() < 1.4 else RM.fontM
+
         if RM.specialFont != None:
             self.font_name = RM.specialFont
             if RM.platform == "mobile": self.font_size = int(RM.fontXS * RM.fontScale())
@@ -2123,7 +2120,7 @@ class RMApp(App):
             self.standardTextColor = self.textInputColor = [.1, .1, .1]
             self.mainMenuActivated = self.titleColor = [0,.45,.77]
             self.activatedColor = [0, .15, .35, .9]
-            self.checkBoxColor = [.6, .6, .8]
+            self.checkBoxColor = [.95, .85, .95] #[.6, .6, .8]
             self.tableBGColor = self.themeDefault[0]
             self.popupBackgroundColor = [.16, .16, .16]
             self.scrollButtonBackgroundColor = [.98,.98,.98]
@@ -2144,7 +2141,7 @@ class RMApp(App):
                 self.textInputBGColor = [.95, .95, .95]
                 self.tableBGColor = [0.83, 0.83, 0.83, .9]
                 self.tabColors = self.linkColor, "tab_background_purple.png"
-                self.checkBoxColor = [1, .7, .7]
+                self.checkBoxColor = [1, .75, .8]
                 self.saveColor = "008E61"
                 self.sliderImage = "slider_cursor_purple.png"
 
@@ -2168,7 +2165,7 @@ class RMApp(App):
                 self.tableColor = "white"
                 self.tableBGColor = [0.2, 0.7, 0.8, .85]
                 self.saveColor = "A0FFCB"#"6EFF00"
-                self.checkBoxColor = [1, 1, .95]
+                self.checkBoxColor = [.5, 1, 1]
                 self.tabColors = self.linkColor, "tab_background_teal.png"
 
             elif self.theme == "gray": # Вечер
@@ -2223,10 +2220,11 @@ class RMApp(App):
             "ok":       icon("icon-ok-1") + " OK",
             "back":     icon("icon-left-2"),
             "details":  icon("icon-pencil-1"),
-            "search":   icon("icon-search-1"),# if self.theme != "darkR" else icon("icon-sun"),
+            "edit":     icon("icon-edit-1"),
+            "search":   icon("icon-search-1"),
             "search2":  icon("icon-search-circled"),
             "dot":      icon("icon-dot-circled"),
-            "menu":     icon("icon-menu"),# if self.theme != "darkR" else icon("icon-wrench-1"),
+            "menu":     icon("icon-menu"),
             "cog":      icon("icon-cog-1"),
             "contact":  icon("icon-user-plus"),
             "phone1":   icon("icon-phone-1"),
@@ -2285,10 +2283,6 @@ class RMApp(App):
 
             self.pageTitle.text = f"[ref=title]{self.displayed.title}[/ref]" if "View" in self.displayed.form \
                 else self.displayed.title
-
-            """settings = autoclass('android.provider.Settings$System')
-            context = autoclass('org.kivy.android.PythonActivity').mActivity
-            auto_caps = settings.getString(context.getContentResolver(), "text_auto_caps")"""
 
             """from kvdroid.tools.lang import device_lang
             DL = device_lang()
@@ -2974,13 +2968,13 @@ class RMApp(App):
     # Действия главных кнопок positive, neutral
 
     def navPressed(self, instance=None):
-        """if self.platform == "mobile":
+        """try: # попытка реализовать через plyer, пока не работает
             from plyer import maps
             #maps.route(self.house.title)
             maps.route("Here", self.house.title)
-        else:
-            webbrowser.open(f"https://www.google.com/maps/place/{dest}")
+        except: webbrowser.open(f"https://www.google.com/maps/place/{dest}")
         return"""
+
         try:
             dest = self.house.title if self.house.type == "condo" else f"{self.house.title} {self.porch.title}"
             address = f"google.navigation:q={dest}"
@@ -3022,6 +3016,9 @@ class RMApp(App):
                             self.pageTitle.text = file
                             self.importDB(file=file)
                     plyer.filechooser.open_file(on_selection=__handleSelection)
+
+                elif input == "export":
+                    self.share(email=True) if self.platform == "mobile" else self.share(file=True)
 
                 elif input != "":
                     self.searchQuery = input
@@ -3114,7 +3111,7 @@ class RMApp(App):
                     self.recalcServiceYear(allowSave=True)
 
                 else:
-                    self.log(self.msg[50]) if self.rep.getLastMonthReport()[0] != "" else self.log(self.msg[51])
+                    self.editLastMonthReport(value=0)
 
             elif self.positive.text == self.button["top"] and len(self.btn) > 0:
                 self.scroll.scroll_to(widget=self.btn[0], padding=0, animate=False)
@@ -3238,7 +3235,7 @@ class RMApp(App):
                     active = True
                     hint = self.msg[70]
                     self.ruTerHint = " / C1"
-                    ruList = " Снимите галочку, если нужно загрузить участок в виде списка адресов."
+                    ruList = " Снимите галочку, если участок другого типа или в виде списка адресов."
                 else:
                     active = False
                     hint = self.msg[166]
@@ -3719,14 +3716,18 @@ class RMApp(App):
 
         tab2 = TTab(text=self.monthName()[2])
         report2 = AnchorLayout(anchor_x="center", anchor_y="center")
-        send = f"\n{self.button['share']} {self.msg[110]}"
-        self.btnRep = self.tip(self.msg[111]) if self.rep.getLastMonthReport()[0] == "" \
-            else RButton(text=self.rep.getLastMonthReport()[0]+send, halign="left", radiusK=.4,
-                                  size=(self.standardTextHeight*8, self.standardTextHeight*8),
-                                  size_hint_x=None, size_hint_y=None)
-
-        self.btnRep.bind(on_release=self.sendLastMonthReport)
-        report2.add_widget(self.btnRep)
+        hint = "" if self.rep.lastMonth != "" else self.msg[111]
+        box = BoxLayout(orientation="vertical", size_hint=(None, None), width=self.standardTextHeight*8,
+                        height=self.standardTextHeight*6 if self.orientation=="h" else self.standardTextHeight*8)
+        self.repBox = MyTextInput(text=ut.filterOutFormatting(self.rep.lastMonth), hint_text=hint, multiline=True, shrink=False)
+        #self.repBox = MyTextInput(text=self.rep.lastMonth, hint_text=hint, multiline=True, shrink=False) # поменять в июне
+        self.repBox.bind(focus=self.editLastMonthReport)
+        btnSend = TableButton(text=f"\n{self.button['share']} {self.msg[110]}",
+                              size_hint_x=1, size_hint_y=None, height=self.standardTextHeight*1.2)
+        btnSend.bind(on_release=self.sendLastMonthReport)
+        report2.add_widget(box)
+        box.add_widget(self.repBox)
+        box.add_widget(btnSend)
         tab2.content = report2
         self.reportPanel.add_widget(tab2)
         self.reportPanel.do_default_tab = False
@@ -3909,12 +3910,17 @@ class RMApp(App):
 
         exportEmail = RButton(text=f"{self.button['export']} {self.msg[132]}", size=text_size, radiusK=radiusK)
         def __export(instance):
-            self.share(email=True) if self.platform == "mobile" else self.share(file=True)
+            try: # пробуем экспортировать один участок
+                if self.house.title == "": 5/0 # вместо участка выбран контакт, генерируем ошибку
+                self.popup(message=self.msg[50] % self.house.title, options=[self.msg[69], self.msg[153]])
+                self.popupForm = "exportTer"
+            except: # если не получилось, обычный экспорт
+                self.share(email=True) if self.platform == "mobile" else self.share(file=True)
         exportEmail.bind(on_release=__export)
         g.add_widget(exportEmail)
 
         importBtn = RButton(text=f"{self.button['import']} {self.msg[133]}", size=text_size, radiusK=radiusK)
-        importBtn.bind(on_release=lambda x: self.importDB(skipConfirm=False))
+        importBtn.bind(on_release=lambda x: self.importDB())
         g.add_widget(importBtn)
 
         if self.platform == "desktop":
@@ -4135,7 +4141,7 @@ class RMApp(App):
             sort=sort,
             resize=noteButton,
             details=self.button["cog"] + porchName,
-            positive=self.button["plus"] + positive,
+            positive=(self.button["edit"] if self.house.type == "condo" else self.button["plus"]) + positive,
             neutral=neutral,
             tip=[note, "note"]
         )
@@ -4154,7 +4160,7 @@ class RMApp(App):
         """ Вид квартиры - список записей посещения """
         self.updateMainMenuButtons()
         number = " " if self.flat.number == "virtual" else self.flat.number + " " # прячем номера отдельных контактов
-        flatPrefix = f"{self.msg[214]} "if "подъезд" in self.porch.type else ""
+        flatPrefix = f"{self.msg[214]} " if "подъезд" in self.porch.type else ""
         self.flatTitle = (flatPrefix + number + self.flat.getName()).strip()
         records = self.flat.showRecords()
         if self.flat.number == "virtual" or self.contactsEntryPoint == 1: self.flatType = f" {self.msg[158]}"
@@ -4439,7 +4445,7 @@ class RMApp(App):
             if self.displayed.form == "set" and self.platform == "mobile":
                 self.multipleBoxLabels[row].font_size = self.fontXS * self.fontScale() if self.fontScale() < 1.4 else self.fontM
             if default != "virtual": grid.add_widget(self.multipleBoxLabels[row])
-            textbox = BoxLayout(size_hint=entrySize_hint, padding=(self.padding, 0, 0, 0),
+            textbox = BoxLayout(size_hint=entrySize_hint, padding=(self.padding, self.padding*2, 0, 0),
                                 height=height, pos_hint={"center_x": .5})
 
             if colorSelect == True: self.multipleBoxEntries.append(RejectColorSelectButton())
@@ -4624,13 +4630,12 @@ class RMApp(App):
             for char in text:
                 if char != "\n": text2 += char
                 else: text2 += " "
-            limit = int(self.listItemCharLimit() * k) if self.orientation == "v" else 200
+            limit = int(self.listItemCharLimit() * k * 1.5) if self.orientation == "v" else 200
             text = text2[:limit]
             size_hint_y = .1 if self.platform == "desktop" else None
 
         if hint_y != False: size_hint_y = hint_y
 
-        #textlen = int(180/self.fontScale()) # размер текста уменьшается пропорционально размеру шрифта
         tip = MyLabel(color=self.standardTextColor, markup=True, size_hint_y=size_hint_y,
                         text=f"[ref=note][color={color}]{self.button[icon]}[/color] {text}[/ref]",
                         text_size=(self.mainList.size[0] * k, None), valign="center")
@@ -4745,7 +4750,7 @@ class RMApp(App):
                 plyer.notification.notify(toast=True, message=message)
             else:
                 icon = "" if self.platform == "mobile" else "icon.ico"
-                if Devmode == 0:
+                if not Devmode:
                     plyer.notification.notify(app_name="Rocket Ministry", title="Rocket Ministry", app_icon=icon,
                                               ticker="Rocket Ministry", message=message, timeout=timeout)
         except: print(message)
@@ -4758,6 +4763,12 @@ class RMApp(App):
         newHouse = len(houses) - 1
         houses[newHouse].title = input.strip() if forceUpper == False or self.language == "ge" else (input.strip()).upper()
         houses[newHouse].type = type
+
+    def editLastMonthReport(self, instance=None, value=None):
+        """ Правка отчета прошлого месяца на странице отчета """
+        if value == 0:
+            self.rep.lastMonth = self.repBox.text
+            self.rep.saveReport(mute=True)
 
     def recalcServiceYear(self, instance=None, value=None, allowSave=True):
         """ Подсчет статистики служебного года """
@@ -4822,7 +4833,7 @@ class RMApp(App):
 
     def sendLastMonthReport(self, instance=None):
         """ Отправка отчета прошлого месяца """
-        plyer.email.send(subject=self.msg[4], text=self.rep.getLastMonthReport()[1], create_chooser=True)
+        plyer.email.send(subject=self.msg[4], text=self.rep.lastMonth, create_chooser=True)
 
     def addList(self, instance):
         """ Добавление квартир списком"""
@@ -4834,8 +4845,8 @@ class RMApp(App):
         text = MyTextInput(hint_text=hint, multiline=True, size_hint_y=None,
                            height=self.standardTextHeight * 5, shrink=False)
         box.add_widget(text)
-        btnPaste = TableButton(text=self.msg[186], size_hint_x=1, size_hint_y=None, width=width, height=self.standardTextHeight,
-                           background_color=self.textInputBGColor)
+        btnPaste = TableButton(text=self.msg[186], size_hint_x=1, size_hint_y=None,
+                               width=width, height=self.standardTextHeight)
         def __paste(instance):
             text.text = Clipboard.paste()
         btnPaste.bind(on_release=__paste)
@@ -5025,10 +5036,6 @@ class RMApp(App):
                     self.restart("soft")
                     self.terPressed()
 
-        elif self.popupForm == "importData":
-            if instance.text == self.button["yes"]:
-                self.importDB()
-
         elif self.popupForm == "newMonth":
             self.repPressed()
             self.resizePressed()
@@ -5129,6 +5136,13 @@ class RMApp(App):
 
         elif self.popupForm == "includeWithoutNumbers":
             self.exportPhones(includeWithoutNumbers = True if instance.text == self.button["yes"] else False)
+
+        elif self.popupForm == "exportTer":
+            if instance.text == self.msg[69]:
+                self.share(email=True) if self.platform == "mobile" else self.share(file=True)
+            else:
+                if self.platform == "mobile": self.share(email=True, ter=self.house)
+                else: self.share(file=True, ter=self.house)
 
         elif self.importHelp:
             if instance.text == self.button["yes"]:
@@ -5406,13 +5420,8 @@ class RMApp(App):
             for zippath in glob.iglob(os.path.join(dir, '*.csv')):
                 os.remove(zippath)
 
-    def importDB(self, instance=None, file=None, skipConfirm=True):
+    def importDB(self, instance=None, file=None):
         """ Импорт данных из буфера обмена либо файла """
-
-        if skipConfirm == False:
-            self.popup(self.msg[69], options=[self.button["yes"], self.button["no"]])
-            self.popupForm = "importData"
-            return
 
         if file == None:
             clipboard = Clipboard.paste()
@@ -5720,7 +5729,19 @@ class RMApp(App):
         if os.path.exists("temp"): os.remove("temp")
         ut.dprint(Devmode, "Загружаю буфер.")
 
-        # Сначала получаем буфер
+        # Замена data.jsn файлом с телефона - недокументированная функция, только на русском языке
+
+        if platform == "win" and os.path.exists("import.ini"):
+            with open("import.ini", encoding='utf-8', mode="r") as f: importPath = f.read()
+            if os.path.exists(importPath + "Данные Rocket Ministry.txt"):
+                os.remove(self.UserPath + "data.jsn")
+                shutil.move(importPath + "Данные Rocket Ministry.txt", os.path.abspath(os.getcwd()))
+                os.rename("Данные Rocket Ministry.txt", "data.jsn")
+
+                plyer.notification.notify(app_name="Rocket Ministry", title="Rocket Ministry", app_icon="icon.ico",
+                                          ticker="Rocket Ministry", message="Импортирован файл с телефона!", timeout=3)
+
+        # Начинаем загрузку, сначала получаем буфер
 
         buffer = []
 
@@ -5753,7 +5774,7 @@ class RMApp(App):
                 ut.dprint(Devmode, "Буфер получен из буфера обмена.")
             except: return badURLError
 
-        elif forced == True:  # импорт по запросу с конкретным файлом
+        elif forced:  # импорт по запросу с конкретным файлом
             try:
                 if ".doc" in DataFile:
                     try:
@@ -5817,10 +5838,10 @@ class RMApp(App):
                     ut.dprint(Devmode, "База сохранена с резервированием.")
 
             elif "Rocket Ministry application data file." in buffer[0]:
+                singleTer = 1 if "Single territory export" in buffer[0] else 0
                 ut.dprint(Devmode, "База определена, контрольная строка совпадает.")
                 del buffer[0]
-                self.clearDB()
-                result = self.loadOutput(buffer)
+                result = self.loadOutput(buffer, singleTer) # ЗАГРУЗКА ИЗ БУФЕРА
                 if result == False:
                     ut.dprint(Devmode, "Ошибка импорта.")
                     self.backupRestore(restoreWorking=True, allowSave=allowSave)
@@ -5946,11 +5967,16 @@ class RMApp(App):
         if export: __save()
         else: _thread.start_new_thread(__save, ("Thread-Save", .01,))
 
-    def getOutput(self):
+    def getOutput(self, ter=None):
         """ Возвращает строку со всеми данными программы, которые затем либо сохраняются локально, либо экспортируются"""
-        output = ["Rocket Ministry application data file. Do NOT edit manually!"] + [self.settings] + \
-                 [[self.resources[0], [self.resources[1][i].export() for i in range(len(self.resources[1]))], self.resources[2]]]
-        for house in self.houses: output.append(house.export())
+        if ter == None:
+            output = ["Rocket Ministry application data file. Do NOT edit manually!"] + [self.settings] + \
+                     [[self.resources[0], [self.resources[1][i].export() for i in range(len(self.resources[1]))], self.resources[2]]]
+            for house in self.houses: output.append(house.export())
+        else: # отдельный участок
+            output = ["Rocket Ministry application data file. Do NOT edit manually! Single territory export."] + [self.settings] + \
+                     [[self.resources[0], [self.resources[1][i].export() for i in range(len(self.resources[1]))], self.resources[2]]]
+            output.append(ter.export())
         return output
 
     def update(self):
@@ -6002,7 +6028,6 @@ class RMApp(App):
     def houseRetrieve(self, containers, housesNumber, h):
         """ Retrieves houses from JSON buffer into objects """
         for a in range(housesNumber):
-
             self.addHouse(containers, h[a][0], h[a][4])  # creating house and writing its title and type
             containers[a].porchesLayout = h[a][1]
             containers[a].date = h[a][2]
@@ -6033,43 +6058,75 @@ class RMApp(App):
                         containers[a].porches[b].flats[c].records[d].date = h[a][5][b][6][c][6][d][0]
                         containers[a].porches[b].flats[c].records[d].title = h[a][5][b][6][c][6][d][1]
 
-    def loadOutput(self, buffer):
+    def loadOutput(self, buffer, singleTer):
         """ Загружает данные из буфера """
         try:
-            self.settings[0] = buffer[0][0]  # загружаем настройки
-            self.settings[1] = buffer[0][1]
-            self.settings[2] = buffer[0][2]
-            self.settings[3] = buffer[0][3]
-            self.settings[4] = buffer[0][4]
+            if singleTer: # загрузка только одного участка, который добавляется к уже существующей базе
+                a=len(self.houses)
+                self.addHouse(self.houses, buffer[2][0], buffer[2][4])  # creating house and writing its title and type
+                self.houses[a].porchesLayout = buffer[2][1]
+                self.houses[a].date = buffer[2][2]
+                self.houses[a].note = buffer[2][3]
+                porchesNumber = len(buffer[2][5])  # counting porches
+                for b in range(porchesNumber):
+                    self.houses[a].addPorch(buffer[2][5][b][0])  # creating porch and writing its title and layout
+                    self.houses[a].porches[b].status = buffer[2][5][b][1]
+                    self.houses[a].porches[b].flatsLayout = buffer[2][5][b][2]
+                    self.houses[a].porches[b].floor1 = buffer[2][5][b][3]
+                    self.houses[a].porches[b].note = buffer[2][5][b][4]
+                    self.houses[a].porches[b].type = buffer[2][5][b][5]
+                    flatsNumber = len(buffer[2][5][b][6])  # counting flats
+                    for c in range(flatsNumber):
+                        self.houses[a].porches[b].flats.append(Flat())  # creating flat and writing its title
+                        self.houses[a].porches[b].flats[c].title = buffer[2][5][b][6][c][0]
+                        self.houses[a].porches[b].flats[c].note = buffer[2][5][b][6][c][1]
+                        self.houses[a].porches[b].flats[c].number = buffer[2][5][b][6][c][2]
+                        self.houses[a].porches[b].flats[c].status = buffer[2][5][b][6][c][3]
+                        self.houses[a].porches[b].flats[c].phone = buffer[2][5][b][6][c][4]
+                        # self.houses[a].porches[b].flats[c].meeting = buffer[2][5][b][6][c][5]
+                        visitNumber = len(buffer[2][5][b][6][c][6])  # counting visits
+                        for d in range(visitNumber):
+                            self.houses[a].porches[b].flats[c].records.append(Record())
+                            self.houses[a].porches[b].flats[c].records[d].date = buffer[2][5][b][6][c][6][d][0]
+                            self.houses[a].porches[b].flats[c].records[d].title = buffer[2][5][b][6][c][6][d][1]
 
-            self.resources[0] = buffer[1][0]  # загружаем блокнот
+            else: # загрузка и обновление базы целиком
+                self.clearDB()
 
-            self.resources[1] = []  # загружаем отдельные контакты
-            virHousesNumber = int(len(buffer[1][1]))
-            hr = []
-            for s in range(virHousesNumber):
-                hr.append(buffer[1][1][s])
-            self.houseRetrieve(self.resources[1], virHousesNumber, hr)
+                self.settings[0] = buffer[0][0]  # загружаем настройки
+                self.settings[1] = buffer[0][1]
+                self.settings[2] = buffer[0][2]
+                self.settings[3] = buffer[0][3]
+                self.settings[4] = buffer[0][4]
 
-            self.resources[2] = buffer[1][2]  # загружаем журнал отчета
+                self.resources[0] = buffer[1][0]  # загружаем блокнот
 
-            housesNumber = int(len(buffer)) - 2  # загружаем участки
-            h = []
-            for s in range(2, housesNumber + 2):
-                h.append(buffer[s])
-            self.houseRetrieve(self.houses, housesNumber, h)
+                self.resources[1] = []  # загружаем отдельные контакты
+                virHousesNumber = int(len(buffer[1][1]))
+                hr = []
+                for s in range(virHousesNumber):
+                    hr.append(buffer[1][1][s])
+                self.houseRetrieve(self.resources[1], virHousesNumber, hr)
 
-            if len(self.resources[0]) == 0: # конвертация заметок блокнота версии 1.x
-                self.resources[0].append("")
-            elif len(self.resources[0]) > 1 and isinstance(self.resources[0][1], str):
-                notes = ""
-                for note in self.resources[0]:
-                    notes += note + "\n"
-                del self.resources[0][:]
-                self.resources[0].append(notes)
+                self.resources[2] = buffer[1][2]  # загружаем журнал отчета
 
-            if len(self.resources[0]) == 1:
-                self.resources[0].append([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) # добавляем для новой версии новый массив
+                housesNumber = int(len(buffer)) - 2  # загружаем участки
+                h = []
+                for s in range(2, housesNumber + 2):
+                    h.append(buffer[s])
+                self.houseRetrieve(self.houses, housesNumber, h)
+
+                if len(self.resources[0]) == 0: # конвертация заметок блокнота версии 1.x
+                    self.resources[0].append("")
+                elif len(self.resources[0]) > 1 and isinstance(self.resources[0][1], str):
+                    notes = ""
+                    for note in self.resources[0]:
+                        notes += note + "\n"
+                    del self.resources[0][:]
+                    self.resources[0].append(notes)
+
+                if len(self.resources[0]) == 1:
+                    self.resources[0].append([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]) # добавляем для новой версии новый массив
 
         except: return False
         else: return True
@@ -6088,32 +6145,32 @@ class RMApp(App):
         if os.path.exists(self.UserPath + self.DataFile) and keepDatafile == False: os.remove(self.UserPath + self.DataFile)
         if os.path.exists(self.BackupFolderLocation): shutil.rmtree(self.BackupFolderLocation)
 
-    def share(self, silent=False, clipboard=False, email=False, folder=None, file=False):
+    def share(self, silent=False, clipboard=False, email=False, folder=None, file=False, ter=None):
         """ Sharing database """
-        output = self.getOutput()
+        output = self.getOutput(ter=ter)
         buffer = json.dumps(output)
 
-        if clipboard == True:  # копируем базу в буфер обмена - не используется
+        if clipboard: # копируем базу в буфер обмена - не используется
             try:
                 s = str(buffer)
                 Clipboard.copy(s)
             except: return
 
-        elif email == True:  # экспорт в сообщении
-            s = str(buffer)
-            filename = self.msg[251]
-            plyer.email.send(subject=filename, text=s, create_chooser=True)
+        elif email: # экспорт в сообщении
+            plyer.email.send(subject=self.msg[251] if ter==None else ter.title, text=str(buffer), create_chooser=True)
 
-        elif file == True:  # экспорт в текстовый файл на компьютере
+        elif file: # экспорт в текстовый файл на компьютере
             try:
                 from tkinter import filedialog
                 folder = filedialog.askdirectory()
-                filename = folder + f"/{self.msg[251]}"
+                filename = folder + f"/{self.msg[251] if ter==None else ter.title}"
                 with open(filename, "w") as file: json.dump(output, file)
-            except: ut.dprint(Devmode, "Экспорт в файл не удался.")
+            except:
+                ut.dprint(Devmode, "Экспорт в файл не удался.")
+                if ter != None: self.popup(self.msg[308])
             else: self.popup(self.msg[252] % filename)
 
-        elif Devmode == 0 and folder != None:  # экспорт в файл
+        elif not Devmode and folder != None: # экспорт в файл
             try:
                 with open(folder + "/data.jsn", "w") as file: json.dump(output, file)
             except: self.popup(self.msg[253])
