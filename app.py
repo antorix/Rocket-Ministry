@@ -2216,7 +2216,7 @@ class RMApp(App):
         else: colNN = None
         self.button = { # кнопки с иконками
             "save": f" [color={self.saveColor}]{icon('icon-ok-circled' if self.theme != 'darkR' else 'icon-floppy')} {self.msg[5]}[/color]",
-            "plus":     icon("icon-plus-circled"),
+            "plus":     icon("icon-plus-squared-alt"),
             "ok":       icon("icon-ok-1") + " OK",
             "back":     icon("icon-left-2"),
             "details":  icon("icon-pencil-1"),
