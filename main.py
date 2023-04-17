@@ -2,5 +2,4 @@
 # -*- coding: utf-8 -*-
 
 from app import RM
-if __name__ == "__main__":
-    RM.run()
+if __name__ == "__main__": RM.run()

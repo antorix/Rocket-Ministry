@@ -206,7 +206,7 @@ You can disable the "%s" button in the app settings!
 Not at home
 Not interested
 Cannot load file. It likely has a wrong format or does not contain necessary data.
-Data successfully loaded!
+Data successfully loaded! If you are not satisfied with the result, perform "%s" to cancel changes.
 To import data, copy the share link to a Google Drive file into the clipboard. Then click this button again. Do you want to see a more detailed instruction?
 section
 entrance
@@ -323,3 +323,4 @@ Cut
 Copy
 Paste
 Select all
+Remember window position and size

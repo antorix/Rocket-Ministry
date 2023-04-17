@@ -206,7 +206,7 @@ Atención
 No en casa
 No interesado
 No se puede cargar el archivo. Es probable que tenga un formato incorrecto o que no contenga los datos necesarios.
-¡Datos cargados con éxito!
+¡Datos cargados con éxito! Si no está satisfecho con el resultado, ejecute "%s" para cancelar los cambios.
 Para importar datos, copie el enlace compartido a un archivo de Google Drive en el portapapeles. A continuación, vuelva a hacer clic en este botón. ¿Quiere ver unas instrucciones más detalladas?
 sección
 entrada
@@ -323,3 +323,4 @@ Cortar
 Copiar
 Pegar
 Seleccionar todo
+Recuerde la posición y el tamaño de la ventana

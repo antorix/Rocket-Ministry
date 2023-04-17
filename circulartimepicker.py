@@ -69,7 +69,7 @@ Builder.load_string("""
                 # text_size: self.size
                 size_hint_x: None #.6
                 width: self.texture_size[0]
-                font_size: self.height * .55
+                font_size: self.height * .55                
 
             Label:
                 id: ampmlabel
@@ -439,7 +439,11 @@ class CircularTimePicker(BoxLayout):
     # military = BooleanProperty(False)
     #time_format = StringProperty("[color={hours_color}][ref=hours]{hours}[/ref][/color]:[color={minutes_color}][ref=minutes]{minutes:02d}[/ref][/color]")
     #time_format = StringProperty("[color={hours_color}][ref=hours]{hours} ч[/ref][/color] [color={minutes_color}][ref=minutes]{minutes:02d} м[/ref][/color]")
-    time_format = StringProperty("[font=DejaVuSans][color={hours_color}][ref=hours]{hours} %s[/ref][/color] [color={minutes_color}][ref=minutes]{minutes:02d} %s[/ref][/color][/font]" % (app.RM.msg[295], app.RM.msg[296]))
+
+    if app.RM.specialFont != None:
+        time_format = StringProperty("[font=DejaVuSans][color={hours_color}][u][ref=hours]{hours} %s[/ref][/u][/color] [color={minutes_color}][u][ref=minutes]{minutes:02d} %s[/ref][/u][/color][/font]" % (app.RM.msg[295], app.RM.msg[296]))
+    else:
+        time_format = StringProperty("[color={hours_color}][u][ref=hours]{hours} %s[/ref][/u][/color] [color={minutes_color}][u][ref=minutes]{minutes:02d} %s[/ref][/u][/color]" % (app.RM.msg[295], app.RM.msg[296]))
     """String that will be formatted with the time and shown in the time label.
     Can be anything supported by :meth:`str.format`. Make sure you don't
     remove the refs. See the default for the arguments passed to format.
