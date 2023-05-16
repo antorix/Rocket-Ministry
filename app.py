@@ -4,12 +4,12 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.6.4"
+Version = "2.7.0"
 
 """
-* Функция восстановления отменяет импорт данных.
-* На ПК: возможность отключить запоминание положения и размера окна при выходе.
-* Небольшие исправления и оптимизации.
+* Турецкий язык.
+* Исправлен баг, при котором контакт мог экспортироваться как участок.
+* Небольшие оптимизации дизайна.
 """
 
 import utils as ut
@@ -417,7 +417,9 @@ class Porch(object):
                 else:
                     if forcedDelete==True: delete=True
                     else:
-                        if silent==False: RM.popup(f"{RM.msg[218]} {self.flats[i].number} – {RM.msg[219]}")
+                        if silent==False:
+                            #RM.popup(f"{RM.msg[218]} {self.flats[i].number} – {RM.msg[219]}")
+                            RM.popup(RM.msg[218] % self.flats[i].number)
                         del self.flats[last] # user reconsidered, delete the newly created empty flat
                 break
 
@@ -1087,6 +1089,11 @@ class MyCheckBox(CheckBox):
         self.active = active
         self.size_hint = size_hint
         self.color = RM.checkBoxColor
+        #self.background_checkbox_normal = "checkbox_off_blue.png"
+        if RM.theme == "default" or RM.theme == "sepia":
+            self.background_checkbox_down = "checkbox_on_blue.png"
+        elif RM.theme == "purple":
+            self.background_checkbox_down = "checkbox_on_purple.png"
         if pos_hint != None: self.pos_hint = pos_hint
 
 class TTab(TabbedPanelHeader):
@@ -1531,17 +1538,13 @@ class Timer(Button):
 
     def on_press(self):
         self.font_size = RM.fontXL * 1.8
-        Clock.schedule_once(self.step1, RM.onClickFlash / 3)
+        Clock.schedule_once(self.step2, RM.onClickFlash)
         if "dark" in RM.theme and self.background_color != RM.tableBGColor:
             self.background_color = RM.buttonPressedOnDark
             Clock.schedule_once(self.restoreBlackBG, RM.onClickFlash)
 
     def restoreBlackBG(self, *args):
         self.background_color = "black"
-
-    def step1(self, *args):
-        self.font_size = RM.fontXL * 1.6
-        Clock.schedule_once(self.step2, RM.onClickFlash / 3)
 
     def step2(self, *args):
         self.font_size = RM.fontXL * 2
@@ -1737,6 +1740,7 @@ class RMApp(App):
             "en": ["English", None],
             "es": ["español", None],
             "ru": ["русский", None],
+            "tr": ["Türkçe", None],
             "ka": ["ქართული", self.MyFont],
             "hy": ["Հայերեն", self.MyFont],
         }
@@ -1780,6 +1784,7 @@ class RMApp(App):
             elif DL == "es": self.language = "es"
             elif DL == "ka": self.language = "ka"
             elif DL == "hy": self.language = "hy"
+            elif DL == "tr": self.language = "tr"
             else: self.language = "en"
             self.settings[0][6] = self.language
 
@@ -2077,6 +2082,7 @@ class RMApp(App):
             else: ut.dprint(Devmode, "Тема переопределена из файла theme.ini.")
 
         self.topButtonColor = [.75, .75, .75] # "lightgray" # поиск, настройки и кнопки счетчиков
+        self.checkBoxColor = [1, 1, 1]
 
         if "dark" in self.theme: # темная тема
             self.globalBGColor = [0, 0, 0]#self.themeDark # фон программы
@@ -2084,10 +2090,9 @@ class RMApp(App):
             self.tableBGColor = [.2, .2, .2, .9] # цвет фона кнопок таблицы
             self.standardTextColor = self.textInputColor = [1, 1, 1, 1]#"white" # основной текст всех шрифтов
             self.titleColor = self.mainMenuActivated = [.3, .82, 1, 1] # неон - цвет нажатой кнопки и заголовка
-            self.checkBoxColor = [1, 1, 1]
             self.popupBackgroundColor = [.16, .16, .16, 1] # фон всплывающего окна
             self.linkColor = self.tableColor = [1, 1, 1, 1]#"white" # цвет текста на плашках таблицы и кнопках главного меню
-            self.scrollButtonBackgroundColor = [.07,.07,.07]# # фон пунктов списка
+            self.scrollButtonBackgroundColor = [.1,.1,.1]# # фон пунктов списка
             self.lightGrayFlat = [.38, .38, .38, 1]
             self.darkGrayFlat = [.28, .28, .28, 1] # квартира "нет дома"
             self.createNewPorchButton = [.2, .2, .2, 1] # пункт списка создания нового подъезда
@@ -2106,7 +2111,6 @@ class RMApp(App):
             self.standardTextColor = self.textInputColor = [.1, .1, .1]
             self.mainMenuActivated = self.titleColor = [0,.45,.77]
             self.activatedColor = [0, .15, .35, .9]
-            self.checkBoxColor = [.95, .85, .95] #[.6, .6, .8]
             self.tableBGColor = self.themeDefault[0]
             self.popupBackgroundColor = [.16, .16, .16]
             self.scrollButtonBackgroundColor = [.98,.98,.98]
@@ -2127,7 +2131,6 @@ class RMApp(App):
                 self.textInputBGColor = [.95, .95, .95]
                 self.tableBGColor = [0.83, 0.83, 0.83, .9]
                 self.tabColors = self.linkColor, "tab_background_purple.png"
-                self.checkBoxColor = [1, .75, .8]
                 self.saveColor = "008E61"
                 self.sliderImage = "slider_cursor_purple.png"
 
@@ -2151,7 +2154,6 @@ class RMApp(App):
                 self.tableColor = "white"
                 self.tableBGColor = [0.2, 0.7, 0.8, .85]
                 self.saveColor = "A0FFCB"#"6EFF00"
-                self.checkBoxColor = [.5, 1, 1]
                 self.tabColors = self.linkColor, "tab_background_teal.png"
 
             elif self.theme == "gray": # Вечер
@@ -2161,7 +2163,7 @@ class RMApp(App):
                 self.tableColor = self.mainMenuButtonColor = [1, 1, 1]
                 self.standardTextColor = self.textInputColor = [.95, .95, .95]
                 self.tableBGColor = [.12, .3, .5, .95]
-                self.scrollButtonBackgroundColor = [.22, .22, .22]
+                self.scrollButtonBackgroundColor = [.25, .25, .25]
                 self.textInputBGColor = [.31, .3, .3, .95]
                 self.saveColor = "00E79E"
                 self.disabledColor = get_hex_from_color(self.darkGrayFlat)#"4C4C4C"
@@ -2567,7 +2569,7 @@ class RMApp(App):
                 self.house.addPorch(text.strip())
                 self.save()
                 self.houseView(instance=instance)
-            elif self.msg[11] in instance.text: # "создайте"
+            elif self.msg[11] in instance.text or self.msg[12] in instance.text: # "создайте"
                 self.positivePressed()
                 return
 
@@ -3220,7 +3222,7 @@ class RMApp(App):
                     active = True
                     hint = self.msg[70]
                     self.ruTerHint = " / C1"
-                    ruList = " Снимите галочку, если участок другого типа или в виде списка адресов."
+                    ruList = " Снимите галочку, если участок другого типа или нужно загрузить список адресов."
                 else:
                     active = False
                     hint = self.msg[166]
@@ -3894,7 +3896,7 @@ class RMApp(App):
         exportEmail = RButton(text=f"{self.button['export']} {self.msg[132]}", size=text_size, radiusK=radiusK)
         def __export(instance):
             try: # пробуем экспортировать один участок
-                if self.house.title == "": 5/0 # вместо участка выбран контакт, генерируем ошибку
+                if self.house.type == "virtual": 5/0 # вместо участка выбран контакт, генерируем ошибку
                 self.popup(message=self.msg[50] % self.house.title, options=[self.msg[69], self.msg[153]])
                 self.popupForm = "exportTer"
             except: # если не получилось, обычный экспорт
@@ -4221,7 +4223,8 @@ class RMApp(App):
     def recordView(self, instance=None, focus=False):
         self.displayed.form = "recordView"
         self.createInputBox(
-            title = f"{self.msg[164]}\n{self.record.date}" if self.language != "hy" else f"{self.record.date}\n{self.msg[164]}",
+            #title = f"{self.msg[164]}\n{self.record.date}" if self.language != "hy" else f"{self.record.date}\n{self.msg[164]}",
+            title = self.msg[164] % self.record.date,
             message = self.msg[83],
             default = self.record.title,
             multiline=True,
