@@ -21,10 +21,8 @@ import shutil
 import datetime
 import _thread
 import webbrowser
-import iconfonts
 from random import random
 from copy import copy, deepcopy
-from iconfonts import icon
 
 try:
     from kivy.app import App
@@ -33,12 +31,15 @@ except:
     if Devmode == 1: print("Модуль kivy и (или) plyer не найдены, устанавливаю.")
     from subprocess import check_call
     from sys import executable
-    check_call([executable, '-m', 'pip', 'install', 'kivy'])
+    check_call([executable, '-m', 'pip', 'install', 'kivy==2.1.0'])
     check_call([executable, '-m', 'pip', 'install', 'plyer'])
     from kivy.app import App
     import plyer
 else:
     if Devmode == 1: print("Модули kivy и plyer найдены.")
+
+import iconfonts
+from iconfonts import icon
 
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
