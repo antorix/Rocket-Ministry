@@ -4,12 +4,10 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.7.0"
+Version = "2.7.1"
 
 """
-* Турецкий язык.
-* Исправлен баг, при котором контакт мог экспортироваться как участок.
-* Небольшие оптимизации дизайна.
+* Мелкие исправления и оптимизации.
 """
 
 import utils as ut
@@ -119,7 +117,7 @@ class House(object):
         except: self.porches.sort(key=lambda x: ut.numberize(x.title), reverse=False) # если не получается, алфавитно
 
         for i in range(len(self.porches)):
-            listIcon = icon('icon-login') if self.type == "condo" else icon('icon-pin')
+            listIcon = RM.button['porch'] if self.type == "condo" else RM.button['pin']
             list.append(f"{listIcon} [b]{self.porches[i].title[:RM.listItemCharLimit()]}[/b]{self.porches[i].getFlatsRange()}")
 
         if self.type != "condo" and len(list) == 0: list.append(RM.msg[213] % self.getPorchType()[1])
@@ -534,13 +532,12 @@ class Flat(object):
             return newContact.getName()
 
     def showRecords(self):
-        listIcon = icon("icon-chat")
         options = []
         if len(self.records)==0: options.append(RM.msg[220])
         else:
             for i in range(len(self.records)): # добавляем записи разговоров
                 title = self.records[i].title[:RM.listItemCharLimit()] if i != 0 else self.records[i].title
-                options.append(f"{listIcon} {self.records[i].date}\n[i]{title}[/i]")
+                options.append(f"{RM.button['entry']} {self.records[i].date}\n [i]{title}[/i]")
         return options
 
     def addRecord(self, input):
@@ -2063,7 +2060,7 @@ class RMApp(App):
             self.msg[307]:  "default"
         }
 
-        self.themeDefault = [ [0.93, 0.93, 0.93, .9], [.16, .32, .46, 1], [.18, .65, .83, 1] ] # фон таблицы, кнопки таблицы и title
+        self.themeDefault = [ [0.92, 0.92, 0.92, .9], [.16, .32, .46, 1], [.18, .65, .83, 1] ] # фон таблицы, кнопки таблицы и title
 
         self.theme = self.settings[0][5] if isinstance(self.settings[0][5], str) else "default"
 
@@ -2077,18 +2074,25 @@ class RMApp(App):
             else: self.theme = self.settings[0][5] = "default"
 
         if Devmode == 0 and self.platform == "desktop": # пытаемся получить тему из файла на ПК
+            self.themeOld = self.theme
             try:
                 with open("theme.ini", mode="r") as file: self.theme = file.readlines()[0]
-            except: ut.dprint(Devmode, "Не удалось прочитать файл theme.ini.")
-            else: ut.dprint(Devmode, "Тема переопределена из файла theme.ini.")
+            except:
+                ut.dprint(Devmode, "Не удалось прочитать файл theme.ini.")
+                self.themeOverriden = False
+            else:
+                ut.dprint(Devmode, "Тема переопределена из файла theme.ini.")
+                self.themeOverriden = True
+        else: self.themeOverriden = False
 
         self.topButtonColor = [.75, .75, .75] # "lightgray" # поиск, настройки и кнопки счетчиков
         self.checkBoxColor = [1, 1, 1]
 
         if "dark" in self.theme: # темная тема
             self.globalBGColor = [0, 0, 0]#self.themeDark # фон программы
-            self.mainMenuButtonColor = [1, 1, 1, 1]#"white"
+            self.mainMenuButtonColor = [.95, .95, .95]
             self.tableBGColor = [.2, .2, .2, .9] # цвет фона кнопок таблицы
+            self.iconColor = get_hex_from_color([.5, .5, .5]) # цвет иконки участка
             self.standardTextColor = self.textInputColor = [1, 1, 1, 1]#"white" # основной текст всех шрифтов
             self.titleColor = self.mainMenuActivated = [.3, .82, 1, 1] # неон - цвет нажатой кнопки и заголовка
             self.popupBackgroundColor = [.16, .16, .16, 1] # фон всплывающего окна
@@ -2113,8 +2117,9 @@ class RMApp(App):
             self.mainMenuActivated = self.titleColor = [0,.45,.77]
             self.activatedColor = [0, .15, .35, .9]
             self.tableBGColor = self.themeDefault[0]
+            self.iconColor = get_hex_from_color([.5, .5, .5])
             self.popupBackgroundColor = [.16, .16, .16]
-            self.scrollButtonBackgroundColor = [.98,.98,.98]
+            self.scrollButtonBackgroundColor = [.97,.97,.97]
             self.lightGrayFlat = [.56, .56, .56, 1]
             self.darkGrayFlat = [.46,.46,.46]
             self.createNewPorchButton = "dimgray"
@@ -2126,7 +2131,7 @@ class RMApp(App):
             self.sliderImage = "slider_cursor.png"
 
             if self.theme == "purple": # Пурпур
-                self.linkColor = [.23, .32, .39, 1]
+                #self.linkColor = [.23, .32, .39, 1]
                 self.mainMenuButtonColor = [.33, .33, .33]
                 self.titleColor = self.tableColor = self.mainMenuActivated = [.36, .24, .53, 1]
                 self.textInputBGColor = [.95, .95, .95]
@@ -2139,10 +2144,12 @@ class RMApp(App):
                 self.titleColor = [.09, .65, .58, 1]
                 k = 1.7
                 self.checkBoxColor = [1, 1, .7]
+                self.topButtonColor = [.72, .74, .72]
                 self.tableColor = self.mainMenuButtonColor = [0, .4, .4]
                 self.mainMenuActivated = [self.mainMenuButtonColor[0] * k, self.mainMenuButtonColor[1] * k,
                                           self.mainMenuButtonColor[2] * k, 1]
                 self.tableBGColor = [0.92, 0.94, 0.92, .9]
+                self.iconColor = get_hex_from_color([.49, .51, .49])
                 self.saveColor = get_hex_from_color(self.titleColor)
                 self.tabColors = self.linkColor, "tab_background_green.png"
                 self.sliderImage = "slider_cursor_green.png"
@@ -2150,7 +2157,7 @@ class RMApp(App):
             elif self.theme == "teal": # Бирюза
                 self.linkColor = self.themeDefault[1]
                 self.titleColor = self.themeDefault[2]
-                self.mainMenuButtonColor = [.85, .97, 1]
+                self.mainMenuButtonColor = [.9, .98, 1]
                 self.mainMenuActivated = [1, 1, 1]
                 self.tableColor = "white"
                 self.tableBGColor = [0.2, 0.7, 0.8, .85]
@@ -2159,11 +2166,12 @@ class RMApp(App):
 
             elif self.theme == "gray": # Вечер
                 self.globalBGColor = [.2, .2, .2]
-                self.titleColor = self.mainMenuActivated = [.7, .8, 1, 1]
+                self.titleColor = self.mainMenuActivated = self.tableColor = [.85, .9, 1, 1]#[.7, .8, 1, 1]
                 self.checkBoxColor = [1, .8, 1]
-                self.tableColor = self.mainMenuButtonColor = [1, 1, 1]
+                self.mainMenuButtonColor = [.75, .75, .75]
                 self.standardTextColor = self.textInputColor = [.95, .95, .95]
                 self.tableBGColor = [.12, .3, .5, .95]
+                self.iconColor = get_hex_from_color([.6, .6, .6])
                 self.scrollButtonBackgroundColor = [.25, .25, .25]
                 self.textInputBGColor = [.31, .3, .3, .95]
                 self.saveColor = "00E79E"
@@ -2175,6 +2183,7 @@ class RMApp(App):
                 self.globalBGColor = [.2, .2, .2]
                 self.buttonTint = [.8,.8,.8]
                 self.linkColor = [1, 1, 1]
+                self.iconColor = get_hex_from_color([.6, .6, .6])
                 self.titleColor = self.mainMenuActivated = [0, 1, .8]
                 self.checkBoxColor = [1, 1, .7]
                 self.mainMenuButtonColor = self.tableColor = [.95, 1, .95]
@@ -2191,7 +2200,8 @@ class RMApp(App):
                 self.tabColors[0] = self.linkColor
                 self.standardTextColor = self.textInputColor = [.21, .2, .2]
                 self.tableBGColor = [.95, .94, .93, .95]
-                self.scrollButtonBackgroundColor = [.98, .97, .97, .95]
+                #self.iconColor = get_hex_from_color([.51, .5, .49])
+                #self.scrollButtonBackgroundColor = [.98, .97, .97, .95]
                 self.topButtonColor = [.7, .69, .69]
 
         self.mainMenuButtonColor2 = get_hex_from_color(self.mainMenuButtonColor)
@@ -2204,7 +2214,14 @@ class RMApp(App):
         elif self.theme == "purple" or self.theme == "green": colNN = get_hex_from_color(self.tableColor)
         else: colNN = None
         self.button = { # кнопки с иконками
-            "save": f" [color={self.saveColor}]{icon('icon-ok-circled')} {self.msg[5]}[/color]",
+            # "building": icon('icon-building-filled'),
+            "save": f" [color={self.saveColor}]{icon('icon-ok-circled')} {self.msg[5]}[/color]", # с цветными иконками
+            "building": f" [color={self.iconColor}][b]{icon('icon-building-filled')}[/b][/color]",
+            "porch":    f" [color={self.iconColor}]{icon('icon-login')}[/color]",
+            "pin":      f" [color={self.iconColor}]{icon('icon-pin')}[/color]",
+            "map":      f" [color={self.iconColor}]{icon('icon-map')}[/color]",
+            "entry":    f" [color={self.iconColor}]{icon('icon-chat')}[/color]",
+
             "plus":     icon("icon-plus-squared-alt"),
             "ok":       icon("icon-ok-1") + " OK",
             "back":     icon("icon-left-2"),
@@ -2963,6 +2980,7 @@ class RMApp(App):
 
         try:
             dest = self.house.title if self.house.type == "condo" else f"{self.house.title} {self.porch.title}"
+            if "virtual" in dest: dest = dest.replace("virtual", "")
             address = f"google.navigation:q={dest}"
             Intent = autoclass('android.content.Intent')
             Uri = autoclass('android.net.Uri')
@@ -3584,12 +3602,12 @@ class RMApp(App):
 
         housesList = []
         for house in self.houses:  # check houses statistics
-            interested = f" [color={self.interestColor}][b]%d[/b][/color] " % house.getHouseStats()[1] \
-                if house.getHouseStats()[1] > 0 else " "
-            houseDue = "[color=F4CA16]" + self.button['warn']+" [/color]" if house.due() == True else ""
-            listIcon = icon('icon-building-filled') if house.type == "condo" else icon('icon-map')#home-1')
-            housesList.append( f"{listIcon} {house.title[:self.listItemCharLimit()]} ({ut.shortenDate(house.date)}) " +\
-                               f"[i]{int(house.getProgress()[0] * 100)}%[/i]{interested}{houseDue}")
+            interested = f"   [color={self.interestColor}][b]{house.getHouseStats()[1]}[/b][/color]" \
+                if house.getHouseStats()[1] > 0 else ""
+            houseDue = f"[color=F4CA16]{self.button['warn']}[/color]" if house.due() == True else ""
+            listIcon = self.button['building'] if house.type == "condo" else self.button['map']
+            housesList.append( f"{listIcon} [b]{house.title[:self.listItemCharLimit()]}[/b]   {ut.shortenDate(house.date)}   " +\
+                               f"[i]{int(house.getProgress()[0] * 100)}%[/i]{interested}   {houseDue}")
             if self.resources[0][1][6] == 0 and int(house.getProgress()[0] * 100) > 0:
                 Clock.schedule_once(lambda x: self.popup(title=self.msg[247], message=self.msg[317]), .1)
                 self.resources[0][1][6] = 1
@@ -3637,20 +3655,20 @@ class RMApp(App):
                 porch = gap = ""
             hyphen = "-" if "подъезд" in self.allcontacts[i][8] else ""
             if self.allcontacts[i][2] != "":
-                address = f"({self.allcontacts[i][2]}{gap}{porch}{hyphen}{self.allcontacts[i][3]})"
+                address = f"  {self.allcontacts[i][2]}{gap}{porch}{hyphen}{self.allcontacts[i][3]}  "
                 sp1 = " "
             else:
                 address = ""
                 sp1 = ""
             if self.allcontacts[i][9] != "":
-                phone = f"{self.button['phone1']}\u00A0{self.allcontacts[i][9]}"
+                phone = f" {self.button['phone1']}\u00A0{self.allcontacts[i][9]}"
                 sp2 = " "
             else:
                 phone = ""
                 sp2 = ""
 
             listIcon = f"[color={get_hex_from_color(self.getColorForStatus('1'))}]{self.button['user']}[/color]"
-            options.append(f"{self.allcontacts[i][1]}{listIcon} {self.allcontacts[i][0][:self.listItemCharLimit()]}{sp1}{address}{sp2}{phone}")
+            options.append(f"{self.allcontacts[i][1]}{listIcon} [b]{self.allcontacts[i][0][:self.listItemCharLimit()]}[/b]{sp1}{address}{sp2}[i]{phone}[/i]")
 
         self.displayed.update(
             form="con",
@@ -4090,9 +4108,7 @@ class RMApp(App):
         )
         if instance != None: self.stack.insert(0, self.displayed.form)
         self.updateList()
-        if self.house.due() == True:
-            self.mainList.add_widget(self.tip(text=self.msg[152], icon="warn"))
-            self.mainList.add_widget(Widget(size_hint_y=None))
+        if self.house.due() == True: self.mainList.add_widget(self.tip(text=self.msg[152], icon="warn"))
 
     def porchView(self, instance=None, sortFlats=False):
         """ Вид подъезда - список квартир или этажей """
@@ -4525,6 +4541,7 @@ class RMApp(App):
         self.dropThemeMenu = DropDown()
         try: currentTheme = list({i for i in self.themes if self.themes[i] == self.theme})[0]
         except: currentTheme = self.msg[307]
+        if self.themeOverriden: currentTheme = list({i for i in self.themes if self.themes[i] == self.themeOld})[0]
         options = list(self.themes.keys())
         for option in options:
             btn = SortListButton(text=option)
@@ -4604,6 +4621,7 @@ class RMApp(App):
         if icon == "warn":
             color = "F4CA16" # желтый
             size_hint_y = None
+            k=.9
         elif icon == "info":
             color = self.titleColor2
             size_hint_y = .5
@@ -4623,6 +4641,8 @@ class RMApp(App):
                       text=f"[ref=note][color={color}]{self.button[icon]}[/color] {text}[/ref]",
                       text_size=(self.mainList.size[0] * k, None),
                       valign="center")
+        if self.platform == "mobile":
+            tip.font_size = self.fontXS * self.fontScale() if self.fontScale() < 1.4 else self.fontS
         if icon == "note" or icon == "warn": tip.bind(on_ref_press=self.titlePressed)
         return tip
 
