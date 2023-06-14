@@ -11,7 +11,7 @@ The program cannot continue working. Try to delete the last created entity. If t
 Add
 Add one or more houses
 Return visit
-Territory name:
+Territory:
 Address:
 details
 Date taken:
@@ -21,7 +21,7 @@ Section name:
 Name
 Person (name, description):
 Phone:
-Apartment number:
+Apartment:
 Number/address:
 Report log
 To make a call, enter the phone number in the contact details.
@@ -88,7 +88,7 @@ A %s with this name already exists, try another one!
 All fields should be filled with numerical values. The number of floors should be more than 0. The last apartment of the range should have the number no less than the first one.
 Periods and commas are not allowed!
 Both values should be numerical, and the first one should not be greater than the second one!
-
+Max. %s characters!
 Date should have the format YYYY-MM-DD! For example: 2023-03-25.
 This number already exists!
 Floors have not yet been enabled for this entrance. Set them up in the "%s" section.
@@ -161,7 +161,7 @@ Visits list:
 Add visit
 initial call
 Record
-visit from %s
+Remember window position and size
 Enter territory name:
 Example: River st.
 Enter the first and the last number of the range to add:
@@ -323,4 +323,3 @@ Cut
 Copy
 Paste
 Select all
-Remember window position and size

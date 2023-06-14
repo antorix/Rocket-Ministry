@@ -11,7 +11,7 @@ Program devam edemiyor. En son oluşturulan nesneyi silmeyi deneyin. Bu işe yar
 İlk
 Bir ya-da birkaç ev oluştur
 Tek. ziy.
-Saha ismi:
+Saha:
 Adres:
 ayarlar
 Alınan tarihi:
@@ -21,7 +21,7 @@ Bölüm ismi:
 Isim
 Kişi (isim, açıklama):
 İletişim:
-Daire numarası:
+Daire:
 No/adres:
 Rapor notları
 İletişime geçebilmek için kişinin telefon numarasını ayarlarda belirtin.
@@ -88,7 +88,7 @@ Bu isime sahip %s var, başka birini seçin!
 Tüm alanlar doldurulmalı ve sayısal değerlere sahip olmalıdır. Kat sayısı 0'dan yüksek olmalı. Aralık'taki son dairenin numarası ilk daireden az olmamalıdır.
 Başlıkta noktalara ve virgüllere izin verilmez!
 Her iki değer de sayı içermelidir, birincisi ikinciden büyük olmalıdır.
-
+Maksimum %s karakter!
 Tarih YYYY-AA-GG formatında olmalıdır! Örneğin 2023-03-25.
 Bu numara zaten var!
 Bu giriş kapısı için henüz bir kat belirlenmemiştir. Bunları "%s" bölümünde ayarlayın.
@@ -161,7 +161,7 @@ Ziyaret listesi:
 Yeni görüşme
 İlk görüşme
 Kayıt
-%s tarihli ziyaret
+Pencere konumunu ve boyutunu hatırla
 Saha'yı adlandırın
 Örneğin: Kurtuluş şok.
 Eklenecek aralığın ilk ve son numaralarını girin:
@@ -323,4 +323,3 @@ Kes
 Kopyala
 Yapıştır
 Tümünü seç
-Pencere konumunu ve boyutunu hatırla
