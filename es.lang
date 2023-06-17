@@ -214,9 +214,9 @@ Agregar el primer %s
 #
 Ya no puede reducir pisos en este bloque, ¡porque el último apartamento con contenido desaparecerá! Pero puede cambiar el rango de números de apartamentos o el número de pisos en la pantalla "%s".
 Se ha solicitado una relación no estándar entre apartamentos y pisos. Tuvimos que añadir %d apartamento(s) que ahora tiene que eliminar manualmente en los pisos correspondientes. Para ello, haga clic en el botón [b]%s[/b] en los detalles de [u]cualquier apartamento en este piso[/u].
-El tiempo de servicio ha comenzado. Para finalizar su sesión de servicio, sólo tiene que volver a hacer clic en el botón del cronómetro. El tiempo se añadirá automáticamente a su informe.
+El tiempo de servicio ha comenzado. Para finalizar su sesión de servicio, sólo tiene que volver a hacer clic en el botón del cronómetro. El tiempo se añadirá automáticamente a su informe. ¡Puedes desactivar la función de cronómetro en la configuración!
 No puede agregar № %s – ¡este número ya existe y tiene contenido!
-
+Empezar ministerio?
 Añadir la primera llamada
 ¡Es un nuevo mes! ¿Ya ha entregado su informe?
 credito

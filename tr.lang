@@ -214,9 +214,9 @@ blok
 No
 Bu girişte katları küçültmek artık mümkün değil çünkü girişi olan son daire kaybolacak! Ancak "%s" ekranından daire aralığını veya kat sayısını değiştirebilirsiniz.
 Standart olmayan bir daire ve kat oranı talep edildi. Gerekli katlarda manuel olarak kaldırmanız gereken %d daire eklemeye ihtiyaç duyuldu. Bunu yapmak için, [u]yerdeki herhangi bir daireyi[/u] başlatmak üzere [b]%s[/b] düğmesine basın.
-Hizmet süresi doldu! Bitirmek için zamanlayıcı düğmesine tekrar basmanız yeterlidir. Zaman otomatik olarak rapora girilecektir.
+Hizmet süresi doldu! Bitirmek için zamanlayıcı düğmesine tekrar basmanız yeterlidir. Zaman otomatik olarak rapora girilecektir. Zamanlayıcı özelliğini ayarlardan devre dışı bırakabilirsiniz!
 No %s oluşturmak mümkün değildir – bu numara zaten var ve içinde notlar var!
-
+Hizmet başlansın mı?
 İlk ziyaretinizi oluşturun
 Yeni bir ay başladı! Raporunuzu gönderdiniz mi?
 kredi
