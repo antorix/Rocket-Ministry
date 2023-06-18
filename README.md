@@ -6,7 +6,7 @@ Android, Windows, Linux are supported. Mac should work too, but not tested yet.
 
 The app is translated into English, Spanish, Russian, Turkish, Georgian and Armenian, more languages are coming. If you want to help translate the app into your language, please send a message to [inoblogger@gmail.com](mailto:inoblogger@gmail.com).
 
-![](https://play-lh.googleusercontent.com/4k6DP-pK2LhTh_7bdxMie3TMZZC39bU-KWX1T8pP-2ql6YYBut-0KBaUlR-iTndiHJ8)
+![](https://play-lh.googleusercontent.com/7hgRAeaj_uHhQ8YgpsBIWu5PxdwecvhVeJ5B8_GmCBdWONR9Aex6isWIiwjOK9EsQLk)
 
 * [Download from Google Play](https://play.google.com/store/apps/details?id=org.rocketministry)
 
