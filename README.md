@@ -6,8 +6,6 @@ Android, Windows, Linux are supported. Mac should work too, but not tested yet.
 
 The app is translated into English, Spanish, Russian, Turkish, Georgian and Armenian, more languages are coming. If you want to help translate the app into your language, please send a message to [inoblogger@gmail.com](mailto:inoblogger@gmail.com).
 
-![](https://play-lh.googleusercontent.com/7hgRAeaj_uHhQ8YgpsBIWu5PxdwecvhVeJ5B8_GmCBdWONR9Aex6isWIiwjOK9EsQLk)
-
 * [Download from Google Play](https://play.google.com/store/apps/details?id=org.rocketministry)
 
 * [Features](https://github.com/antorix/Rocket-Ministry/wiki#features)
@@ -16,7 +14,11 @@ The app is translated into English, Spanish, Russian, Turkish, Georgian and Arme
  
 * [Install on Linux](https://github.com/antorix/Rocket-Ministry/wiki#linux)
 
+* [Loading Territory via List of Addresses](https://github.com/antorix/Rocket-Ministry/wiki#loading-territory-via-list-of-addresses)
+
 * [Data synchronization and backup](https://github.com/antorix/Rocket-Ministry/wiki#data-synchronization-and-backup)
+
+* [Sharing individual territories between users](https://github.com/antorix/Rocket-Ministry/wiki#sharing-individual-territories-between-users)
  
 * [Frequently asked questions](https://github.com/antorix/Rocket-Ministry/wiki#faq)
 
