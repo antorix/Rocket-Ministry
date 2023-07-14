@@ -3140,7 +3140,7 @@ class RMApp(App):
                                 self.rep.studies
                             )
                         )
-                        self.pageTitle.text = f"[ref=report]{self.msg[4]}{self.rep.getCurrentHours()[2]}[/ref]"
+                        self.pageTitle.text = f"[b][ref=report]{self.msg[4]}{self.rep.getCurrentHours()[2]}[/ref][/b]"
                         if self.settings[0][2] == 1:
                             self.creditLabel.text = self.msg[106] % self.rep.getCurrentHours()[0]
 
@@ -5395,6 +5395,7 @@ class RMApp(App):
                             self.time3 = ut.sumHHMM([time1, time2]) # сумма исходного и добавленного времени (HH:MM)
                             self.rep.modify(f"ч{time2}")
                             self.hours.update(self.time3)
+                            self.pageTitle.text = f"[b][ref=report]{self.msg[4]}{self.rep.getCurrentHours()[2]}[/ref][/b]"
                         except: self.popup(self.msg[46])
                 else:
                     time1 = self.credit.get()  # исходное время на счетчике (HH:MM)
@@ -5403,6 +5404,7 @@ class RMApp(App):
                             self.time3 = ut.sumHHMM([time1, time2])  # сумма двух времен в HH:MM
                             self.rep.modify(f"р{time2}")
                             self.credit.update(self.time3)
+                            self.pageTitle.text = f"[b][ref=report]{self.msg[4]}{self.rep.getCurrentHours()[2]}[/ref][/b]"
                         except: self.popup(self.msg[46])
             save.bind(on_release=__closeTimePicker)
             pickerForm.add_widget(save)
