@@ -176,16 +176,6 @@ def timeFloatToHHMM(hours=None, delta=None):
 
     return result
 
-def filterOutFormatting(string):
-    """ Удаляет из отчета теги форматирования """
-    string = string.replace('[u]', '')
-    string = string.replace('[/u]', '')
-    string = string.replace('[b]', '')
-    string = string.replace('[/b]', '')
-    string = string.replace('[i]', '')
-    string = string.replace('[/i]', '')
-    return string
-
 def dprint(devmode, text):
     if devmode: print(text)
 

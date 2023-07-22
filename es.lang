@@ -151,7 +151,7 @@ búsqueda por ''%s''
 Resultados:
 ¡Este territorio fue tomado hace más de 4 meses! Es necesario volver atrás o prolongar mediante la actualización de la fecha en los detalles.
 Territorio
-
+Exportar teléfonos
 Apartamentos
 Agregar casas
 ent.
@@ -309,7 +309,7 @@ Claridad
 1, 2b, calle del parque 1a, Quinta Avenida 119
 ¡Nueva versión encontrada! Se actualizará en el próximo inicio del programa.
 La reordenación de números y plantas no afecta a los datos de visitas existentes.
-Exportar teléfonos
+Presiona %s para agregar apartamentos a la entrada:
 No hay números de teléfono para exportar en este territorio.
 Números de teléfono en %s
 ¿Incluir en la exportación los apartamentos sin números de teléfono?

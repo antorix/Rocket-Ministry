@@ -151,7 +151,7 @@ Search by "%s"
 Results:
 This territory was taken more than 4 months ago! You need to turn it back or prolong by updating its date in the details.
 Territory
-
+Export phones
 Apartments
 Add houses
 entr.
@@ -309,7 +309,7 @@ Export failed! The territory name may contain invalid characters.
 1, 2b, Park St 1a, 5th Avenue 119
 New version found! It will be updated on the next program start.
 Re-arranging numbers and floors does not affect existing visits data.
-Export phones
+Press %s to add flats to the entrance:
 No phone numbers to export in this territory!
 Phone numbers on %s
 Include into export apartments without phone numbers?

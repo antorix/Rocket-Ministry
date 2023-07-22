@@ -4,9 +4,11 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.8.2"
+Version = "2.8.3"
 
 """
+* Запись «Нет дома» теперь добавляется в заметки, а не в посещения.
+* Переработан интерфейс добавления квартир в новый подъезд.
 * Небольшие исправления и оптимизации.
 """
 
@@ -283,9 +285,12 @@ class Porch(object):
             floors = self.type[7:]
             if floors == "": floors = "1"
         except:
-            first = "1"
-            last = "20"
-            floors = "5"
+            try:
+                first, last, floors = RM.settings[0][9]
+            except:
+                first = "1"
+                last = "20"
+                floors = "5"
         return first, last, floors
 
     def sortFlats(self):
@@ -2948,6 +2953,9 @@ class RMApp(App):
             self.dropSortMenu.bind(on_select=lambda instance, x: setattr(self.sortButton, 'text', x))
             self.sortButton.bind(on_release=self.dropSortMenu.open)
 
+        elif self.displayed.form == "createNewFlat": # кнопка "Список" на форме создания квартир
+            self.addList()
+
     def clearTable(self):
         """ Очистка верхних кнопок таблицы для некоторых форм """
         self.backButton.disabled = False
@@ -3207,25 +3215,37 @@ class RMApp(App):
             elif self.displayed.form == "porchView":
                 self.clearTable()
                 self.displayed.form = "createNewFlat"
+                self.positive.text = self.button["save"]
+                self.negative.text = self.button["cancel"]
+                self.sortButton.text = f"{self.button['list']} {self.msg[191]}"
+                self.sortButton.disabled = False
                 if self.house.type == "condo": # многоквартирный дом
                     if len(self.porch.flats) > 0: self.stack.insert(0, self.stack[0])
                     self.mainList.clear_widgets()
-                    self.positive.text = self.button["save"]
-                    self.negative.text = self.button["cancel"]
                     a = AnchorLayout(anchor_x="center", anchor_y="top")
                     grid = GridLayout(rows=4, cols=2, size_hint=(.95, 1))
                     align = "center"
                     if len(self.porch.flats)==0: # определяем номер первой и последней квартир, сначала если это первый подъезд:
-                        firstflat = "1"
-                        lastflat = "20"
-                        floors = "5"
+                        if len(self.house.porches)==1: # если это первый подъезд дома, пытаемся загрузить параметры из настроек:
+                            try: # попытка загрузить первичные параметры этажей из настроек
+                                firstflat, lastflat, floors = self.settings[0][9]
+                            except:
+                                firstflat = "1"
+                                lastflat = "20"
+                                floors = "5"
+                        else:
+                            firstflat = "1"
+                            lastflat = "20"
+                            floors = "5"
                         if self.selectedPorch > 0:
                             prevFirst, prevLast, floors = self.house.porches[self.selectedPorch - 1].getFirstAndLastNumbers()
                             prevRange = int(prevLast) - int(prevFirst)
                             firstflat = str(int(prevLast) + 1)
                             lastflat = str(int(prevLast) + 1 + prevRange)
+
                     else: # если уже есть предыдущие подъезды:
                         firstflat, lastflat, floors = self.porch.getFirstAndLastNumbers()
+
                     text_size = (self.mainList.size[0] * (0.3 * self.fontScale()), self.counterHeight)
                     grid.add_widget(MyLabel(text=self.msg[58], halign=align, valign=align,
                                             color=self.standardTextColor, text_size=text_size))
@@ -3255,10 +3275,11 @@ class RMApp(App):
                     self.floor1 = Counter(text=str(self.porch.floor1), size_hint=(.7, .5), fixed=True, shrink=False)
                     grid.add_widget(self.floor1)
                     grid.add_widget(Widget())
-                    grid.add_widget(self.flatListButton())
                     a.add_widget(grid)
                     self.mainList.add_widget(a)
-                    if len(self.porch.flats) > 0:
+                    if len(self.porch.flats) == 0:
+                        self.mainList.add_widget(self.tip(text=self.msg[312] % f"[b]{self.msg[5]}[/b]" + "\n", hint_y=None))
+                    else:
                         self.mainList.add_widget(self.tip(text=self.msg[311]+"\n", hint_y=None))
                         self.mainList.add_widget(Widget(size_hint_y=.1))
 
@@ -3270,7 +3291,6 @@ class RMApp(App):
                         active=False,
                         hint=self.msg[66]
                     )
-                    self.mainList.add_widget(self.flatListButton())
 
             # Формы добавления
 
@@ -3434,6 +3454,8 @@ class RMApp(App):
                         self.porch.addFlats("%d-%d[%d" % (start, finish, floors))
                         self.porch.flatsLayout = str(floors)
                         self.porch.floor1 = f1
+                        if len(self.house.porches) == 1:  # если это первое создание квартир в доме, выгружаем параметры в настройку
+                            self.settings[0][9] = start, finish, floors
                         self.save()
                         self.porchView()
 
@@ -3772,8 +3794,7 @@ class RMApp(App):
         hint = "" if self.rep.lastMonth != "" else self.msg[111]
         box = BoxLayout(orientation="vertical", size_hint=(None, None), width=self.standardTextHeight*8,
                         height=self.standardTextHeight*7)
-        self.repBox = MyTextInput(text=ut.filterOutFormatting(self.rep.lastMonth), hint_text=hint, multiline=True, shrink=False)
-        #self.repBox = MyTextInput(text=self.rep.lastMonth, hint_text=hint, multiline=True, shrink=False) # поменять в июле и удалить эту функцию из utils
+        self.repBox = MyTextInput(text=self.rep.lastMonth, hint_text=hint, multiline=True, shrink=False)
         self.repBox.bind(focus=self.editLastMonthReport)
         btnSend = TableButton(text=f"\n{self.button['share']} {self.msg[110]}",
                               size_hint_x=1, size_hint_y=None, height=self.standardTextHeight*1.2)
@@ -3946,6 +3967,7 @@ class RMApp(App):
         self.settings[0][5] - тема интерфейса
         self.settings[0][7] - масштабирование подъезда
         self.settings[0][8] - значение слайдера
+        self.settings[0][9] - значения первой и последней квартиры и количества этажей в новом подъезде
         self.settings[0][22] - таймер                
         """
 
@@ -4238,7 +4260,8 @@ class RMApp(App):
             neutral=self.button["phone"],
             tip=[note, "note"]
         )
-        if call == False and self.flat.status == "": # всплывающее окно первого посещения
+        if call == False and len(self.flat.records)==0: # всплывающее окно первого посещения
+            # if call == False and self.flat.status == "": # всплывающее окно первого посещения
             self.clickedInstance = instance
             self.popup(firstCall=True)
 
@@ -4669,7 +4692,7 @@ class RMApp(App):
         """ Кнопка экспорта телефонов участка либо обработка ее нажатия """
         if includeWithoutNumbers == None: # пользователь еще не ответил, просто рисуем кнопку
             k = 1-self.descrColWidth if self.orientation == "v" else .3
-            btn = TableButton(text=f"{self.button['share']} {self.msg[312]}", size_hint_x=None, size_hint_y=None,
+            btn = TableButton(text=f"{self.button['share']} {self.msg[154]}", size_hint_x=None, size_hint_y=None,
                               width=Window.size[0]*k, height=self.standardTextHeight, background_color=self.globalBGColor)
             a = AnchorLayout(anchor_x="right", anchor_y="top", size_hint_y=None, padding=(0, self.padding),
                                height=self.mainList.size[1]*.1)
@@ -4727,19 +4750,6 @@ class RMApp(App):
             tip.font_size = self.fontXS * self.fontScale() if self.fontScale() < 1.4 else self.fontS
         if icon == "note" or icon == "warn": tip.bind(on_ref_press=self.titlePressed)
         return tip
-
-    def flatListButton(self):
-        """ Кнопка создания квартир/домов списком"""
-        height = self.standardTextHeight
-        addList = TableButton(text=f"{self.button['list']} {self.msg[191]}", size_hint_x=None, size_hint_y=None,
-                              size=(Window.size[0] / 3, self.standardTextHeight),
-                              height=height, background_color=self.globalBGColor)
-        AL = AnchorLayout(anchor_x="right", anchor_y="center", padding=self.padding, size_hint_y=.3)
-        try: self.inputBoxText.size_hint_y = .5
-        except: pass
-        addList.bind(on_release=self.addList)
-        AL.add_widget(addList)
-        return AL
 
     # Функции для контактов
 
@@ -4921,7 +4931,7 @@ class RMApp(App):
         """ Отправка отчета прошлого месяца """
         plyer.email.send(subject=self.msg[4], text=self.rep.lastMonth, create_chooser=True)
 
-    def addList(self, instance):
+    def addList(self, instance=None):
         """ Добавление квартир списком"""
         size_hint = (.9, .6 * self.fontScale()) if self.orientation == "v" else (.6, .8)
         width = self.mainList.width * size_hint[0]*.9
@@ -5305,7 +5315,14 @@ class RMApp(App):
                 firstCallNotAtHome = RButton(text=self.button['lock'], color="white",
                                              quickFlash=True, background_color=colorBG, radiusK=radiusK)
                 def __quickNotAtHome(instance):
-                    self.flat.addRecord(self.msg[206][0].lower()+self.msg[206][1:])
+                    #self.flat.addRecord(self.msg[206][0].lower()+self.msg[206][1:])
+
+                    date = time.strftime("%d", time.localtime())
+                    month = self.monthName()[5]
+                    timeCur = time.strftime("%H:%M:%S", time.localtime())
+                    newNote = f"{date} {month} {timeCur} {self.msg[206][0].lower()+self.msg[206][1:]}\n" + self.flat.note
+                    self.flat.editNote(newNote)
+
                     self.save()
                     if self.porch.floors(): self.clickedInstance.colorize()
                     else: self.porchView()
