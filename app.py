@@ -93,14 +93,18 @@ class House(object):
         self.porches = []
 
     def getHouseStats(self):
-        """ Finds how many interested (status==1) people in house """
+        """ Подсчет, сколько в доме посещенных и интересующихся """
         visited=0
         interest=0
-        for a in range(len(self.porches)):
-            for b in range(len(self.porches[a].flats)):
-                if self.porches[a].flats[b].status != "": visited += 1
-                if self.porches[a].flats[b].status == "1": interest += 1
-        return visited, interest
+        totalFlats=0
+        for porch in self.porches:
+            for flat in porch.flats:
+                totalFlats += 1
+                if len(flat.records) > 0: visited += 1
+                if flat.status == "1": interest += 1
+
+        ratio = visited / totalFlats if totalFlats != 0 else 0
+        return visited, interest, ratio
 
     def getPorchType(self):
         """ Выдает название подъезда своего типа (всегда именительный падеж), [0] для программы и [1] для пользователя """
@@ -141,17 +145,6 @@ class House(object):
 
     def rename(self, input):
         self.title = input[3:].upper()
-
-    def getProgress(self):
-        """ Выдает показатель обработки участка в виде доли от 0 до 1 [0] и только обработанные квартиры [1] """
-        totalFlats = workedFlats = 0
-        for porch in self.porches:
-            for flat in porch.flats:
-                totalFlats +=1
-                if flat.status != "" and flat.status != "?":
-                    workedFlats += 1
-        if totalFlats != 0: return workedFlats / totalFlats, workedFlats
-        else: return 0, 0
 
     def export(self):
         export = [
@@ -2460,6 +2453,7 @@ class RMApp(App):
                             if flat.note != "":
                                 myicon = self.button["note"]
                                 note = f"[color={gray}]{myicon}[/color]\u00A0{flat.note[:int(self.сharLimit()/self.fontScale())]}\u00A0\u00A0"
+                                if "\n" in note: note = note[ : note.index("\n")] + "  "
                             else:
                                 note = ""
                             if len(flat.records) > 0:
@@ -3664,22 +3658,23 @@ class RMApp(App):
             self.houses.sort(key=lambda x: x.interest, reverse=True)
         elif self.settings[0][19] == "п":  # by progress
             for i in range(len(self.houses)):
-                self.houses[i].progress = self.houses[i].getProgress()[0]
+                self.houses[i].progress = self.houses[i].getHouseStats()[2]
             self.houses.sort(key=lambda x: x.progress, reverse=False)
         elif self.settings[0][19] == "о":  # by progress reversed
             for i in range(len(self.houses)):
-                self.houses[i].progress = self.houses[i].getProgress()[0]
+                self.houses[i].progress = self.houses[i].getHouseStats()[2]
             self.houses.sort(key=lambda x: x.progress, reverse=True)
 
         housesList = []
         for house in self.houses:  # check houses statistics
-            interested = f"   [color={self.interestColor}][b]{house.getHouseStats()[1]}[/b][/color]" \
-                if house.getHouseStats()[1] > 0 else ""
+            stats = house.getHouseStats()
+            interested = f"   [color={self.interestColor}][b]{stats[1]}[/b][/color]" \
+                if stats[1] > 0 else ""
             houseDue = f"[color=F4CA16]{self.button['warn']}[/color]" if house.due() == True else ""
             listIcon = self.button['building'] if house.type == "condo" else self.button['map']
             housesList.append( f"{listIcon} [b]{house.title}[/b]   {ut.shortenDate(house.date)}   " +\
-                               f"[i]{int(house.getProgress()[0] * 100)}%[/i]{interested}   {houseDue}")
-            if self.resources[0][1][6] == 0 and int(house.getProgress()[0] * 100) > 0:
+                               f"[i]{int(stats[2] * 100)}%[/i]{interested}   {houseDue}")
+            if self.resources[0][1][6] == 0 and int(stats[2] * 100) > 0:
                 Clock.schedule_once(lambda x: self.popup(title=self.msg[247], message=self.msg[317]), .1)
                 self.resources[0][1][6] = 1
                 self.save()
