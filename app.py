@@ -4,11 +4,9 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.8.3"
+Version = "2.8.4"
 
 """
-* Запись «Нет дома» теперь добавляется в заметки, а не в посещения.
-* Переработан интерфейс добавления квартир в новый подъезд.
 * Небольшие исправления и оптимизации.
 """
 
@@ -1305,7 +1303,7 @@ class SortListButton(Button):
         super(SortListButton, self).__init__()
         self.markup = True
         self.size_hint_y = None
-        self.height = RM.standardTextHeight * (1.5 if RM.orientation == "v" else 1.2)
+        self.height = RM.standardTextHeight * (1.7 if RM.orientation == "v" else 1.2)
         self.background_color = RM.textInputBGColor
         self.background_normal = ""
         self.background_down = RM.buttonPressedBG
@@ -2452,7 +2450,11 @@ class RMApp(App):
                                 phone = ""
                             if flat.note != "":
                                 myicon = self.button["note"]
-                                note = f"[color={gray}]{myicon}[/color]\u00A0{flat.note[:int(self.сharLimit()/self.fontScale())]}\u00A0\u00A0"
+                                if self.msg[206].lower() in flat.note[:30]: # если в заметке есть "нет дома", обрезаем заметку по это слово
+                                    limit = flat.note.index("\n") if "\n" in flat.note else len(flat.note)
+                                else: # иначе обрезаем по размеру шрифта в системе
+                                    limit = int(self.сharLimit()/self.fontScale())
+                                note = f"[color={gray}]{myicon}[/color]\u00A0{flat.note[:limit]}\u00A0\u00A0"
                                 if "\n" in note: note = note[ : note.index("\n")] + "  "
                             else:
                                 note = ""
@@ -2842,8 +2844,8 @@ class RMApp(App):
 
     def backPressed(self, instance=None):
         """ Нажата кнопка «назад» """
-        self.func = self.backPressed
-        if self.confirmNonSave() == True: return
+        #if self.displayed.form == "set": self.saveSettings(clickOnSave=False)
+        if self.confirmNonSave(): return
         if len(self.stack) > 0: del self.stack[0]
         if self.displayed.form == "repLog":
             self.repPressed()
@@ -2859,6 +2861,7 @@ class RMApp(App):
                 self.porchView()
             elif self.stack[0] == "flatView":
                 self.flatView()
+
         self.updateMainMenuButtons()
 
     def resizePressed(self, instance=None):
@@ -3033,6 +3036,9 @@ class RMApp(App):
 
         # Поиск
 
+        print(self.displayed.form)
+        print(self.positive.text)
+        print(self.button["top"])
         def __press(*args):
             if self.msg[146] in self.pageTitle.text:
                 input = self.inputBoxEntry.text.lower().strip()
@@ -3154,55 +3160,13 @@ class RMApp(App):
                 else:
                     self.editLastMonthReport(value=0)
 
-            elif self.positive.text == self.button["top"] and len(self.btn) > 0:
+            elif self.button["top"] in self.positive.text and len(self.btn) > 0:
                 self.scroll.scroll_to(widget=self.btn[0], padding=0, animate=False)
 
             # Настройки
 
             elif self.displayed.form == "set":
-
-                if self.settingsPanel.current_tab.text == self.msg[52]:
-                    if self.settings[0][7] == 1 and self.multipleBoxEntries[6].active == False:
-                        self.slider.value = self.settings[0][8] = 1
-                        self.showSlider = False
-                    try:
-                        self.settings[0][3] = 0 if self.multipleBoxEntries[0].text.strip() == "" \
-                            else int(self.multipleBoxEntries[0].text.strip())  # норма часов
-                    except: pass
-                    self.settings[0][22] = self.multipleBoxEntries[1].active   # таймер
-                    self.settings[0][13] = self.multipleBoxEntries[2].active   # нет дома
-                    self.settings[0][15] = self.multipleBoxEntries[3].active   # переносить минуты
-                    self.settings[0][18] = self.multipleBoxEntries[4].get()    # цвет отказа
-                    self.settings[0][2] = self.multipleBoxEntries[5].active    # кредит
-                    self.settings[0][20] = self.multipleBoxEntries[6].active   # показывать телефон
-                    self.settings[0][0] = self.multipleBoxEntries[7].active    # уведомление при запуске таймера
-                    for i in range(len(self.Languages)):                       # язык
-                        if list(self.Languages.values())[i][0] in self.languageButton.text:
-                            self.settings[0][6] = list(self.Languages.keys())[i]
-                            break
-                    if self.platform == "mobile":
-                        self.settings[0][11] = self.multipleBoxEntries[9].active # новое предложение с заглавной
-                    else:
-                        self.settings[0][12] = self.multipleBoxEntries[9].active  # запоминать положение окна
-
-                    self.settings[0][5] = self.themes[self.themeButton.text]   # тема
-
-                    if self.settings[0][22] == 0:
-                        self.settings[2][6] = 0 # принудительно останавливаем таймер, если он отключен
-                        self.updateTimer()
-
-                    self.save()
-                    self.restart("soft")
-                    Clock.schedule_once(self.settingsPressed, .1)
-                    self.log(self.msg[53])
-
-                elif self.settingsPanel.current_tab.text == self.msg[54]:
-                    self.save(backup=True)
-                    self.log(self.msg[56])
-
-                elif self.settingsPanel.current_tab.text == self.msg[55]:
-                    self.resources[0][0] = self.inputBoxEntry.text.strip()
-                    self.save()
+                self.saveSettings()
 
             # Форма создания квартир/домов
 
@@ -4072,6 +4036,51 @@ class RMApp(App):
         self.settingsPanel.do_default_tab = False
         self.mainList.add_widget(self.settingsPanel)
 
+    def saveSettings(self, clickOnSave=True):
+        if self.settingsPanel.current_tab.text == self.msg[52]:
+            if self.settings[0][7] == 1 and self.multipleBoxEntries[6].active == False:
+                self.slider.value = self.settings[0][8] = 1
+                self.showSlider = False
+            try:
+                self.settings[0][3] = 0 if self.multipleBoxEntries[0].text.strip() == "" \
+                    else int(self.multipleBoxEntries[0].text.strip())  # норма часов
+            except:
+                pass
+            self.settings[0][22] = self.multipleBoxEntries[1].active  # таймер
+            self.settings[0][13] = self.multipleBoxEntries[2].active  # нет дома
+            self.settings[0][15] = self.multipleBoxEntries[3].active  # переносить минуты
+            self.settings[0][18] = self.multipleBoxEntries[4].get()  # цвет отказа
+            self.settings[0][2] = self.multipleBoxEntries[5].active  # кредит
+            self.settings[0][20] = self.multipleBoxEntries[6].active  # показывать телефон
+            self.settings[0][0] = self.multipleBoxEntries[7].active  # уведомление при запуске таймера
+            for i in range(len(self.Languages)):  # язык
+                if list(self.Languages.values())[i][0] in self.languageButton.text:
+                    self.settings[0][6] = list(self.Languages.keys())[i]
+                    break
+            if self.platform == "mobile":
+                self.settings[0][11] = self.multipleBoxEntries[9].active  # новое предложение с заглавной
+            else:
+                self.settings[0][12] = self.multipleBoxEntries[9].active  # запоминать положение окна
+
+            self.settings[0][5] = self.themes[self.themeButton.text]  # тема
+
+            if self.settings[0][22] == 0:
+                self.settings[2][6] = 0  # принудительно останавливаем таймер, если он отключен
+                self.updateTimer()
+
+            self.save()
+            self.restart("soft")
+            if clickOnSave: Clock.schedule_once(self.settingsPressed, .1)
+            self.log(self.msg[53])
+
+        elif self.settingsPanel.current_tab.text == self.msg[54]:
+            self.save(backup=True)
+            self.log(self.msg[56])
+
+        elif self.settingsPanel.current_tab.text == self.msg[55]:
+            self.resources[0][0] = self.inputBoxEntry.text.strip()
+            self.save()
+
     def searchPressed(self, instance=None):
         """ Нажата кнопка поиск """
         self.func = self.searchPressed
@@ -4093,7 +4102,7 @@ class RMApp(App):
         self.contactsEntryPoint = 0
         allContacts = self.getContacts(forSearch=True)
         self.searchResults = []
-        for i in range(len(allContacts)):  # start search in flats/contacts
+        for i in range(len(allContacts)): # start search in flats/contacts
             found = False
             if self.searchQuery in allContacts[i][2].lower() or self.searchQuery in allContacts[i][2].lower() or self.searchQuery in \
                     allContacts[i][3].lower() or self.searchQuery in allContacts[i][8].lower() or self.searchQuery in \
@@ -4138,7 +4147,7 @@ class RMApp(App):
                         self.houses[self.searchResults[i][0][0]].porches[self.searchResults[i][0][1]].flats[self.searchResults[i][0][2]].title
                         ))
 
-            else:  # for standalone contacts
+            else: # for standalone contacts
                 title = "" if self.resources[1][self.searchResults[i][0][0]].title == "" else \
                     self.resources[1][self.searchResults[i][0][0]].title + ", "
                 options.append(f"[b]%s%s%s[/b]" % (number, title,
@@ -4703,8 +4712,8 @@ class RMApp(App):
             flats = []
             for porch in self.house.porches:
                 for flat in porch.flats:
-                    if includeWithoutNumbers == True: flats.append(flat)
-                    elif includeWithoutNumbers == False and flat.phone != "": flats.append(flat)
+                    if includeWithoutNumbers and not "." in flat.number: flats.append(flat)
+                    elif not includeWithoutNumbers and flat.phone != "": flats.append(flat)
             if len(flats) == 0: self.popup(self.msg[313])
             else:
                 try:    flats.sort(key=lambda x: float(x.number))
@@ -4727,10 +4736,6 @@ class RMApp(App):
             textHeight = None
         elif icon == "note":
             color = self.titleColor2
-            text2 = ""
-            for char in text:
-                if char != "\n": text2 += char
-                else: text2 += " "
             size_hint_y = 0.1
             textHeight = self.standardTextHeight
             self.mainList.padding = (0, self.padding*5, self.padding, 0)
@@ -4739,7 +4744,7 @@ class RMApp(App):
 
         tip = MyLabel(color=self.standardTextColor, markup=True, size_hint_y=size_hint_y,
                       text=f"[ref=note][color={color}]{self.button[icon]}[/color] {text}[/ref]",
-                      text_size=(self.mainList.size[0] * k, textHeight),
+                      text_size=(self.mainList.size[0]*k, textHeight),
                       halign="left", valign="top")
         if icon == "warn" and self.platform == "mobile":
             tip.font_size = self.fontXS * self.fontScale() if self.fontScale() < 1.4 else self.fontS
@@ -5310,8 +5315,6 @@ class RMApp(App):
                 firstCallNotAtHome = RButton(text=self.button['lock'], color="white",
                                              quickFlash=True, background_color=colorBG, radiusK=radiusK)
                 def __quickNotAtHome(instance):
-                    #self.flat.addRecord(self.msg[206][0].lower()+self.msg[206][1:])
-
                     date = time.strftime("%d", time.localtime())
                     month = self.monthName()[5]
                     timeCur = time.strftime("%H:%M:%S", time.localtime())
