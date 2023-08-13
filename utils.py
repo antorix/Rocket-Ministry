@@ -11,12 +11,9 @@ def getCurTime():
 
 def checkDate(date):
     """Проверяет, что дата в формате ГГГГ-ММ-ДД"""
-    try:
-        datetime.datetime.strptime(date, "%Y-%m-%d")
-    except:
-        return False
-    else:
-        return True
+    try:    datetime.datetime.strptime(date, "%Y-%m-%d")
+    except: return False
+    else:   return True
 
 def shortenDate(longDate):
     """ Convert date from format "2016-07-22" into "22.07" """
@@ -177,6 +174,7 @@ def timeFloatToHHMM(hours=None, delta=None):
     return result
 
 def dprint(devmode, text):
+    """ Печать только в режиме разработчика """
     if devmode: print(text)
 
 def numberize(line):
