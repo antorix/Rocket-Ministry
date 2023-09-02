@@ -4,7 +4,7 @@ Keep track of your territories, contacts, visits, placements, and reports in you
 
 Android, Windows, Linux are supported. Mac should work too, but not tested yet.
 
-The app is translated into English, Spanish, Russian, Turkish, Georgian and Armenian, more languages are coming. If you want to help translate the app into your language, please send a message to [inoblogger@gmail.com](mailto:inoblogger@gmail.com).
+The app is translated into English, Spanish, Russian, Ukrainian, Turkish, Georgian and Armenian. If you want to help translate the app into your language, please send a message to [inoblogger@gmail.com](mailto:inoblogger@gmail.com).
 
 * [Download from Google Play](https://play.google.com/store/apps/details?id=org.rocketministry)
 
