@@ -4,9 +4,10 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.8.5"
+Version = "2.9.0"
 
 """
+* Украинский язык.
 * Небольшие исправления и оптимизации.
 """
 
@@ -1102,8 +1103,7 @@ class TTab(TabbedPanelHeader):
     """ Вкладки панелей """
     def __init__(self, text=""):
         super(TTab, self).__init__()
-        if RM.platform == "mobile":
-            self.font_size = RM.fontXS * RM.fontScale() if RM.fontScale() < 1.4 else RM.fontM
+        if RM.platform == "mobile" and RM.fontScale() > 1: self.font_size = RM.fontS
         if RM.specialFont != None: self.font_name = RM.specialFont
         self.text = text
         self.background_normal = "void.png"
@@ -1138,10 +1138,8 @@ class TableButton(Button):
     def __init__(self, text="", size_hint_x=1, size_hint_y=1, height=0, width=0, background_color=None,
                  color=None, pos_hint=None, size=None, disabled=False, font_name=None, **kwargs):
         super(TableButton, self).__init__()
-        if RM.platform == "mobile":
-            self.font_size = RM.fontL if RM.platform=="desktop" else RM.fontS#RM.fontXS * RM.fontScale() if RM.fontScale() < 1.4 else RM.fontS
-        if RM.specialFont != None:
-            self.font_name = RM.specialFont
+        if RM.platform == "mobile": self.font_size = RM.fontS
+        if RM.specialFont != None:  self.font_name = RM.specialFont
         self.text = text.strip()
         self.markup = True
         self.size_hint_x = size_hint_x
@@ -1170,7 +1168,6 @@ class TableButton(Button):
         if font_name != None: self.font_name = font_name
 
     def on_press(self):
-        print(self.text)
         if RM.theme != "3D":
             RM.buttonFlash(instance=self)
             if (RM.theme == "dark" or RM.theme == "gray") and \
@@ -1227,10 +1224,17 @@ class RButton(Button):
             if onPopup == True: self.background_color = [.22, .22, .22, .9]
             elif background_color == "": self.background_color = RM.tableBGColor
             else: self.background_color = background_color
+            if RM.theme == "purple":
+                k=1.06
+                self.background_color = [self.background_color[0]*k, self.background_color[1]*k,
+                                         self.background_color[2]*k, 1]
             self.background_normal = background_normal
             self.origColor = RM.tableColor if color == "" else color
             self.color = self.origColor
             self.background_color[3] = 0
+
+
+
             with self.canvas.before:
                 self.shape_color = Color(rgba=[self.background_color[0], self.background_color[1],
                                                self.background_color[2], 1])
@@ -1307,7 +1311,12 @@ class SortListButton(Button):
         self.markup = True
         self.size_hint_y = None
         self.height = RM.standardTextHeight * (1.7 if RM.orientation == "v" else 1.2)
-        self.background_color = RM.textInputBGColor
+        if RM.theme == "default" or RM.theme == "green":
+            k=.98
+            self.bk_color = [RM.textInputBGColor[0]*k, RM.textInputBGColor[1]*k, RM.textInputBGColor[2]*k, RM.textInputBGColor[3]]
+        else:
+            self.bk_color = RM.textInputBGColor
+        self.background_color = self.bk_color
         self.background_normal = ""
         self.background_down = RM.buttonPressedBG
         self.color = RM.tableColor if RM.theme != "teal" else RM.themeDefault[1]
@@ -1322,7 +1331,7 @@ class SortListButton(Button):
         Clock.schedule_once(self.restoreColor, RM.onClickFlash)
 
     def restoreColor(self, *args):
-        self.background_color = RM.textInputBGColor
+        self.background_color = self.bk_color
 
 class ScrollButton(Button):
     # Все пункты списка, кроме квадратиков квартир в поэтажном режиме
@@ -1756,6 +1765,7 @@ class RMApp(App):
             "en": ["English", None],
             "es": ["español", None],
             "ru": ["русский", None],
+            "uk": ["українська", None],
             "tr": ["Türkçe", None],
             "ka": ["ქართული", self.MyFont],
             "hy": ["Հայերեն", self.MyFont],
@@ -1796,14 +1806,14 @@ class RMApp(App):
                 try:    DL = os.environ['LANG'][0:2]
                 except: DL = "en"
             else: DL = "en"
-            if DL == "ru" or DL == "ua" or DL == "by" or DL == "kz": self.language = "ru"
+            if DL == "ru" or DL == "by" or DL == "kz": self.language = "ru"
             elif DL == "es": self.language = "es"
+            elif DL == "uk": self.language = "uk"
             elif DL == "ka": self.language = "ka"
             elif DL == "hy": self.language = "hy"
             elif DL == "tr": self.language = "tr"
             else: self.language = "en"
             self.settings[0][6] = self.language
-
         try:
             with open(f"{self.language}.lang", mode="r", encoding="utf-8") as file: # загрузка языкового файла
                 self.msg = file.read().splitlines()
@@ -1843,9 +1853,9 @@ class RMApp(App):
             self.standardBarWidth = self.standardTextHeight
             self.standardTextWidth = self.standardTextHeight * 1.3
             self.titleSizeHintY = .1 # ширина полосы заголовка
-            self.tableSizeHintY = .08 # ширина полосы верхних табличных кнопок - было 0.06
-            self.bottomButtonsSizeHintY = .12 # ширина полосы центральной кнопки - было .1
-            self.mainButtonsSizeHintY = 0.08 # ширина полосы 3 главных кнопок
+            self.tableSizeHintY = .1 # ширина полосы верхних табличных кнопок
+            self.bottomButtonsSizeHintY = .09 #.12 # ширина полосы центральной кнопки
+            self.mainButtonsSizeHintY = 0.1 # ширина полосы 3 главных кнопок
             self.charLimit = 30 # лимит символов на кнопках
             self.allowCharWarning = True
             self.descrColWidth = .35  # ширина левого столбца таблицы (подписи полей), но кроме настроек
@@ -1963,22 +1973,23 @@ class RMApp(App):
 
         # Верхние кнопки таблицы
 
-        self.titleBox = BoxLayout(size_hint_y=self.tableSizeHintY)
+        self.titleBox = BoxLayout(size_hint_y=self.tableSizeHintY, padding=self.padding)
         self.listarea.add_widget(self.titleBox)
-        self.backButton = TableButton(text=self.button["back"], size_hint_x=.3, background_color=self.globalBGColor)
+        tbWidth = [.29, .31, .1, .3] # значения ширины кнопок таблицы
+        self.backButton = TableButton(text=self.button["back"], size_hint_x=tbWidth[0], background_color=self.globalBGColor)
         self.backButton.bind(on_release=self.backPressed)
         self.titleBox.add_widget(self.backButton)
 
         self.dropSortMenu = DropDown()
-        self.sortButton = TableButton(size_hint_x=.28,  background_color=self.globalBGColor)
+        self.sortButton = TableButton(size_hint_x=tbWidth[1],  background_color=self.globalBGColor)
         self.titleBox.add_widget(self.sortButton)
         self.sortButton.bind(on_press=self.sortPressed)
 
-        self.resizeButton = TableButton(size_hint_x=.12, background_color=self.globalBGColor)
+        self.resizeButton = TableButton(size_hint_x=tbWidth[2], background_color=self.globalBGColor)
         self.titleBox.add_widget(self.resizeButton)
         self.resizeButton.bind(on_release=self.resizePressed)
 
-        self.detailsButton = TableButton(size_hint_x=.3, background_color=self.globalBGColor)
+        self.detailsButton = TableButton(size_hint_x=tbWidth[3], background_color=self.globalBGColor)
         self.detailsButton.bind(on_release=self.detailsPressed)
         self.titleBox.add_widget(self.detailsButton)
 
@@ -2031,7 +2042,7 @@ class RMApp(App):
 
         # Нижние кнопки таблицы
 
-        self.bottomButtons = BoxLayout(size_hint_y=self.bottomButtonsSizeHintY)
+        self.bottomButtons = BoxLayout(size_hint_y=self.bottomButtonsSizeHintY, padding=self.padding)
         self.listarea.add_widget(self.bottomButtons)
         self.navButton = TableButton(text=self.button['nav'], background_color=self.globalBGColor, size_hint_x=.15)
         self.bottomButtons.add_widget(self.navButton)
@@ -2039,9 +2050,6 @@ class RMApp(App):
 
         self.positive = TableButton(background_color=self.globalBGColor, size_hint_x=.7) if self.theme == "3D" \
             else RButton(background_color=self.tableBGColor, color=self.tableColor, size_hint_x=.7)
-
-        self.bottomButtons.spacing = self.spacing * 4
-        self.bottomButtons.padding = (0, self.padding * 4, 0, self.padding * 5)
 
         self.positive.bind(on_release=self.positivePressed)
         self.bottomButtons.add_widget(self.positive)
@@ -2057,6 +2065,9 @@ class RMApp(App):
         # Подвал и кнопки меню
 
         self.boxFooter = BoxLayout(size_hint_y=self.mainButtonsSizeHintY, height=0)
+        if self.theme == "purple":
+            self.boxFooter.padding      = (0, self.padding, 0, 0)
+            self.bottomButtons.padding[3] = self.padding * 2
 
         self.buttonTer = MainMenuButton(text=self.msg[2])
         self.buttonTer.bind(on_release=self.terPressed)
@@ -2134,7 +2145,7 @@ class RMApp(App):
             self.popupBackgroundColor = [.16, .16, .16, 1] # фон всплывающего окна
             self.linkColor = self.tableColor = [1, 1, 1, 1] #"white" # цвет текста на плашках таблицы и кнопках главного меню
             self.lightGrayFlat = [.38, .38, .38, 1]
-            self.darkGrayFlat = [.22, .22, .22, 1] # квартира "нет дома"
+            self.darkGrayFlat = [.26, .26, .26, 1] # квартира "нет дома"
             self.createNewPorchButton = [.2, .2, .2, 1] # пункт списка создания нового подъезда
             self.interestColor = get_hex_from_color(self.getColorForStatus("1")) # "00BC7F" # "00CA94" # должен соответствовать зеленому статусу или чуть светлее
             self.saveColor = "00E7C8"
@@ -2219,7 +2230,7 @@ class RMApp(App):
             elif self.theme == "3D" or self.theme == "retro": # 3D
                 self.mode = "dark"
                 self.globalBGColor = [.12, .12, .12, 1]
-                self.buttonPressedOnDark = [.4, .4, .4, 1]  # цвет в темных темах, определяющий засветление фона кнопки
+                self.buttonPressedOnDark = [.4, .4, .4, 1] # цвет в темных темах, определяющий засветление фона кнопки
                 self.buttonTint = [.8,.8,.8]
                 self.linkColor = [.98, 1, .98]
                 self.iconColor = get_hex_from_color([.6, .6, .6])
@@ -2232,6 +2243,7 @@ class RMApp(App):
                 self.disabledColor = get_hex_from_color(self.darkGrayFlat)
                 self.tabColors = [self.linkColor, "tab_background_3d.png"]
                 self.sliderImage = "slider_cursor_green.png"
+                self.bottomButtonsSizeHintY = self.tableSizeHintY
 
         self.mainMenuButtonColor2 = get_hex_from_color(self.mainMenuButtonColor)
         self.titleColor2 = get_hex_from_color(self.titleColor)
@@ -2386,8 +2398,7 @@ class RMApp(App):
                 height1 = self.standardTextHeight * 2 / self.fontScale()
                 if self.platform == "desktop": height1 = height1 * .7
                 height = height1
-                self.scrollWidget = GridLayout(cols=1, spacing=self.spacing*1.5, padding=(self.padding*2, self.padding),
-                                               size_hint_y=None)
+                self.scrollWidget = GridLayout(cols=1, spacing=self.spacing*1.5, padding=self.padding*2, size_hint_y=None)
                 self.scrollWidget.bind(minimum_height=self.scrollWidget.setter('height'))
                 self.scroll = ScrollView(size=(self.mainList.size[0]*.9, self.mainList.size[1]*.9),
                                          bar_width=self.standardBarWidth, scroll_type=['bars', 'content'])
@@ -2503,7 +2514,7 @@ class RMApp(App):
                 spacing = self.spacing * 2
 
                 self.floorview = GridLayout(cols=self.porch.columns+1, rows=self.porch.rows, spacing=spacing,
-                                            padding=spacing*2)
+                                            padding=(self.padding*2, self.padding*2, self.padding*2, self.padding*3))
                 for label in self.displayed.options:
                     if "│" in label: # показ цифры этажа
                         self.floorview.add_widget(Label(text=label[: label.index("│")], halign="right",
@@ -2541,7 +2552,7 @@ class RMApp(App):
                 elif self.settings[0][1] == 9:  self.noScalePadding = [diffX, diffY, 0, 0]  # справа снизу
                 else:                           self.noScalePadding = [diffX / 2, diffY / 2, diffX / 2, diffY / 2]  # по центру
 
-                if self.noScalePadding[0] < 0 or self.noScalePadding[1] < 0: # если слишком большой подъезд, включаем масштабирование
+                if self.noScalePadding[0] < 0 or self.noScalePadding[1] < 0 or self.noScalePadding[2] < 0 or self.noScalePadding[3] < 0: # если слишком большой подъезд, включаем масштабирование
                     self.settings[0][7] = 1
                     self.porchView()
                     return
@@ -3254,7 +3265,7 @@ class RMApp(App):
             elif self.displayed.form == "ter": # добавление участка
                 self.detailsButton.disabled = True
                 self.displayed.form = "createNewHouse"
-                if self.language == "ru":
+                if self.language == "ru" or self.language == "uk":
                     active = True
                     hint = self.msg[70]
                     self.ruTerHint = " / C1"
@@ -3309,7 +3320,7 @@ class RMApp(App):
                 if len(self.flat.records) > 0:
                     self.displayed.form = "createNewRecord" # добавление нового посещения в существующем контакте
                     self.createInputBox(
-                        title=f"{self.flatTitle} {self.button['arrow']} {self.msg[82]}",
+                        title=f"{self.flatTitle} {self.button['arrow']} {self.msg[161].lower()}",
                         message=self.msg[83],
                         multiline=True,
                         addCheckBoxes=True,
@@ -4303,7 +4314,8 @@ class RMApp(App):
                         self.colorBtn[i].markup = True
 
                 colorBox = BoxLayout(size_hint_y=None, height=self.mainList.size[0]/7,
-                                     spacing=self.spacing*2, padding=(self.padding * 2, 0))
+                                     spacing=self.spacing*2,
+                                     padding=(self.padding*2, self.padding*2, self.padding*2, self.padding*3))
                 if self.orientation == "h": colorBox.height = self.standardTextHeight
                 colorBox.add_widget(self.colorBtn[1])
                 colorBox.add_widget(self.colorBtn[2])
@@ -4406,11 +4418,12 @@ class RMApp(App):
                         filled = self.inputBoxEntry.text
                         textbox.remove_widget(self.inputBoxEntry)
                         height = self.standardTextHeight
-                        self.inputBoxEntry = MyTextInput(text=filled, hint_text=self.msg[59], multiline=multiline, height=height,
-                                                       size_hint_x=Window.size[0]/2, size_hint_y=None, pos_hint=pos_hint,
-                                                       input_type="number")
+                        self.inputBoxEntry = MyTextInput(text=filled, hint_text=self.msg[59], multiline=multiline,
+                                                         height=height*1.2, size_hint_x=Window.size[0]/2,
+                                                         size_hint_y=None, pos_hint=pos_hint,
+                                                         input_type="number")
                         textbox.add_widget(self.inputBoxEntry)
-                        self.inputBoxEntry2 = MyTextInput(hint_text = self.msg[60], multiline=multiline, height=height,
+                        self.inputBoxEntry2 = MyTextInput(hint_text = self.msg[60], multiline=multiline, height=height*1.2,
                                                         size_hint_x=Window.size[0]/2, size_hint_y=None, pos_hint=pos_hint,
                                                         input_type="number")
                         textbox.add_widget(self.inputBoxEntry2)
@@ -4521,7 +4534,7 @@ class RMApp(App):
             if self.displayed.form == "set":
                 grid.spacing = 0
                 labelSize_hint = (1, 1)
-                entrySize_hint = ((.45 if self.orientation == "v" else .3), 1)
+                entrySize_hint = ((.47 if self.orientation == "v" else .3), 1)
                 text_size = (Window.size[0] * 0.66, None)
             else:
                 labelSize_hint = (self.descrColWidth, y)
@@ -4550,7 +4563,7 @@ class RMApp(App):
 
             elif langSelect == True:
                 self.multipleBoxEntries.append(self.languageSelector())
-                textbox.padding = self.padding, 0
+                textbox.padding = (self.padding, 0,0,0)
 
             elif checkbox == False:
                 input_type = "number" if self.displayed.form == "set" or self.msg[17] in self.multipleBoxLabels[row].text \
@@ -4571,13 +4584,13 @@ class RMApp(App):
 
         if self.displayed.form == "set": # добавляем выбор темы для настроек
             grid.rows += 1
-            themes = MyLabel(text=self.msg[168], valign="center", halign="center", size_hint=labelSize_hint,
+            themes = MyLabel(text=self.msg[168], valign="center", halign="center",
                                     color=self.standardTextColor, text_size=text_size)
             if self.platform == "mobile":
                 themes.font_size = self.fontXS * self.fontScale() if self.fontScale() < 1.4 else self.fontM
             grid.add_widget(themes)
-            textbox2 = BoxLayout(size_hint=entrySize_hint, padding=(self.padding, 0),
-                                height=height, pos_hint={"center_x": .5})
+            textbox2 = BoxLayout(size_hint=entrySize_hint, padding=(self.padding,0,0,0),
+                                 height=height, pos_hint={"center_x": .5})
             textbox2.add_widget(self.themeSelector())
             grid.add_widget(textbox2)
 
@@ -5233,6 +5246,7 @@ class RMApp(App):
 
         elif self.popupForm == "submitReport":
             if instance.text == self.button["no"]:
+                self.buttonTer.deactivate()
                 self.repPressed(jumpToPrevMonth=True)
                 Clock.schedule_once(self.sendLastMonthReport, 0.3)
 
@@ -5590,7 +5604,7 @@ class RMApp(App):
             self.boxHeader.size_hint_y = self.titleSizeHintY * 1.2
             self.titleBox.size_hint_y = self.tableSizeHintY * 1.2
             self.boxFooter.size_hint_y = self.mainButtonsSizeHintY * 1.3
-            self.bottomButtons.size_hint_y = self.bottomButtonsSizeHintY * 1.1
+            self.bottomButtons.size_hint_y = self.bottomButtonsSizeHintY * 1.2
             if self.theme != "3D": self.positive.size_hint_x = .15
 
         self.pageTitle.text_size = (Window.size[0] * (.4 if self.settings[0][22] else .7), None)

@@ -79,7 +79,7 @@ Agregar
 Agregar contacto
 Introduzca nombre de contacto y/o descripción:
 Está creando un contacto independiente no asociado a ningún territorio. Las personas de todos sus territorios aparecen automáticamente en los contactos si se les asigna el estado verde claro.
-agregar visita
+
 Informacion de la visita:
 Ახალი ძებნა
 ¡Ya existe un territorio con este nombre, pruebe con otro!
@@ -179,7 +179,7 @@ Horas agregadas
 Requisito anual
 Horas restantes
 Promedio mensual
-Equivale a 12 x necesidad mensual (a partir de los ajustes)
+Equivale a 12 x necesidad mensual (a partir de los ajustes).
 Promedio de horas a servir cada mes durante el resto de los meses (no añadidos).
 ¡Pero tenga en cuenta que esto desactivará la vista por piso!
 Lista de números
