@@ -4,10 +4,9 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.9.0"
+Version = "2.9.1"
 
 """
-* Украинский язык.
 * Небольшие исправления и оптимизации.
 """
 
@@ -1999,7 +1998,7 @@ class RMApp(App):
 
         # Главный список
 
-        self.mainList = BoxLayout(orientation="vertical")
+        self.mainList = BoxLayout(orientation="vertical", padding=0)
         AL = AnchorLayout(anchor_x="center", anchor_y="top")
         AL.add_widget(self.mainList)
         self.listarea.add_widget(AL)
@@ -2042,7 +2041,10 @@ class RMApp(App):
 
         # Нижние кнопки таблицы
 
-        self.bottomButtons = BoxLayout(size_hint_y=self.bottomButtonsSizeHintY, padding=self.padding)
+        self.bottomButtons = BoxLayout(
+            size_hint_y = self.bottomButtonsSizeHintY if self.theme != "3d" else self.tableSizeHintY,
+            padding = self.padding if self.theme != "3d" else 0
+        )
         self.listarea.add_widget(self.bottomButtons)
         self.navButton = TableButton(text=self.button['nav'], background_color=self.globalBGColor, size_hint_x=.15)
         self.bottomButtons.add_widget(self.navButton)
@@ -2066,8 +2068,8 @@ class RMApp(App):
 
         self.boxFooter = BoxLayout(size_hint_y=self.mainButtonsSizeHintY, height=0)
         if self.theme == "purple":
-            self.boxFooter.padding      = (0, self.padding, 0, 0)
-            self.bottomButtons.padding[3] = self.padding * 2
+            self.boxFooter.padding          = (0, self.padding, 0, 0)
+            self.bottomButtons.padding[3]   = self.padding * 2
 
         self.buttonTer = MainMenuButton(text=self.msg[2])
         self.buttonTer.bind(on_release=self.terPressed)
@@ -2319,7 +2321,6 @@ class RMApp(App):
         try:
             self.stack = list(dict.fromkeys(self.stack))
             self.mainList.clear_widgets()
-            self.mainList.padding = (0, self.padding)
             self.popupEntryPoint = 0
             if self.showSlider == False: self.sortButton.disabled = True
             self.navButton.disabled = True
@@ -3268,8 +3269,9 @@ class RMApp(App):
                 if self.language == "ru" or self.language == "uk":
                     active = True
                     hint = self.msg[70]
-                    self.ruTerHint = " / C1"
-                    ruList = " Снимите галочку, если участок другого типа или нужно загрузить список адресов."
+                    self.ruTerHint = " / У1"
+                    ruList = " Снимите галочку, если участок другого типа или нужно загрузить произвольный список адресов (в одном доме или разных)." \
+                        if self.language == "ru" else ""
                 else:
                     active = False
                     hint = self.msg[166]
@@ -5194,11 +5196,13 @@ class RMApp(App):
                 self.save()
 
         elif self.popupForm == "confirmShrinkFloor":
+            del self.stack[0]
             if instance.text == self.button["yes"]:
                 self.porch.shrinkFloor(self.selectedFlat)
                 self.porchView()
                 if self.popupCheckbox.active == True: self.resources[0][1][0] = 1
                 self.save()
+                del self.stack[0]
 
         elif self.popupForm == "confirmDeletePorch":
             if instance.text == self.button["yes"]:
