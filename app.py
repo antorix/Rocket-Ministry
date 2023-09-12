@@ -4,7 +4,7 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.9.1"
+Version = "2.9.2"
 
 """
 * Небольшие исправления и оптимизации.
@@ -134,13 +134,15 @@ class House(object):
                 last = len(self.porches)-1
                 number = int(self.porches[last].title) + 1 if self.porches[last].title.isnumeric() else None
             if number != None: list.append(f"[i]{RM.msg[6]} {number}[/i]")
-            #[b]{RM.button['plus']}[/b]
         return list
 
     def addPorch(self, input="", type="подъезд"):
         self.porches.append(Porch())
         self.porches[len(self.porches)-1].title = input.strip()
         self.porches[len(self.porches)-1].type = type
+
+    def deletePorch(self, selectedPorch):
+        del self.porches[selectedPorch]
 
     def rename(self, input):
         self.title = input[3:].upper()
@@ -168,7 +170,7 @@ class Porch(object):
         self.type = ""
 
     def shrinkFloor(self, selectedFlat):
-        """ Определяет самую левую квартиру этажа и отправляет ее на удаление, чтобы уменьшить этаж"""
+        """ Определяет самую левую квартиру этажа и отправляет ее на удаление, чтобы уменьшить этаж """
         all = self.showFlats()
         number = self.flats[selectedFlat].number
         for i in range(len(all)):
@@ -189,7 +191,6 @@ class Porch(object):
     def deleteFlat(self, ind):
         """ Удаление квартиры - переводит на сдвиг (если подъезд) или простое удаление (если не подъезд) """
         if "подъезд" in self.type: # если подъезд, делаем сдвиг
-
             deletedFlat = self.flats[ind]
             flatsLayoutOriginal = self.flatsLayout # определяем, нет ли в конце списка квартиры с записями, которую нельзя сдвигать
             self.flatsLayout = "о"
@@ -1135,7 +1136,7 @@ class TopButton(Button):
 
 class TableButton(Button):
     def __init__(self, text="", size_hint_x=1, size_hint_y=1, height=0, width=0, background_color=None,
-                 color=None, pos_hint=None, size=None, disabled=False, font_name=None, **kwargs):
+                 form=None, color=None, pos_hint=None, size=None, disabled=False, font_name=None, **kwargs):
         super(TableButton, self).__init__()
         if RM.platform == "mobile": self.font_size = RM.fontS
         if RM.specialFont != None:  self.font_name = RM.specialFont
@@ -1145,6 +1146,9 @@ class TableButton(Button):
         self.size_hint_y = size_hint_y
         self.height = height
         self.width = width
+        if form == "firstCall":
+            self.height *= 1.6
+            self.width *= 1.7
         if size != None: self.size = size
         self.pos_hint = pos_hint if pos_hint != None else {"center_y": .5}
         self.default_background_color = RM.tableBGColor if background_color == None else background_color
@@ -1487,6 +1491,8 @@ class Counter(AnchorLayout):
             box.size_hint = (None, None)
             box.height = RM.counterHeight
             box.width = RM.counterHeight * 1.5
+            if RM.displayed.form == "rep" and RM.fontScale() > 1.2: # счетчики пошире, если крупный шрифт
+                box.width *= RM.fontScale() * .9
             if RM.orientation == "h": box.height *= .6
 
         box.add_widget(self.input)
@@ -1863,6 +1869,7 @@ class RMApp(App):
             self.mypopup = PopupNoAnimation()
             self.onClickColK  = .9 # коэффициент затемнения фона кнопки при клике
             self.onClickFlash = .1 # время появления теневого эффекта на кнопках
+            self.backupTimeoutBeforeDelete = .02 # время задержки перед удалением, чтобы прошло резервирование
             self.buttonPressedBG = "button_background.png"
 
             self.fontXXL =  int(Window.size[1] / 25) # размеры шрифтов
@@ -2786,7 +2793,7 @@ class RMApp(App):
     def detailsPressed(self, instance=None):
         """ Нажата кнопка настроек рядом с заголовком (редактирование данного объекта) """
         self.func = self.detailsPressed
-        if self.confirmNonSave() == True: return
+        if self.confirmNonSave(): return
 
         self.showSlider = False
         self.sliderToggle()
@@ -2858,6 +2865,7 @@ class RMApp(App):
 
     def backPressed(self, instance=None):
         """ Нажата кнопка «назад» """
+        self.func = self.backPressed
         if self.confirmNonSave(): return
         if len(self.stack) > 0: del self.stack[0]
         if self.displayed.form == "repLog":
@@ -3088,6 +3096,8 @@ class RMApp(App):
             # Отчет
 
             elif self.displayed.form == "rep":
+                self.save(backup=True)
+                time.sleep(self.backupTimeoutBeforeDelete)
                 self.rep.checkNewMonth()
                 if self.reportPanel.current_tab.text == self.monthName()[0]:
                     success = 1
@@ -3176,11 +3186,16 @@ class RMApp(App):
 
             # Настройки
 
-            elif self.displayed.form == "set": self.saveSettings()
+            elif self.displayed.form == "set":
+                self.save(backup=True)
+                time.sleep(self.backupTimeoutBeforeDelete)
+                self.saveSettings()
 
             # Форма создания квартир/домов
 
             elif self.displayed.form == "porchView":
+                self.save(backup=True)
+                time.sleep(self.backupTimeoutBeforeDelete)
                 self.clearTable()
                 self.displayed.form = "createNewFlat"
                 self.positive.text = self.button["save"]
@@ -3270,7 +3285,7 @@ class RMApp(App):
                     active = True
                     hint = self.msg[70]
                     self.ruTerHint = " / У1"
-                    ruList = " Снимите галочку, если участок другого типа или нужно загрузить произвольный список адресов (в одном доме или разных)." \
+                    ruList = " Снимите галочку, если участок другого типа или нужно ввести произвольный список адресов (в одном доме или разных)." \
                         if self.language == "ru" else ""
                 else:
                     active = False
@@ -3617,9 +3632,7 @@ class RMApp(App):
 
     def terPressed(self, instance=""):
         self.func = self.terPressed
-        if self.confirmNonSave() == True:
-            return
-
+        if self.confirmNonSave(): return
         self.buttonTer.activate()
         self.contactsEntryPoint = 0
         self.searchEntryPoint = 0
@@ -3671,9 +3684,7 @@ class RMApp(App):
     def conPressed(self, instance=None):
         if instance != None:
             self.func = self.conPressed
-            if self.confirmNonSave() == True:
-                return
-
+            if self.confirmNonSave(): return
         self.buttonCon.activate()
         self.contactsEntryPoint = 1
         self.searchEntryPoint = 0
@@ -3733,7 +3744,7 @@ class RMApp(App):
 
     def repPressed(self, instance=None, jumpToPrevMonth=False):
         self.func = self.repPressed
-        if self.confirmNonSave() == True: return
+        if self.confirmNonSave(): return
         self.buttonRep.activate()
         if len(self.stack) > 0: self.stack.insert(0, self.stack[0]) # дублирование последнего шага стека, чтобы предотвратить уход со страницы
         self.clearTable()
@@ -3895,7 +3906,7 @@ class RMApp(App):
     def settingsPressed(self, instance=None):
         """ Настройки """
         self.func = self.settingsPressed
-        if self.confirmNonSave() == True: return
+        if self.confirmNonSave(): return
         self.displayed.form = "set"
         self.updateMainMenuButtons(deactivateAll=True)
         self.clearTable()
@@ -4096,7 +4107,7 @@ class RMApp(App):
     def searchPressed(self, instance=None):
         """ Нажата кнопка поиск """
         self.func = self.searchPressed
-        if self.confirmNonSave() == True: return
+        if self.confirmNonSave(): return
         self.displayed.form = "search"
         self.clearTable()
         focus = True
@@ -4255,6 +4266,7 @@ class RMApp(App):
 
     def flatView(self, call=True, instance=None):
         """ Вид квартиры - список записей посещения """
+        if "." in str(self.flat.number): return # страховка от случайного захода в удаленную квартиру
         self.updateMainMenuButtons()
         number = " " if self.flat.number == "virtual" else self.flat.number + " " # прячем номера отдельных контактов
         flatPrefix = f"{self.msg[214]} " if "подъезд" in self.porch.type else ""
@@ -5059,7 +5071,7 @@ class RMApp(App):
         elif status == "5": return [.81, .24, .17, 1] # красный
         else:               return self.lightGrayFlat
 
-    def deletePressed(self, instance=None):
+    def deletePressed(self, instance=None, forced=False):
         """ Действие при нажатии на кнопку с корзиной на форме любых деталей """
         if self.displayed.form == "houseDetails": # удаление участка
             self.popupForm = "confirmDeleteHouse"
@@ -5073,7 +5085,7 @@ class RMApp(App):
             self.popup(title=f"{title}: {self.porch.title}", message=self.msg[198],
                        options=[self.button["yes"], self.button["no"]])
 
-        elif self.displayed.form == "flatDetails" or self.displayed.form == "flatView": # удаление квартиры
+        elif self.displayed.form == "flatDetails" or self.displayed.form == "flatView" or forced: # удаление квартиры
             self.popupForm = "confirmDeleteFlat"
             if self.contactsEntryPoint == 1 or self.searchEntryPoint == 1 or \
                     (self.flat.status != "" and not "подъезд" in self.porch.type):
@@ -5163,12 +5175,16 @@ class RMApp(App):
 
         elif self.popupForm == "confirmDeleteRecord":
             if instance.text == self.button["yes"]:
+                self.save(backup=True)
+                time.sleep(self.backupTimeoutBeforeDelete)
                 self.flat.deleteRecord(self.selectedRecord)
                 self.save()
                 self.flatView()
 
         elif self.popupForm == "confirmDeleteFlat":
             if instance.text == self.button["yes"]:
+                self.save(backup=True)
+                time.sleep(self.backupTimeoutBeforeDelete)
                 if self.house.type == "virtual":
                     del self.resources[1][self.selectedHouse]
                     if self.contactsEntryPoint == 1: self.conPressed()
@@ -5182,12 +5198,17 @@ class RMApp(App):
                             return
                         else:
                             self.porch.shrinkFloor(self.selectedFlat)
-                            del self.stack[0]
-                            self.backPressed()
+                            if self.displayed.form == "flatDetails":
+                                if not self.popupEntryPoint: self.backPressed()
+                                self.backPressed()
+                            else:
+                                self.porchView()
                     else:
                         self.flat.wipe()
-                        if self.contactsEntryPoint == 1: self.conPressed()
-                        elif self.searchEntryPoint == 1: self.find(instance=instance)
+                        if self.contactsEntryPoint == 1:
+                            self.conPressed()
+                        elif self.searchEntryPoint == 1:
+                            self.find(instance=instance)
                 else:
                     self.porch.deleteFlat(self.selectedFlat)
                     if self.contactsEntryPoint == 1: self.conPressed()
@@ -5196,22 +5217,25 @@ class RMApp(App):
                 self.save()
 
         elif self.popupForm == "confirmShrinkFloor":
-            del self.stack[0]
+            if self.displayed.form == "flatDetails": del self.stack[0]
             if instance.text == self.button["yes"]:
                 self.porch.shrinkFloor(self.selectedFlat)
                 self.porchView()
                 if self.popupCheckbox.active == True: self.resources[0][1][0] = 1
                 self.save()
-                del self.stack[0]
 
         elif self.popupForm == "confirmDeletePorch":
             if instance.text == self.button["yes"]:
-                del self.house.porches[self.selectedPorch]
+                self.save(backup=True)
+                time.sleep(self.backupTimeoutBeforeDelete)
+                self.house.deletePorch(self.selectedPorch)
                 self.save()
                 self.houseView()
 
         elif self.popupForm == "confirmDeleteHouse":
             if instance.text == self.button["yes"]:
+                self.save(backup=True)
+                time.sleep(self.backupTimeoutBeforeDelete)
                 for p in range(len(self.house.porches)):
                     for f in range(len(self.house.porches[p].flats)):
                         flat = self.house.porches[p].flats[f]
@@ -5234,6 +5258,8 @@ class RMApp(App):
 
         elif self.popupForm == "resetFlatToGray":
             if instance.text == self.button["yes"]:
+                self.save(backup=True)
+                time.sleep(self.backupTimeoutBeforeDelete)
                 if len(self.stack) > 0: del self.stack[0]
                 if self.flat.number == "virtual": del self.resources[1][self.selectedHouse]
                 else:                             self.flat.wipe()
@@ -5295,19 +5321,41 @@ class RMApp(App):
             content = GridLayout(rows=1, cols=1, padding=self.padding, spacing=self.spacing)
             content2 = GridLayout(rows=1, cols=1, padding=[self.padding, 0, self.padding, self.padding],
                                   spacing=self.spacing)
-            details = TableButton(text=self.button["cog"], size_hint_x=None, size_hint_y=None, color="white",
-                                size=(self.standardTextHeight, self.standardTextHeight),
-                                background_color=self.popupBackgroundColor, pos_hint={"right": 1})
+            spacingK = 3 # коэффициент увеличения кнопки в углу формы
+            buttonsGrid = BoxLayout(orientation="horizontal", size_hint=(None, None), height=self.standardTextHeight,
+                                    width=self.standardTextHeight*2 + self.spacing * spacingK,
+                                    pos_hint={"right": 1, "center": .5}, spacing=self.spacing * spacingK)
+            shrink = TableButton(text=icon('icon-scissors') if self.house.getPorchType()[0] == "подъезд" else icon('icon-trash-1'),
+                                 form=self.popupForm, size_hint_x=None, size_hint_y=None, color="white",
+                                 size=(self.standardTextHeight, self.standardTextHeight),
+                                 background_color=self.popupBackgroundColor, pos_hint={"right": 1, "center": .5})
+            def __shrink(instance):
+                self.mypopup.dismiss()
+                self.buttonFlash(instance)
+                self.popupEntryPoint = 1
+                self.blockFirstCall = 1
+                self.deletePressed(forced=True)
+            shrink.bind(on_release=__shrink)
+            if self.porch.floors() or self.house.getPorchType()[0] == "сегмент":
+                buttonsGrid.add_widget(shrink)
+            else:
+                buttonsGrid.width = self.standardTextHeight
 
+            details = TableButton(text=self.button["cog"], size_hint_x=None, size_hint_y=None, color="white", # кнопка настроек
+                                  form=self.popupForm,
+                                  size=(self.standardTextHeight, self.standardTextHeight),
+                                  background_color=self.popupBackgroundColor, pos_hint={"right": 1})
             def __details(instance):
                 self.mypopup.dismiss()
                 self.buttonFlash(instance)
                 self.popupEntryPoint = 1
                 self.blockFirstCall = 1
                 self.flatView()
+                del self.stack[0]
                 self.detailsPressed()
             details.bind(on_release=__details)
-            contentMain.add_widget(details)
+            buttonsGrid.add_widget(details)
+            contentMain.add_widget(buttonsGrid)
 
             if self.settings[0][20] == 1: # если нужно добавить телефон
                 self.keyboardCloseTime = .1
