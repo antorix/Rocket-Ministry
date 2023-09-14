@@ -167,7 +167,7 @@ Ejemplo: Calle del Río
 Introduzca el primer y el último número del rango a añadir:
 Tema de la interface
 Planta retractil
-No mostrar mas este consejo
+No preguntar de nuevo
 Este es un cambio entre la vista de "rejilla" por piso y una simple lista de apartamentos. Sólo funciona en territorios de tipo condominio. La vista por piso visualiza bien el bloque, mientras que la vista de lista permite ordenar y previsualizar el contenido de los apartamentos.
 video(s)
 Borrar
@@ -296,7 +296,7 @@ hrs
 min
 Si
 No
-Pulsando este botón disminuirá la cantidad de apartamentos [u]en este piso [/u] en uno con desplazamiento a la derecha y recuento de todos los números de la unidad excepto los que tengan visitas. Todos los apartamentos que tengan algún contenido permanecerán. Esta es una forma de editar la cantidad de apartamentos en cada planta. ¿Proceder a la reducción?
+¿Disminuir la cantidad de departamentos en este piso?
 Usando este botón, puedes ajustar el tamaño de la rejilla de números moviendo el deslizador de arriba, así como su posición en uno de los 9 puntos con los botones de la esquina inferior derecha. Haga clic en el mismo botón %s para finalizar la edición.
 Noche
 Tarde

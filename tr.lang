@@ -167,7 +167,7 @@ Saha'yı adlandırın
 Eklenecek aralığın ilk ve son numaralarını girin:
 Arayüz teması
 Zemini azaltın
-Bu ipucunu tekrar göstermeyin
+Artık bunu sorma
 Bu, her bir kat için "ızgara" görünümü ile daire listesi arasında geçiş sağlayan bir butondur. Çok daireli alanlarda kullanılabilir. Kat kat modu giriş yolunu iyi bir şekilde görselleştirirken, liste modunda sıralama ve dairelerdeki girişlerin önizlemesi vardır.
 video
 Sil
@@ -296,7 +296,7 @@ s
 d
 Evet
 Hayır
-Bu butona basmak, [u]bu kattaki[/u] daire sayısını sağa kaydırarak birer birer azaltacak ve ziyaret edilenler hariç girişteki tüm sayıları yeniden sayacaktır. Herhangi bir içeriği olan tüm daireler kalacaktır. Bu, her kattaki daire miktarını düzenlemenin bir yoludur. Azaltılmaya devam edilsin mi?
+Bu kattaki daire sayısı azaltılsın mı?
 Bu düğme aracılığıyla, yukarıdaki kaydırıcıyı hareket ettirerek giriş kapı boyutunu ve sağ alt köşedeki düğmelerle 9 noktadan birindeki konumunu ayarlayabilirsiniz. Düzenlemeyi bitirmek için aynı düğmeye %s tıklayın.
 Gece
 Akşam

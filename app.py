@@ -8,6 +8,9 @@ Version = "2.9.2"
 
 """
 * Небольшие исправления и оптимизации.
+
+Известные баги:
+1. Если сделать подъезд толщиной в 1 квартиру (1 кв. на этаж), то можно удалить даже самую верхнюю квартиру с данными, если удалять из нее. 
 """
 
 import utils as ut
@@ -28,7 +31,7 @@ try:
     import plyer
     import requests
 except:
-    if Devmode == 1: print("Модуль kivy, plyer или requests не найдены, устанавливаю.")
+    if Devmode == 1: print("Модуль kivy, plyer или requests не найден, устанавливаю.")
     from subprocess import check_call
     from sys import executable
     check_call([executable, '-m', 'pip', 'install', 'kivy==2.1.0'])
@@ -958,7 +961,7 @@ class MyTextInput(TextInput):
     def __init__(self, multiline=False, size_hint_y=1, size_hint_x=1, hint_text="", pos_hint = {"center_y": .5},
                  text="", disabled=False, input_type="text", width=0, height=0, mode="resize", time=False,
                  popup=False, focus=False, color=None, background_color=None, smallText=False, limit=99999,
-                 *args, **kwargs):
+                 font_size=None, *args, **kwargs):
         super(MyTextInput, self).__init__()
         if RM.specialFont != None:
             self.font_name = RM.specialFont
@@ -974,6 +977,7 @@ class MyTextInput(TextInput):
         self.input_type = input_type
         self.text = u"%s" % text
         self.disabled = disabled
+        if font_size != None: self.font_size = font_size
         self.foreground_color = RM.textInputColor
         self.background_color = RM.textInputBGColor
         self.hint_text = hint_text
@@ -2223,6 +2227,7 @@ class RMApp(App):
             elif self.theme == "gray": # Вечер
                 self.mode = "dark"
                 self.globalBGColor = [.12, .12, .12, .5]
+                self.darkGrayFlat = [.4, .4, .4, 1]
                 self.buttonPressedOnDark = [.4, .4, .4, 1]  # цвет в темных темах, определяющий засветление фона кнопки
                 self.scrollButtonBackgroundColor = [.2, .2, .2]
                 self.textInputBGColor = [.28, .28, .29, .95]
@@ -2550,6 +2555,7 @@ class RMApp(App):
 
                 # Определение центровки
 
+                #self.mainList.padding[3] = 200
                 if self.settings[0][1] == 1:    self.noScalePadding = [0, 0, diffX, diffY / 2]  # влево вверху
                 elif self.settings[0][1] == 2:  self.noScalePadding = [diffX / 2, 0, diffX / 2, diffY]  # по центру вверху
                 elif self.settings[0][1] == 3:  self.noScalePadding = [diffX, 0, diffY, 0]  # справа вверху
@@ -2565,7 +2571,7 @@ class RMApp(App):
                     self.porchView()
                     return
 
-                BL = BoxLayout()
+                BL = BoxLayout()#padding = (0, 0, 0, 300))
                 self.floorview = GridLayout(row_force_default=True, row_default_height=size, # отрисовка
                                             col_force_default=True, col_default_width=size,
                                             cols_minimum={0: floorLabelWidth},
@@ -3355,9 +3361,7 @@ class RMApp(App):
                     if self.contactsEntryPoint == 1: self.conPressed()
                     elif self.searchEntryPoint == 1: self.find()
                     else: self.porchView()
-                    for entry in self.multipleBoxEntries:
-                        entry.text = ""
-                    if len(self.stack) > 0: del self.stack[0]
+                    for entry in self.multipleBoxEntries: entry.text = ""
                     self.save()
 
             elif self.displayed.form == "createNewRecord": # добавление новой записи посещения (повторное)
@@ -3848,7 +3852,7 @@ class RMApp(App):
             else:
                 x = .3
                 y = 1
-                k = .85
+                k = .8
                 row_force_default = True
 
             width = self.standardTextWidth
@@ -3874,9 +3878,11 @@ class RMApp(App):
                                        color=self.standardTextColor))
                 text = str(self.settings[4][i]) if self.settings[4][i] != None else ""
                 mode = "" if i<6 else "pan"
-                self.months.append(
-                    MyTextInput(text=text, multiline=False, input_type="number", width=self.standardTextWidth * 1.1,
-                                height=height, size_hint_x=None, size_hint_y=None, mode=mode, shrink=False))
+                monthAmount = MyTextInput(text=text, multiline=False, input_type="number", width=self.standardTextWidth * 1.1,
+                                height=height, size_hint_x=None, size_hint_y=None, mode=mode, shrink=False)
+                if self.orientation == "h":
+                    monthAmount.font_size = self.fontS
+                self.months.append(monthAmount)
                 mGrid.add_widget(self.months[i])
                 self.analyticsMessage = MyLabel(markup=True, color=self.standardTextColor, valign="center",
                                               text_size=(Window.size[0] / 2, self.mainList.size[1]),
@@ -4316,7 +4322,7 @@ class RMApp(App):
                     note=note,
                     addCheckBoxes=True
                 )
-                if len(self.stack) > 0: del self.stack[0]
+                self.stack = list(dict.fromkeys(self.stack))
             else: self.updateList()
 
             if self.house.type != "virtual" and self.contactsEntryPoint == 0:
@@ -4767,19 +4773,19 @@ class RMApp(App):
             size_hint_y = 0.1
             textHeight = self.standardTextHeight
             self.mainList.padding = (0, self.padding*5, self.padding, 0)
-
         if hint_y != False: size_hint_y = hint_y
-
         if text == "": # если получен пустой текст, вместо подсказки ставим пустой виджет
             tip = Widget(size_hint_y=size_hint_y)
         else:
-            tip = MyLabel(color=self.standardTextColor, markup=True, size_hint_y=size_hint_y,
-                      text=f"[ref=note][color={color}]{self.button[icon]}[/color] {text}[/ref]",
-                      text_size=(self.mainList.size[0]*k, textHeight),
-                      halign="left", valign="top")
+            tip = MyLabel(color=self.standardTextColor, markup=True,
+                          size_hint_y=.2 if self.displayed.form == "flatView" and len(self.flat.records) == 0 else size_hint_y,
+                          text=f"[ref=note][color={color}]{self.button[icon]}[/color] {text}[/ref]",
+                          text_size=[self.mainList.size[0]*k, textHeight],
+                          halign="left", valign="top")
         if icon == "warn" and self.platform == "mobile":
             tip.font_size = self.fontXS * self.fontScale() if self.fontScale() < 1.4 else self.fontS
-        if icon == "note" or icon == "warn": tip.bind(on_ref_press=self.titlePressed)
+        if icon == "note" or icon == "warn":
+            tip.bind(on_ref_press=self.titlePressed)
         return tip
 
     # Функции для контактов
@@ -5193,7 +5199,7 @@ class RMApp(App):
                     if self.contactsEntryPoint == 0 and self.searchEntryPoint == 0:
                         if self.resources[0][1][0] == 0:
                             self.popupForm = "confirmShrinkFloor"
-                            self.popup(title=self.msg[247], message=self.msg[299], checkboxText=self.msg[170],
+                            self.popup(title=self.msg[203], message=self.msg[299], checkboxText=self.msg[170],
                                        options=[self.button["yes"], self.button["no"]])
                             return
                         else:
@@ -5205,10 +5211,8 @@ class RMApp(App):
                                 self.porchView()
                     else:
                         self.flat.wipe()
-                        if self.contactsEntryPoint == 1:
-                            self.conPressed()
-                        elif self.searchEntryPoint == 1:
-                            self.find(instance=instance)
+                        if self.contactsEntryPoint == 1: self.conPressed()
+                        elif self.searchEntryPoint == 1: self.find(instance=instance)
                 else:
                     self.porch.deleteFlat(self.selectedFlat)
                     if self.contactsEntryPoint == 1: self.conPressed()
@@ -5217,7 +5221,6 @@ class RMApp(App):
                 self.save()
 
         elif self.popupForm == "confirmShrinkFloor":
-            if self.displayed.form == "flatDetails": del self.stack[0]
             if instance.text == self.button["yes"]:
                 self.porch.shrinkFloor(self.selectedFlat)
                 self.porchView()
@@ -5522,21 +5525,21 @@ class RMApp(App):
 
         else:
             radiusK = .4
-            if self.orientation == "v":
-                size_hint = (.9, .3 * (self.fontScale()*2)) if checkboxText != None else (.9, .2 * (self.fontScale()*2))
-            else:
-                size_hint = (.6, .6) if checkboxText != None else (.6, .5)
-
+            size_hint = (.9, .2 * (self.fontScale()*2)) if self.orientation == "v" else (.6, .5)
             text_size = (Window.size[0] * size_hint[0] * .92, None)
             contentMain = BoxLayout(orientation="vertical")
+            if checkboxText != None: contentMain.add_widget(Widget())
             contentMain.add_widget(MyLabel(text=message, halign="left", valign="center", text_size=text_size, markup=True))
 
             if checkboxText != None: # задана галочка
-                CL = BoxLayout(size_hint_y=None)
-                self.popupCheckbox = MyCheckBox(size_hint=(.1, None))
+                contentMain.add_widget(Widget())
+                CL = BoxLayout()
+                self.popupCheckbox = MyCheckBox(size_hint=(.1, 1), halign="right")
                 CL.add_widget(self.popupCheckbox)
-                CL.add_widget(MyLabel(text=checkboxText, halign="center", valign="center", size_hint=(.85, None),
-                                    text_size=text_size))
+                CL.add_widget(MyLabel(text="    "+checkboxText, halign="left", valign="center",
+                                      color="lightgray",
+                                      font_size = self.fontXS * .95 * self.fontScale(),
+                                      size_hint=(.85, 1), text_size=text_size))
                 contentMain.add_widget(CL)
 
             if len(options) > 0: # заданы кнопки

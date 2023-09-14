@@ -167,7 +167,7 @@ Example: River st.
 Enter the first and the last number of the range to add:
 Interface theme
 Shrink floor
-Don't show this tip anymore
+Don't ask this anymore
 This is a switch between the per-floor "grid" view and a simple list of apartments. It works only in condominium-type territories. The per-floor view well visualizes the block, while the list view has handy sorting and preview of flats' content.
 video(s)
 Delete
@@ -296,7 +296,7 @@ h
 m
 Yes
 No
-Pressing this button will decrease the amount of flats [u]on this floor[/u] by one with shift to the right and recount of all numbers in the unit except those with visits. All apartments having any content will remain. This is a way to edit the amount of flats on each floor. Proceed with shrinking?
+Decrease the amount of flats on this floor?
 Using this button, you can adjust the size of the flat grid by moving the slider above, as well as its position in one of the 9 points with the buttons in the bottom right corner. Click on the same button %s to finish editing.
 Night
 Evening
