@@ -4,13 +4,10 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.9.2"
+Version = "2.9.3"
 
 """
-* Небольшие исправления и оптимизации.
-
-Известные баги:
-1. Если сделать подъезд толщиной в 1 квартиру (1 кв. на этаж), то можно удалить даже самую верхнюю квартиру с данными, если удалять из нее. 
+* Небольшие исправления и оптимизации. 
 """
 
 import utils as ut
@@ -99,7 +96,7 @@ class House(object):
         totalFlats=0
         for porch in self.porches:
             for flat in porch.flats:
-                totalFlats += 1
+                if not "." in str(flat.number): totalFlats += 1
                 if len(flat.records) > 0: visited += 1
                 if flat.status == "1": interest += 1
 
@@ -206,8 +203,7 @@ class Porch(object):
             self.flatsLayout = flatsLayoutOriginal
             self.sortFlats()
 
-            if status != "" and deletedFlat.number != number:
-                RM.popup(RM.msg[215] % RM.msg[155])
+            if status != "": RM.popup(RM.msg[215] % RM.msg[155]) # больше нельзя уменьшать этажи
 
             else:
                 deletedFlatClone = deepcopy(deletedFlat)
@@ -1731,9 +1727,7 @@ class RejectColorSelectButton(AnchorLayout):
         self.b3.bind(on_press=self.change)
         self.anchor_x = "center"
         self.anchor_y = "center"
-        box = BoxLayout()
-        box.spacing = RM.spacing
-        box.size_hint = (1, .7)
+        box = BoxLayout(spacing = RM.spacing, size_hint = (1, .7))
         self.add_widget(box)
         box.add_widget(self.b1)
         box.add_widget(self.b2)
@@ -2333,6 +2327,7 @@ class RMApp(App):
         try:
             self.stack = list(dict.fromkeys(self.stack))
             self.mainList.clear_widgets()
+            self.mainList.padding = (0, self.padding)
             self.popupEntryPoint = 0
             if self.showSlider == False: self.sortButton.disabled = True
             self.navButton.disabled = True
@@ -2555,7 +2550,6 @@ class RMApp(App):
 
                 # Определение центровки
 
-                #self.mainList.padding[3] = 200
                 if self.settings[0][1] == 1:    self.noScalePadding = [0, 0, diffX, diffY / 2]  # влево вверху
                 elif self.settings[0][1] == 2:  self.noScalePadding = [diffX / 2, 0, diffX / 2, diffY]  # по центру вверху
                 elif self.settings[0][1] == 3:  self.noScalePadding = [diffX, 0, diffY, 0]  # справа вверху
@@ -4647,7 +4641,8 @@ class RMApp(App):
     
     def reportBoxes(self, addReturn=False):
         """ Счетчики и галочка повторных посещений для первого и повторного посещений """
-        a = AnchorLayout(anchor_x="center", anchor_y="center", size_hint_y=.7) # для счетчиков в новом посещении
+        a = AnchorLayout(anchor_x="center", anchor_y="center",
+                         size_hint_y=.7 if self.displayed.form != "flatView" else .9) # для счетчиков в новом посещении
         grid2 = GridLayout(rows=3, cols=2, size_hint_y=None, padding=self.padding)
         if addReturn == True: grid2.cols += 1
         label1 = MyLabel(text=self.msg[102], halign="center", valign="center", color=self.standardTextColor)
@@ -4778,7 +4773,7 @@ class RMApp(App):
             tip = Widget(size_hint_y=size_hint_y)
         else:
             tip = MyLabel(color=self.standardTextColor, markup=True,
-                          size_hint_y=.2 if self.displayed.form == "flatView" and len(self.flat.records) == 0 else size_hint_y,
+                          size_hint_y=.18 if self.displayed.form == "flatView" and len(self.flat.records) == 0 else size_hint_y,
                           text=f"[ref=note][color={color}]{self.button[icon]}[/color] {text}[/ref]",
                           text_size=[self.mainList.size[0]*k, textHeight],
                           halign="left", valign="top")
@@ -5073,7 +5068,7 @@ class RMApp(App):
         elif status == "1": return [0, .74, .50, 1] # зеленый
         elif status == "2": return [.30, .50, .46, 1] # темно-зеленый
         elif status == "3": return [.53, .37, .76, 1] # фиолетовый
-        elif status == "4": return [.50, .27, .22, 1] # коричневый
+        elif status == "4": return [.77, .66, .34, 1] # желтый
         elif status == "5": return [.81, .24, .17, 1] # красный
         else:               return self.lightGrayFlat
 
@@ -5221,10 +5216,10 @@ class RMApp(App):
                 self.save()
 
         elif self.popupForm == "confirmShrinkFloor":
+            if self.popupCheckbox.active == True: self.resources[0][1][0] = 1
             if instance.text == self.button["yes"]:
                 self.porch.shrinkFloor(self.selectedFlat)
                 self.porchView()
-                if self.popupCheckbox.active == True: self.resources[0][1][0] = 1
                 self.save()
 
         elif self.popupForm == "confirmDeletePorch":
@@ -5429,17 +5424,16 @@ class RMApp(App):
             firstCallBtnCall.bind(on_release=__firstCall)
             content.add_widget(firstCallBtnCall)
 
-            rejectColor = self.getColorForStatus(self.settings[0][18])  # кнопка отказ
-            if rejectColor == self.lightGrayFlat:
-                rejectColor = self.getColorForStatus("0")
-                self.settings[0][18] = "0"
-                self.save()
-            if self.theme == "3D":
-                color = rejectColor
+            if self.theme == "3D": # кнопка отказ
+                color = [
+                    self.getColorForStatus(self.settings[0][18])[0],
+                    self.getColorForStatus(self.settings[0][18])[1],
+                    self.getColorForStatus(self.settings[0][18])[2]
+                ]
                 colorBG = ""
             else:
                 color = "white"
-                colorBG = rejectColor
+                colorBG = self.getColorForStatus(self.settings[0][18])
             firstCallBtnReject = RButton(text=self.button['reject'], background_color=colorBG,
                                          color=color, quickFlash=True, radiusK=radiusK)
             def __quickReject(instance):
@@ -5469,7 +5463,7 @@ class RMApp(App):
         elif self.popupForm == "showTimePicker":
             self.popupForm = ""
             radiusK = .4
-            size_hint = (.9, .6) if self.orientation == "v" else (.4, .8)
+            size_hint = (.9, .7) if self.orientation == "v" else (.4, .9)
             pickerForm = BoxLayout(orientation="vertical", padding=self.padding, spacing=self.spacing*2)
             from circulartimepicker import CircularTimePicker
             picker = CircularTimePicker() # часы
