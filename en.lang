@@ -56,7 +56,7 @@ Notepad
 Data saved, backup copy created
 House
 Apartments:
-from
+
 to
 Floors:
 First floor
@@ -215,7 +215,7 @@ Add the first %s
 You cannot shrink floors in this block anymore, because the last apartment with content will disappear! But you can change the apartment numbers range or floors count on the "%s" screen.
 A non-standard relation between apartments and floors requested. We had to add %d apartment(s) that you now have to manually delete on corresponding floors. To do this, click on the button [b]%s[/b] in the details of [u]any apartment on this floor[/u].
 Service time has started! To finish your service session, just click on the timer button once again. The time will be added to your report automatically. You can disable the timer feature in the settings!
-You cannot add № %s – this number already exists and has content inside!
+You cannot add No %s – it already exists and has content inside!
 Start ministry?
 Add the first call
 It's a new month! Have you turned in your report already?
