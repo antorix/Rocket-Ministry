@@ -2,7 +2,7 @@ Home of Rocket Ministry, the only cross-platform ministry app in the world.
 
 Keep track of your territories, contacts, visits, placements, and reports in your field service in a clean and non-cluttered design. The most well-thought system of floors and entrances. The focus is on speed of all operations with minimum number of clicks, ease of use, and good ergonomics.
 
-Android, Windows, Linux are supported. Mac should work too, but not tested yet.
+Android, Windows, Linux, and Mac are supported.
 
 The app is translated into English, Spanish, Russian, Ukrainian, Turkish, Georgian and Armenian. If you want to help translate the app into your language, please send a message to [inoblogger@gmail.com](mailto:inoblogger@gmail.com).
 
