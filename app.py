@@ -4,7 +4,7 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.09.05"
+Version = "2.09.005"
 
 """
 * Небольшие исправления и оптимизации.
@@ -5687,7 +5687,7 @@ class RMApp(App):
             self.backupRestore(delete=True, silent=True)
 
             updated = self.update()
-            if updated == True: self.popup(self.msg[310], dismiss=False)
+            #if updated == True: self.popup(self.msg[310], dismiss=False)
 
             ut.dprint(Devmode, "Определяем начало нового месяца.")
             self.rep.checkNewMonth()
