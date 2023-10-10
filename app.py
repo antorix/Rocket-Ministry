@@ -4,7 +4,7 @@
 from sys import argv
 Devmode = 0 if "nodev" in argv else 0 # DEVMODE!
 
-Version = "2.9.4"
+Version = "2.09.05"
 
 """
 * Небольшие исправления и оптимизации.
@@ -765,7 +765,7 @@ class Report(object):
                          f"{RM.msg[109]}{RM.col} %d\n" % self.studies
         if credit != "": self.lastMonth += f"{RM.msg[224]}{RM.col} %s" % credit
 
-        # Clear service year in October        
+        # Clear service year in October
         if int(time.strftime("%m", time.localtime())) == 10:
             RM.settings[4] = [None, None, None, None, None, None, None, None, None, None, None, None]
 
@@ -2534,7 +2534,8 @@ class RMApp(App):
                         gap = 1.05 # зазор между квартирами в списке
                         box = BoxLayout(orientation="vertical", size_hint_y=None)
 
-                        if self.displayed.form != "porchView": # вид для всех списков, кроме подъезда - без фона
+                        if self.displayed.form != "porchView" or self.button['plus-1'] in self.displayed.options[0]:
+                            # вид для всех списков, кроме подъезда - без фона (а также кнопки "Создайте дом")
                             self.btn.append(ScrollButton(text=label.strip(), height=height, valign=valign))
 
                         else: # вид для списка подъезда - с фоном и закругленными квадратиками
@@ -3117,17 +3118,22 @@ class RMApp(App):
     # Действия главных кнопок positive, neutral
 
     def navPressed(self, instance=None):
-        """try: # попытка реализовать через plyer, пока не работает
+        """ Навигация до участка/контакта """
+        dest = self.house.title if self.house.type == "condo" else f"{self.house.title} {self.porch.title}"
+        if "virtual" in dest: dest = dest.replace("virtual", "")
+
+        """try:# попытка реализовать через plyer, пока не работает
             from plyer import maps
-            #maps.route(self.house.title)
-            maps.route("Here", self.house.title)
-        except: webbrowser.open(f"https://www.google.com/maps/place/{dest}")
+            maps.search(dest)
+            #maps.route("Пушкина 32", self.house.title)
+        except:
+            #webbrowser.open(f"https://www.google.com/maps/place/{dest}")
+            #webbrowser.open(f"https://yandex.ru/maps/?text={dest}")
         return"""
 
         try:
-            dest = self.house.title if self.house.type == "condo" else f"{self.house.title} {self.porch.title}"
-            if "virtual" in dest: dest = dest.replace("virtual", "")
             address = f"google.navigation:q={dest}"
+            #address = f"maps:q={dest}"
             Intent = autoclass('android.content.Intent')
             Uri = autoclass('android.net.Uri')
             intent = Intent(Intent.ACTION_VIEW, Uri.parse(address))
@@ -3783,7 +3789,7 @@ class RMApp(App):
 
         for i in range(len(self.allcontacts)):
             if self.allcontacts[i][15] != "condo" and self.allcontacts[i][15] != "virtual":
-                porch = f"{self.allcontacts[i][12]}, "
+                porch = f"{self.allcontacts[i][12]}, " if self.allcontacts[i][14] else ""
                 gap = ", "
             else:
                 porch = gap = ""
@@ -4721,7 +4727,7 @@ class RMApp(App):
                         break
 
     # Генераторы интерфейсных элементов
-    
+
     def reportBoxes(self, addReturn=False):
         """ Счетчики и галочка повторных посещений для первого и повторного посещений """
         a = AnchorLayout(anchor_x="center", anchor_y="center",
@@ -4750,7 +4756,7 @@ class RMApp(App):
         grid2.height = self.counterHeight + self.standardTextHeight*1.2
         a.add_widget(grid2)
         return a
-    
+
     def themeSelector(self):
         """ Выбор темы для настроек """
         a = AnchorLayout(size_hint_x=0.6 if self.orientation == "v" else 0.4)
@@ -4877,6 +4883,7 @@ class RMApp(App):
                 lastRecordDate = containers[h].porches[p].flats[f].records[len(containers[h].porches[p].flats[f].records) - 1].date
         else:   lastRecordDate = ""
 
+        #print(containers[h].porches[p].type)
         contacts.append([  # create list with one person per line with values:
             containers[h].porches[p].flats[f].getName(),  # 0 contact name
             containers[h].porches[p].flats[f].getStatus()[0],  # 1 status
@@ -4895,7 +4902,7 @@ class RMApp(App):
             containers[h].porches[p].flats[f].note,  # 11 flat note
             containers[h].porches[p].title,  # 12 porch type
             containers[h].note,  # 13 house note
-            "",  # не используется
+            True if (len(containers[h].porches) > 1 and containers[h].porches[p].type == "сегмент") else False,# 14 True = универсальный участок и несколько сегментов, False = все остальное
 
             # Used for checking house type:
 
@@ -4905,8 +4912,7 @@ class RMApp(App):
         return contacts
 
     def getContacts(self, forSearch=False):
-        """ Returns list of all contacts (house contacts: with records and status other than 0 and 9 """
-
+        """ Returns list of all contacts """
         contacts = []
         for h in range(len(self.houses)):
             for p in range(len(self.houses[h].porches)):
@@ -5318,7 +5324,7 @@ class RMApp(App):
                 time.sleep(self.backupTimeoutBeforeDelete)
                 self.house.deletePorch(self.selectedPorch)
                 self.save()
-                self.backPressed()
+                self.houseView()
                 self.backPressed()
 
         elif self.popupForm == "confirmDeleteHouse":
