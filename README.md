@@ -1,3 +1,5 @@
+![](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi3u7NW_EDbEhSIzmmRehwJH3RY0YbHx-UnnOECnD7B8ixRuaIkCjTEgCY6tbWD9ASMKPUHfqcAI35o5gH_jIpN81T5LsmiwxGAdbAo8eMy73KN4qt10TXTOIpPbKF-SpSevakS8hYZP60nw89AjZ-omRFdXyYXRpojQGUk5yixBgLh4XgCBkSuk2w9S62S/s602/win-vertical-en.png)
+
 Home of Rocket Ministry, the only cross-platform ministry app in the world.
 
 Keep track of your territories, contacts, visits, placements, and reports in your field service in a clean and non-cluttered design. The most well-thought system of floors and entrances. The focus is on speed of all operations with minimum number of clicks, ease of use, and good ergonomics.
