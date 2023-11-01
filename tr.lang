@@ -1,325 +1,326 @@
-Türkçe
-Sahalar
-Kişiler
-Rapor
-Kaydet
-Blok oluştur:
-Öncü müsün? O zaman aylık saat sayısını ayarlarda belirleyeceğiz. Onu kendiniz de değiştirebilirsiniz.
-Bir şey bulunmadı
-Sistem hatası
-Program devam edemiyor. En son oluşturulan nesneyi silmeyi deneyin. Bu işe yaramazsa, ayarlara gidin, verileri Google Drive'a aktarın ve sorunu analiz etmeleri için dosyayı geliştiricilere gönderin. Ayrıca verileri temizleyebilir ve sıfırdan başlayabilirsiniz.
-İlk
-Bir ya-da birkaç ev oluştur
-Tek. ziy.
-Saha:
-Adres:
-ayarlar
-Alınan tarihi:
-Not:
-Blok numarası:
-Bölüm ismi:
-Isim
-Kişi (isim, açıklama):
-İletişim:
-Daire:
-No/adres:
-Rapor notları
-İletişime geçebilmek için kişinin telefon numarasını ayarlarda belirtin.
-%s Telefon numarası panoya kopyalandı.
-Başlık
-Tarih
-İlgililer
-İşlenme
-Adres
-No
-İletişim
-Statü
-Not
-Giriş hatası. Listede noktalar geçersizdir!
-Kapat
-Kronometre
-Saati nereye yazacağım?
-Hizmet
-Kredi
-Veri kurtarma
-Bu numara ile istenen kopya geri yüklenemedi. Muhtemelen henüz oluşturulmadı.
-Alanlardan birinde hata var, verileri kontrol edin!
-kred.: %s
-Değişiklikler kaydedildi: yayın.: %d, video: %d, saat: %s, %stek. ziy.: %d, tetk.: %d
-Hizmet yılı
-Tüm veriler mi yoksa yalnızca %s saha mı dışa aktarılsın?
-Geçen ayın raporu bir sonraki ayın başında otomatik olarak kaydedilir!
-Ayarlar
-Ayarlar kaydedildi
-Veriler
-Not defteri
-Veriler kaydedildi, yedeklendi
-Ev
-Daire:
+srpski
+Područja
+Kontakti
+Izveštaj
+Sačuvaj
+Kreiraj ulaz
+Da li ste Vi pionir? Onda upisaćemo kvotu sati u podešavanjima. Vi možete nju da promenite.
+Ništa nije pronađeno
+Greška baze podataka
+Aplikacija ne može da nastavi sa funkcijom. Pokušajte obrisati posledni kreirani objekat. Ako to ne pomaže, otvorite podešavanja, izvozite podatke na Google Disk i pošaljite datoteku programerima aplikacije za analizu problema. Osim toga, vi možete obrisati sve podatke i početi od nule.
+Dodaj
+Dodaj jedan ili više kuća
+Pored područja možete videti njegov procenat obrađenosti.
+Područje:
+Adresa:
+detalji
+Datum uzima:
+Primedba:
+Broj ulaza:
+Naziv dela:
+Ime
+Osoba (ime, opis):
+Telefon:
+Stan:
+Broj/adresa:
+Dnevnik izveštaja
+Koristeći ovo dugme, možete podesiti veličinu plana zgrade pomerajući klizač iznad, kao i njegovu poziciju u jednoj od 9 tačaka pomoću dugmića i donjem desnom uglu. Pritisnite isto dugme %s da biste sačuvali izmene.
+Broj telefona %s je kopiran u međuspremnik
+Naziv
+Datum
+Zainteresovani
+Obrada
+Adresa
+Broj
+Telefon
+Status
+Primedba
+Veličina
+Zatvori
+Tajmer
+Gde da upišem vreme?
+Služba
+Volonterski sati
+Oporava podataka
+Vratiti rezervnu kopiju od?
+Greška u nekim poljima, proverite podatke!
 
-–
-Kat:
-1. kat
-numarası:
-Evin numarasını, adresini veya herhangi bir adını girin:
-Toplu ekleme
-Örnek: 1 / 1a / kırmızı ev
-Yeni saha
-Apartman
-Tüm
-Örnek: Kurtuluş, 20
-Site bir apartman ise kutuyu işaretleyin.
-Yeni block kapısını adlandırın:
-Numarası veya açıklaması
-Apartman'da bir veya birçok giriş kapısı olabilir.
-Yeni segment'in adını girin:
-Örnek: 1 / güney kısım
-Kolaylık için saha bölümlere veya segmentlere ayrılabilir. Bir segment sokak, caddenin kenarı veya başka bir şey olabilir.
-Yeni
-Yeni kişi numarası
-Kişinin adını ve/veya açıklamasını girin
-Sahaya bağlı olmayan bir kişi oluşturuyorsunuz. Tüm sahalardaki sakinler açık yeşil statüsünde olmaları koşuluyla, kişiler bölümünde otomatik olarak görüntülenir.
+Promene su sačuvane: sati: %s, %sBK: %d
+Službena god.
+da
+Prošlomesečni izveštaj se automatski čuva početkom sledećeg meseca!
+Podešavanja
+Podešavanja su sačuvana
+Podaci
+Beležnik
+Podaci su sačuvani, rezervna kopija je kreirana
+Kuća
+Stanova:
+od
+do
+Spratova:
+Broj
+prizemlja:
+Unesite kućni broj, adresu ili drugi opis:
+Masovno dodavanje
+Primeri: 1 / 1a / crvena kuća
+Novo područje
+Stambena zgrada
 
-Görüşme detayları:
-Yeni arama
-Aynı isime sahip olan bir saha zaten var, başka birisini seçin!
-Cümlenin ilk kelimesini büyük harfle yaz
-Bu isime sahip %s var, başka birini seçin!
-Tüm alanlar doldurulmalı ve sayısal değerlere sahip olmalıdır. Kat sayısı 0'dan yüksek olmalı. Aralık'taki son dairenin numarası ilk daireden az olmamalıdır.
-Başlıkta noktalara ve virgüllere izin verilmez!
-Her iki değer de sayı içermelidir, birincisi ikinciden büyük olmalıdır.
-Maksimum %s karakter!
-Tarih YYYY-AA-GG formatında olmalıdır! Örneğin 2023-03-25.
-Bu numara zaten var!
-Bu giriş kapısı için henüz bir kat belirlenmemiştir. Bunları "%s" bölümünde ayarlayın.
-İlk sahanızı oluşturun
-Kişi listesi:
-Sahalar listesi:
-Yeni saha
-"%s" düğmesini kullanarak eklenebilecek bireysel kişilerin yanı sıra, tüm sahalardan ilgilenen sakinler burada gösterilecektir.
-Yeni kişi
-Dergi
-Yayınlar
-Video
-Saatler
-Hizmet süresine ne kadar eklenir?
-Kredi (%s saat ile toplam)
-Kredi süresine ne kadar eklenir?
-Tekrar ziyaret
-Tetkik
-Gönder
-Geçerli ay için raporunuz sona erdiğinde burada olacaktır.
-Eyl
-Eki
-Kas
-Ara
-Oca
-Şub
-Mar
-Nis
-May
-Haz
-Tem
-Ağu
-Aylık saat oranı
-Tek tıklamayla "%s"
-Dakikaları bir sonraki aya aktar
-Ret rengi
-Saat kredisi
-Hızlı telefon numara girişi
-Zamanlayıcı başladığında bildirim
-Dil
-İhracat
-İthalat
-Aç
-Geri yükleme
-Temizle
-Son değişiklikten önce oluşturulan yedek veriler yüklenecektir. Devam edeyim mi?
-Tüm kullanıcı verileri uygulamadan tamamen silinecektir! Bunu yapmanız gerektiğinden emin misiniz?
-Program hakkında
-Evrensel düzenleyici
-Windows ve Linux için Rocket Ministry, yardım ve kaynak kodu:
-Sorular, teknik destek:
-Başa dönüş
-Yardım
-Serbest formdaki herhangi bir bilgi
-Kişi arama
-Kişinin ismini, adresini veya herhangi bir bilgiyi girin:
-Aramak
-Bir şey bulunmadı
-"%s" ile ara
-Sonuçlar:
-Bu arsa 4 aydan daha uzun bir süre önce alınmıştır! Ayarlarda tarih güncellenerek teslim edilmesi veya yenilenmesi gerekir.
-Saha
-Telefon numaralarını dışa aktarma
-Evler
-Yeni evler
-bl.
-Kişiler
-Evler
-Ziyaret listesi:
-Yeni görüşme
-İlk görüşme
-Kayıt
-Pencere konumunu ve boyutunu hatırla
-Saha'yı adlandırın
-Örneğin: Kurtuluş şok.
-Eklenecek aralığın ilk ve son numaralarını girin:
-Arayüz teması
-Zemini azaltın
-Artık sorma
-Bu, her bir kat için "ızgara" görünümü ile daire listesi arasında geçiş sağlayan bir butondur. Çok daireli alanlarda kullanılabilir. Kat kat modu giriş yolunu iyi bir şekilde görselleştirirken, liste modunda sıralama ve dairelerdeki girişlerin önizlemesi vardır.
-video
-Sil
-Stok
-Birikmiş
-Yıllık performans
-Girilen aylar
-Girilen saatler
-Yıllık oran
-Kalan saatler
-Aylık ortalama
-12 * aylık orana eşittir (ayarlarda).
-Kalan (girilmemiş) aylarda her ay hizmet edilecek ortalama saat sayısı.
-Ancak bunun girişin kat görünümünü kapatacağına dikkat edin!
-Sayı listesi
-Panodan yapıştır
-Burada yeni numaraları virgülle ayrılmış basit bir listeye veya yeni bir satıra ekleyebilirsiniz
-Ekle
-Giriş hatası. Yalnızca sayılara ve virgüllere izin verilir. Alfabetik karakterler içeren bir liste oluşturmak istiyorsanız, normal (çok birimli olmayan) bir saha oluşturun.
-İptal
-Liste
-Veriler başarıyla temizlendi
-Bir daireyi griye sıfırlamak içindeki tüm bilgileri silecektir! Devam edelim mi?
-Saha'yı sil
-Bir sahayı kaldırmadan önce, kaydetmek istediğiniz tüm kişilerin durumunun açık yeşil olduğundan emin olun. Aksi takdirde saha ile birlikte silineceklerdir! Silinsin mi?
-Bloğu sil
-Bölümü sil
-Bundan emin misiniz?
-Siliniyor
-Ziyaret kaydının silinmesi
-Şuradaki kaydı sil
-Parantezlerde, ayın geçerli günü için aylık normla karşılaştırıldığında bir hisse senedi (+) veya gecikme (-) belirtilir. Örneğin, 50 saat normunda bir gün hizmet etmezseniz, ertesi gün bu rakam yaklaşık 1:40 oranında düşecektir.
-Dikkat
-Telefon numarası kaydedildi!
-«%s» düğmesi ayarlardan devre dışı bırakılabilir!
-Kimse yok
-Ret
-Dosya yüklenemedi. Büyük olasılıkla hatalı biçimlendirilmiş veya gerekli verileri içermiyor.
-Veriler başarıyla yüklendi! Sonuçtan memnun değilseniz, değişiklikleri geri almak için "%s" komutunu çalıştırın.
-Verileri içe aktarmak için, paylaşılan Google Drive'daki dosyanın bağlantısını panoya kopyalayın. Ardından bu düğmeye tekrar tıklayın. Daha ayrıntılı talimatlar istiyor musunuz?
-bölüm
-blok
-İlk %s'yi oluştur
-No
-Bu girişte katları küçültmek artık mümkün değil çünkü girişi olan son daire kaybolacak! Ancak "%s" ekranından daire aralığını veya kat sayısını değiştirebilirsiniz.
-Standart olmayan bir daire ve kat oranı talep edildi. Gerekli katlarda manuel olarak kaldırmanız gereken %d daire eklemeye ihtiyaç duyuldu. Bunu yapmak için, [u]yerdeki herhangi bir daireyi[/u] başlatmak üzere [b]%s[/b] düğmesine basın.
-Hizmet süresi doldu! Bitirmek için zamanlayıcı düğmesine tekrar basmanız yeterlidir. Zaman otomatik olarak rapora girilecektir. Zamanlayıcı özelliğini ayarlardan devre dışı bırakabilirsiniz!
-No %s oluşturmak mümkün değildir – bu numara zaten var ve içinde notlar var!
-Hizmet başlansın mı?
-İlk ziyaretinizi oluşturun
-Yeni bir ay başladı! Raporunuzu gönderdiniz mi?
-kredi
-%s için rapor:
-Not
-Zamanlayıcı başladı
-Zamanlayıcı durduruldu ve rapora %s saat eklendi.
-Zamanlayıcı durduruldu, rapora %s saat kredi eklendi
-Rapora eklendi
-yayınlar
-TZ
-Rapora 1 saat eklendi.
-Bildirmek için %s saat eklendi.
-Rapora 1 saatlik kredi eklendi
-Rapora %s saat kredisi eklendi
-Rapora 1 yayın eklendi
-Rapora %d yayın eklendi.
-Rapora 1 video eklendi
-Rapora %d video eklendi
-Rapora 1 tekrar ziyareti eklendi
-Rapora %d tekrar ziyareti eklendi
-Rapora 1 tetkik eklendi
-Veritabanı temizlendi!
-Arabellekte Google Drive'a bir bağlantı var, ancak dosyaya bu bağlantı aracılığıyla erişilemiyor. Büyük olasılıkla, kendisine genel erişim hakları verilmemiştir.
-Veri dosyası yüklenemedi. Büyük olasılıkla hasar görmüş veya formata uymuyor.
-Tamamen keyfi kelimelerden, hatta farklı yerlerdeki adreslerden oluşan bir liste olabilir.
-Veritabanının indirilmesi
-İpucu
-Yedekleme başarısız oldu!
-Bir yedekleme oluşturuldu.
-Veritabanı kaydedilmiştir.
-Rocket Ministry verileri
-Veriler, %s dosyasına başarıyla aktarıldı.
-Veriler kaydedilemedi!
-Veriler %s dosyasına başarıyla kaydedildi.
-Veriler dışa aktarılamadı!
-Veritabanı başarıyla %s klasörüne aktarıldı.
-Yedekleme dosyaları henüz oluşturulmadı!
-%s kaynağından yedekleme başarıyla yüklendi.
-Ocak
-Ocak
-Aralık
-Aralık
-Şubat
-Şubat
+Primer: Vuka Karadžića 30
+Označite ovo polje ako je ovo područje stambena zgrada.
+Upišite naziv novog ulaza:
+Broj ili opis
+Stambena zgrada može imati jedan ili više ulaza ili blokova sa zasebnim stanovima.
+Upišite naziv novog dela:
+Primer: 1 / južni deo
+Područje se može podeliti na delove ili zone radi pogodnosti. Jedan deo može biti ulica, strana ulice, blok ili bilo šta drugo.
+Dodaj
+Dodaj kontakt
+Upišite ime i/ili opis osobe:
+Kreirate samostalni kontakt koji nije povezan ni sa jednom teritorijom. Ljudi sa svih vaših teritorija se automatski navode u kontaktima ako im se dodeli svetlozeleni status.
+Čestimate, našli ste prvu zainteresovanu osobu! Ona će automatski biti dodana u odeljak Kontakti i biće označena svetlo-zelenom bojom. Takođe možete videti ukupan broj zainteresovanih osoba u odeljku Područja.
+Informacija o poseti:
+Nova pretraga
+
+Rečenica počinje velikim slovom
+
+Sva polja trebaju biti popunena sa brojčanim vrednostima. Broj spratova mora biti veći od 0. Zadnji stan u nizu ne može imati manji broj od početnog.
+Tačke i zarezi nisu dozvoljeni!
+Obe vrednosti treba da budu numeričke i prva vrednost ne može biti veća od druge.
+Najviše %s karaktera!
+Datum mora biti u formatu GGGG-MM-DD. Na primer: 2023-03-25.
+Ovaj broj već postoji!
+Spratovi još uvek nisu podešeni za ovaj ulaz. Podesite ih u odeljku "%s"
+Dodajte svoje prvo područje
+Lista kontakata:
+Lista područja:
+Dodaj područje
+Ovde ćete pronaći sve zainteresovane osobe sa svih područja, kao i zasebne kontakte koje možete dodati koresteći dugme "%s".
+Dodaj kontakt
+Dnevnik
+Koju datoteku učitati?
+Biblijski kursevi
+Sati
+Volontereski sati (ukupno sa satima %s)
+
+
+Koliko vremena u službi dodati u izveštaj?
+Koliko volonterskih sati dodati u izveštaj?
+Pošalji
+Ovde ćete nalaziti vaš izveštaj o službi za tekući mesec kad se on završi.
+sep
+okt
+nov
+dec
+jan
+feb
+mar
+apr
+maj
+jun
+jul
+avg
+Mesećna kvota sati
+
+Prenositi minute u sledeći mesec
+Boja nezainteresovanih
+Volonterski sati
+Brzi unos telefona
+Obaveštenje prilikom startovanja tajmera
+Jezik
+Izvoz
+Uvoz
+Otvori
+Oporavak
+Brisanje
+Područje
+Svi kosnički podaci će biti nepovratno obrisani. Da li ste sigurni da želite da obrišete?
+O aplikaciji
+Višenamenski organizer
+Rocket Ministry za Windows i Linux, dokumentacija i izvorni kod:
+Pitanja i podrška korisnika:
+Nazad na vrh
+Pomoć
+Upišite dodatne informacije
+Pretraga ljudi
+Unesi ime, adresu ili neku drugu informaciju o osobi:
+Pretraži
+Nema rezultata
+Potraga po "%s"
+Rezultati:
+Ovo područje je uzeto pre više od 4 meseca! Treba da ga vratite ili produžite tako što ćete ažurirati datum u detaljima.
+Izvezi područje
+Izvezi brojeve telefona
+Stanovi
+Dodaj kuće
+ulaz
+Kontakt
+Stan
+Lista poseta
+Dodaj posetu
+Prva poseta
+Zapis
+Sačuvati poziciju i veličinu prozora
+Unesi naziv područja
+Primer: ul. Obalska
+Unesite prvi i zadnji broj u nizu za dodavanje:
+Tema interfejsa
+Smanjiti broj stanova na ovom spratu
+Ne pitaj ovo više
+Ovo je prekidač izmedđu pregledu po spratu i jednostavne liste stanova. Ovo važi samo za poručja sa stambenim zgradam. Pregled po spratu dobro ilustruje ulaze, dok pregled liste ima zgodno sortiranje i pregled sadržaja stanova.
+Uključiti stanove bez broja telefona u izvoz?
+izbriši
+Višak
+Manjak
+Godišnja statistika
+Dodati meseci
+Dodati sati
+Godišnja kvota
+Preostali sati
+Mesećni prosek
+Jednako 12 x mesećni zahtev (iz podešavanja)
+Prosećan broj sati službe svakog meseca tokom ostalih (ne dodatih) meseci.
+Obratite pažnju da će ovo isključiti pregled po spratu!
+Lista brojeva
+Nalepi iz privremene memorije
+Ovde možete dodati nove brojeve koristeći listu brojevu odvojenu zarezima ili novim redovima.
+Dodaj
+Greška unosa. Ova lista treba da sadrži samo brojeve i zareze. Nijedan drugi znak nije dozvoljen. Ako treba da koristite slova, kreirajte teren bez zgrada.
+Otkaži
+Lista
+Podaci su uspešno obrisani
+Označavanje stana sivom bojom će obrisati sve njegove informacije. Nastaviti?
+Obrisati područje
+Pre brisanja područja, proverite da li su svi stanari koji želite da sačuvate označeni svetlo-zelenom bojom. U suprotnom biće obrisani zajedno sa područjem! Nastaviti sa brisanjem?
+Izbriši ulaz
+Izbriši deo područja
+Da li ste sigurni?
+Izbriši
+Izbriši beleške o posetama
+Izbriši beleške od
+
+Pažnja
+Telefon je sačuvan
+
+Nema kući
+Nezainteresovan
+
+
+
+deo
+ulaz
+
+br.
+
+
+
+
+
+
+
+
+Izveštaj za %s:
+Primedba
+
+
+
+
+
+
+
+
+
+
+Iseci
+Kopiraj
+Zalepi
+Izaberi sve
+
+
+
+
+
+
+
+Učitavanje baze podataka
+Savet
+
+
+Baza podataka je sačuvana
+Podaci Rocket Ministry
+
+
+
+
+
+
+
+Januar
+januar
+Decembar
+decembar
+Februar
+Februar
 Mart
-Mart
-Nisan
-Nisan
-May
-May
-Haziran
-Haziran
-Temmuz
-Temmuz
-Ağustos
-Ağustos
-Eylül
-Eylül
-Ekim
-Ekim
-Kasım
-Kasım
-Oca
-Şub
-Mar
-Nis
-May
-Haz
-Tem
-Ağu
-Eyl
-Eki
-Kas
-Ara
-s
-d
-Evet
-Hayır
-Bu kattaki daire sayısı azaltılsın mı?
-Bu düğme aracılığıyla, yukarıdaki kaydırıcıyı hareket ettirerek giriş kapı boyutunu ve sağ alt köşedeki düğmelerle 9 noktadan birindeki konumunu ayarlayabilirsiniz. Düzenlemeyi bitirmek için aynı düğmeye %s tıklayın.
-Gece
-Akşam
-Sepya
+mart
+April
+april
+Maj
+maj
+Jun
+jun
+Jul
+jul
+Avgust
+avgust
+Septembar
+septembar
+Oktobar
+oktobar
+Novembar
+novembar
+jan
+feb
+mar
+apr
+maj
+jun
+jul
+avg
+sep
+okt
+nov
+dev
+
+
+Da
+Ne
+
+Noć
+Veče
+
+
 Eko
-Turkuaz
-Mor
-Netlik
-Dışa aktarma başarısız oldu! Saha adı geçersiz karakterler içerebilir.
-1,2a Kurtuluş 20-5, Istiklal 19/2-15
-Yeni versiyon bulundu! Programın bir sonraki başlangıcında güncellenecektir.
-Numaralandırma ve kat sayısındaki değişiklikler, yapılan ziyaretleri etkilemez.
-Blok'a bir daire eklemek için %s'ye basın:
-Bu alanda telefon numarası yok!
-%s saha telefon numaraları
-Telefon numaraları olmadan ihracat dairelerine dahil edilsin mi?
-Tebrikler, ilk ilgilenen kişiniz var! Kişiler ekranına otomatik olarak eklenecektir. Bu açık yeşil renkle yapılır. Ayrıca, site ekranında toplamda ilgilenen kişi sayısı gösterilir.
-Bir bölgenin yanında, iş ilerleme yüzdesini görebilirsiniz.
-Önünüzde ilk ziyaret ekranı. Sadece kişiyi ilk kez ziyaret ettiğinizde ortaya çıkar.
-Bu kattaki daire sayısını başarıyla azalttınız! Girişteki dairelerin toplam sayısı 1 azaltıldı. Sonucu beğenmediyseniz, sadece "%s" penceresindeki orijinal numaralandırmayı geri yükleyin ve tekrar deneyin.
-Sayfada kaydedilmemiş değişiklikler var! Kaydetmeden devam edilsin mi?
-Burada tüm rapor güncellemelerinin bir geçmişi olacaktır (maksimum %s kayıt).
-Kes
-Kopyala
-Yapıştır
-Tümünü seç
+
+
+
+
+1, 2a, Obalska 4a-15, Vuka Karadžića 12-23
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Dodaj brojeve sa nebrojčanim simbolima
+Neki brojevi stanova sadrže slova, tako da plan zgrade ne može biti omogućen!

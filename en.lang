@@ -10,7 +10,7 @@ Database error
 The program cannot continue working. Try to delete the last created entity. If this does not help, open Settings, do Export to Google Drive, and send the file to the developers to analyze the issue. Alternatively, you can wipe all the data and begin from scratch.
 Add
 Add one or more houses
-Return visit
+Next to a territory, you can see its work progress percentage.
 Territory:
 Address:
 details
@@ -24,7 +24,7 @@ Phone:
 Apartment:
 Number/address:
 Report log
-To make a call, enter the phone number in the contact details.
+Using this button, you can adjust the size of the flat grid by moving the slider above, as well as its position in one of the 9 points with the buttons in the bottom right corner. Click on the same button %s to finish editing.
 Phone number %s copied into clipboard.
 Name
 Date
@@ -35,19 +35,19 @@ Number
 Phone
 Status
 Note
-Input error. The list must not contain periods!
+Size
 Close
 Timer
 Where to log time?
-Service
+Ministry
 Credit
 Data recovery
-Cannot restore a backup copy with this name. Likely it does not exist.
+Restore backup from %s?
 Error in some of the fields, please check data!
-cred.: %s
-Saved changes: plac.: %d, videos: %d, hours: %s, %sRV: %d, BS: %d
+credit: %s
+Saved changes: hours: %s, %sBS: %d
 Service Year
-Export all data or only territory %s?
+Yes
 Last month's report is saved automatically at the beginning of the next month!
 Settings
 Settings saved
@@ -66,25 +66,25 @@ Mass adding
 Examples: 1 / 1a / red building
 Add territory
 Condominium
-All
+All data
 Example: Park Way, 30
-Check the box if this territory is an apartment complex.
+Check the box if this territory is an apartment complex or a part of it.
 Enter new entrance name:
 Number or description
 A condominium may have one or more entrances or blocks with separate sets of apartments.
 Enter new section name:
-Example: 1 / south part
+Example: 1 / north
 A territory may be divided into sections or zones for convenience. One section may be a street, side of a street, block, or anything else.
 Add
 Add contact
 Enter contact name and/or description:
 You are creating a standalone contact not associated with any territory. People from all your territories are listed in the contacts automatically if they are assigned the light-green status.
-
+Congratulations, you have your first interested person! He/she will be automatically added to the Contacts screen due to the light-green color. Also, you can see the total amount of interested ones in Territories screen.
 Visit info:
 New search
-A territory with this name already exists, try another one!
+
 Capitalize the first word of a sentence
-A %s with this name already exists, try another one!
+
 All fields should be filled with numerical values. The number of floors should be more than 0. The last apartment of the range should have the number no less than the first one.
 Periods and commas are not allowed!
 Both values should be numerical, and the first one should not be greater than the second one!
@@ -99,15 +99,15 @@ Add territory
 You will find here all the interested persons from all your territories, as well as standalone contacts you can add using the button "%s."
 Add contact
 Log
-Placements
-Videos
-Hours
-How much time to add to service time?
-Credit (totally with hours %s)
-How much time to add to hourly credit?
-Return visits
+Which file to load?
 Bible studies
-Send
+Hours
+Credit (totally with hours %s)
+
+
+How much time to add to service time?
+How much time to add to hourly credit?
+Share
 You will find here your service report for the current month when it is over.
 Sep
 Oct
@@ -130,11 +130,11 @@ Quick phone input
 Notification on timer start
 Language
 Export
-Import
+Insert and import
 Open
 Recover
 Wipe
-This will restore the last backup copy created before the last change. Proceed?
+Territory
 All user data will be irreversibly deleted from the app! Are you sure you need to do it?
 About
 Multi-purpose organizer
@@ -150,7 +150,7 @@ Nothing found
 Search by "%s"
 Results:
 This territory was taken more than 4 months ago! You need to turn it back or prolong by updating its date in the details.
-Territory
+Export territory
 Export phones
 Apartments
 Add houses
@@ -166,10 +166,10 @@ Enter territory name:
 Example: River st.
 Enter the first and the last number of the range to add:
 Interface theme
-Shrink floor
+Decrease the amount of flats on this floor
 Don't ask this anymore
 This is a switch between the per-floor "grid" view and a simple list of apartments. It works only in condominium-type territories. The per-floor view well visualizes the block, while the list view has handy sorting and preview of flats' content.
-video(s)
+Include into export apartments without phone numbers?
 Delete
 Ahead of requirement
 Behind requirement
@@ -206,8 +206,8 @@ You can disable the "%s" button in the app settings!
 Not at home
 Not interested
 Cannot load file. It likely has a wrong format or does not contain necessary data.
-Data successfully loaded! If you are not satisfied with the result, perform "%s" to cancel changes.
-To import data, copy the share link to a Google Drive file into the clipboard. Then click this button again. Do you want to see a more detailed instruction?
+Data successfully loaded!
+Please wait
 section
 entrance
 Add the first %s
@@ -215,32 +215,32 @@ Add the first %s
 You cannot shrink floors in this block anymore, because the last apartment with content will disappear! But you can change the apartment numbers range or floors count on the "%s" screen.
 A non-standard relation between apartments and floors requested. We had to add %d apartment(s) that you now have to manually delete on corresponding floors. To do this, click on the button [b]%s[/b] in the details of [u]any apartment on this floor[/u].
 Service time has started! To finish your service session, just click on the timer button once again. The time will be added to your report automatically. You can disable the timer feature in the settings!
-You cannot add No %s – it already exists and has content inside!
+
 Start ministry?
 Add the first call
 It's a new month! Have you turned in your report already?
 credit
 Report for %s:
-Note
+Comments
 Timer started
 Timer stopped, added to report: %s h.
 Timer stopped, added to report: %s h. of credit
 Added to report
-placement(s)
-RV
+You are now on the first call screen. It appears only when you are visiting a person for the first time.
+You have successfully reduced the amount of flats on this floor! The number range is now 1 less. If you are not happy with the result, no problem: just restore the original numeration in the "%s" window and then try again.
 1 hour added to report
 %s hour(s) added to report
 1 hour of credit added to report
 %s hour(s) of credit added to report
-1 placement added to report
-%d placement(s) added to report
-1 video added to report
-%d video(s) added to report
-1 return visit added to report
-%d return visit(s) added to report
+Cut
+Copy
+Paste
+Select all
+There are unsaved changes at the page! Proceed without saving?
+Here you will find the history of all report updates (max. %s entries).
 1 Bible study added to report
 Database wiped!
-There is a link to Google Drive in the clipboard, but there is no access to the file it refers to. Most likely, the link is not assigned public access rights.
+Unable to access file. Most likely, the link is not assigned public access rights.
 Failed to load data file. Most likely, it is damaged or of wrong format.
 It can be a list of random words, even addresses in different places.
 Loading database
@@ -255,7 +255,7 @@ Data successfully saved to file %s.
 Database export failed!
 Data successfully exported to folder %s.
 No backup copies have been created so far!
-Backup copy dated %s loaded successfully.
+Backup copy from %s loaded successfully.
 January
 January
 December
@@ -297,9 +297,9 @@ m
 Yes
 No
 Decrease the amount of flats on this floor?
-Using this button, you can adjust the size of the flat grid by moving the slider above, as well as its position in one of the 9 points with the buttons in the bottom right corner. Click on the same button %s to finish editing.
 Night
 Evening
+Morning
 Sepia
 Eco
 Teal
@@ -312,14 +312,15 @@ Re-arranging numbers and floors does not affect existing visits data.
 Press %s to add flats to the entrance:
 No phone numbers to export in this territory!
 Phone numbers on %s
-Include into export apartments without phone numbers?
-Congratulations, you have your first interested person! He/she will be automatically added to the Contacts screen due to the light-green color. Also, you can see the total amount of interested ones in Territories screen.
-Next to a territory, you can see its work progress percentage.
-You are now on the first call screen. It appears only when you are visiting a person for the first time.
-You have successfully reduced the amount of flats on this floor! The number range is now 1 less. If you are not happy with the result, no problem: just restore the original numeration in the "%s" window and then try again.
-There are unsaved changes at the page! Proceed without saving?
-Here you will find the history of all report updates (max. %s entries).
-Cut
-Copy
-Paste
-Select all
+Maps
+Default
+This is not a link to the Rocket Ministry data file! You need to copy the link in Google Drive. Do you want to see a more detailed instruction?
+Export all app data. It is recommended to export to Google Drive.
+Load data from a local file on your computer.
+The app creates up to 10 backup copies. You can recover them here.
+Full reset of all program data and settings, including backups.
+Save all program data, including settings, into a file. It is recommended to upload this file to Google Drive.
+Your link
+To import data, insert the share link to a Google Drive file. This link should have public access rights:
+Add numbers with non-numeric characters
+Some apartment numbers contain non-numeric characters, so the grid view cannot be enabled!

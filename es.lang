@@ -10,7 +10,7 @@ Error en la base de datos
 El programa no puede seguir funcionando. Intente eliminar la última entidad creada. Si esto no ayuda, abra Configuración, haga Exportar a Google Drive y envíe el archivo a los desarrolladores para que analicen el problema. Alternativamente, puedes borrar todos los datos y empezar desde cero.
 Agregar
 Agregar una o mas casas
-Revisita
+Junto a un territorio, puede ver su porcentaje de progreso de trabajo.
 Territorio:
 Dirección:
 detalles
@@ -24,7 +24,7 @@ Teléfono:
 Apartamento:
 Número/dirección:
 Informe de registro
-Hacer una llamada, introducir el número de teléfono en los datos de contacto.
+Usando este botón, puedes ajustar el tamaño de la rejilla de números moviendo el deslizador de arriba, así como su posición en uno de los 9 puntos con los botones de la esquina inferior derecha. Haga clic en el mismo botón %s para finalizar la edición.
 Número de teléfono %s copiado en el portapapeles.
 Nombre
 Fecha
@@ -35,19 +35,19 @@ Número
 Teléfono
 Estado
 Nota
-Error de entrada. ¡La lista no debe contener puntos!
+Tamaño
 Cerrar
 Cronómetro
 ¿Dónde registrar el tiempo?
 Servicio
 Crédito
 Recuperación de datos
-No se puede restaurar una copia de seguridad con este nombre. Es probable que no exista.
+¿Restaurar copia de seguridad del %s?
 Error en algunos de los campos, ¡por favor, compruebe los datos!
 crédito: %s
-Cambios guardados: col.: %d, vídeos: %d, horas: %s, %sRV: %d, EB: %d
+Cambios guardados: horas: %s, %sEB: %d
 Año de Serv.
-Exportar todos los datos o solo territorio %s?
+si
 ¡El informe del mes anterior se guarda automáticamente a principios del mes siguiente!
 Ajustes
 Ajustes guardados
@@ -66,7 +66,7 @@ Adición masiva
 Ejemplos: 1 / 1a / edificio rojo
 Añadir territorio
 Condominio
-Todos
+Todos los datos
 Ejemplo: Avenida del Parque, 30
 Marque la casilla si este territorio es un complejo de apartamentos.
 Introduzca el nombre de la nueva entrada:
@@ -79,12 +79,12 @@ Agregar
 Agregar contacto
 Introduzca nombre de contacto y/o descripción:
 Está creando un contacto independiente no asociado a ningún territorio. Las personas de todos sus territorios aparecen automáticamente en los contactos si se les asigna el estado verde claro.
-
+Enhorabuena, ¡ya tiene a su primer interesado! Se añadirá automáticamente a la pantalla de Contactos gracias a su color verde claro. Además, podrá ver la cantidad total de interesados en la pantalla Territorios.
 Informacion de la visita:
-Ახალი ძებნა
-¡Ya existe un territorio con este nombre, pruebe con otro!
+Nueva búsqueda
+
 Poner en mayúscula la primera palabra de una oración
-¡Ya existe un %s con este nombre, intenta con otro!
+
 Todos los campos deben rellenarse con valores numéricos. El número de pisos debe ser superior a 0. El último apartamento del rango debe tener el número no inferior al primero.
 !Puntos y comas no están permitidos!
 ¡Ambos valores deben ser numéricos, y el primero no debe ser mayor que el segundo!
@@ -99,14 +99,14 @@ Agregar territorio
 Aquí encontrará todas las personas interesadas de todos sus territorios, así como contactos independientes que puede añadir utilizando el botón "%s".
 Agregar contacto
 Registrar
-Publicaciones
-Videos
-Horas
-¿Cuánto tiempo hay que añadir al tiempo de servicio?
-Crédito (totalmente con horas %s)
-¿Cuánto tiempo hay que añadir al crédito horario?
-Revisitas
+¿Qué archivo cargar?
 Estudios bíblicos
+Horas
+Crédito (totalmente con horas %s)
+
+
+¿Cuánto tiempo hay que añadir al tiempo de servicio?
+¿Cuánto tiempo hay que añadir al crédito horario?
 Enviar
 Aquí encontrará su informe de servicio correspondiente al mes en curso, una vez finalizado éste.
 sep
@@ -130,11 +130,11 @@ Entrada rápida del teléfono
 Notificación de inicio del cronómetro
 Lenguaje
 Exportar
-Importar
+Insertar e importar
 Abrir
 Recuperar
 Limpiar
-Esto restaurará la última copia de seguridad creada antes del último cambio. ¿Continuar?
+Territorio
 Todos los datos del usuario se eliminarán irreversiblemente de la aplicación. ¿Estás seguro de que necesitas hacerlo?
 Acerca de
 Organizador multipropósito
@@ -150,7 +150,7 @@ No se encontró nada
 búsqueda por ''%s''
 Resultados:
 ¡Este territorio fue tomado hace más de 4 meses! Es necesario volver atrás o prolongar mediante la actualización de la fecha en los detalles.
-Territorio
+Exportar el territorio
 Exportar teléfonos
 Apartamentos
 Agregar casas
@@ -166,10 +166,10 @@ Introduzca el nombre del territorio:
 Ejemplo: Calle del Río
 Introduzca el primer y el último número del rango a añadir:
 Tema de la interface
-Planta retractil
+Disminuir la cantidad de departamentos en este piso
 No preguntar de nuevo
 Este es un cambio entre la vista de "rejilla" por piso y una simple lista de apartamentos. Sólo funciona en territorios de tipo condominio. La vista por piso visualiza bien el bloque, mientras que la vista de lista permite ordenar y previsualizar el contenido de los apartamentos.
-video(s)
+¿Incluir en la exportación los apartamentos sin números de teléfono?
 Borrar
 Antes de lo requerido
 Detrás del requisito
@@ -206,8 +206,8 @@ Atención
 No en casa
 No interesado
 No se puede cargar el archivo. Es probable que tenga un formato incorrecto o que no contenga los datos necesarios.
-¡Datos cargados con éxito! Si no está satisfecho con el resultado, ejecute "%s" para cancelar los cambios.
-Para importar datos, copie el enlace compartido a un archivo de Google Drive en el portapapeles. A continuación, vuelva a hacer clic en este botón. ¿Quiere ver unas instrucciones más detalladas?
+¡Datos cargados con éxito!
+Espere
 sección
 entrada
 Agregar el primer %s
@@ -215,7 +215,7 @@ Agregar el primer %s
 Ya no puede reducir pisos en este bloque, ¡porque el último apartamento con contenido desaparecerá! Pero puede cambiar el rango de números de apartamentos o el número de pisos en la pantalla "%s".
 Se ha solicitado una relación no estándar entre apartamentos y pisos. Tuvimos que añadir %d apartamento(s) que ahora tiene que eliminar manualmente en los pisos correspondientes. Para ello, haga clic en el botón [b]%s[/b] en los detalles de [u]cualquier apartamento en este piso[/u].
 El tiempo de servicio ha comenzado. Para finalizar su sesión de servicio, sólo tiene que volver a hacer clic en el botón del cronómetro. El tiempo se añadirá automáticamente a su informe. ¡Puedes desactivar la función de cronómetro en la configuración!
-No puede agregar № %s – ¡este número ya existe y tiene contenido!
+
 Empezar ministerio?
 Añadir la primera llamada
 ¡Es un nuevo mes! ¿Ya ha entregado su informe?
@@ -226,21 +226,21 @@ Cronómetro activado
 Cronómetro parado, añadido al informe: %s h.
 Cronómetro parado, agregado al informe: %s h. de crédito
 Agregado al informe
-publicacione(s)
-RV
+Ahora se encuentra en la pantalla de primera coonversación. Sólo aparece cuando visita a una persona por primera vez.
+Ha conseguido reducir el número de apartamentos en este piso. El rango de números es ahora 1 menos. Si no está satisfecho con el resultado, no hay problema: restaure la numeración original en la ventana "%s" y vuelva a intentarlo.
 1 hora agregada al informe
 %s hora(s) agregada(s) al informe
 1 hora de crédito agregada al informe
 %s hora(s) de crédito agregada(s) al informe
-1 publicacion agregada al informe
-%d publicacion(es) agregada(s) al informe
-1 video agregado al informe
-%d video(s) agregado(s) al informe
-1 revisita agregada al informe
-%d revisita(s) agregada(s) al informe
+Cortar
+Copiar
+Pegar
+Seleccionar todo
+¡Hay cambios sin guardar en la página! ¿Proceder sin guardar?
+Aquí encontrará el historial de todas las actualizaciones de informes (máx. %s entradas).
 1 Estudio bíblico agregado al informe
 ¡Base de datos borrada!
-Hay un enlace a Google Drive en el portapapeles, pero no hay acceso al archivo al que hace referencia. Lo más probable es que el enlace no tenga asignados derechos de acceso público.
+No se puede acceder al archivo. Lo más probable es que el enlace no tenga asignados derechos de acceso público.
 No se ha podido cargar el archivo de datos. Lo más probable es que esté dañado o tenga un formato incorrecto.
 Puede ser una lista de palabras aleatorias, incluso direcciones de distintos lugares.
 Cargando base de datos
@@ -297,9 +297,9 @@ min
 Si
 No
 ¿Disminuir la cantidad de departamentos en este piso?
-Usando este botón, puedes ajustar el tamaño de la rejilla de números moviendo el deslizador de arriba, así como su posición en uno de los 9 puntos con los botones de la esquina inferior derecha. Haga clic en el mismo botón %s para finalizar la edición.
 Noche
 Tarde
+Mañana
 Sepia
 Eco
 Verde azulado
@@ -312,14 +312,15 @@ La reordenación de números y plantas no afecta a los datos de visitas existent
 Presiona %s para agregar apartamentos a la entrada:
 No hay números de teléfono para exportar en este territorio.
 Números de teléfono en %s
-¿Incluir en la exportación los apartamentos sin números de teléfono?
-Enhorabuena, ¡ya tiene a su primer interesado! Se añadirá automáticamente a la pantalla de Contactos gracias a su color verde claro. Además, podrá ver la cantidad total de interesados en la pantalla Territorios.
-Junto a un territorio, puede ver su porcentaje de progreso de trabajo.
-Ahora se encuentra en la pantalla de primera coonversación. Sólo aparece cuando visita a una persona por primera vez.
-Ha conseguido reducir el número de apartamentos en este piso. El rango de números es ahora 1 menos. Si no está satisfecho con el resultado, no hay problema: restaure la numeración original en la ventana "%s" y vuelva a intentarlo.
-¡Hay cambios sin guardar en la página! ¿Proceder sin guardar?
-Aquí encontrará el historial de todas las actualizaciones de informes (máx. %s entradas).
-Cortar
-Copiar
-Pegar
-Seleccionar todo
+Mapas
+Por defecto
+¡Este no es un enlace al archivo de datos del Rocket Ministry! Debe copiar el enlace en Google Drive. ¿Quiere ver unas instrucciones más detalladas?
+Exporta todos los datos de la aplicación. Se recomienda exportar a Google Drive.
+Cargue datos desde un archivo local en su computadora.
+La aplicación crea hasta 10 copias de seguridad. Puedes recuperarlos aquí.
+Restablecimiento completo de todos los datos y configuraciones, incluidas las copias de seguridad.
+Guarde todos los datos del programa, incluida la configuración, en un archivo. Se recomienda cargar este archivo en Google Drive.
+Su enlace
+Para importar datos, inserte el enlace compartido a un archivo de Google Drive. El enlace debe ser público:
+Sumar números con caracteres no numéricos
+Algunos números de apartamentos contienen caracteres no numéricos, por lo que no se puede habilitar la vista de cuadrícula.
