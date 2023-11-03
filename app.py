@@ -4,19 +4,11 @@
 from sys import argv
 Devmode = 1 if "dev" in argv else 0
 
-Version = "2.10.000" # November Edition.
+Version = "2.10.001"
 
 """
-* Новая система отчетности с 1 ноября.
-* Много изменений в дизайне.
-* Более понятный интерфейс экспорта/импорта.
-* Квартиры с буквами, переименование и полное удаление квартир в подъездах.
-* Выбор приложения карт (Google Maps, Яндекс.Карты или 2ГИС).
-* Темная фиолетовая тема, имитирующая JW Library (светлая уже есть).
-* Сортировка участков по размеру.
-* Интерфейс восстановления резервных копий.
-* Оптимизация настольной версии под горизонтальную ориентацию.
-* Небольшие исправления и оптимизации.
+* Исправлен баг, при котором программа падала при выборе турецкого языка.
+* Мелкие исправления и оптимизации.
 """
 
 import utils as ut
@@ -54,6 +46,7 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.anchorlayout import AnchorLayout
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.button import Button
 from kivy.uix.scrollview import ScrollView
 from kivy.core.window import Window
@@ -568,7 +561,8 @@ class Flat(object):
             tempFlatNumber = self.title[0: self.title.index(",")] if "," in self.title else self.title
             RM.resources[1].append(House()) # create house address
             newVirtualHouse = RM.resources[1][len(RM.resources[1]) - 1]
-            porch = self.porchRef.title if "подъезд" in self.porchRef.type else ""
+            try: porch = self.porchRef.title if "подъезд" in self.porchRef.type else ""
+            except: porch = ""
             newVirtualHouse.addPorch(input=porch, type="virtual") # create virtual porch
             newVirtualHouse.porches[0].addFlat(self.getName(), virtual=True) # create flat
             newContact = newVirtualHouse.porches[0].flats[0]
@@ -600,6 +594,7 @@ class Flat(object):
         if len(self.records)==1 and self.status == "" and self.number != "virtual": # при первой записи ставим статус ?
             self.status="?"
         date = time.strftime("%d", time.localtime())
+        if date[0] == "0": date = date[1:]
         month = RM.monthName()[5]
         timeCur = time.strftime("%H:%M", time.localtime())
         self.records[0].date = "%s %s %s" % (date, month, timeCur)        
@@ -724,7 +719,7 @@ class Report(object):
         self.lastMonth = RM.settings[2][12]
         self.reportLogLimit = 200
 
-    def saveReport(self, message="", mute=False, save=True, forceNotify=False):
+    def saveReport(self, message="", mute=False, save=True, notify=False):
         """ Выгрузка данных из класса в настройки, сохранение и оповещение """
         RM.settings[2] = [
             self.hours,
@@ -742,7 +737,7 @@ class Report(object):
             self.lastMonth
         ]
         if not mute:
-            RM.log(message, forceNotify=forceNotify)
+            RM.log(message, notify=notify)
             date = time.strftime("%d.%m", time.localtime()) + "." + str(int(time.strftime("%Y", time.localtime())) - 2000)
             time2 = time.strftime("%H:%M:%S", time.localtime())
             RM.resources[2].insert(0, f"\n{date} {time2}: {message}")
@@ -755,16 +750,14 @@ class Report(object):
         if savedMonth != currentMonth or forceDebug:
             if RM.displayed.form == "rep": RM.mainList.clear_widgets()
             saveTimer = self.startTime
-            RM.popup(message=RM.msg[221], options=[RM.button["yes"], RM.button["no"]])
+            Clock.schedule_once(lambda x: RM.popup(message=RM.msg[221], options=[RM.button["yes"], RM.button["no"]]), 2)
             RM.popupForm = "submitReport"
-            rolloverHours = rolloverCredit = 0.0
 
             # Calculate rollovers
-            if RM.settings[0][15] == 1:  # rollover seconds to next month if activated
-                rolloverHours = round(self.hours, 2) - int(round(self.hours, 2))
-                self.hours = int(round(self.hours, 2) - rolloverHours)
-                rolloverCredit = round(self.credit, 2) - int(round(self.credit, 2))
-                self.credit = int(round(self.credit, 2) - rolloverCredit)
+            rolloverHours = round(self.hours, 2) - int(round(self.hours, 2))
+            self.hours = int(round(self.hours, 2) - rolloverHours)
+            rolloverCredit = round(self.credit, 2) - int(round(self.credit, 2))
+            self.credit = int(round(self.credit, 2) - rolloverCredit)
 
             if RM.settings[0][2] and self.credit > 0.0:
                 credit = f"{RM.msg[222]} {ut.timeFloatToHHMM(self.credit)[0: ut.timeFloatToHHMM(self.credit).index(':')]}\n"
@@ -772,8 +765,9 @@ class Report(object):
 
             # Save file of last month
             service = f"{RM.msg[42]}{':' if RM.language != 'hy' else '.'} {RM.emoji['check']}\n" # служение было
+            forceHours = True if RM.settings[0][2] == 1 and self.credit >= 1 else False
             self.lastMonth = f"{RM.msg[223]}\n" % RM.monthName()[3] + \
-                             (service if self.hours < 1 else \
+                             (service if self.hours < 1 and not forceHours else \
                              f"{RM.msg[104]}{RM.col} %s\n" % ut.timeFloatToHHMM(self.hours)[
                                                      0: ut.timeFloatToHHMM(self.hours).index(":")]) + \
                              f"{RM.msg[103]}{RM.col} %d\n" % self.studies
@@ -831,8 +825,7 @@ class Report(object):
         if input == "(":  # start timer
             self.startTime = int(time.strftime("%H", time.localtime())) * 3600 + int(
                 time.strftime("%M", time.localtime())) * 60 + int(time.strftime("%S", time.localtime()))
-            forceNotify = True if RM.settings[0][0] == 1 else False
-            self.saveReport(RM.msg[225], forceNotify=forceNotify)
+            self.saveReport(RM.msg[225], notify = True if RM.settings[0][0] == 1 else False)
 
         elif input == ")": # остановка таймера
             if self.startTime > 0:
@@ -893,8 +886,9 @@ class Report(object):
             credit = f"{RM.msg[222]} {ut.timeFloatToHHMM(self.credit)[0: ut.timeFloatToHHMM(self.credit).index(':')]}\n"  # whether save credit to file
         else: credit = ""
         service = f"{RM.msg[42]}{':' if RM.language != 'hy' else '.'} {RM.emoji['check']}\n" # служение было
+        forceHours = True if RM.settings[0][2] == 1 and self.credit >= 1 else False
         result= f"{RM.msg[223]}\n" % RM.monthName()[1] + \
-                (service if self.hours < 1 else \
+                (service if self.hours < 1 and not forceHours else \
                 f"{RM.msg[104]}{RM.col} %s\n" % ut.timeFloatToHHMM(self.hours)[
                                                  0: ut.timeFloatToHHMM(self.hours).index(":")]) + \
                 f"{RM.msg[103]}{RM.col} %d\n" % self.studies
@@ -925,13 +919,15 @@ class DisplayedList(object):
 
 class TipButton(Button):
     """ Заметки и предупреждения (невидимые кнопки) """
-    def __init__(self, text="", size_hint_y=1, text_size=[0, 0], color=None, background_color=None,
-                 halign="left", *args, **kwargs):
+    def __init__(self, text="", size_hint_y=1, font_size=None, text_size=[0, 0], color=None, background_color=None,
+                 font_size_force=False, halign="left", *args, **kwargs):
         super(TipButton, self).__init__()
         self.text = text
         self.size_hint_y = size_hint_y
         if RM.specialFont != None: self.font_name = RM.specialFont
-        if not RM.desktop: self.font_size = RM.fontXS * RM.fontScale()
+        if not RM.desktop or font_size_force:
+            self.font_size = font_size if font_size != None else RM.fontS * RM.fontScale()
+        if RM.bigLanguage: self.font_size = self.font_size * .9
         self.markup = True
         self.text_size = text_size
         self.background_normal = ""
@@ -946,7 +942,7 @@ class TipButton(Button):
 
 class MyLabel(Label):
     def __init__(self, text="", markup=None, color=None, halign=None, valign=None, text_size=None, size_hint=None,
-                 size_hint_y=1, #font_size_force=False,
+                 size_hint_y=1, font_size_force=False,
                  height=None, width=None, pos_hint=None, font_size=None, *args, **kwargs):
         super(MyLabel, self).__init__()
         if markup != None: self.markup = markup
@@ -959,27 +955,28 @@ class MyLabel(Label):
         if size_hint != None: self.size_hint = size_hint
         if size_hint_y != 1: self.size_hint_y = size_hint_y
         if pos_hint != None: self.pos_hint = pos_hint
-        if not RM.desktop:# or font_size_force:
+        if not RM.desktop or font_size_force:
             self.font_size = font_size if font_size != None else RM.fontS * RM.fontScale()
+        if RM.bigLanguage: self.font_size = self.font_size * .9
         if RM.specialFont != None:
             self.font_name = RM.specialFont
-            if not RM.desktop: self.font_size = int(RM.fontXXS * RM.fontScale())
         self.text = text
 
 class MyTextInput(TextInput):
     def __init__(self, multiline=False, size_hint_y=1, size_hint_x=1, hint_text="", pos_hint = {"center_y": .5},
                  text="", disabled=False, input_type="text", width=0, height=None, mode="resize", time=False,
-                 popup=False, halign="left", focus=False, color=None, background_color=None, limit=99999,
+                 popup=False, halign="left", valign="center", focus=False, color=None, background_color=None, limit=99999,
                  specialFont=False,
                  font_size=None, font_size_force=False, shrink=True, blockPositivePress=False, *args, **kwargs):
         super(MyTextInput, self).__init__()
-        if not RM.desktop or font_size_force: # font_size_force = принудительно менять шрифт даже на десктопе
+        if not RM.desktop or font_size_force:
             self.font_size = font_size if font_size != None else (RM.fontS * RM.fontScale())
         if RM.specialFont != None or specialFont: self.font_name = RM.differentFont
         self.multiline = multiline
         self.markup = True
         self.limit = limit
         self.halign = halign
+        self.valign = valign
         self.shrink = shrink
         self.size_hint_x = size_hint_x
         self.size_hint_y = size_hint_y
@@ -1086,6 +1083,11 @@ class MyTextInput(TextInput):
                 RM.bottomButtons.size_hint_y = RM.bottomButtonsSizeHintY
                 if RM.boxFooter not in RM.globalFrame.children: RM.globalFrame.add_widget(RM.boxFooter)
 
+    def on_touch_down (self, instance, touch):
+        print(1)
+        if touch.button == 'right':
+            print("right mouse clicked")
+
     def create_keyboard(self, *args):
         self.show_keyboard()
 
@@ -1153,9 +1155,8 @@ class FooterButton(Button):
         self.markup = True
         self.parentIndex = parentIndex
         self.background_color = RM.scrollButtonBackgroundColor if RM.theme != "3D" else RM.globalBGColor
-        self.background_down = ""#self.background_color#self.background_down = RM.buttonPressedBG
+        self.background_down = ""
         self.background_normal = ""
-        #self.halign = "left" if RM.displayed.form == "con" else "center"
         self.valign = "top"
         self.font_size = (RM.fontS if RM.desktop else RM.fontXXS*.9) * RM.fontScale()
         self.color = get_hex_from_color(
@@ -1171,8 +1172,6 @@ class FooterButton(Button):
 
     def on_release(self):
         if self.parentIndex != None: RM.btn[self.parentIndex].on_release()
-        #RM.btn[self.parentIndex].background_normal = ""
-        #RM.btn[self.parentIndex].background_color = RM.scrollButtonBackgroundColor
 
 class TableButton(Button):
     """ Кнопки в шапке таблицы и ниже на некоторых формах """
@@ -1182,6 +1181,7 @@ class TableButton(Button):
         super(TableButton, self).__init__()
         if not RM.desktop: self.font_size = RM.fontS
         if RM.specialFont != None: self.font_name = RM.specialFont
+        if font_name != None: self.font_name = font_name
         self.text = text.strip()
         self.markup = True
         self.size_hint_x = size_hint_x
@@ -1219,10 +1219,8 @@ class TableButton(Button):
             else: self.background_down = RM.buttonPressedBG
             self.background_disabled_normal = ""
 
-        if font_name != None: self.font_name = font_name
-
     def on_press(self):
-        if RM.theme != "3D":
+        if RM.theme != "3D":# and self.default_background_color != RM.tableBGColor:
             RM.buttonFlash(instance=self)
             if (RM.mode == "dark" and RM.theme != "3D") and \
                     (self.background_color != RM.tableBGColor or RM.button["target"] in self.text):
@@ -1232,21 +1230,16 @@ class TableButton(Button):
     def restoreBlackBG(self, *args):
         self.background_color = self.default_background_color
 
-    def flash(self, mode):
-        if mode == "on": self.background_color[3] = .6
-        else: self.background_color = self.default_background_color
-
 class RButton(Button):
     """ Круглая кнопка """
     def __init__(self, text="", size_hint_x=1, size_hint_y=1, text_size=(None, None), halign="center",
-                 height=0,
+                 height=0, font_name=None,
                  valign="center", size=Window.size, font_size=None, background_normal="", color=None, background_color=None,
                  markup=True, background_down="", onPopup=False, quickFlash=False, radiusK = 1, **kwargs):
         super(RButton, self).__init__()
-        if not RM.desktop:
-            self.font_size = font_size if font_size != None else RM.fontS
-        if RM.specialFont != None:
-            self.font_name = RM.specialFont
+        if not RM.desktop: self.font_size = font_size if font_size != None else RM.fontS
+        if RM.specialFont != None: self.font_name = RM.specialFont
+        if font_name != None: self.font_name = font_name
         self.markup = markup
         self.padding = (RM.padding, RM.padding)
         self.text = text
@@ -1426,6 +1419,49 @@ class ScrollButton(Button):
         self.text = text
         if parentIndex != None: self.background_color = [.92, .92, .92]
 
+    """def on_touch_down(self, touch):# widget, touch, *args):
+        self.menu = BoxLayout(
+            size_hint=(None, None),
+            orientation='vertical',
+            center=touch.pos)
+        self.menu.add_widget(Button(text='a'))
+        self.menu.add_widget(Button(text='b'))
+        close = Button(text='close')
+        close.bind(on_release=self.close_menu)
+        self.menu.add_widget(close)
+        RM.mainList.add_widget(self.menu)
+
+    def close_menu(self, instance):
+        RM.mainList.remove_widget(self.menu)
+
+    def on_touch_up(self, touch):
+        self.delete_clock(widget=self.root, touch=touch)
+
+    def delete_clock(self, widget, touch, *args):
+        Clock.unschedule(touch.ud['event'])
+        #RM.btn[0].on_release()
+        #RM.detailsPressed()
+        #self.menu(touch)
+
+    def menu(self, touch, *args):
+        print(3)
+        RM.btn[0].on_release()
+        return
+        menu = BoxLayout(
+                size_hint=(None, None),
+                orientation='vertical',
+                center=touch.pos)
+        menu.add_widget(Button(text='a'))
+        menu.add_widget(Button(text='b'))
+        close = Button(text='close')
+        close.bind(on_release=partial(self.close_menu, menu))
+        menu.add_widget(close)
+        self.root.add_widget(menu)
+        #self.root.run()
+
+    def close_menu(self, widget, *args):
+        self.root.remove_widget(widget)"""
+
     def on_press(self):
         if self.parentIndex == None:
             if "dark" in RM.theme:
@@ -1443,7 +1479,7 @@ class ScrollButton(Button):
 class FlatButton(Button):
     """ Кнопка квартиры """
     def __init__(self, text="", status="", size_hint_x=1, size_hint_y=1, width=0, height=0, pos_hint={"top": 0},
-                 font_size=None, **kwargs):
+                 grid=False, **kwargs):
         super(FlatButton, self).__init__()
         if RM.specialFont != None: self.font_name = RM.specialFont
         self.text = text
@@ -1455,7 +1491,15 @@ class FlatButton(Button):
         self.size_hint_x = size_hint_x
         self.size_hint_y = size_hint_y
         if not RM.desktop:
-            self.font_size = font_size if font_size != None else RM.fontM*.9 * RM.fontScale()
+            if not grid:
+                if RM.fontScale() > 1.3:
+                    self.font_size = RM.fontL
+                else:
+                    self.font_size = RM.fontM * RM.fontScale()
+            elif RM.fontScale() < 1.2:
+                self.font_size = RM.fontS * RM.fontScale()
+            else:
+                self.font_size = RM.fontS
         self.origWidth = width
         self.origHeight = height
         self.width = self.origWidth
@@ -1549,16 +1593,19 @@ class Counter(AnchorLayout):
                                  font_size=RM.fontBigEntry,
                                  height=RM.standardTextHeight, input_type="number", mode=mode)
         def focus(instance, value):
-            if ":" in self.input.text: RM.counterTimeChanged = RM.counterChanged = True
+            RM.counterChanged = True
+            if ":" in self.input.text: RM.counterTimeChanged = True
             if self.input.text.isnumeric() and int(self.input.text) < 0: self.input.text = "0"
             else:
                 try:
                     if self.input.text[0] == "-": self.input.text = self.input.text[1:]
                 except: pass
             if not value:
-                if self.input.text.strip() == "": self.input.text = "0"
+                if self.input.text.strip() == "":
+                    self.input.text = "0" if picker == None else "0:00"
                 elif picker != None and not ":" in self.input.text: self.input.text += ":00"
         self.input.bind(focus=focus)
+        self.input.bind(on_text_validate=RM.positivePressed)
         box.add_widget(self.input)
 
         buttonBox = BoxLayout(size_hint_y=1 if RM.orientation=="v" else .5,  # второй бокс для кнопок
@@ -1705,13 +1752,11 @@ class MainMenuButton(Button):
         self.pos_hint = {"center_y": .5}
         if not RM.desktop:
             self.iconFont = int(RM.fontL)
-            if RM.language != "hy":
-                self.font_size = RM.fontXS * .8 * RM.fontScale()
-            else:
-                self.font_size = RM.fontXS * .8
+            if not RM.bigLanguage: self.font_size = RM.fontXS * .8 * RM.fontScale()
+            else: self.font_size = RM.fontXS * .8
         else:
             self.iconFont = int(RM.fontXL * 1.1)
-            if RM.language == "hy" and RM.orientation == "h":
+            if RM.bigLanguage and RM.orientation == "h":
                 self.font_size = RM.fontXXS*.9
             else: self.font_size = RM.fontS
         if RM.specialFont != None: self.font_name = RM.specialFont
@@ -1875,7 +1920,7 @@ class DatePicker(BoxLayout):
 
     def pick(self, instance=None):
         def do(*args):
-            RM.mypopup.dismiss()
+            RM.dismissTopPopup()#RM.mypopup.dismiss()
             RM.multipleBoxEntries[1].text = str(self.date)
         Clock.schedule_once(do, RM.onClickFlash)
 
@@ -1948,6 +1993,9 @@ class RMApp(App):
         self.rep.optimizeReportLog()
         self.save(backup=True)
         Clock.schedule_interval(self.updateTimer, 1)
+
+        self.root = FloatLayout()
+
         return self.interface
 
     # Подготовка переменных
@@ -2036,7 +2084,7 @@ class RMApp(App):
             self.allowCharWarning = True
             self.defaultKeyboardHeight = Window.size[1]*.4
             self.clickedBtnIndex = 0
-            self.mypopup = PopupNoAnimation()
+            self.popups = []  # стек попапов, которые могут открываться один над другим
             self.listOnScreenLimit = 8 # кол-во пунктов списка, после которого будет прокручивание до этого пункта
             self.onClickColK  = .9 # коэффициент затемнения фона кнопки при клике
             self.onClickFlash = .1 # время появления теневого эффекта на кнопках
@@ -2050,6 +2098,7 @@ class RMApp(App):
             self.fontXS =   int(Window.size[1] / 50)
             self.fontXXS =  int(Window.size[1] / 55)
             self.fontBigEntry = int(Window.size[1] / 41 * self.fontScale())  # шрифт для увеличенных полей ввода
+            self.bigLanguage = True if self.language == "hy" or self.language == "ka" else False
 
             if Devmode:
                 k = .4
@@ -2061,7 +2110,8 @@ class RMApp(App):
 
             if self.desktop:
                 from kivy.config import Config
-                Config.set('input', 'mouse', 'mouse,disable_multitouch')
+                Config.set('input', 'mouse', 'mouse, disable_multitouch')
+                #Config.set('input', 'mouse', 'mouse, enable_multitouch')
                 Config.write()
                 self.title = 'Rocket Ministry'
                 Window.icon = "icon.png"
@@ -2222,7 +2272,8 @@ class RMApp(App):
 
         # Нижние кнопки таблицы
 
-        self.bottomButtons = BoxLayout(size_hint_y = self.bottomButtonsSizeHintY, padding = self.padding * 2)
+        self.bottomButtons = BoxLayout(size_hint_y = self.bottomButtonsSizeHintY, spacing=self.spacing,
+                                       padding = self.padding * 2)
         self.listarea.add_widget(self.bottomButtons)
         self.navButton = TableButton(text=self.button['nav'], disabled=True, background_color=self.globalBGColor,
                                      size_hint_x=.2)
@@ -2295,7 +2346,6 @@ class RMApp(App):
         self.topButtonColor = [.73, .73, .73, 1] # "lightgray" # поиск, настройки и кнопки счетчиков
         ck = .9
         self.popupButtonColor = [.97, .97, .97]
-        #self.sliderImage = "slider_cursor_mono.png"
 
         if self.theme == "dark" or self.theme == "morning": # темная тема
             self.mode = "dark"
@@ -2516,7 +2566,6 @@ class RMApp(App):
             "no":       self.msg[298],
             "cancel":   self.msg[190],
             "link":    icon("icon-link-ext"),
-
             "":         ""
         }
 
@@ -2657,7 +2706,8 @@ class RMApp(App):
                         else: # вид для списка подъезда - с фоном и закругленными квадратиками
                             if not "." in label:
                                 self.scrollWidget.spacing = (self.spacing, 0)
-                                self.btn.append(FlatButton(text=marker+label.strip(), height=height, status=status, size_hint_y=None))
+                                self.btn.append(FlatButton(text=marker+label.strip(), height=height, status=status,
+                                                           size_hint_y=None))
                             else:
                                 continue
 
@@ -2741,7 +2791,6 @@ class RMApp(App):
                                             padding=(self.padding*2, 0))
                 for i in range(len(self.displayed.options)):
                     flat = self.displayed.options[i]
-                    #marker = f"[size=0][color={get_hex_from_color([0, 0, 0, 0])}]{i}[/color][/size]"
                     try:  # показ цифры этажа
                         self.floorview.add_widget(Label(text=flat, halign="right", color=self.standardTextColor,
                                                         width=self.standardTextHeight/3,
@@ -2750,7 +2799,7 @@ class RMApp(App):
                         if "." in flat.number: self.floorview.add_widget(Widget())
                         else:
                             self.floorview.add_widget(FlatButton(text=flat.number, status=flat.status, size_hint_y=0,
-                                                                 font_size=self.fontS*self.fontScale()))
+                                                                 grid=True))
                 self.sliderToggle()
                 self.mainList.add_widget(self.floorview)
 
@@ -2791,7 +2840,6 @@ class RMApp(App):
 
                 for i in range(len(self.displayed.options)):
                     flat = self.displayed.options[i]
-                    #marker = f"[size=0][color={get_hex_from_color([0,0,0,0])}]{i}[/color][/size]"
                     try: # показ цифры этажа
                         self.floorview.add_widget(Label(text=flat, halign="right", valign="center", width=floorLabelWidth,
                                                         font_size=self.fontXS*floorK, height=size, size_hint=(None, None),
@@ -2800,8 +2848,7 @@ class RMApp(App):
                         if "." in flat.number: self.floorview.add_widget(Widget())
                         else:
                             self.floorview.add_widget(FlatButton(text=flat.number, status=flat.status, width=size,
-                                                                 height=size, font_size=self.fontS*self.fontScale(),
-                                                                 size_hint_x=None, size_hint_y=None))
+                                                                 height=size, grid=True, size_hint_x=None, size_hint_y=None))
                 BL.add_widget(self.floorview)
                 self.mainList.add_widget(BL)
                 self.sliderToggle()
@@ -2902,8 +2949,9 @@ class RMApp(App):
 
             elif self.displayed.form == "flatView": # режим редактирования записей
                 self.selectedRecord = self.choice
-                self.record = self.flat.records[self.selectedRecord]
-                self.recordView(instance=instance) # вход в запись посещения
+                try: self.record = self.flat.records[self.selectedRecord]
+                except: return # для защиты от ошибки при нажатии 2 пальцами
+                else: self.recordView(instance=instance) # вход в запись посещения
 
             elif self.displayed.form == "con": # контакты
                 self.selectedCon = self.choice
@@ -2922,7 +2970,6 @@ class RMApp(App):
                 self.flatView(instance=instance)
 
             elif self.displayed.form == "search": # поиск
-                #contactText = self.displayed.options[self.choice]
                 self.selectedCon = self.choice
                 h = self.searchResults[self.selectedCon][0][0]  # получаем номера дома, подъезда и квартиры
                 p = self.searchResults[self.selectedCon][0][1]
@@ -3269,6 +3316,12 @@ class RMApp(App):
                             self.importDB(file=file)
                     plyer.filechooser.open_file(on_selection=__handleSelection)
 
+                elif input == "export000":
+                    self.share(email=True) if not self.desktop else self.share(file=True)
+
+                elif input == "clone000":
+                    self.flat.clone(title=self.house.title, toStandalone=True)
+
                 elif input != "":
                     self.searchQuery = input
                     self.find(instance=instance)
@@ -3363,7 +3416,7 @@ class RMApp(App):
                     if len(self.porch.flats) > 0: self.stack.insert(0, self.stack[0])
                     self.mainList.clear_widgets()
                     grid = GridLayout(rows=3, cols=2, col_force_default = True, padding=self.padding, # основная сетка
-                                      size_hint_y = .5 if self.orientation=="v" else .7)
+                                      size_hint_y = .4 if self.orientation=="v" else .6)
                     if self.orientation=="v": # ширина колонок основной таблицы
                         grid.cols_minimum = {0: self.mainList.size[0] * .4, 1: self.mainList.size[0] * .55}
                     else:
@@ -3413,15 +3466,15 @@ class RMApp(App):
                     self.floor1 = Counter(text=str(self.porch.floor1) if not self.porch.alpha else "", mode="pan",
                                           disabled=False if not self.porch.alpha else True)
                     grid.add_widget(self.floor1)
-                    self.mainList.add_widget(grid)#a)
+                    self.mainList.add_widget(grid)
                     def __linkPressed(instance, *args):
                         self.buttonFlash(instance)
                         self.popup("addList")
-                    self.mainList.add_widget(self.tip(icon="link", text=self.msg[325], hint_y=.08, func=__linkPressed))
+                    self.mainList.add_widget(self.tip(icon="link", text=self.msg[325], hint_y=.09, func=__linkPressed))
                     if len(self.porch.flats) == 0:
-                        self.mainList.add_widget(self.tip(text=self.msg[312] % f"[b]{self.msg[5]}[/b]", hint_y=.08))
+                        self.mainList.add_widget(self.tip(text=self.msg[312] % f"[b]{self.msg[5]}[/b]", hint_y=.09))
                     else:
-                        self.mainList.add_widget(self.tip(text=self.msg[311]+"\n", hint_y=.08))
+                        self.mainList.add_widget(self.tip(text=self.msg[311]+"\n", hint_y=.09))
 
                 else: # универсальный участок
                     self.createInputBox(
@@ -3814,7 +3867,7 @@ class RMApp(App):
                 footer[i].insert(0, "")
                 footer[i].append("")
             if self.resources[0][1][6] == 0 and int(stats[2] * 100) > 0:
-                Clock.schedule_once(lambda x: self.popup(title=self.msg[247], message=self.msg[13]), .1)
+                self.popup(title=self.msg[247], message=self.msg[13])
                 self.resources[0][1][6] = 1
                 self.save()
         buildingIcon = self.button['building'] if RM.language == "ru" or RM.language == "uk" else self.button['map']
@@ -3998,7 +4051,7 @@ class RMApp(App):
 
             report3 = AnchorLayout(anchor_x="center", anchor_y="center")
             b3 = BoxLayout(spacing=self.spacing, padding=self.padding)
-            mGrid = GridLayout(rows=12, cols=2, size_hint=(x, y), spacing=self.spacing, col_default_width=width,
+            mGrid = GridLayout(rows=12, cols=2, size_hint=(x, y), spacing=self.spacing*2, col_default_width=width,
                                 pos_hint={"center_y": .5})
 
             for i, month in zip(range(12),
@@ -4013,8 +4066,7 @@ class RMApp(App):
                 monthAmount = MyTextInput(text=text, multiline=False, input_type="number", width=self.standardTextWidth * 1.1,
                                           font_size=self.fontXS*self.fontScale() if not self.desktop else Window.size[1]/45,
                                           font_size_force=True, halign="center", valign="center", mode=mode,
-                                          size_hint_x=None, height=height,
-                                          size_hint_y=None if self.orientation == "v" else 1)
+                                          size_hint_x=None, size_hint_y=1, height=height)
                 self.months.append(monthAmount)
                 mGrid.add_widget(self.months[i])
                 self.analyticsMessage = MyLabel(markup=True, color=self.standardTextColor, valign="center",
@@ -4056,12 +4108,11 @@ class RMApp(App):
             options=[
                 self.msg[124], # норма часов
                 "{}" + self.msg[40],  # таймер
+                "{}" + self.msg[130],  # уведомление при таймере
                 "{}" + self.msg[125] % self.msg[206], # нет дома {} = вместо строки ввода должна быть галочка
-                "{}" + self.msg[126], # переносить минуты
                 "<>" + self.msg[127], # выбор цвета отказа
                 "{}" + self.msg[128], # кредит часов
                 "{}" + self.msg[129], # быстрый ввод телефона
-                "{}" + self.msg[130], # уведомление при таймере
                 "{}" + (self.msg[86] if not self.desktop else self.msg[164]), # новое предложение с заглавной / запоминать положение окна
                f"[]{icon('icon-language')} {self.msg[131]}", # язык () = togglebutton
                 "[]" + self.msg[315], # карты ()
@@ -4070,18 +4121,17 @@ class RMApp(App):
             defaults=[
                 self.settings[0][3],   # норма часов
                 self.settings[0][22],  # таймер
+                self.settings[0][0],   # уведомление при запуске таймера
                 self.settings[0][13],  # нет дома
-                self.settings[0][15],  # переносить минуты
                 self.settings[0][18],  # цвет отказа
                 self.settings[0][2],   # кредит часов
                 self.settings[0][20],  # показывать телефон
-                self.settings[0][0],   # уведомление при запуске таймера
                 self.settings[0][11] if not self.desktop else self.settings[0][12], # новое предложение с заглавной / запоминать положение окна
                 self.settings[0][6],   # язык
                 self.settings[0][21],  # карты
                 self.settings[0][5],   # тема
             ],
-            multilines=[False, False, False, False, False, False, False, False, False, False, False, False]
+            multilines=[False, False, False, False, False, False, False, False, False, False, False]
         )
 
         """ Также заняты настройки:
@@ -4137,8 +4187,7 @@ class RMApp(App):
         importBox.add_widget(importBtn)
         self.importEntry = MyTextInput(hint_text=self.msg[323], multiline=False, font_size=self.fontXXS,
                                        size_hint_y=.25 if self.orientation == "v" else .5,
-                                       blockPositivePress=True,
-                                       font_size_force=True, shrink=False)
+                                       blockPositivePress=True, font_size_force=True, shrink=False)
         def __import(*args):
             def __do(*args):
                 self.importDB(link=self.importEntry.text)
@@ -4253,16 +4302,15 @@ class RMApp(App):
                     else int(self.multipleBoxEntries[0].text.strip())  # норма часов
             except: pass
             self.settings[0][22] = self.multipleBoxEntries[1].active  # таймер
-            self.settings[0][13] = self.multipleBoxEntries[2].active  # нет дома
-            self.settings[0][15] = self.multipleBoxEntries[3].active  # переносить минуты
+            self.settings[0][0] = self.multipleBoxEntries[2].active  # уведомление при запуске таймера
+            self.settings[0][13] = self.multipleBoxEntries[3].active  # нет дома
             self.settings[0][18] = self.multipleBoxEntries[4].get()  # цвет отказа
             self.settings[0][2] = self.multipleBoxEntries[5].active  # кредит
             self.settings[0][20] = self.multipleBoxEntries[6].active  # показывать телефон
-            self.settings[0][0] = self.multipleBoxEntries[7].active  # уведомление при запуске таймера
             if not self.desktop:
-                self.settings[0][11] = self.multipleBoxEntries[8].active  # новое предложение с заглавной
+                self.settings[0][11] = self.multipleBoxEntries[7].active  # новое предложение с заглавной
             else:
-                self.settings[0][12] = self.multipleBoxEntries[8].active  # запоминать положение окна
+                self.settings[0][12] = self.multipleBoxEntries[7].active  # запоминать положение окна
             for i in range(len(self.languages)):  # язык
                 if list(self.languages.values())[i][0] in self.languageButton.text:
                     self.settings[0][6] = list(self.languages.keys())[i]
@@ -4735,6 +4783,11 @@ class RMApp(App):
                 entrySize_hint = ((.5 if self.orientation == "v" else .3), 1)
                 text_size = (Window.size[0]*self.SR * 0.66, None)
                 halign = "center"
+                if self.desktop and self.msg[130] in text: # не показываем опцию уведомления, если таймер отключен, а также всегда на ПК
+                    timerOK = False
+                elif self.msg[130] not in text or (self.msg[130] in text and self.settings[0][22] == 1):
+                    timerOK = True
+                else: timerOK = False
             else:
                 y = 1 if multiline else None
                 text = options[row].strip()
@@ -4742,6 +4795,7 @@ class RMApp(App):
                 entrySize_hint = (1-self.descrColWidth, y)
                 text_size = (Window.size[0]*self.SR*self.descrColWidth, None)
                 halign="left"
+                timerOK = True
 
             if self.displayed.form == "set": limit = 99999 # задаем лимиты символов
             elif multiline: limit = 99999
@@ -4751,7 +4805,7 @@ class RMApp(App):
                                                   markup=True, text_size=text_size, font_size=self.fontS,
                                                   color=self.standardTextColor, height=height))
 
-            if default != "virtual": # скрываем поле "номер/подъезд" для виртуальных контактов
+            if default != "virtual" and timerOK: # скрываем поле "номер/подъезд" для виртуальных контактов
                 grid.add_widget(self.multipleBoxLabels[row])
 
             textbox = BoxLayout(size_hint=entrySize_hint, height=height, pos_hint={"center_x": .5},
@@ -4789,9 +4843,12 @@ class RMApp(App):
                 textbox.add_widget(self.multipleBoxEntries[row])
                 textbox.add_widget(calButton)
                 grid.add_widget(textbox)
-            elif default != "virtual": # скрываем поле "номер/подъезд" для виртуальных контактов
+            elif default != "virtual" and timerOK:#and (self.msg[130] not in text and self.settings[0][22] == 0): # скрываем поле "номер/подъезд" для виртуальных контактов
                 textbox.add_widget(self.multipleBoxEntries[row])
                 grid.add_widget(textbox)
+                #if self.msg[130] in text and self.settings[0][22] == 0: # убираем уведомление по таймеру, если сам таймер отключен
+                #    textbox.remove_widget(self.multipleBoxEntries[row])
+                #    grid.remove_widget(textbox)
 
         form.add_widget(grid)
 
@@ -4845,7 +4902,7 @@ class RMApp(App):
             btn = SortListButton(text=option)
             btn.bind(on_release=lambda btn: self.dropThemeMenu.select(btn.text))
             self.dropThemeMenu.add_widget(btn)
-        self.themeButton = TableButton(text=currentTheme, size_hint_x=1, size_hint_y=.7)
+        self.themeButton = RButton(text=currentTheme, size_hint_x=1, size_hint_y=.7, radiusK=.2)
         self.dropThemeMenu.bind(on_select=lambda instance, x: setattr(self.themeButton, 'text', x))
         self.themeButton.bind(on_release=self.dropThemeMenu.open)
         a.add_widget(self.themeButton)
@@ -4860,7 +4917,8 @@ class RMApp(App):
             btn = SortListButton(font_name=self.differentFont, text=option[0])
             btn.bind(on_release=lambda btn: self.dropLangMenu.select(btn.text))
             self.dropLangMenu.add_widget(btn)
-        self.languageButton = TableButton(font_name=self.differentFont, text=self.msg[1], size_hint_x=1, size_hint_y=.7)
+        self.languageButton = RButton(font_name=self.differentFont, text=self.msg[1], size_hint_x=1,
+                                      size_hint_y=.7, radiusK=.2)
         self.dropLangMenu.bind(on_select=lambda instance, x: setattr(self.languageButton, 'text', x))
         self.languageButton.bind(on_release=self.dropLangMenu.open)
         a.add_widget(self.languageButton)
@@ -4875,7 +4933,7 @@ class RMApp(App):
             btn.bind(on_release=lambda btn: self.dropMapsMenu.select(btn.text))
             self.dropMapsMenu.add_widget(btn)
         if len(str(self.settings[0][21]))<3: self.settings[0][21] = "Google"
-        self.mapsButton = TableButton(text=self.settings[0][21], size_hint_x=1, size_hint_y=.7)
+        self.mapsButton = RButton(text=self.settings[0][21], size_hint_x=1, size_hint_y=.7, radiusK=.2)
         self.dropMapsMenu.bind(on_select=lambda instance, x: setattr(self.mapsButton, 'text', x))
         self.mapsButton.bind(on_release=self.dropMapsMenu.open)
         a.add_widget(self.mapsButton)
@@ -4958,20 +5016,23 @@ class RMApp(App):
         btn.bind(on_release=self.deletePressed)
         return btn
 
-    def tip(self, text="", icon="info", hint_y=False, func=None):
+    def tip(self, text="", icon="info", hint_y=None, func=None):
         """ Подсказка """
         k = .8
         background_color = None
         if icon == "warn":
             color = "F4CA16" # желтый
             background_color = [.96, .95, .78] if self.mode == "light" else [.37, .32, .11]
-            size_hint_y = 0.22 * self.fontScale()
-            k=.9
+            size_hint_y = hint_y if hint_y != None else 0.22
+            size_hint_y *= self.fontScale()
+            if self.bigLanguage: size_hint_y *= 1.25
+            k=.95
             textHeight = None
             halign = "left"
         elif icon == "info":
             color = self.titleColor2
-            size_hint_y = .5 * self.fontScale()
+            size_hint_y = hint_y if hint_y != None else 0.5
+            size_hint_y *= self.fontScale()
             textHeight = None
             halign = "left"
         elif icon == "note":
@@ -4981,18 +5042,19 @@ class RMApp(App):
             halign = "center"
         elif icon == "link":
             color = get_hex_from_color(self.linkColor)
-            size_hint_y = .5 * self.fontScale()
+            size_hint_y = hint_y if hint_y != None else 0.5
+            size_hint_y *= self.fontScale()
             textHeight = None
             halign = "left"
             text = f"[u][color={color}][ref=link]{text}[/ref][/color][/u]"
-        if hint_y != False: size_hint_y = hint_y
+
         if text == "": # если получен пустой текст, вместо подсказки ставим пустой виджет
             tip = Widget(size_hint_y=size_hint_y)
         else:
             if icon == "warn":
                 tip = TipButton(text=f"[ref=note][color={color}]{self.button[icon]}[/color] {text}[/ref]",
                                 text_size=[self.mainList.size[0] * k, None],#textHeight],
-                                size_hint_y=size_hint_y,
+                                size_hint_y=size_hint_y, font_size=self.fontXS * self.fontScale(),
                                 halign=halign, valign="center", background_color = background_color)
             else:
                 tip = MyLabel(text=f"[ref=note][color={color}]{self.button[icon]}[/color] {text}[/ref]",
@@ -5090,17 +5152,15 @@ class RMApp(App):
 
     # Вспомогательные функции
 
-    def log(self, message="", title=None, timeout=2, forceNotify=False):
+    def log(self, message="", timeout=2, notify=False):
         """ Displaying and logging to file important system messages """
-        try:
-            if not self.desktop and forceNotify == False:
-                plyer.notification.notify(toast=True, message=message)
-            else:
-                icon = "" if not self.desktop else "icon.ico"
-                if not Devmode:
-                    plyer.notification.notify(app_name="Rocket Ministry", title="Rocket Ministry", app_icon=icon,
-                                              ticker="Rocket Ministry", message=message, timeout=timeout)
-        except: print(message)
+        if Devmode: print(message)
+        elif self.desktop or notify:
+            icon = "" if not self.desktop else "icon.ico"
+            plyer.notification.notify(app_name="Rocket Ministry", title="Rocket Ministry", app_icon=icon,
+                                      ticker="Rocket Ministry", message=message, timeout=timeout)
+        else:
+            plyer.notification.notify(toast=True, message=message)
 
     def addHouse(self, houses, input, type=True, forceUpper=False):
         """ Adding new house """
@@ -5155,7 +5215,7 @@ class RMApp(App):
             gapWord = self.msg[175]
         else:
             gapEmo = ""
-        br = "" if self.fontScale() > 1 or Window.size[1]<550 or self.language == "ka" or self.language == "hy" else "\n"
+        br = "" if Window.size[1]<=600 or self.bigLanguage else "\n"
         if not self.desktop and self.fontScale() > 1: self.analyticsMessage.font_size = self.fontS
         self.analyticsMessage.text = f"[b]{self.msg[176]}[/b]\n\n" + \
                                      f"{self.msg[177]}{self.col} [b]%d[/b]\n{br}" % monthNumber + \
@@ -5268,7 +5328,7 @@ class RMApp(App):
 
     def popupPressed(self, instance=None):
         """ Действия при нажатии на кнопки всплывающего окна self.popup """
-        self.mypopup.dismiss()
+        self.dismissTopPopup()
         if self.popupForm == "timerType":
             self.rep.modify(")" if instance.text == self.msg[42] else "$")
             if self.displayed.form == "rep": self.repPressed()
@@ -5284,8 +5344,7 @@ class RMApp(App):
         elif self.popupForm == "restoreRequest":
             if instance.text == self.button["yes"]:
                 result = self.backupRestore(restoreNumber=self.fileToRestore, allowSave=False)
-                self.mypopup.dismiss()
-                for popup in self.popups: popup.dismiss()
+                self.dismissTopPopup()
                 if result == False:
                     self.popup(title=self.msg[44], message=self.msg[45])
                 else:
@@ -5467,15 +5526,13 @@ class RMApp(App):
                                  font_size=self.fontS * self.fontScale(),
                                  background_color=self.popupBackgroundColor, pos_hint={"right": 1, "center": .5})
             def __shrink(instance):
-                self.mypopup.dismiss()
+                self.dismissTopPopup()
                 self.buttonFlash(instance)
                 self.popupEntryPoint = 1
                 self.blockFirstCall = 1
                 self.deletePressed(forced=True)
             shrink.bind(on_release=__shrink)
-            if 1:#self.porch.floors() or self.house.getPorchType()[0] == "сегмент":
-                buttonsGrid.add_widget(shrink)
-            else: buttonsGrid.width = self.standardTextHeight
+            buttonsGrid.add_widget(shrink)
 
             details = TableButton(text=self.button["cog"], size_hint_x=None, size_hint_y=None, # кнопка настроек
                                   font_size=self.fontS * self.fontScale(),
@@ -5483,7 +5540,7 @@ class RMApp(App):
                                   size=(self.standardTextHeight, self.standardTextHeight),
                                   background_color=self.popupBackgroundColor, pos_hint={"right": 1})
             def __details(instance):
-                self.mypopup.dismiss()
+                self.dismissTopPopup()
                 self.buttonFlash(instance)
                 self.popupEntryPoint = 1
                 self.blockFirstCall = 1
@@ -5502,7 +5559,7 @@ class RMApp(App):
                                               multiline=False, input_type="text", popup=True)
                 contentMain.add_widget(self.quickPhone)
                 def __getPhone(instance):
-                    self.mypopup.dismiss()
+                    self.dismissTopPopup()
                     self.quickPhone.hint_text = self.msg[204]
                     self.popupForm = "quickPhone"
                     self.flat.editPhone(self.quickPhone.text)
@@ -5513,7 +5570,7 @@ class RMApp(App):
                 self.quickPhone.bind(on_text_validate=__getPhone)
 
                 def __dismiss(instance, value):
-                    if value == 0: self.mypopup.dismiss()
+                    if value == 0: self.dismissTopPopup()
                 if self.desktop: # на компьютере закрываем попап при дефокусе строки поиска
                     self.quickPhone.bind(focus=__dismiss)
 
@@ -5532,7 +5589,7 @@ class RMApp(App):
                     self.save()
                     if self.porch.floors(): self.clickedInstance.colorize()
                     else: self.porchView()
-                    self.mypopup.dismiss()
+                    self.dismissTopPopup()#.dismiss()
                     if self.resources[0][1][4] == 0:
                         self.popup(title=self.msg[247], message=self.msg[205] % self.msg[206])
                         self.resources[0][1][4] = 1
@@ -5557,7 +5614,7 @@ class RMApp(App):
                                        font_size=self.fontS * self.fontScale(),
                                        color=color, background_color=colorBG, radiusK=radiusK)
             def __firstCall(instance):
-                self.mypopup.dismiss()
+                self.dismissTopPopup()
                 self.flatView(call=True, instance=instance)
             firstCallBtnCall.bind(on_release=__firstCall)
             content.add_widget(firstCallBtnCall)
@@ -5581,7 +5638,7 @@ class RMApp(App):
                 self.save()
                 if self.porch.floors(): self.clickedInstance.colorize()
                 else: self.porchView()
-                self.mypopup.dismiss()
+                self.dismissTopPopup()
             firstCallBtnReject.bind(on_release=__quickReject)
             content2.add_widget(firstCallBtnReject)
 
@@ -5612,7 +5669,7 @@ class RMApp(App):
             save = RButton(text=self.msg[188], onPopup=True, pos_hint={"bottom": 1}, radiusK=radiusK)  # кнопка сохранения
 
             def __closeTimePicker(instance):
-                self.mypopup.dismiss()
+                self.dismissTopPopup()
                 time2 = str(self.pickedTime)[:5] # время, выбранное на пикере (HH:MM)
                 if title == self.msg[108]:
                     time1 = self.hours.get()  # исходное время на счетчике (HH:MM)
@@ -5684,6 +5741,7 @@ class RMApp(App):
             contentMain.add_widget(btnPaste)
             warning = f" {self.msg[184]}" if self.house.type == "condo" else f" {self.msg[245]}"
             description = MyLabel(text=self.msg[187] + warning, text_size=(width, None),
+                                  font_size=self.fontXS * self.fontScale(),
                                   valign="center", color=[.95, .95, .95])
             contentMain.add_widget(description)
             grid = GridLayout(cols=3, size_hint=(1, None))
@@ -5710,7 +5768,7 @@ class RMApp(App):
                 if "подъезд" in self.porch.type: self.porchView(sortFlats=True)
                 else: self.porchView()#scroll_to="last")
                 self.save()
-                self.mypopup.dismiss()
+                self.dismissTopPopup()
 
             btnSave.bind(on_release=__save)
             btnClose = RButton(text=self.msg[190], onPopup=True, radiusK=radiusK)
@@ -5745,7 +5803,6 @@ class RMApp(App):
                 self.fileDates.append(str("{:%d.%m.%Y, %H:%M:%S}".format(
                     datetime.datetime.strptime(time.ctime((os.path.getmtime(self.backupFolderLocation + file))),
                                                "%a %b %d %H:%M:%S %Y"))))
-            self.popups = []
             def __clickOnFile(instance): # обработка клика по файлу
                 for i in range(len(files)):
                     if instance.text == str("{:%d.%m.%Y, %H:%M:%S}".format(
@@ -5753,7 +5810,6 @@ class RMApp(App):
                                                    "%a %b %d %H:%M:%S %Y"))):
                         break
                 self.fileToRestore = i
-                self.popups.append(self.mypopup)
                 self.popup("restoreRequest", title=self.msg[44], message=self.msg[45] % self.fileDates[i],
                            options=[self.button["yes"], self.button["no"]])
 
@@ -5781,10 +5837,8 @@ class RMApp(App):
 
             grid = GridLayout(rows=2, cols=1, size_hint_y=None) # добавляем кнопку "Отмена"
             self.confirmButtonPositive = RButton(text=options[0], onPopup=True, pos_hint={"bottom": 1}, radiusK=radiusK)
-            def __dismissAll(instance):
-                for popup in self.popups: popup.dismiss()
-                self.mypopup.dismiss()
-            self.confirmButtonPositive.bind(on_release=__dismissAll)
+
+            self.confirmButtonPositive.bind(on_release=lambda x=True: self.dismissTopPopup(all=x))
             grid.add_widget(Widget())
             grid.add_widget(self.confirmButtonPositive)
             contentMain.add_widget(grid)
@@ -5826,19 +5880,30 @@ class RMApp(App):
                     grid.add_widget(self.confirmButtonNegative)
                 contentMain.add_widget(grid)
 
-        self.mypopup = PopupNoAnimation(title=title, content=contentMain, size_hint=size_hint,
+        self.popups.insert(0, PopupNoAnimation(title=title, content=contentMain, size_hint=size_hint,
                                         separator_color=self.titleColor if title != "" and
                                                                            title != self.msg[108] and title != self.msg[109]\
                                                                         else self.popupBackgroundColor,
-                                        auto_dismiss=auto_dismiss)
+                                        auto_dismiss=auto_dismiss))
 
         if firstCall == True:
             def __gotoPorch(instance):
                 self.displayed.form = "porchView"
                 self.displayed.options = self.porch.showFlats()
-            self.mypopup.bind(on_dismiss=__gotoPorch)
+            self.popups[0].bind(on_dismiss=__gotoPorch)
             self.popupForm = ""
-        Clock.schedule_once(self.mypopup.open, 0)
+        Clock.schedule_once(self.popups[0].open, 0)
+
+    def dismissTopPopup(self, all=False, *args):
+        """ Закрывает и удаляет самый верхний попап в стеке """
+        if len(self.popups) == 0: return
+        if not all:
+            self.popups[0].dismiss()
+            del self.popups[0]
+        else: # закрываем и удаляем вообще все попапы
+            for popup in self.popups:
+                popup.dismiss()
+            del self.popups[:]
 
     def changePorchPos(self, pos):
         """ Центровка подъезда по кнопке на джойстике """
