@@ -1,4 +1,4 @@
-![](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi3u7NW_EDbEhSIzmmRehwJH3RY0YbHx-UnnOECnD7B8ixRuaIkCjTEgCY6tbWD9ASMKPUHfqcAI35o5gH_jIpN81T5LsmiwxGAdbAo8eMy73KN4qt10TXTOIpPbKF-SpSevakS8hYZP60nw89AjZ-omRFdXyYXRpojQGUk5yixBgLh4XgCBkSuk2w9S62S/s602/win-vertical-en.png)
+![](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjNp1Y-NJCcMtNXj2L0Eg8tBYvXw_9N4cKiIJigvVmwbsSnDvCPrjWKVoHuR7ex8DoR4opPN8gsN_Ce0Ew2pqTT1yd5IAFM7Ojquv3K5MrXEeOcHVB5Gtvls9LQk2umehE3aHqnHa10BEMtL9HFQargztWuL6jx00x5aRrkQOTUFDBMAi2gfzbT2SGSwjx3/s626/win-vertical-en.png)
 
 Home of Rocket Ministry, the only cross-platform ministry app in the world.
 
