@@ -1,4 +1,4 @@
-![](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjNp1Y-NJCcMtNXj2L0Eg8tBYvXw_9N4cKiIJigvVmwbsSnDvCPrjWKVoHuR7ex8DoR4opPN8gsN_Ce0Ew2pqTT1yd5IAFM7Ojquv3K5MrXEeOcHVB5Gtvls9LQk2umehE3aHqnHa10BEMtL9HFQargztWuL6jx00x5aRrkQOTUFDBMAi2gfzbT2SGSwjx3/s626/win-vertical-en.png)
+![image](https://github.com/antorix/Rocket-Ministry/assets/9825468/e2e8a9ff-66ce-42b5-9da3-51683c1a5492)
 
 Home of Rocket Ministry, the only cross-platform ministry app in the world.
 
