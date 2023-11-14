@@ -4,11 +4,11 @@
 from sys import argv
 Devmode = 1 if "dev" in argv else 0
 
-Version = "2.10.002"
+Version = "2.10.003"
 
 """
-* Исправлен баг, при котором приложение могло падать при запуске таймера.
-* Мелкие исправления и оптимизации.
+* Сортировка контактов по времени последнего разговора.
+* Оптимизация работы с памятью.
 """
 
 import utils as ut
@@ -17,7 +17,6 @@ import os
 import json
 import shutil
 import datetime
-import _thread
 import webbrowser
 from functools import partial
 from random import random
@@ -72,9 +71,14 @@ if platform == "android":
     mActivity = PythonActivity.mActivity
     from android.storage import app_storage_path
 
-elif platform == "win" and not Devmode: # убираем консоль
-    import ctypes
-    ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+elif platform == "win":
+    import _thread
+    if not Devmode: # убираем консоль
+        import ctypes
+        ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+
+elif platform == "linux" or platform == "macosx":
+    import _thread
 
 # Классы объектов участка
 
@@ -720,7 +724,7 @@ class Report(object):
         self.lastMonth = RM.settings[2][12]
         self.reportLogLimit = 200
 
-    def saveReport(self, message="", mute=False, save=True, notify=False):
+    def saveReport(self, message="", mute=False, save=True, forceNotify=False):#notify=False):
         """ Выгрузка данных из класса в настройки, сохранение и оповещение """
         RM.settings[2] = [
             self.hours,
@@ -738,14 +742,14 @@ class Report(object):
             self.lastMonth
         ]
         if not mute:
-            RM.log(message, notify=notify)
+            RM.log(message, forceNotify=forceNotify)#RM.log(message, notify=notify)
             date = time.strftime("%d.%m", time.localtime()) + "." + str(int(time.strftime("%Y", time.localtime())) - 2000)
             time2 = time.strftime("%H:%M:%S", time.localtime())
             RM.resources[2].insert(0, f"\n{date} {time2}: {message}")
         if save: RM.save(silent=True)
 
     def checkNewMonth(self, forceDebug=False):
-        ut.dprint(Devmode, "Определяем начало нового месяца.")
+        RM.dprint("Определяем начало нового месяца.")
         savedMonth = RM.settings[3]
         currentMonth = time.strftime("%b", time.localtime())
         if savedMonth != currentMonth or forceDebug:
@@ -826,7 +830,9 @@ class Report(object):
         if input == "(":  # start timer
             self.startTime = int(time.strftime("%H", time.localtime())) * 3600 + int(
                 time.strftime("%M", time.localtime())) * 60 + int(time.strftime("%S", time.localtime()))
-            self.saveReport(RM.msg[225], notify = (True if RM.settings[0][0] == 1 else False))
+            #self.saveReport(RM.msg[225], notify = (True if RM.settings[0][0] == 1 else False))
+            forceNotify = True if RM.settings[0][0] == 1 else False
+            self.saveReport(RM.msg[225], forceNotify=forceNotify)
 
         elif input == ")": # остановка таймера
             if self.startTime > 0:
@@ -873,13 +879,11 @@ class Report(object):
         self.checkNewMonth()
 
     def optimizeReportLog(self):
-        def __optimize(*args):
-            ut.dprint(Devmode, "Оптимизируем размер журнала отчета.")
-            if len(RM.resources[2]) > self.reportLogLimit:
-                extra = len(RM.resources[2]) - self.reportLogLimit
-                for i in range(extra):
-                    del RM.resources[2][len(RM.resources[2]) - 1]
-        _thread.start_new_thread(__optimize, ("Thread-Optimize", .1,))
+        RM.dprint("Оптимизируем размер журнала отчета.")
+        if len(RM.resources[2]) > self.reportLogLimit:
+            extra = len(RM.resources[2]) - self.reportLogLimit
+            for i in range(extra):
+                del RM.resources[2][len(RM.resources[2]) - 1]
 
     def getCurrentMonthReport(self):
         """ Выдает отчет текущего месяца """
@@ -1170,11 +1174,7 @@ class FooterButton(Button):
                 .9
             ] if RM.mode == "light" else RM.standardTextColor)
 
-    def on_press_(self):
-        RM.btn[self.parentIndex].background_normal = RM.buttonPressedBG
-
-    def on_release(self):
-        if self.parentIndex is not None: RM.btn[self.parentIndex].on_release()
+    def on_release(self): RM.btn[self.parentIndex].on_release()
 
 class TableButton(Button):
     """ Кнопки в шапке таблицы и ниже на некоторых формах """
@@ -1344,7 +1344,9 @@ class PopupNoAnimation(Popup):
     """ Попап, в котором отключена анимация при закрытии """
     def __init__(self, **kwargs):
         super(PopupNoAnimation, self).__init__(**kwargs)
-        if RM.specialFont is not None: self.title_font = RM.specialFont
+        try:
+            if RM.specialFont is not None: self.title_font = RM.specialFont
+        except: pass
 
     def open(self, *_args, **kwargs):
         if self._is_open: return
@@ -1925,7 +1927,7 @@ class DatePicker(BoxLayout):
 
     def pick(self, instance=None):
         def do(*args):
-            RM.dismissTopPopup()#RM.mypopup.dismiss()
+            RM.dismissTopPopup()
             RM.multipleBoxEntries[1].text = str(self.date)
         Clock.schedule_once(do, RM.onClickFlash)
 
@@ -1979,12 +1981,12 @@ class RMApp(App):
             "ka": ["ქართული", self.differentFont],
             "hy": ["Հայերեն", self.differentFont],
         }
-
+        self.interface = AnchorLayout(anchor_x="center",
+                                      anchor_y="top")  # форма высшего уровня, поднимается над клавиатурой
         self.houses, self.settings, self.resources = self.initializeDB()
         self.load(allowSave=False)
         self.setParameters()
         self.setTheme()
-        self.interface = AnchorLayout(anchor_x="center", anchor_y="top") # форма высшего уровня, поднимается над клавиатурой
         self.displayed = DisplayedList()
         self.createInterface()
         self.terPressed()
@@ -1993,6 +1995,7 @@ class RMApp(App):
         if self.update(): self.popup(message=self.msg[310], dismiss=False)
         self.rep.checkNewMonth()
         self.rep.optimizeReportLog()
+        self.save(backup=True)
         return self.interface
 
     # Подготовка переменных
@@ -2065,9 +2068,6 @@ class RMApp(App):
             "Яндекс" if self.language == "ru" or self.language == "uk" else "Yandex",
             "2ГИС" if self.language == "ru" or self.language == "uk" else "2GIS"
         ]
-        self.rep = Report() # инициализация отчета
-
-        register('default_font', 'fontello.ttf', 'fontello.fontd')  # шрифты с иконками
 
         if not reload:  # при мягкой перезагрузке все, что ниже, не перезагружается (сохраняется)
             self.contactsEntryPoint = self.searchEntryPoint = self.popupEntryPoint = 0 # различные переменные
@@ -2109,7 +2109,6 @@ class RMApp(App):
             if self.desktop:
                 from kivy.config import Config
                 Config.set('input', 'mouse', 'mouse, disable_multitouch')
-                #Config.set('input', 'mouse', 'mouse, enable_multitouch')
                 Config.write()
                 self.title = 'Rocket Ministry'
                 Window.icon = "icon.png"
@@ -2127,7 +2126,7 @@ class RMApp(App):
                 Window.bind(on_drop_file=__dropFile)
                 def __close(*args):
                     self.save(export=True)
-                    ut.dprint(Devmode, "Выход из программы.")
+                    self.dprint("Выход из программы.")
                     self.checkOrientation(width=args[0].size[0], height=args[0].size[1])
                 Window.bind(on_request_close=__close)
                 Window.bind(on_resize=self.checkOrientation)
@@ -2136,6 +2135,8 @@ class RMApp(App):
                 try: plyer.orientation.set_portrait()
                 except: pass
 
+        self.rep = Report()  # инициализация отчета
+        register('default_font', 'fontello.ttf', 'fontello.fontd')  # шрифты с иконками
         rad = 37 # коэффициент закругления овальных кнопок, которое рассчитывается с учетом размера экрана
         self.buttonRadius = (Window.size[0] * Window.size[1]) / (Window.size[0] * rad)
         self.desktopRadK = 1.8 # коэффициент усиления радиуса для некоторых кнопок на ПК
@@ -2333,10 +2334,10 @@ class RMApp(App):
             try:
                 with open("theme.ini", mode="r") as file: self.theme = file.readlines()[0]
             except:
-                ut.dprint(Devmode, "Не удалось прочитать файл theme.ini.")
+                self.dprint("Не удалось прочитать файл theme.ini.")
                 self.themeOverriden = False
             else:
-                ut.dprint(Devmode, "Тема переопределена из файла theme.ini.")
+                self.dprint("Тема переопределена из файла theme.ini.")
                 self.themeOverriden = True
         else: self.themeOverriden = False
 
@@ -2852,16 +2853,16 @@ class RMApp(App):
 
         except: # в случае ошибки пытаемся восстановить последнюю резервную копию
             if self.restore < 10:
-                ut.dprint(Devmode, f"Файл базы данных поврежден, пытаюсь восстановить резервную копию {self.restore}.")
+                self.dprint(f"Файл базы данных поврежден, пытаюсь восстановить резервную копию {self.restore}.")
                 result = self.backupRestore(restoreNumber=self.restore, allowSave=False)
                 if result != False:
-                    ut.dprint(Devmode, "Резервная копия восстановлена.")
+                    self.dprint("Резервная копия восстановлена.")
                     self.restore += 1
                     self.restart("soft")
-                    self.save(backup=False)
+                    self.save()
                     self.updateList()
                 else:
-                    ut.dprint(Devmode, "Резервных копий больше нет.")
+                    self.dprint("Резервных копий больше нет.")
                     self.restore = 10
             else:
                 self.popup("emergencyExport", title=self.msg[9], message=self.msg[10])
@@ -3179,14 +3180,14 @@ class RMApp(App):
             sortTypes = [
                 "[u]"+self.msg[21]+"[/u]" if self.settings[0][4] == "и" else self.msg[21], # имя
                 "[u]"+self.msg[33]+"[/u]" if self.settings[0][4] == "а" else self.msg[33], # адрес
-                #"[u]"+self.msg[30]+"[/u]" if self.settings[0][4] == "д" else self.msg[30] # дата последней встречи
+                "[u]"+self.msg[30]+"[/u]" if self.settings[0][4] == "д" else self.msg[30] # дата последней встречи
             ]
             for i in range(len(sortTypes)):
                 btn = SortListButton(text=sortTypes[i])
                 def __resortCons(instance=None):
                     if instance.text == sortTypes[0]:   self.settings[0][4] = "и"
                     elif instance.text == sortTypes[1]: self.settings[0][4] = "а"
-                    #elif instance.text == sortTypes[2]: self.settings[0][4] = "д"
+                    elif instance.text == sortTypes[2]: self.settings[0][4] = "д"
                     #elif instance.text == sortTypes[3]: self.settings[0][4] = "з"
                     self.save()
                     self.conPressed()
@@ -3304,6 +3305,10 @@ class RMApp(App):
 
                 if input == "report000":
                     self.rep.checkNewMonth(forceDebug=True)
+
+                elif input == "load":
+                    self.load()
+                    self.restart(mode="soft")
 
                 elif input == "file000":
                     def __handleSelection(selection):
@@ -4323,7 +4328,7 @@ class RMApp(App):
 
         elif self.settingsPanel.current_tab.text == self.msg[54]:
             self.save()
-            self.log(self.msg[56])
+            self.popup(title=self.msg[203], message=self.msg[56])
 
         elif self.settingsPanel.current_tab.text == self.msg[55]:
             self.resources[0][0] = self.inputBoxEntry.text.strip()
@@ -4502,7 +4507,9 @@ class RMApp(App):
 
     def flatView(self, call=True, instance=None):
         """ Вид квартиры - список записей посещения """
-        if "." in str(self.flat.number): return # страховка от случайного захода в удаленную квартиру
+        try:
+            if "." in str(self.flat.number): return # страховка от случайного захода в удаленную квартиру
+        except: return
         self.updateMainMenuButtons()
         number = " " if self.flat.number == "virtual" else self.flat.number + " " # прячем номера отдельных контактов
         flatPrefix = f"{self.msg[214]} " if "подъезд" in self.porch.type else ""
@@ -5146,16 +5153,27 @@ class RMApp(App):
 
     # Вспомогательные функции
 
-    def log(self, message="", timeout=2, notify=False):
-        """ Displaying and logging to file important system messages """
+    """def log(self, message="", timeout=2, notify=False): # более новая версия, но стала глючить на некоторых устройствах
+        # Displaying and logging to file important system messages
         if Devmode: print(message)
         elif self.desktop or notify:
-            icon = "" if not self.desktop else "icon.ico"
-            try: plyer.notification.notify( app_name="Rocket Ministry", title="Rocket Ministry", app_icon=icon,
-                                            ticker="Rocket Ministry", message=message, timeout=timeout)
-            except: pass
+            icon = "icon.ico" if self.desktop else ""
+            try: plyer.notification.notify(app_name="Rocket Ministry", title="Rocket Ministry", app_icon=icon,
+                                      ticker="Rocket Ministry", message=message, timeout=timeout)
+            except: plyer.notification.notify(toast=True, message=message)
         else:
+            plyer.notification.notify(toast=True, message=message)"""
+
+    def log(self, message="", title="Rocket Ministry", timeout=2, forceNotify=False): # временно взято из версии 2.6.4
+        """ Displaying and logging to file important system messages """
+        if Devmode: self.dprint(message)
+        elif not self.desktop and not forceNotify:
             plyer.notification.notify(toast=True, message=message)
+        else:
+            icon = "" if not self.desktop else "icon.ico"
+            try: plyer.notification.notify(app_name="Rocket Ministry", title=title, app_icon=icon,
+                                      ticker="Rocket Ministry", message=message, timeout=timeout)
+            except: plyer.notification.notify(toast=True, message=message)
 
     def addHouse(self, houses, input, type=True, forceUpper=False):
         """ Adding new house """
@@ -5343,6 +5361,7 @@ class RMApp(App):
                 if result == False:
                     self.popup(title=self.msg[44], message=self.msg[45])
                 else:
+                    self.save()
                     self.restart("soft")
                     self.terPressed()
                     self.popup(title=self.msg[44], message=self.msg[258] % self.fileDates[self.fileToRestore])
@@ -5574,13 +5593,13 @@ class RMApp(App):
                 def __quickNotAtHome(instance):
                     date = time.strftime("%d", time.localtime())
                     month = self.monthName()[5]
-                    timeCur = time.strftime("%H:%M:%S", time.localtime())
+                    timeCur = time.strftime("%H:%M", time.localtime())
                     newNote = f"{date} {month} {timeCur} {self.msg[206][0].lower()+self.msg[206][1:]}\n" + self.flat.note
                     self.flat.editNote(newNote)
                     self.save()
                     if self.porch.floors(): self.clickedInstance.colorize()
                     else: self.porchView()
-                    self.dismissTopPopup()#.dismiss()
+                    self.dismissTopPopup()
                     if self.resources[0][1][4] == 0:
                         self.popup(title=self.msg[247], message=self.msg[205] % self.msg[206])
                         self.resources[0][1][4] = 1
@@ -5783,13 +5802,12 @@ class RMApp(App):
 
             self.fileDates = [] # собираем файлы резервных копий
             try:
-                files = [f for f in os.listdir(self.backupFolderLocation) if
-                     os.path.isfile(os.path.join(self.backupFolderLocation, f))]
+                files = [f for f in os.listdir(self.backupFolderLocation) if os.path.isfile(os.path.join(self.backupFolderLocation, f))]
+                files.sort(reverse=True)
             except:
                 self.popup(title=self.msg[135], message=self.msg[257]) # файлов нет, выходим
                 return
 
-            files.sort(reverse=True)
             for file in files:
                 self.fileDates.append(str("{:%d.%m.%Y, %H:%M:%S}".format(
                     datetime.datetime.strptime(time.ctime((os.path.getmtime(self.backupFolderLocation + file))),
@@ -5922,9 +5940,9 @@ class RMApp(App):
                     for col in range(len(languages)):
                         languages[col].append(row[col].strip())
         except:
-            ut.dprint(Devmode, "CSV-файл с локализациями не найден.")
+            self.dprint("CSV-файл с локализациями не найден.")
         else:
-            ut.dprint(Devmode, "CSV-файл с локализациями найден, обновляю языковые файлы.")
+            self.dprint("CSV-файл с локализациями найден, обновляю языковые файлы.")
             with open("lpath.ini", encoding='utf-8', mode="r") as f: lpath = f.read()
             for i in range(len(self.languages.keys())):
                 __generate(f"{lpath}\\{list(self.languages.keys())[i]}.lang", i)
@@ -5935,14 +5953,15 @@ class RMApp(App):
         """ Импорт данных из буфера обмена либо файла """
         self.save(silent=True)
         if file is None:
-            ut.dprint(Devmode, "Пытаюсь загрузить базу по ссылке.")
+            self.dprint("Пытаюсь загрузить базу по ссылке.")
             success = self.load(clipboard=link)
         else:
-            ut.dprint(Devmode, "Пытаюсь загрузить базу из файла.")
+            self.dprint("Пытаюсь загрузить базу из файла.")
             success = self.load(forced=True, DataFile=file, silent=True) # сначала пытаемся загрузить текстовый файл
             if success == False: # файл не текстовый, пробуем загрузить Word-файл
                 self.popup(message=self.msg[208])
         if success == True:
+            self.save()
             self.restart("soft")
             self.terPressed()
             Clock.schedule_once(lambda x: self.popup(message=self.msg[209]), 0.2)
@@ -6264,7 +6283,7 @@ class RMApp(App):
         if DataFile is None: DataFile = self.dataFile
         self.popupForm = ""
         if os.path.exists("temp"): os.remove("temp")
-        ut.dprint(Devmode, "Загружаю буфер.")
+        self.dprint("Загружаю буфер.")
 
         # Замена data.jsn файлом с телефона - недокументированная функция, только на русском языке
 
@@ -6284,7 +6303,7 @@ class RMApp(App):
         if clipboard is not None:  # берем буфер обмена
 
             badURLError = self.msg[243]
-            ut.dprint(Devmode, "Смотрим буфер обмена.")
+            self.dprint("Смотрим буфер обмена.")
             clipboard = str(clipboard).strip()
 
             if "drive.google.com" in clipboard: # получена ссылка на Google Drive
@@ -6302,12 +6321,12 @@ class RMApp(App):
                 try:
                     clipboard = clipboard[clipboard.index("[\"Rocket Ministry"):]
                     with open("temp", "w") as file: file.write(clipboard)
-                    ut.dprint(Devmode, "Содержимое буфера обмена записано во временный файл.")
+                    self.dprint("Содержимое буфера обмена записано во временный файл.")
                 except: return False
 
             try:
                 with open("temp", "r") as file: buffer = json.load(file)
-                ut.dprint(Devmode, "Буфер получен из буфера обмена.")
+                self.dprint("Буфер получен из буфера обмена.")
             except: return badURLError
 
         elif forced:  # импорт по запросу с конкретным файлом
@@ -6323,83 +6342,61 @@ class RMApp(App):
                     with open("temp", "r") as file: buffer = json.load(file)
                 else:
                     with open(DataFile, "r") as file: buffer = json.load(file)
-                ut.dprint(Devmode, "Буфер получен из импортированного файла.")
+                self.dprint("Буфер получен из импортированного файла.")
             except:
                 if not silent: self.popup(message=self.msg[244])
                 return False
 
         else:  # обычная загрузка
             if os.path.exists(self.userPath + DataFile):
-                size = os.path.getsize(self.userPath + DataFile)  # файл меньше заданного порога не загружаем
-                if size < self.initialDBSize:
-                    ut.dprint(Devmode, "Файл данных найден, но пустой. Пытаюсь восстановить резервную копию.")
-                    if self.backupRestore(restoreWorking=True, allowSave=allowSave) == True:
-                        ut.dprint(Devmode, "База восстановлена из резервной копии.")
-                        if allowSave:
-                            self.save(backup=True) # успешный результат с загрузкой копии и выход
-                            ut.dprint(Devmode, "База сохранена с резервированием1.")
+                try:
+                    with open(self.userPath + DataFile, "r") as file: buffer = json.load(file)
+                except:
+                    self.dprint("Файл данных найден, но поврежден. Пытаюсь восстановить резервную копию.")
+                    if self.backupRestore(restoreNumber=0, allowSave=allowSave):
+                        self.dprint("База восстановлена из резервной копии 1.")
                         return True
-                    else: ut.dprint(Devmode, "Не удалось восстановить непустую резервную копию (ее нет?).")
-                else:
-                    try:
-                        with open(self.userPath + DataFile, "r") as file: buffer = json.load(file)
-                    except:
-                        ut.dprint(Devmode, "Файл данных найден, но он поврежден. Пытаюсь восстановить резервную копию.")
-                        if self.backupRestore(restoreWorking=True, allowSave=allowSave) == True:
-                            ut.dprint(Devmode, "База восстановлена из резервной копии.")
-                            if allowSave:
-                                self.save(backup=True)  # успешный результат с загрузкой копии и выход
-                                ut.dprint(Devmode, "База сохранена с резервированием2.")
-                            return True
-                        else: ut.dprint(Devmode, "Не удалось восстановить непустую резервную копию (ее нет?).")
-                    else: ut.dprint(Devmode, "Буфер получен из файла data.jsn в стандартном местоположении.")
+                    else: self.dprint("Не удалось восстановить непустую резервную копию (ее нет?).")
+                else: self.dprint("Буфер получен из файла data.jsn в стандартном местоположении.")
             else:
-                ut.dprint(Devmode, "Файл базы данных %s не найден, пытаюсь восстановить резервную копию." % DataFile)
-                if self.backupRestore(restoreWorking=True, allowSave=allowSave) == True:
-                    ut.dprint(Devmode, "База восстановлена из резервной копии.")
-                    if allowSave:
-                        self.save(backup=True)  # успешный результат с загрузкой копии и выход
-                        ut.dprint(Devmode, "База сохранена с резервированием3.")
+                self.dprint("Файл данных не найден, пытаюсь восстановить резервную копию.")
+                if self.backupRestore(restoreNumber=0, allowSave=allowSave):
+                    self.dprint("База восстановлена из резервной копии 2.")
                     return True
-                else: ut.dprint(Devmode, "Не удалось восстановить непустую резервную копию (ее нет?).")
+                else: self.dprint("Не удалось восстановить последнюю резервную копию (ее нет?).")
 
         # Буфер получен, читаем из него
 
-        try:
-            self.save(backup=True)
-            if len(buffer) == 0: ut.dprint(Devmode, "Создаю новую базу.")
+        if len(buffer) == 0: self.dprint("Создаю новую базу.")
 
-            elif "Rocket Ministry application data file." in buffer[0]:
-                singleTer = 1 if "Single territory export" in buffer[0] else 0
-                ut.dprint(Devmode, "База определена, контрольная строка совпадает.")
-                del buffer[0]
-                result = self.loadOutput(buffer, singleTer) # ЗАГРУЗКА ИЗ БУФЕРА
-                if not result:
-                    ut.dprint(Devmode, "Ошибка импорта.")
-                    self.backupRestore(restoreWorking=True, allowSave=allowSave)
-                    ut.dprint(Devmode, "База восстановлена из резервной копии.")
-                else:
-                    ut.dprint(Devmode, "База успешно загружена.")
-                    if allowSave:
-                        self.save()  # успешный результат
-                        ut.dprint(Devmode, "База сохранена без резервирования.")
+        elif "Rocket Ministry application data file." in buffer[0]:
+            singleTer = 1 if "Single territory export" in buffer[0] else 0
+            self.dprint("База определена, контрольная строка совпадает.")
+            del buffer[0]
+            result = self.loadOutput(buffer, singleTer) # ЗАГРУЗКА ИЗ БУФЕРА, RESULT УКАЗЫВАЕТ НА УСПЕХ/НЕУСПЕХ
+            if not result:
+                self.dprint("Ошибка загрузки из буфера.")
+                if self.backupRestore(restoreNumber=0, allowSave=allowSave):
+                    self.dprint("База восстановлена из резервной копии 3.")
                     return True
             else:
-                ut.dprint(Devmode, "База получена, но контрольная строка не совпадает.")
-                if clipboard is None and not forced:
-                    ut.dprint(Devmode, "Восстанавливаю резервную копию.")
-                    self.backupRestore(restoreWorking=True)
-        except:
-            ut.dprint(Devmode, "Ошибка проверки загруженного буфера.")
-            return False
+                self.dprint("База успешно загружена.")
+                return True
+        else:
+            self.dprint("База получена, но контрольная строка в файле не совпадает.")
+            if clipboard is None and not forced:
+                self.dprint("Восстанавливаю резервную копию.")
+                if self.backupRestore(restoreNumber=0):
+                    self.dprint("База восстановлена из резервной копии 4.")
+                    return True
 
-    def backupRestore(self, silent=True, allowSave=True, delete=False, restoreNumber=None, restoreWorking=False):
+    def backupRestore(self, silent=True, allowSave=True, delete=False, restoreNumber=None):
         """ Восстановление файла из резервной копии """
 
         try:
             files = [f for f in os.listdir(self.backupFolderLocation) if os.path.isfile(os.path.join(self.backupFolderLocation, f))]
         except:
-            ut.dprint(Devmode, "Не найдена папка резервных копий.")
+            self.dprint("Не найдена папка резервных копий.")
             return
 
         fileDates = []
@@ -6412,93 +6409,95 @@ class RMApp(App):
             files.sort(reverse=True)
             fileDates.sort(reverse=True)
             try: self.load(forced=True, allowSave=allowSave, DataFile=self.backupFolderLocation + files[restoreNumber])
-            except: return False
-            else: return fileDates[restoreNumber]  # в случае успеха возвращает дату и время восстановленной копии
-
-        elif restoreWorking:  # восстановление самой последней непустой копии
-            files.sort(reverse=True)
-            fileDates.sort(reverse=True)
-            for i in range(len(files)):
-                size = os.path.getsize(self.backupFolderLocation + files[i])
-                if size > self.initialDBSize:
-                    try:
-                        self.load(forced=True, allowSave=allowSave, DataFile=self.backupFolderLocation + files[i])
-                    except:
-                        ut.dprint(Devmode, "Непустая резервная копия не найдена.")
-                        return False
-                    else:
-                        ut.dprint(Devmode, "Успешно загружена последняя непустая резервная копия.")
-                        if not silent: self.popup(message=self.msg[258] % fileDates[i])
-                        return True
+            except:
+                message = f"Не удалось восстановить резервную копию № {restoreNumber}: {files[restoreNumber]}"
+                if silent: self.dprint(message)
+                else: self.popup(message=message)
+                return False
+            else:
+                message = f"Успешно восстановлена резервная копия № {restoreNumber}: {files[restoreNumber]}"
+                if silent: self.dprint(message)
+                else: self.popup(message=message)
+                return fileDates[restoreNumber]  # в случае успеха возвращает дату и время восстановленной копии
 
         # Если выбран режим удаления лишних копий
 
         elif delete == True:
-            def __delete(*args):
-                ut.dprint(Devmode, "Обрабатываем резервные копии.")
-                limit = 10
+            def __cut(*args):
+                files.sort()
+                self.dprint("Обрабатываем резервные копии.")
+                limit = 19 # -1, потому что сразу после обрезки создается новая резервная копия на старте
                 if len(files) > limit:  # лимит превышен, удаляем
                     extra = len(files) - limit
                     for i in range(extra):
+                        self.dprint(f"Удаляю лишний резервный файл: {files[i]}")
                         os.remove(self.backupFolderLocation + files[i])
-            _thread.start_new_thread(__delete, ("Thread-Delete", 0,))
+            if self.desktop: _thread.start_new_thread(__cut, ("Thread-Cut", 0,))
+            else: __cut()
 
     def save(self, backup=False, silent=True, export=False):
         """ Saving database to JSON file """
 
-        def __save(*args):
-            output = self.getOutput()
+        output = self.getOutput()
 
-            # Сначала резервируем
+        # Сначала резервируем
 
-            if backup:
-                if os.path.exists(self.userPath + self.dataFile):
-                    if not os.path.exists(self.backupFolderLocation):
-                        try: os.makedirs(self.backupFolderLocation)
-                        except IOError:
-                            if not silent: self.log(self.msg[248])
-                            return
-                    savedTime = time.strftime("%Y-%m-%d_%H%M%S", time.localtime())
-                    with open(self.backupFolderLocation + "data_" + savedTime + ".jsn", "w") as newbkfile:
-                        json.dump(output, newbkfile)
+        if backup:
+            if os.path.exists(self.userPath + self.dataFile):
+                if not os.path.exists(self.backupFolderLocation):
+                    try: os.makedirs(self.backupFolderLocation)
+                    except IOError:
+                        if not silent: self.log(self.msg[248])
+                        return
+                savedTime = time.strftime("%Y-%m-%d_%H%M%S", time.localtime())
+                while 1:
+                    try:
+                        with open(self.backupFolderLocation + "data_" + savedTime + ".jsn", "w") as newbkfile:
+                            json.dump(output, newbkfile)
+                    except:
+                        self.dprint("Не удалось создать резервную копию! Пробуем еще раз...")
+                        time.sleep(.1)
+                    else:
+                        self.dprint("Создана резервная копия базы данных.")
                         if not silent: self.popup(message=self.msg[249])
-                        ut.dprint(Devmode, "Выполнена резервная копия из self.save.")
+                        break
 
-            # Сохраняем
+            else: print("При попытке резервирования не найден существующий файл данных.")
 
-            while 1:
-                try:
-                    with open(self.userPath + self.dataFile, "w") as file: json.dump(output, file)
-                except:
-                    pass#ut.dprint(Devmode, "Ошибка записи в self.save!")
-                else:
-                    #ut.dprint(Devmode, "База успешно сохранена из self.save.")
-                    if not silent: self.popup(message=self.msg[250])
-                    break
+        # Сохраняем
 
-            # Экспорт в файл на ПК, если найден файл sync.ini, где прописан путь
+        while 1:
+            try:
+                with open(self.userPath + self.dataFile, "w") as file:
+                    json.dump(output, file)
+            except:
+                self.dprint("Ошибка записи базы! Пробуем еще раз...")
+                time.sleep(.05)
+            else:
+                self.dprint("База успешно сохранена.")
+                if not silent: self.popup(message=self.msg[250])
+                break
 
-            if export and not Devmode and os.path.exists("sync.ini"):
-                ut.dprint(Devmode, "Найден sync.ini, экспортируем.")
-                try:
-                    with open("sync.ini", encoding='utf-8', mode="r") as f: filename = f.read()
-                    if ".doc" in filename:  # если в расширении файла есть .doc, создаем Word-файл
-                        try:
-                            from docx import Document
-                        except:
-                            from subprocess import check_call
-                            from sys import executable
-                            check_call([executable, '-m', 'pip', 'install', 'python-docx'])
-                            from docx import Document
-                        doc = Document()
-                        doc.add_paragraph(str(json.dumps(output)))
-                        doc.save(filename)
-                    else:  # иначе пишем в простой текст
-                        with open(filename, "w") as file: json.dump(output, file)
-                except: ut.dprint(Devmode, "Ошибка записи в файл.")
+        # Экспорт в файл на ПК, если найден файл sync.ini, где прописан путь
 
-        if export: __save()
-        else: _thread.start_new_thread(__save, ("Thread-Save", .01,))
+        if export and not Devmode and os.path.exists("sync.ini"):
+            self.dprint("Найден sync.ini, экспортируем.")
+            try:
+                with open("sync.ini", encoding='utf-8', mode="r") as f: filename = f.read()
+                if ".doc" in filename:  # если в расширении файла есть .doc, создаем Word-файл
+                    try:
+                        from docx import Document
+                    except:
+                        from subprocess import check_call
+                        from sys import executable
+                        check_call([executable, '-m', 'pip', 'install', 'python-docx'])
+                        from docx import Document
+                    doc = Document()
+                    doc.add_paragraph(str(json.dumps(output)))
+                    doc.save(filename)
+                else:  # иначе пишем в простой текст
+                    with open(filename, "w") as file: json.dump(output, file)
+            except: self.dprint("Ошибка записи в файл.")
 
     def getOutput(self, ter=None):
         """ Возвращает строку со всеми данными программы, которые затем либо сохраняются локально, либо экспортируются"""
@@ -6518,13 +6517,13 @@ class RMApp(App):
         result = False
 
         if not self.desktop: return result  # мобильная версия не проверяет обновления
-        else: ut.dprint(Devmode, "Проверяем обновления настольной версии.")
+        else: self.dprint("Проверяем обновления настольной версии.")
 
         try:  # подключаемся к GitHub
             for line in requests.get("https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/version"):
                 newVersion = line.decode('utf-8').strip()
         except:
-            ut.dprint(Devmode, "Не удалось подключиться к серверу.")
+            self.dprint("Не удалось подключиться к серверу.")
             return result
         else:  # успешно подключились, сохраняем сегодняшнюю дату последнего обновления (пока не используется)
 
@@ -6539,15 +6538,15 @@ class RMApp(App):
                 print("no new version found")
                 return False"""
 
-            ut.dprint(Devmode, "Версия на сайте: " + newVersion)
+            self.dprint("Версия на сайте: " + newVersion)
             today = str(datetime.datetime.strptime(time.strftime('%Y-%m-%d'), "%Y-%m-%d"))
             today = today[0: today.index(" ")]
             self.settings[1] = today
-            self.save()
+            #self.save()
 
         if newVersion > Version:
             def __update(threadName, delay):
-                ut.dprint(Devmode, "Найдена новая версия, скачиваем.")
+                self.dprint("Найдена новая версия, скачиваем.")
                 response = requests.get("https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip")
                 import tempfile
                 import zipfile
@@ -6562,12 +6561,12 @@ class RMApp(App):
                     destination = file_name
                     if os.path.isfile(source):
                         try: shutil.move(source, destination)
-                        except: ut.dprint(Devmode, "Не удалось переместить файл %s." % source)
+                        except: self.dprint("Не удалось переместить файл %s." % source)
                 os.remove(file)
                 shutil.rmtree(downloadedFolder)
             _thread.start_new_thread(__update, ("Thread-Update", 0,))
             result = True
-        else: ut.dprint(Devmode, "Обновлений нет.")
+        else: self.dprint("Обновлений нет.")
 
         return result
 
@@ -6698,7 +6697,7 @@ class RMApp(App):
         output = self.getOutput(ter=ter)
         buffer = json.dumps(output)
 
-        if clipboard: # копируем базу в буфер обмена - не используется
+        if clipboard: # копируем базу в буфер обмена - нигде не используется, но возможно
             try:
                 s = str(buffer)
                 Clipboard.copy(s)
@@ -6714,7 +6713,7 @@ class RMApp(App):
                 filename = folder + f"/{self.msg[251] if ter==None else ter.title}.txt"
                 with open(filename, "w") as file: json.dump(output, file)
             except:
-                ut.dprint(Devmode, "Экспорт в файл не удался.")
+                self.dprint("Экспорт в файл не удался.")
                 if folder != "": self.popup(message=self.msg[308])
             else: self.popup(message=self.msg[252] % filename)
 
@@ -6732,6 +6731,10 @@ class RMApp(App):
                 if not silent: self.popup(message=self.msg[255])
             else:
                 if not silent: self.popup(message=self.msg[256] % path)
+
+    def dprint(self, text):
+        """ Печать только в режиме разработчика """
+        if Devmode: print(text)
 
 RM = RMApp()
 

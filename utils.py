@@ -140,10 +140,6 @@ def timeFloatToHHMM(hours=None, delta=None):
         result = delta
     return result
 
-def dprint(devmode, text):
-    """ Печать только в режиме разработчика """
-    if devmode: print(text)
-
 def numberize(line):
     """ Убирает из слова все нечисловые символы, чтобы получилось отсортировать по номеру """
     result = 0
