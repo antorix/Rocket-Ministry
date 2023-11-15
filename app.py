@@ -11,19 +11,6 @@ Version = "2.10.003"
 * Оптимизация работы с памятью.
 """
 
-import utils as ut
-import time
-import os
-import json
-import shutil
-import datetime
-import webbrowser
-from functools import partial
-from random import random
-from copy import copy, deepcopy
-from iconfonts import icon
-from iconfonts import register
-
 try:
     from kivy.app import App
     import plyer
@@ -38,6 +25,19 @@ except:
     from kivy.app import App
     import plyer
     import requests
+
+import utils as ut
+import time
+import os
+import json
+import shutil
+import datetime
+import webbrowser
+from functools import partial
+from random import random
+from copy import copy, deepcopy
+from iconfonts import icon
+from iconfonts import register
 
 from kivy import platform
 from kivy.uix.label import Label
