@@ -48,7 +48,7 @@ credit: %s
 Saved changes: hours: %s, %sBS: %d
 Service Year
 Yes
-
+During the previous launch, the application crashed due to a memory write error. If this error occurs frequently, please contact the developer via the email address shown in the settings of this application and on the Google Play Store.
 Settings
 Settings saved
 Data
@@ -82,9 +82,9 @@ You are creating a standalone contact not associated with any territory. People 
 Congratulations, you have your first interested person! He/she will be automatically added to the Contacts screen due to the light-green color. Also, you can see the total amount of interested ones in Territories screen.
 Visit info:
 New search
-
+m
+f
 Capitalize the first word of a sentence
-
 All fields should be filled with numerical values. The number of floors should be more than 0. The last apartment of the range should have the number no less than the first one.
 Periods and commas are not allowed!
 Both values should be numerical, and the first one should not be greater than the second one!
@@ -215,7 +215,7 @@ Add the first %s
 You cannot shrink floors in this block anymore, because the last apartment with content will disappear! But you can adjust the apartments and floors layout on the "%s" screen.
 A non-standard relation between apartments and floors requested. We had to add %d apartment(s) that you now have to manually delete on corresponding floors. To do this, click on the button [b]%s[/b] in the details of [u]any apartment on this floor[/u].
 Service time has started! To finish your service session, just click on the timer button once again. The time will be added to your report automatically. You can disable the timer feature in the settings!
-
+Check for updates:
 Start ministry?
 Add the first call
 It's a new month! Have you turned in your report already?
@@ -246,8 +246,8 @@ It can be a list of random words, even addresses in different places.
 Loading database
 Tip
 Backup copy creation failed!
-Backup copy created.
-Database saved.
+Add numbers with non-numeric characters
+Some apartment numbers contain non-numeric characters, so the grid view cannot be enabled!
 Rocket Ministry Data
 Data successfully exported to file %s.
 Save failed!
@@ -322,5 +322,3 @@ Full reset of all program data and settings, including backups.
 Save all program data, including settings, into a file. It is recommended to upload this file to Google Drive.
 Your link
 To import data, insert the share link to a Google Drive file. This link should have public access rights:
-Add numbers with non-numeric characters
-Some apartment numbers contain non-numeric characters, so the grid view cannot be enabled!

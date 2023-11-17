@@ -48,7 +48,7 @@ crédito: %s
 Cambios guardados: horas: %s, %sEB: %d
 Año de Serv.
 si
-
+Durante el lanzamiento anterior, la aplicación falló debido a un error de escritura en la memoria. Si este error ocurre con frecuencia, comuníquese con el desarrollador a través de la dirección de correo electrónico que se muestra en la configuración de esta aplicación y en Google Play Store.
 Ajustes
 Ajustes guardados
 Datos
@@ -82,9 +82,9 @@ Está creando un contacto independiente no asociado a ningún territorio. Las pe
 Enhorabuena, ¡ya tiene a su primer interesado! Se añadirá automáticamente a la pantalla de Contactos gracias a su color verde claro. Además, podrá ver la cantidad total de interesados en la pantalla Territorios.
 Informacion de la visita:
 Nueva búsqueda
-
+m
+f
 Poner en mayúscula la primera palabra de una oración
-
 Todos los campos deben rellenarse con valores numéricos. El número de pisos debe ser superior a 0. El último apartamento del rango debe tener el número no inferior al primero.
 !Puntos y comas no están permitidos!
 ¡Ambos valores deben ser numéricos, y el primero no debe ser mayor que el segundo!
@@ -215,7 +215,7 @@ Agregar el primer %s
 Ya no puede reducir pisos en este bloque, ¡porque el último apartamento con contenido desaparecerá! Pero puede cambiar el rango de números de apartamentos o el número de pisos en la pantalla "%s".
 Se ha solicitado una relación no estándar entre apartamentos y pisos. Tuvimos que añadir %d apartamento(s) que ahora tiene que eliminar manualmente en los pisos correspondientes. Para ello, haga clic en el botón [b]%s[/b] en los detalles de [u]cualquier apartamento en este piso[/u].
 El tiempo de servicio ha comenzado. Para finalizar su sesión de servicio, sólo tiene que volver a hacer clic en el botón del cronómetro. El tiempo se añadirá automáticamente a su informe. ¡Puedes desactivar la función de cronómetro en la configuración!
-
+Revisa actualizaciones:
 Empezar ministerio?
 Añadir la primera llamada
 ¡Es un nuevo mes! ¿Ya ha entregado su informe?
@@ -246,8 +246,8 @@ Puede ser una lista de palabras aleatorias, incluso direcciones de distintos lug
 Cargando base de datos
 Consejo
 ¡Fallo en la creación de la copia de seguridad!
-Copia de seguridad creada.
-Base de datos guardada.
+Sumar números con caracteres no numéricos
+Algunos números de apartamentos contienen caracteres no numéricos, por lo que no se puede habilitar la vista de cuadrícula.
 Datos de Rocket Ministry
 Datos exportados correctamente al archivo %s.
 ¡Guardar falló!
@@ -322,5 +322,3 @@ Restablecimiento completo de todos los datos y configuraciones, incluidas las co
 Guarde todos los datos del programa, incluida la configuración, en un archivo. Se recomienda cargar este archivo en Google Drive.
 Su enlace
 Para importar datos, inserte el enlace compartido a un archivo de Google Drive. El enlace debe ser público:
-Sumar números con caracteres no numéricos
-Algunos números de apartamentos contienen caracteres no numéricos, por lo que no se puede habilitar la vista de cuadrícula.

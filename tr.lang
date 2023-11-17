@@ -48,7 +48,7 @@ kredi: %s
 Değişiklikler kaydedildi: saatler: %s, %stetkik: %d
 Hizmet yılı
 evet
-
+Önceki başlatma sırasında uygulama, belleğe yazma hatası nedeniyle çöktü. Bu hata sık sık meydana geliyorsa lütfen bu uygulamanın ayarlarında ve Google Play Store'da gösterilen e-posta adresi aracılığıyla geliştiriciyle iletişime geçin.
 Ayarlar
 Ayarlar kaydedildi
 Veriler
@@ -82,9 +82,9 @@ Sahaya bağlı olmayan bir kişi oluşturuyorsunuz. Tüm sahalardaki sakinler a�
 Tebrikler, ilk ilgilenen kişiniz var! Kişiler ekranına otomatik olarak eklenecektir. Bu açık yeşil renkle yapılır. Ayrıca, site ekranında toplamda ilgilenen kişi sayısı gösterilir.
 Görüşme detayları:
 Yeni arama
-
+e
+k
 Cümlenin ilk kelimesini büyük harfle yaz
-
 Tüm alanlar doldurulmalı ve sayısal değerlere sahip olmalıdır. Kat sayısı 0'dan yüksek olmalı. Aralık'taki son dairenin numarası ilk daireden az olmamalıdır.
 Başlıkta noktalara ve virgüllere izin verilmez!
 Her iki değer de sayı içermelidir, birincisi ikinciden büyük olmalıdır.
@@ -215,7 +215,7 @@ No
 Bu girişte katları küçültmek artık mümkün değil çünkü girişi olan son daire kaybolacak! Ancak "%s" ekranından daire aralığını veya kat sayısını değiştirebilirsiniz.
 Standart olmayan bir daire ve kat oranı talep edildi. Gerekli katlarda manuel olarak kaldırmanız gereken %d daire eklemeye ihtiyaç duyuldu. Bunu yapmak için, [u]yerdeki herhangi bir daireyi[/u] başlatmak üzere [b]%s[/b] düğmesine basın.
 Hizmet süresi doldu! Bitirmek için zamanlayıcı düğmesine tekrar basmanız yeterlidir. Zaman otomatik olarak rapora girilecektir. Zamanlayıcı özelliğini ayarlardan devre dışı bırakabilirsiniz!
-
+Güncellemeleri kontrol et:
 Hizmet başlansın mı?
 İlk ziyaretinizi oluşturun
 Yeni bir ay başladı! Raporunuzu gönderdiniz mi?
@@ -246,8 +246,8 @@ Tamamen keyfi kelimelerden, hatta farklı yerlerdeki adreslerden oluşan bir lis
 Veritabanının indirilmesi
 İpucu
 Yedekleme başarısız oldu!
-Bir yedekleme oluşturuldu.
-Veritabanı kaydedilmiştir.
+Sayısal olmayan karakterler içeren sayılar ekleme
+Bazı daire numaraları sayısal olmayan karakterler içerdiğinden tablo görünümü etkinleştirilemez!
 Rocket Ministry verileri
 Veriler, %s dosyasına başarıyla aktarıldı.
 Veriler kaydedilemedi!
@@ -322,5 +322,3 @@ Yedeklemeler dahil tüm program verilerinin ve ayarlarının tamamen sıfırlanm
 Ayarlar dahil tüm program verilerini bir dosyaya kaydedin. Bu dosyayı Google Drive'a yüklemeniz önerilir.
 Senin linkin
 Verileri içe aktarmak için paylaşım bağlantısını bir Google Drive dosyasına ekleyin. Bu bağlantının genel erişim hakları olmalıdır:
-Sayısal olmayan karakterler içeren sayılar ekleme
-Bazı daire numaraları sayısal olmayan karakterler içerdiğinden tablo görünümü etkinleştirilemez!
