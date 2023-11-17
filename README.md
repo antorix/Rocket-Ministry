@@ -8,7 +8,7 @@ Android, Windows, Linux, and Mac are supported.
 
 The app is translated into English, Spanish, Russian, Ukrainian, Turkish, Georgian and Armenian. If you want to help translate the app into your language, please send a message to [inoblogger@gmail.com](mailto:inoblogger@gmail.com).
 
-* [Download from Google Play](https://play.google.com/store/apps/details?id=org.rocketministry)
+* [Download from Google Play Store](https://play.google.com/store/apps/details?id=org.rocketministry)
 
 * [Features](https://github.com/antorix/Rocket-Ministry/wiki#features)
 
