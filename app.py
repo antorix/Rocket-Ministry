@@ -2042,7 +2042,7 @@ class RMApp(App):
             self.fontBigEntry = int(Window.size[1] / 41 * self.fontScale())  # шрифт для увеличенных полей ввода
 
             if Devmode: # в режиме разработчика задаем размер окна принудительно
-                k = .4
+                k = .38
                 Window.size = (1120 * k, 2340 * k)
                 Window.top = 80
                 Window.left = 600
@@ -4180,7 +4180,8 @@ class RMApp(App):
             def __importFile(instance):
                 from tkinter import filedialog
                 file = filedialog.askopenfilename()
-                if file != "": self.importDB(file=file)
+                print(file)
+                if file != "" and len(file)>0: self.importDB(file=file)
             importFile.bind(on_release=__importFile)
             g.add_widget(MyLabel(text=self.msg[319], text_size=text_size, font_size=self.fontXS * self.fontScale(cap=cap)))
             importFileBox.add_widget(Widget(size_hint_y=.25))
@@ -4238,12 +4239,15 @@ class RMApp(App):
         tab3 = TTab(text=self.msg[139])
         a = AnchorLayout(anchor_x="center", anchor_y="center")
         linkColor = get_hex_from_color(self.linkColor)
+        GooglePlay = f"{self.msg[218]}\n[ref=google][color={linkColor}]{icon('icon-google')} [u]{'Google Play Маркет' if self.language == 'ru' else 'Google Play Store'}[/u][/color][/ref]"\
+            if platform == "android" else ""
+
         aboutBtn = MyLabel(text=
                            f"[color={self.titleColor2}][b]Rocket Ministry {Version}[/b][/color]\n\n" + \
                            f"[i]{self.msg[140]}[/i]\n\n" + \
                            f"{self.msg[141]}\n[ref=web][color={linkColor}]{icon('icon-github')} [u]Github[/u][/color][/ref]\n\n" + \
                            f"{self.msg[142]}\n[ref=email][color={linkColor}]{icon('icon-mail-alt')} [u]inoblogger@gmail.com[/u][/color][/ref]\n\n" + \
-                           f"{self.msg[218]}\n[ref=google][color={linkColor}]{icon('icon-google')} [u]{'Google Play Маркет' if self.language == 'ru' else 'Google Play Store'}[/u][/color][/ref]",
+                           GooglePlay,
                            markup=True, halign="left", valign="center", color=self.standardTextColor,
                            text_size=[self.mainList.size[0] * .8, None]
         )
@@ -4753,7 +4757,7 @@ class RMApp(App):
                     text = str(options[row][2:]).strip()
                 labelSize_hint = (1, 1)
                 entrySize_hint = ((.5 if self.orientation == "v" else .3), 1)
-                text_size = (Window.size[0]*self.SR * 0.66, None)
+                text_size = (Window.size[0]*self.SR * 0.66 * .95, None)
                 font_size = self.fontXS * self.fontScale(cap=1.2)
                 halign = "center"
                 if self.desktop and self.msg[130] in text: # не показываем опцию уведомления, если таймер отключен, а также всегда на ПК
@@ -4766,7 +4770,7 @@ class RMApp(App):
                 text = options[row].strip()
                 labelSize_hint = (self.descrColWidth, y)
                 entrySize_hint = (1-self.descrColWidth, y)
-                text_size = (Window.size[0]*self.SR*self.descrColWidth*.97, None)
+                text_size = (Window.size[0]*self.SR*self.descrColWidth*.95, None)
                 font_size = self.fontS * self.fontScale()
                 halign="left"
                 timerOK = True
@@ -6754,6 +6758,7 @@ class RMApp(App):
             try:
                 from tkinter import filedialog
                 folder = filedialog.askdirectory()
+                if folder == "" or len(folder) == 0: return # пользователь отменил экспорт
                 filename = folder + f"/{self.msg[251] if ter==None else ter.title}.txt"
                 with open(filename, "w") as file: json.dump(output, file)
             except:
