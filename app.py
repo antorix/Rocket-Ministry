@@ -63,7 +63,6 @@ from kivy.utils import get_hex_from_color
 
 if platform == "android":
     from android.permissions import request_permissions, Permission
-    import kvdroid
     from kvdroid import activity
     from kvdroid.jclass.android import Rect
     from jnius import autoclass
@@ -2014,7 +2013,7 @@ class RMApp(App):
         ]
 
         if not reload:  # при мягкой перезагрузке все, что ниже, не перезагружается (сохраняется)
-            self.contactsEntryPoint = self.searchEntryPoint = self.popupEntryPoint = 0 # различные переменные
+            self.contactsEntryPoint = self.searchEntryPoint = self.popupEntryPoint = 0 # вход в разные списки
             self.stack = []
             self.showSlider = False
             self.restore = 0
@@ -5144,8 +5143,9 @@ class RMApp(App):
     # Вспомогательные функции
 
     def on_pause(self):
-        """ На паузе приложения делаем верифицированное сохранение """
+        """ На паузе приложения делаем верифицированное сохранение либо резервирование, если изменилась дата """
         self.save(verify=True)
+        self.checkDate()
         return True
 
     def log(self, message="", title="Rocket Ministry", timeout=2, forceNotify=False):
@@ -6222,13 +6222,12 @@ class RMApp(App):
             self.dprint(message)
             if self.dev2: self.popup(message=message)
             self.save(backup=True)
+            self.today = time.strftime("%d", time.localtime())
 
     # Работа с базой данных
 
     def initializeDB(self):
         """ Возвращает исходные значения houses, settings, resources """
-        import time
-        self.initialDBSize = 360 # минимальный размер файла для загрузки
         return [], \
                [
                    [1, 5, 0, 0, "и", "", "", 0, 1.5, 0, 0, 1, 1, 1, "", 1, 0, "", "5", "д", 0, "Default", 1],
