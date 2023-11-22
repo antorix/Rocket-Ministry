@@ -6,7 +6,7 @@ Keep track of your territories, contacts, visits, placements, and reports in you
 
 Android, Windows, Linux, and Mac are supported.
 
-The app is translated into English, Spanish, Russian, Ukrainian, Turkish, Georgian and Armenian. If you want to help translate the app into your language, please send a message to [inoblogger@gmail.com](mailto:inoblogger@gmail.com).
+The app is translated into English, Spanish, Russian, Ukrainian, Turkish, Serbian, Georgian and Armenian. If you want to help translate the app into your language, please send a message to [inoblogger@gmail.com](mailto:inoblogger@gmail.com).
 
 * [Download from Google Play Store](https://play.google.com/store/apps/details?id=org.rocketministry)
 
@@ -17,8 +17,6 @@ The app is translated into English, Spanish, Russian, Ukrainian, Turkish, Georgi
 * [Install on Linux](https://github.com/antorix/Rocket-Ministry/wiki#linux)
 
 * [Loading Territory via List of Addresses](https://github.com/antorix/Rocket-Ministry/wiki#loading-territory-via-list-of-addresses)
-
-* [Data synchronization and backup](https://github.com/antorix/Rocket-Ministry/wiki#data-synchronization-and-backup)
 
 * [Sharing individual territories between users](https://github.com/antorix/Rocket-Ministry/wiki#sharing-individual-territories-between-users)
  
