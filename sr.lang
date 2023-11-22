@@ -1,0 +1,320 @@
+srpski
+Područja
+Kontakti
+Izveštaj
+Sačuvaj
+Kreiraj ulaz
+Da li ste Vi pionir? Onda upisaćemo kvotu sati u podešavanjima. Vi možete nju da promenite.
+Ništa nije pronađeno
+Greška baze podataka
+Aplikacija ne može da nastavi sa funkcijom. Pokušajte obrisati posledni kreirani objekat.
+Dodajte
+Dodajte jedan ili više kuća
+Pored područja možete videti njegov procenat obrađenosti.
+Područje:
+Adresa:
+detalji
+Datum uzima:
+Primedba:
+Broj ulaza:
+Naziv dela:
+Ime
+Osoba (ime, opis):
+Telefon:
+Stan:
+Broj/adresa:
+Dnevnik izveštaja
+Koristeći ovo dugme, možete podesiti veličinu plana zgrade pomerajući klizač iznad, kao i njegovu poziciju u jednoj od 9 tačaka pomoću dugmića i donjem desnom uglu. Pritisnite isto dugme %s da biste sačuvali izmene.
+Broj telefona %s je kopiran u međuspremnik.
+Naziv
+Datum
+Zainteres.
+Obrada
+Adresa
+Broj
+Telefon
+Status
+Primedba
+Veličina
+Zatvori
+Tajmer
+Gde da upišem vreme?
+Služba
+Volonterski sati
+Oporava podataka
+Vratiti rezervnu kopiju od %s?
+Greška u nekim poljima, proverite podatke!
+volonterski sati: %s
+Promene su sačuvane: sati: %s, %sBK: %d
+Službena god.
+da
+Tokom prethodnog pokretanja, aplikacija se ugasila zbog greške u pisanju memorije. Ako se ova greška često javlja, kontaktirajte programera na adresu e-pošte navedenu u podešavanjima ove aplikacije i u Google Plai prodavnici.
+Podešavanja
+Podešavanja su sačuvana
+Podaci
+Beležnik
+Podaci su sačuvani, rezervna kopija je kreirana.
+Kuća
+Stanova:
+od
+do
+Spratova:
+Broj
+prizemlja:
+Unesite kućni broj, adresu ili drugi opis:
+Masovno dodavanje
+Primeri: 1 / 1a / crvena kuća
+Novo područje
+Stambena zgrada
+Svi podaci
+Primer: Vuka Karadžića 30
+Označite ovo polje ako je ovo područje stambena zgrada.
+Upišite naziv novog ulaza:
+Broj ili opis
+Stambena zgrada može imati jedan ili više ulaza ili blokova sa zasebnim stanovima.
+Upišite naziv novog dela:
+Primer: 1 / južni deo
+Područje se može podeliti na delove ili zone radi pogodnosti. Jedan deo može biti ulica, strana ulice, blok ili bilo šta drugo.
+Dodaj
+Novi kontakt
+Upišite ime i/ili opis osobe:
+Kreirate samostalni kontakt koji nije povezan ni sa jednom teritorijom. Ljudi sa svih vaših teritorija se automatski navode u kontaktima ako im se dodeli svetlozeleni status.
+Čestimate, našli ste prvu zainteresovanu osobu! Ona će automatski biti dodana u odeljak Kontakti i biće označena svetlo-zelenom bojom. Takođe možete videti ukupan broj zainteresovanih osoba u odeljku Područja.
+Informacija o poseti:
+Nova pretraga
+m
+ž
+Rečenica počinje velikim slovom
+Sva polja trebaju biti popunena sa brojčanim vrednostima. Broj spratova mora biti veći od 0. Zadnji stan u nizu ne može imati manji broj od početnog.
+Tačke i zarezi nisu dozvoljeni!
+Obe vrednosti treba da budu numeričke i prva vrednost ne može biti veća od druge.
+Najviše %s karaktera!
+Datum mora biti u formatu GGGG-MM-DD. Na primer: 2023-03-25.
+Ovaj broj već postoji!
+Spratovi još uvek nisu podešeni za ovaj ulaz. Podesite ih u odeljku "%s".
+Dodajte svoje prvo područje
+Lista kontakata:
+Lista područja:
+Dodaj područje
+Ovde ćete pronaći sve zainteresovane osobe sa svih područja, kao i zasebne kontakte koje možete dodati koresteći dugme "%s".
+Novi kontakt
+Dnevnik
+Koju datoteku učitati?
+Biblijski kursevi
+Sati
+Volontereski sati (ukupno sa satima %s)
+
+
+Koliko vremena u službi dodati u izveštaj?
+Koliko volonterskih sati dodati u izveštaj?
+Pošalji
+Ovde ćete nalaziti vaš izveštaj o službi za tekući mesec kad se on završi.
+sep
+okt
+nov
+dec
+jan
+feb
+mar
+apr
+maj
+jun
+jul
+avg
+Mesećna kvota sati
+"%s " jednim klikom
+Prenositi minute u sledeći mesec
+Boja nezainteresovanih
+Volonterski sati
+Brzi unos telefona
+Obaveštenje prilikom startovanja tajmera
+Jezik
+Sačuvaj nije uspelo!
+
+Otvori
+Oporavak
+Brisanje
+Područje
+Svi kosnički podaci će biti nepovratno obrisani. Da li ste sigurni da želite da obrišete?
+O aplikaciji
+Višenamenski organizer
+Rocket Ministry za Windows i Linux, dokumentacija i izvorni kod:
+Pitanja i podrška korisnika:
+Nazad na vrh
+Pomoć
+Upišite dodatne informacije
+Pretraga ljudi
+Unesi ime, adresu ili neku drugu informaciju o osobi:
+Pretraži
+Nema rezultata
+Potraga po "%s"
+Rezultati:
+Ovo područje je uzeto pre više od 4 meseca! Treba da ga vratite ili produžite tako što ćete ažurirati datum u detaljima.
+Izvezi područje
+Izvezi brojeve telefona
+Stanovi
+Dodaj kuće
+ulaz
+Kontakt
+Stan
+Lista poseta:
+Dodaj posetu
+prva poseta
+Zapis
+Sačuvati poziciju i veličinu prozora
+Unesi naziv područja:
+Primer: ul. Obalska
+Unesite prvi i zadnji broj u nizu za dodavanje:
+Tema interfejsa
+Smanjiti broj stanova na ovom spratu
+Ne pitaj ovo više
+Ovo je prekidač izmedđu pregledu po spratu i jednostavne liste stanova. Ovo važi samo za poručja sa stambenim zgradam. Pregled po spratu dobro ilustruje ulaze, dok pregled liste ima zgodno sortiranje i pregled sadržaja stanova.
+Uključiti stanove bez broja telefona u izvoz?
+izbriši
+Višak
+Manjak
+Godišnja statistika
+Dodati meseci
+Dodati sati
+Godišnja kvota
+Preostali sati
+Mesećni prosek
+Jednako 12 x mesećni zahtev (iz podešavanja).
+Prosećan broj sati službe svakog meseca tokom ostalih (ne dodatih) meseci.
+Obratite pažnju da će ovo isključiti pregled po spratu!
+Lista brojeva
+Nalepi iz privremene memorije
+Ovde možete dodati nove brojeve koristeći listu brojevu odvojenu zarezima ili novim redovima.
+Dodaj
+Greška unosa. Ova lista treba da sadrži samo brojeve i zareze. Nijedan drugi znak nije dozvoljen. Ako treba da koristite slova, kreirajte teren bez zgrada.
+Otkaži
+Lista
+Podaci su uspešno obrisani
+Označavanje stana sivom bojom će obrisati sve njegove informacije. Nastaviti?
+Obrisati područje
+Pre brisanja područja, proverite da li su svi stanari koji želite da sačuvate označeni svetlo-zelenom bojom. U suprotnom biće obrisani zajedno sa područjem! Nastaviti sa brisanjem?
+Izbriši ulaz
+Izbriši deo područja
+Da li ste sigurni?
+Izbriši
+Izbriši beleške o posetama
+Izbriši beleške od
+U zagradama možete videti koliko vremena ste ispred (+) ili zaostajete (-) za mesečnom potrebom za tekućim danom u mesecu. Na primer, sa zahtevom od 50 sati, ako danas niste imali propoved, ta vrednost će se sutra smanjiti za oko 1:40.
+Pažnja
+Telefon je sačuvan!
+Možete da onemogućite dugme "%s" u podešavanjima aplikacije!
+Nema kući
+Nezainteresovan
+Nije moguće učitati datoteku. Najverovatnije je u pogrešnom formatu ili ne sadrži potrebne podatke.
+Data successfully loaded!
+Molimo sačekajte
+deo
+ulaz
+Dodajte prvi %s
+br.
+Više nećete moći da smanjite broj spratova u ovom bloku, jer će poslednji stan sa sadržajem nestati! Ali možete promeniti raspored stanova i podova na ekranu "%s".
+Tražen je nestandardni odnos između stanova i spratova. Morali smo da dodamo %d stana, koje sada morate ručno ukloniti na odgovarajućim podovima. Da biste to uradili, kliknite na dugme [b]%s[/b] u rekvizitima [u]bilo kog stana na tom spratu[/u].
+Vreme propovedi je počelo! Da biste završili sesiju propovedi, samo ponovo dodirnite dugme tajmera. Vreme će se automatski dodati u vaš izveštaj. Možete isključiti funkciju tajmera u podešavanjima!
+Proverite da li postoje ispravke:
+Započnite službu?
+Dodajte prvi poziv
+Počeo je novi mesec! Da li ste već predali svoj izveštaj?
+volonterski sati
+Izveštaj za %s:
+Primedba
+Pokrenut tajmer
+Tajmer je zaustavljen, dodan u izveštaj: %s s.
+Tajmer je zaustavljen, dodan u izveštaj: %s s. VS
+Dodato u izveštaj
+Sada ste na ekranu prvog poziva. Pojavljuje se samo kada prvi put posetite osobu.
+Uspešno ste smanjili broj stanova na ovom spratu! Raspon brojeva je sada 1 manji. Ako niste zadovoljni rezultatom, nema problema: samo vratite originalno numerisanje u prozoru "%s", a zatim pokušajte ponovo.
+1 sat je dodat izveštaju
+%s s. dodato u izveštaj
+1 sat VS dodan u izveštaj
+%s s. VS dodan u izveštaj
+Iseci
+Kopiraj
+Zalepi
+Izaberi sve
+Stranica ima nespremljene promene! Nastavite bez čuvanja?
+Ovde ćete pronaći istoriju svih ažuriranja izveštaja (max. %pregleda).
+Izveštaj dodaje 1 proučavanje Biblije
+Baza podataka je izbrisana!
+Ne mogu da pristupim datoteci. Veza verovatno nije dobila prava javnog pristupa.
+Preuzimanje datoteke podataka nije uspelo. Najverovatnije je oštećen ili ima pogrešan format.
+To može biti lista slučajnih reči, čak i adresa na različitim lokacijama.
+Učitavanje baze podataka
+Savet
+Nije moguće napraviti rezervnu kopiju!
+Dodaj brojeve sa nebrojčanim simbolima
+Neki brojevi stanova sadrže slova, tako da plan zgrade ne može biti omogućen!
+Podaci Rocket Ministry
+Podaci se uspešno izvoze u datoteku %s.
+Podaci se uspešno izvoze u fasciklu Dokumenti na vašem uređaju.
+Podaci su uspešno sačuvani u datoteci %s.
+Izvoz baze podataka nije uspeo!
+Podaci se uspešno izvoze u direktorijum %s.
+Rezervne kopije još nisu napravljene!
+Rezervna kopija iz %s je uspešno preuzeta.
+Januar
+januar
+Decembar
+decembar
+Februar
+Februar
+Mart
+mart
+April
+april
+Maj
+maj
+Jun
+jun
+Jul
+jul
+Avgust
+avgust
+Septembar
+septembar
+Oktobar
+oktobar
+Novembar
+novembar
+jan
+feb
+mar
+apr
+maj
+jun
+jul
+avg
+sep
+okt
+nov
+dev
+s
+m
+Da
+Ne
+Smanjite broj stanova na ovom spratu?
+Noć
+Veče
+Jutro
+Sepija
+Eko
+Čirok
+Ljubičasta
+Jasnoća
+Izvoz nije izvršen! Naziv teritorije može sadržati nevažeće znakove.
+1, 2a, Obalska 4a-15, Vuka Karadžića 12-23
+Pronađena nova verzija! Biće ažuriran sledeći put kada pokrenete program.
+Promena soba i podova ne utiče na postojeće podatke o posetama.
+Pritisnite %s da biste dodali stanove na ulaz:
+Na ovoj teritoriji nema telefonskih brojeva za izvoz!
+Telefonski brojevi na %s
+Karte
+Podrazum.
+Preuzmite podatke iz lokalne datoteke
+Izvezite sve podatke aplikacije
+Aplikacija kreira do 20 rezervnih kopija. Vratite ih ovde
+Potpuno resetovanje svih podataka programa i postavki, uključujući rezervne kopije

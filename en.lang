@@ -7,7 +7,7 @@ Add entrance
 Are you a pioneer? We will set up the monthly hour requirement in settings. You may change it manually.
 Nothing found
 Database error
-The program cannot continue working. Try to delete the last created entity. If this does not help, open Settings, do Export to Google Drive, and send the file to the developers to analyze the issue. Alternatively, you can wipe all the data and begin from scratch.
+The program cannot continue working. Try to delete the last created entity.
 Add
 Add one or more houses
 Next to a territory, you can see its work progress percentage.
@@ -129,9 +129,9 @@ Hourly credit
 Quick phone input
 Notification on timer start
 Language
-Export
-Insert and import
-Open
+Save failed!
+
+Load
 Recover
 Wipe
 Territory
@@ -212,7 +212,7 @@ section
 entrance
 Add the first %s
 #
-You cannot shrink floors in this block anymore, because the last apartment with content will disappear! But you can adjust the apartments and floors layout on the "%s" screen.
+You cannot reduce floors in this block anymore, because the last apartment with content will disappear! But you can adjust the apartments and floors layout on the "%s" screen.
 A non-standard relation between apartments and floors requested. We had to add %d apartment(s) that you now have to manually delete on corresponding floors. To do this, click on the button [b]%s[/b] in the details of [u]any apartment on this floor[/u].
 Service time has started! To finish your service session, just click on the timer button once again. The time will be added to your report automatically. You can disable the timer feature in the settings!
 Check for updates:
@@ -250,7 +250,7 @@ Add numbers with non-numeric characters
 Some apartment numbers contain non-numeric characters, so the grid view cannot be enabled!
 Rocket Ministry Data
 Data successfully exported to file %s.
-Save failed!
+Data successfully exported to the Documents folder on your device.
 Data successfully saved to file %s.
 Database export failed!
 Data successfully exported to folder %s.
@@ -296,7 +296,7 @@ h
 m
 Yes
 No
-Decrease the amount of flats on this floor?
+Reduce the amount of flats on this floor?
 Night
 Evening
 Morning
@@ -311,14 +311,10 @@ New version found! It will be updated on the next program start.
 Re-arranging numbers and floors does not affect existing visits data.
 Press %s to add flats to the entrance:
 No phone numbers to export in this territory!
-Phone numbers on %s
+Phone numbers in %s
 Maps
 Default
-This is not a link to the Rocket Ministry data file! You need to copy the link in Google Drive. Do you want to see a more detailed instruction?
-Export all app data. It is recommended to export to Google Drive.
-Load data from a local file on your computer.
-The app creates up to 20 backup copies. You can recover them here.
-Full reset of all program data and settings, including backups.
-Save all program data, including settings, into a file. It is recommended to upload this file to Google Drive.
-Your link
-To import data, insert the share link to a Google Drive file. This link should have public access rights:
+Load data from a local file
+Export all app data
+The app creates up to 20 backup copies. Recover them here
+Full reset of all program data and settings, including backups

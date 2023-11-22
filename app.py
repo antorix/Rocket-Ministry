@@ -4,31 +4,52 @@
 from sys import argv
 Devmode = 1 if "dev" in argv else 0
 
-Version = "2.10.004"
+Version = "2.11.000"
 
 """
-* Быстрый выбор пола и возраста человека при первом посещении.
+* Сербский язык.
+* Переработан экспорт/импорт на мобильных устройствах. Данные сохраняются
+локально в папку «Документы» и загружаются через стандартный диалог Android.
 * Небольшие исправления и оптимизации. 
 """
 
-try:
+from kivy import platform
+if platform == "android":
+    from android.permissions import request_permissions, Permission
+    from android.storage import app_storage_path
+    from androidstorage4kivy import SharedStorage, Chooser
+    from kvdroid import activity, autoclass
+    from kvdroid.jclass.android import Rect
+    PythonActivity = autoclass('org.kivy.android.PythonActivity')
+    mActivity = PythonActivity.mActivity
     from kivy.app import App
     import plyer
-    import requests
-except:
-    if Devmode: print("Модуль kivy, plyer или requests не найден, устанавливаю.")
-    from subprocess import check_call
-    from sys import executable
-    check_call([executable, '-m', 'pip', 'install', 'kivy==2.1.0'])
-    check_call([executable, '-m', 'pip', 'install', 'plyer'])
-    check_call([executable, '-m', 'pip', 'install', 'requests'])
-    from kivy.app import App
-    import plyer
-    import requests
+
+else:
+    import _thread
+    try:
+        from kivy.app import App
+        import plyer
+        import requests
+    except:
+        if Devmode: print("Что-то из модулей не найдено, устанавливаю.")
+        from subprocess import check_call
+        from sys import executable
+        check_call([executable, '-m', 'pip', 'install', 'kivy==2.1.0'])
+        check_call([executable, '-m', 'pip', 'install', 'plyer'])
+        check_call([executable, '-m', 'pip', 'install', 'requests'])
+        from kivy.app import App
+        import plyer
+        import requests
+
+if platform == "win":
+    if not Devmode: # убираем консоль
+        import ctypes
+        ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
 import utils as ut
-import time
 import os
+import time
 import json
 import shutil
 import datetime
@@ -39,7 +60,6 @@ from copy import copy, deepcopy
 from iconfonts import icon
 from iconfonts import register
 
-from kivy import platform
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.gridlayout import GridLayout
@@ -60,24 +80,6 @@ from kivy.uix.slider import Slider
 from kivy.animation import Animation
 from kivy.graphics import Color, RoundedRectangle
 from kivy.utils import get_hex_from_color
-
-if platform == "android":
-    from android.permissions import request_permissions, Permission
-    from kvdroid import activity
-    from kvdroid.jclass.android import Rect
-    from jnius import autoclass
-    PythonActivity = autoclass('org.kivy.android.PythonActivity')
-    mActivity = PythonActivity.mActivity
-    from android.storage import app_storage_path
-
-elif platform == "win":
-    import _thread
-    if not Devmode: # убираем консоль
-        import ctypes
-        ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
-
-elif platform == "linux" or platform == "macosx":
-    import _thread
 
 SavedCount = 1
 
@@ -1088,11 +1090,6 @@ class MyTextInput(TextInput):
                 RM.bottomButtons.size_hint_y = RM.bottomButtonsSizeHintY
                 if RM.boxFooter not in RM.globalFrame.children: RM.globalFrame.add_widget(RM.boxFooter)
 
-    def on_touch_down (self, instance, touch):
-        print(1)
-        if touch.button == 'right':
-            print("right mouse clicked")
-
     def create_keyboard(self, *args):
         self.show_keyboard()
 
@@ -1898,16 +1895,25 @@ class DatePicker(BoxLayout):
 
 class RMApp(App):
     def build(self):
-        if platform == "android": request_permissions([Permission.INTERNET, "com.google.android.gms.permission.AD_ID"])
+        if platform == "android":
+            request_permissions(["com.google.android.gms.permission.AD_ID"])
 
-        self.userPath = app_storage_path() if platform == "android" else ""
+            temp = SharedStorage().get_cache_dir() # очистка SharedStorage при запуске
+            if temp and os.path.exists(temp): shutil.rmtree(temp)
 
-        ### Перенос данных из старого местоположения на Android в новое
-        if platform == "android" and os.path.exists("../data.jsn"):
-            shutil.move("../data.jsn", self.userPath + "data.jsn")
-            try: shutil.rmtree("../backup")
-            except: pass
+            self.chooser = Chooser(self.chooser_callback) # виджет для загрузки базы локально
 
+            """from android.storage import primary_external_storage_path
+            primary_ext_storage = primary_external_storage_path()
+            from android.storage import secondary_external_storage_path
+            secondary_ext_storage = secondary_external_storage_path()"""
+
+            if os.path.exists("../data.jsn"): # перенос данных из старого местоположения на Android в новое
+                shutil.move("../data.jsn", self.userPath + "data.jsn")
+                try: shutil.rmtree("../backup")
+                except: pass
+
+        self.userPath = app_storage_path() if platform == "android" else "" # местоположение рабочей папки программы
         self.dataFile = "data.jsn"
         self.backupFolderLocation = self.userPath + "backup/"
         self.differentFont = "DejaVuSans.ttf" # специальный шрифт для некоторых языков
@@ -1918,7 +1924,7 @@ class RMApp(App):
             "es": ["español", None],
             "ru": ["русский", None],
             "uk": ["українська", None],
-            #"sr": ["srpski", None],
+            "sr": ["srpski", None],
             "tr": ["Türkçe", None],
             "ka": ["ქართული", self.differentFont],
             "hy": ["Հայերեն", self.differentFont],
@@ -1964,6 +1970,7 @@ class RMApp(App):
                 except: DL = "en"
             else: DL = "en"
             if DL == "ru" or DL == "be" or DL == "kk": self.language = "ru"
+            elif DL == "sr" or DL == "bs" or DL == "hr": self.language = "sr"
             elif DL == "es": self.language = "es"
             elif DL == "uk": self.language = "uk"
             elif DL == "ka": self.language = "ka"
@@ -1989,6 +1996,7 @@ class RMApp(App):
         self.bigLanguage = True if self.language == "hy" or self.language == "ka" else False
         self.textContextMenuSize = ('150sp', '50sp') if self.language == "en" else ('250sp', '50sp') # размер контекстного меню текста в зависимости от языка
         self.specialFont = self.languages[self.language][1]
+        self.openedFile = None # файл данных для открытия с устройства
         self.standardTextHeight = (Window.size[1] * .038 * self.fontScale()) if not self.desktop else 35
         self.standardTextHeightUncorrected = Window.size[1] * .038 # то же, что выше, но без коррекции на размер шрифта
         self.standardTextWidth = self.standardTextHeight * 1.3
@@ -2071,9 +2079,7 @@ class RMApp(App):
                     self.save(export=True)
                     self.dprint("Выход из программы.")
                     self.checkOrientation(width=args[0].size[0], height=args[0].size[1])
-                Window.bind(on_request_close=__close)
-                Window.bind(on_resize=self.checkOrientation)
-
+                Window.bind(on_request_close=__close, on_resize=self.checkOrientation)
             else:
                 try: plyer.orientation.set_portrait()
                 except: pass
@@ -3279,24 +3285,19 @@ class RMApp(App):
                 if input == "report000":
                     self.rep.checkNewMonth(forceDebug=True)
 
-                elif input == "ver000":
+                elif 0:# input == "ver000":
                     self.save(verify=True)
 
-                elif input == "dev2":
+                elif 0:#input == "dev2":
                     if self.dev2: self.dev2 = False
                     else: self.dev2 = True
                     self.pageTitle.text = f"dev2: {self.dev2}"
 
-                elif input == "file000":
-                    def __handleSelection(selection):
-                        if len(selection) > 0:
-                            file = selection[0]
-                            self.pageTitle.text = file
-                            self.importDB(file=file)
-                    plyer.filechooser.open_file(on_selection=__handleSelection)
+                elif input == "@": # классический экспорт в облако
+                    self.share(email=True)
 
-                elif input == "export000":
-                    self.share(email=True) if not self.desktop else self.share(file=True)
+                elif input == "#": # классический импорт через буфер обмена
+                    self.importDB(link=Clipboard.paste().strip())
 
                 elif input == "clone000":
                     self.flat.clone(title=self.house.title, toStandalone=True)
@@ -4123,92 +4124,61 @@ class RMApp(App):
         # Вторая вкладка: работа с данными
 
         tab2 = TTab(text=self.msg[54])
-        g = GridLayout(rows=4, cols=2, spacing=self.spacing*4, padding=self.padding*2)
-        radiusK, sp, cap = .2, (self.spacing*3), 1.2 if self.language != "hy" else 1
-        ratioV = .55 if self.orientation == "v" else .75
-        ratioH = .45 if self.orientation == "v" else .25
-        g.cols_minimum = {0: (self.mainList.size[0]*self.SR-self.padding*4-self.spacing*4)*ratioV,
-                          1: (self.mainList.size[0]*self.SR-self.padding*4-self.spacing*4)*ratioH}
+        g = GridLayout(rows=5, cols=2, spacing=self.spacing*4, padding=self.padding*2)
+        radiusK, sp, cap = .3, (self.spacing*3), 1.2 if self.language != "hy" else 1
+        ratio0 = .6 if self.orientation == "v" else .75
+        ratio1 = .4 if self.orientation == "v" else .25
+        size_hint_y = 1
+        padding = (0, self.padding*10 if self.orientation == "v" else self.padding*5)
+        g.cols_minimum = {0: (self.mainList.size[0]*self.SR-self.padding*4-self.spacing*4)*ratio0,
+                          1: (self.mainList.size[0]*self.SR-self.padding*4-self.spacing*4)*ratio1}
         text_size = [g.cols_minimum[0]-self.padding*3, None]
 
-        exportBox = BoxLayout(orientation="vertical", spacing=sp)
-        exportEmail = RButton(text = f"{self.button['export' if not self.desktop else 'floppy']} {self.msg[132]}",
-                              size_hint_y=.5, radiusK=radiusK)
-
+        exportBox = BoxLayout(orientation="vertical", padding=padding, spacing=sp) # Сохранить
+        exportEmail = RButton(text = f"{self.button['floppy']}\n{self.msg[5]}",
+                              size_hint_y=size_hint_y, radiusK=radiusK)
         def __export(instance):
-            self.share(email=True) if not self.desktop else self.share(file=True)
+            self.share(file=True)
         exportEmail.bind(on_release=__export)
-        g.add_widget(MyLabel(text=self.msg[318] if not self.desktop else self.msg[322], text_size=text_size,
-                             valign="top", font_size=self.fontXS * self.fontScale(cap=cap)))
-        exportBox.add_widget(Widget(size_hint_y=.25))
+        g.add_widget(MyLabel(text=self.msg[318], text_size=text_size, valign="top", halign="center",
+                             font_size=self.fontXS * self.fontScale(cap=cap)))
         exportBox.add_widget(exportEmail)
-        exportBox.add_widget(Widget(size_hint_y=.25))
         g.add_widget(exportBox)
 
-        importBtnDefaultText = f"{self.button['import']} {self.msg[133]}"
-        importBtn = RButton(text=importBtnDefaultText, radiusK=radiusK,
-                            size_hint_y=.5, text_size=[g.cols_minimum[1]-self.padding*3, None])
-        importBox = BoxLayout(orientation="vertical", spacing=sp)#self.spacing*3)
-        g.add_widget(MyLabel(text=self.msg[324], text_size=text_size, font_size=self.fontXS * self.fontScale(cap=cap)))
-        g.add_widget(importBox)
-        if self.orientation == "v": importBox.add_widget(Widget(size_hint_y=.12))
-        importBox.add_widget(importBtn)
-        self.importEntry = MyTextInput(hint_text=self.msg[323], multiline=False, font_size=self.fontXXS,
-                                       size_hint_y=.25 if self.orientation == "v" else .5,
-                                       blockPositivePress=True, font_size_force=True, shrink=False)
-        def __import(*args):
-            def __do(*args):
-                self.importDB(link=self.importEntry.text)
-                importBtn.color = self.tableColor
-                importBtn.text = importBtnDefaultText
-            importBtn.color = self.titleColor if self.theme != "purple" else self.linkColor
-            importBtn.text = f"{icon('icon-hourglass-3')} {self.msg[210]}"
-            Clock.schedule_once(__do, .1)
-
-        def __insertAndImport(*args):
-            self.importEntry.text = Clipboard.paste().strip()
-            Clock.schedule_once(__import, .1)
-        importBtn.bind(on_release=__insertAndImport)
-        self.importEntry.bind(on_text_validate=__import)
-        importBox.add_widget(self.importEntry)
-        if self.orientation == "v": importBox.add_widget(Widget(size_hint_y=.12))
-
-        if self.desktop:
-            g.rows += 1
-            importFileBox = BoxLayout(orientation="vertical", spacing=sp)
-            importFile = RButton(text=f"{self.button['open']} {self.msg[134]}", radiusK=radiusK, size_hint_y=.5)
-            def __importFile(instance):
+        openFileBox = BoxLayout(orientation="vertical", padding=padding, spacing=sp) # Открыть
+        openFile = RButton(text=f"{self.button['open']}\n{self.msg[134]}", radiusK=radiusK, size_hint_y=size_hint_y)
+        def __open(instance):
+            if self.desktop:
                 from tkinter import filedialog
                 file = filedialog.askopenfilename()
-                print(file)
-                if file != "" and len(file)>0: self.importDB(file=file)
-            importFile.bind(on_release=__importFile)
-            g.add_widget(MyLabel(text=self.msg[319], text_size=text_size, font_size=self.fontXS * self.fontScale(cap=cap)))
-            importFileBox.add_widget(Widget(size_hint_y=.25))
-            importFileBox.add_widget(importFile)
-            importFileBox.add_widget(Widget(size_hint_y=.25))
-            g.add_widget(importFileBox)
+                if file != "" and len(file) > 0: self.importDB(file=file)
+            elif platform == "android":
+                request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
+                self.chooser.choose_content("text/*")
+        openFile.bind(on_release=__open)
+        g.add_widget(MyLabel(text=self.msg[317], text_size=text_size, font_size=self.fontXS * self.fontScale(cap=cap),
+                             halign="center"))
+        openFileBox.add_widget(openFile)
+        g.add_widget(openFileBox)
 
-        restoreBox = BoxLayout(orientation="vertical", spacing=sp)
-        restoreBtn = RButton(text=f"{self.button['restore']} {self.msg[135]}", radiusK=radiusK, size_hint_y=.5)
+        restoreBox = BoxLayout(orientation="vertical", padding=padding, spacing=sp) # Восстановление
+        restoreBtn = RButton(text=f"{self.button['restore']}\n{self.msg[135]}", radiusK=radiusK, size_hint_y=size_hint_y)
         def __restore(instance):
             self.popup("restoreBackup")
         restoreBtn.bind(on_release=__restore)
-        g.add_widget(MyLabel(text=self.msg[320], text_size=text_size, font_size=self.fontXS * self.fontScale(cap=cap)))
-        restoreBox.add_widget(Widget(size_hint_y=.25))
+        g.add_widget(MyLabel(text=self.msg[319], text_size=text_size, font_size=self.fontXS * self.fontScale(cap=cap),
+                             halign="center"))
         restoreBox.add_widget(restoreBtn)
-        restoreBox.add_widget(Widget(size_hint_y=.25))
         g.add_widget(restoreBox)
 
-        clearBox = BoxLayout(orientation="vertical", spacing=sp)
-        clearBtn = RButton(text=f"{self.button['wipe']} {self.msg[136]}", radiusK=radiusK, size_hint_y=.5)
+        clearBox = BoxLayout(orientation="vertical", padding=padding, spacing=sp) # Очистка
+        clearBtn = RButton(text=f"{self.button['wipe']}\n{self.msg[136]}", radiusK=radiusK, size_hint_y=size_hint_y)
         def __clear(instance):
             self.popup("clearData", message=self.msg[138], options=[self.button["yes"], self.button["no"]])
         clearBtn.bind(on_release=__clear)
-        g.add_widget(MyLabel(text=self.msg[321], text_size=text_size, font_size=self.fontXS * self.fontScale(cap=cap)))
-        clearBox.add_widget(Widget(size_hint_y=.25))
+        g.add_widget(MyLabel(text=self.msg[320], text_size=text_size, font_size=self.fontXS * self.fontScale(cap=cap),
+                             halign="center"))
         clearBox.add_widget(clearBtn)
-        clearBox.add_widget(Widget(size_hint_y=.25))
         g.add_widget(clearBox)
 
         tab2.content = g
@@ -4248,7 +4218,7 @@ class RMApp(App):
                            f"{self.msg[141]}\n[ref=web][color={linkColor}]{icon('icon-github')} [u]Github[/u][/color][/ref]\n\n" + \
                            f"{self.msg[142]}\n[ref=email][color={linkColor}]{icon('icon-mail-alt')} [u]inoblogger@gmail.com[/u][/color][/ref]\n\n" + \
                            GooglePlay,
-                           markup=True, halign="left", valign="center", color=self.standardTextColor,
+                           markup=True, halign="center", valign="center", color=self.standardTextColor,
                            text_size=[self.mainList.size[0] * .8, None]
         )
 
@@ -4266,6 +4236,21 @@ class RMApp(App):
         self.settingsPanel.do_default_tab = False
         self.mainList.add_widget(self.settingsPanel)
         self.checkDate()
+
+    def chooser_callback(self, uri_list):
+        """ Копируем файл, выбранный пользователем, в Private Storage """
+        try:
+            for uri in uri_list:
+                self.openedFile = SharedStorage().copy_from_shared(uri)
+            Clock.schedule_interval(self.loadOpenedFile, .05)
+        except Exception as e:
+            self.popup(message='SharedStorageExample.chooser_callback():' + str(e))
+
+    def loadOpenedFile(self, *args):
+        if self.openedFile is not None:
+            self.importDB(file=self.openedFile)
+            self.openedFile = None
+            Clock.unschedule(self.loadOpenedFile)
 
     def saveSettings(self, clickOnSave=True):
         if self.settingsPanel.current_tab.text == self.msg[52]: # Настройки
@@ -4823,18 +4808,19 @@ class RMApp(App):
                 textbox.add_widget(self.multipleBoxEntries[row])
                 grid.add_widget(textbox)
 
-            if self.displayed.form == "flatView" and self.multipleBoxLabels[row].text == self.msg[22]: # добавляем кнопочки м и ж
+            if self.displayed.form == "flatView" and \
+                    self.multipleBoxLabels[row].text == self.msg[22]: # добавляем кнопочки м и ж
                 grid.rows+=1
                 mfBox = BoxLayout(spacing=self.spacing, size_hint=(entrySize_hint[0], None), height=height*2,
                                   padding=[0, 0, 0, self.padding*8])
                 self.row = row
                 self.maleMenu = DropDown()
                 self.maleButton = RButton(text=self.button['male'], size_hint_x=None, radiusK=radiusK,
-                                          size=(self.standardTextWidth*1.4, self.standardTextHeight))
+                                          size=(self.standardTextWidth*1.5, self.standardTextHeight))
                 self.maleButton.bind(on_press=self.maleButtonPressed)
                 self.femaleMenu = DropDown()
                 self.femaleButton = RButton(text=self.button['female'], size_hint_x=None, radiusK=radiusK,
-                                            size=(self.standardTextWidth*1.4, self.standardTextHeight))
+                                            size=(self.standardTextWidth*1.5, self.standardTextHeight))
                 self.femaleButton.bind(on_press=self.femaleButtonPressed)
                 mfBox.add_widget(self.maleButton)
                 mfBox.add_widget(self.femaleButton)
@@ -4949,8 +4935,7 @@ class RMApp(App):
         btn = RButton(text=text, size_hint_x=None, size_hint_y=None, radiusK=self.standardRButtonRadius,
                       size=(w, h), text_size=(w, None))
         def __exportTer(instance):
-            if not self.desktop: self.share(email=True, ter=self.house)
-            else: self.share(file=True, ter=self.house)
+            self.share(file=True, ter=self.house)
         btn.bind(on_release=__exportTer)
         return btn
 
@@ -5914,7 +5899,7 @@ class RMApp(App):
         languages = []
         for l in self.languages.keys():
             languages.append([])
-        dir = "c:\\Users\\antor\\Downloads\\"
+        dir = "c:\\Users\\antor\\Downloads\\" if os.name == "nt" else "/home/antorix/Загрузки/"
         filenames = glob.glob(dir + "Rocket Ministry localization sheet*.csv")
         def __generate(file, col):
             with open(file, "w", encoding="utf-8") as f:
@@ -5932,7 +5917,8 @@ class RMApp(App):
             self.dprint("CSV-файл с локализациями найден, обновляю языковые файлы.")
             with open("lpath.ini", encoding='utf-8', mode="r") as f: lpath = f.read()
             for i in range(len(self.languages.keys())):
-                __generate(f"{lpath}\\{list(self.languages.keys())[i]}.lang", i)
+                #__generate(f"{lpath}{list(self.languages.keys())[i]}.lang", i)
+                __generate(f"{list(self.languages.keys())[i]}.lang", i) # в Linux с относительным путем
             for zippath in glob.iglob(os.path.join(dir, '*.csv')):
                 os.remove(zippath)
 
@@ -5940,13 +5926,12 @@ class RMApp(App):
         """ Импорт данных из буфера обмена либо файла """
         self.save()
         if file is None:
-            self.dprint("Пытаюсь загрузить базу по ссылке.")
+            self.dprint("Пытаюсь загрузить базу из буфера обмена.")
             success = self.load(clipboard=link)
         else:
             self.dprint("Пытаюсь загрузить базу из файла.")
-            success = self.load(forced=True, DataFile=file, silent=True) # сначала пытаемся загрузить текстовый файл
-            if success == False: # файл не текстовый, пробуем загрузить Word-файл
-                self.popup(message=self.msg[208])
+            success = self.load(forced=True, DataFile=file, silent=True) # сначала пытаемся загрузить файл
+            if success == False: self.popup(message=self.msg[208])
         if success == True:
             self.save()
             self.restart("soft")
@@ -5955,7 +5940,7 @@ class RMApp(App):
         elif file is None:
             if success == False:
                 self.importHelp = 1
-                self.popup(message=self.msg[317], options=[self.button["yes"], self.button["no"]])
+                self.popup(message="Clipboard is empty or has wrong data.")
             else: # тоже неудачно, но другой вид ошибки
                 self.popup(message=success)
 
@@ -6282,7 +6267,6 @@ class RMApp(App):
         if DataFile is None: DataFile = self.dataFile
         self.popupForm = ""
         self.error = None  # отладочный флаг
-        if os.path.exists("temp"): os.remove("temp")
         self.dprint("Загружаю буфер.")
 
         # Замена data.jsn файлом с телефона - недокументированная функция, только на русском языке
@@ -6300,48 +6284,23 @@ class RMApp(App):
 
         buffer = []
 
-        if clipboard is not None:  # берем буфер обмена
-
-            badURLError = self.msg[243]
+        if clipboard is not None:  # импорт из буфера обмена старым способом (только через строку поиска)
             self.dprint("Смотрим буфер обмена.")
             clipboard = str(clipboard).strip()
-
-            if "drive.google.com" in clipboard: # получена ссылка на Google Drive
-                try:
-                    URL = "https://docs.google.com/uc?export=download"
-                    id = clipboard[clipboard.index("/d/") + 3: clipboard.index("/view")]
-                    session = requests.Session()
-                    response = session.get(URL, params={'id': id}, stream=True)
-                    with open("temp", "wb") as f:
-                        for chunk in response.iter_content(32768):
-                            if chunk: f.write(chunk)
-                except: return badURLError
-
-            else: # получен чистый текст
-                try:
-                    clipboard = clipboard[clipboard.index("[\"Rocket Ministry"):]
-                    with open("temp", "w") as file: file.write(clipboard)
-                    self.dprint("Содержимое буфера обмена записано во временный файл.")
-                except: return False
-
+            try:
+                clipboard = clipboard[clipboard.index("[\"Rocket Ministry"):]
+                with open("temp", "w") as file: file.write(clipboard)
+                self.dprint("Содержимое буфера обмена записано во временный файл.")
+            except: return False
             try:
                 with open("temp", "r") as file: buffer = json.load(file)
                 self.dprint("Буфер получен из буфера обмена.")
             except: return badURLError
+            if os.path.exists("temp"): os.remove("temp")
 
-        elif forced:  # импорт по запросу с конкретным файлом
+        if forced:  # импорт по запросу с конкретным файлом
             try:
-                if ".doc" in DataFile:
-                    try: import docx2txt
-                    except:
-                        check_call([executable, '-m', 'pip', 'install', 'docx2txt'])
-                        check_call([executable, '-m', 'pip', 'install', 'plyer'])
-                        import docx2txt
-                    string = docx2txt.process(DataFile)
-                    with open("temp", "w") as file: file.write(string)
-                    with open("temp", "r") as file: buffer = json.load(file)
-                else:
-                    with open(DataFile, "r") as file: buffer = json.load(file)
+                with open(DataFile, "r") as file: buffer = json.load(file)
                 self.dprint("Буфер получен из импортированного файла.")
             except:
                 if not silent: self.popup(message=self.msg[244])
@@ -6388,7 +6347,6 @@ class RMApp(App):
             else:
                 message = "База успешно загружена."
                 self.dprint(message)
-                #self.error = message
                 return True
         else:
             message = "База получена, но контрольная строка в файле не совпадает."
@@ -6532,19 +6490,7 @@ class RMApp(App):
             self.dprint("Найден sync.ini, экспортируем.")
             try:
                 with open("sync.ini", encoding='utf-8', mode="r") as f: filename = f.read()
-                if ".doc" in filename:  # если в расширении файла есть .doc, создаем Word-файл
-                    try:
-                        from docx import Document
-                    except:
-                        from subprocess import check_call
-                        from sys import executable
-                        check_call([executable, '-m', 'pip', 'install', 'python-docx'])
-                        from docx import Document
-                    doc = Document()
-                    doc.add_paragraph(str(json.dumps(output)))
-                    doc.save(filename)
-                else:  # иначе пишем в простой текст
-                    with open(filename, "w") as file: json.dump(output, file)
+                with open(filename, "w") as file: json.dump(output, file)
             except: self.dprint("Ошибка записи в файл.")
 
     def getOutput(self, ter=None):
@@ -6554,10 +6500,12 @@ class RMApp(App):
                      [[self.resources[0], [self.resources[1][i].export() for i in range(len(self.resources[1]))], self.resources[2]]]
             for house in self.houses:
                 output.append(house.export())
+
         else: # экспорт одного участка
             output = ["Rocket Ministry application data file. Do NOT edit manually! Single territory export."] + [self.settings] + \
                      [[self.resources[0], [self.resources[1][i].export() for i in range(len(self.resources[1]))], self.resources[2]]]
             output.append(ter.export())
+
         return output
 
     def update(self):
@@ -6590,7 +6538,6 @@ class RMApp(App):
             today = str(datetime.datetime.strptime(time.strftime('%Y-%m-%d'), "%Y-%m-%d"))
             today = today[0: today.index(" ")]
             self.settings[1] = today
-            #self.save()
 
         if newVersion > Version:
             def __update(threadName, delay):
@@ -6752,24 +6699,37 @@ class RMApp(App):
             except: return
 
         elif email: # экспорт в сообщении
-            plyer.email.send(subject=self.msg[251] if ter==None else ter.title, text=str(buffer), create_chooser=True)
+            if not self.desktop:
+                plyer.email.send(subject=self.msg[251] if ter==None else ter.title, text=str(buffer), create_chooser=True)
+            else: # на компьютере просто кладем в буфер обмена
+                Clipboard.copy(str(buffer))
+                self.popup(message="Data copied to clipboard.")
 
-        elif file: # экспорт в текстовый файл на компьютере
-            try:
-                from tkinter import filedialog
-                folder = filedialog.askdirectory()
-                if folder == "" or len(folder) == 0: return # пользователь отменил экспорт
-                filename = folder + f"/{self.msg[251] if ter==None else ter.title}.txt"
+        elif file: # экспорт в локальный файл на устройстве
+            if self.desktop:
+                try:
+                    from tkinter import filedialog
+                    folder = filedialog.askdirectory()
+                    if folder == "" or len(folder) == 0: return # пользователь отменил экспорт
+                    filename = folder + f"/{self.msg[251] if ter==None else ter.title}.txt"
+                    with open(filename, "w") as file: json.dump(output, file)
+                except:
+                    self.dprint("Экспорт в файл не удался.")
+                    if folder != "": self.popup(message=self.msg[308])
+                else: self.popup(message=self.msg[252] % filename)
+
+            elif platform == "android":
+                filename = os.path.join(
+                    SharedStorage().get_cache_dir(),
+                    f"{self.msg[251] if ter == None else ter.title}.txt")
                 with open(filename, "w") as file: json.dump(output, file)
-            except:
-                self.dprint("Экспорт в файл не удался.")
-                if folder != "": self.popup(message=self.msg[308])
-            else: self.popup(message=self.msg[252] % filename)
+                shared_file = SharedStorage().copy_to_shared(private_file=filename) # копируем в папку "Документы" на телефоне
+                self.popup(message=self.msg[253])
 
         elif not Devmode and folder is not None: # экспорт в файл
             try:
                 with open(folder + "/data.jsn", "w") as file: json.dump(output, file)
-            except: self.popup(message=self.msg[253])
+            except: self.popup(message=self.msg[132])
             else:   self.popup(message=self.msg[254] % folder + "/data.jsn")
 
         else:

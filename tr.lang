@@ -7,7 +7,7 @@ Blok oluştur
 Öncü müsün? O zaman aylık saat sayısını ayarlarda belirleyeceğiz. Onu kendiniz de değiştirebilirsiniz.
 Bir şey bulunmadı
 Sistem hatası
-Program devam edemiyor. En son oluşturulan nesneyi silmeyi deneyin. Bu işe yaramazsa, ayarlara gidin, verileri Google Drive'a aktarın ve sorunu analiz etmeleri için dosyayı geliştiricilere gönderin. Ayrıca verileri temizleyebilir ve sıfırdan başlayabilirsiniz.
+Program devam edemiyor. En son oluşturulan nesneyi silmeyi deneyin.
 İlk
 Bir ya-da birkaç ev oluştur
 Bir bölgenin yanında, iş ilerleme yüzdesini görebilirsiniz.
@@ -129,8 +129,8 @@ Saat kredisi
 Hızlı telefon numara girişi
 Zamanlayıcı başladığında bildirim
 Dil
-İhracat
-Ekle ve içe aktar
+Veriler kaydedilemedi!
+
 Aç
 Geri yükleme
 Temizle
@@ -250,7 +250,7 @@ Sayısal olmayan karakterler içeren sayılar ekleme
 Bazı daire numaraları sayısal olmayan karakterler içerdiğinden tablo görünümü etkinleştirilemez!
 Rocket Ministry verileri
 Veriler, %s dosyasına başarıyla aktarıldı.
-Veriler kaydedilemedi!
+Veriler cihazınızdaki Documents (Belgeler) klasörüne başarıyla aktarıldı.
 Veriler %s dosyasına başarıyla kaydedildi.
 Veriler dışa aktarılamadı!
 Veritabanı başarıyla %s klasörüne aktarıldı.
@@ -314,11 +314,7 @@ Bu alanda telefon numarası yok!
 %s saha telefon numaraları
 Haritalar
 Varsayılan
-Bu Roсket Ministry veri dosyasına bir bağlantı değil! Bağlantıyı Google Drive'a kopyalamanız gerekir. Daha ayrıntılı talimatlar istiyor musunuz?
-Tüm uygulama verilerini dışa aktarın. Google Drive'a aktarmanız önerilir.
-Verileri bilgisayarınıza yerel bir dosyadan yükleyin.
-Uygulama en fazla 20 yedek kopya oluşturur. Bunlar burada geri yüklenebilir.
-Yedeklemeler dahil tüm program verilerinin ve ayarlarının tamamen sıfırlanması.
-Ayarlar dahil tüm program verilerini bir dosyaya kaydedin. Bu dosyayı Google Drive'a yüklemeniz önerilir.
-Senin linkin
-Verileri içe aktarmak için paylaşım bağlantısını bir Google Drive dosyasına ekleyin. Bu bağlantının genel erişim hakları olmalıdır:
+Bir dosyadan veri yükleyin
+Tüm uygulama verilerini dışa aktarın
+Uygulama en fazla 20 yedek kopya oluşturur. Bunlar burada geri yüklenebilir
+Yedeklemeler dahil tüm program verilerinin ve ayarlarının tamamen sıfırlanması

@@ -7,7 +7,7 @@ Agregar entrada
 ¿Eres precursor? Estableceremos el requisito de horas mensuales en los ajustes. Puedes cambiarlo manualmente
 No se ha encontrado nada
 Error en la base de datos
-El programa no puede seguir funcionando. Intente eliminar la última entidad creada. Si esto no ayuda, abra Configuración, haga Exportar a Google Drive y envíe el archivo a los desarrolladores para que analicen el problema. Alternativamente, puedes borrar todos los datos y empezar desde cero.
+El programa no puede seguir funcionando. Intente eliminar la última entidad creada.
 Agregar
 Agregar una o mas casas
 Junto a un territorio, puede ver su porcentaje de progreso de trabajo.
@@ -129,8 +129,8 @@ Crédito por hora
 Entrada rápida del teléfono
 Notificación de inicio del cronómetro
 Lenguaje
-Exportar
-Insertar e importar
+¡Guardar falló!
+
 Abrir
 Recuperar
 Limpiar
@@ -250,7 +250,7 @@ Sumar números con caracteres no numéricos
 Algunos números de apartamentos contienen caracteres no numéricos, por lo que no se puede habilitar la vista de cuadrícula.
 Datos de Rocket Ministry
 Datos exportados correctamente al archivo %s.
-¡Guardar falló!
+Datos exportados correctamente a la carpeta Documents (Documentos) de su dispositivo.
 Datos guardados correctamente en el archivo %s.
 Error en la exportación de la base de datos.
 Datos exportados correctamente a la carpeta %s.
@@ -314,11 +314,7 @@ No hay números de teléfono para exportar en este territorio.
 Números de teléfono en %s
 Mapas
 Por defecto
-¡Este no es un enlace al archivo de datos del Rocket Ministry! Debe copiar el enlace en Google Drive. ¿Quiere ver unas instrucciones más detalladas?
-Exporte todos los datos de la aplicación. Se recomienda exportar a Google Drive.
-Cargue datos desde un archivo local en su computadora.
-La aplicación crea hasta 20 copias de seguridad. Puede recuperarlos aquí.
-Restablecimiento completo de todos los datos y configuraciones, incluidas las copias de seguridad.
-Guarde todos los datos del programa, incluida la configuración, en un archivo. Se recomienda cargar este archivo en Google Drive.
-Su enlace
-Para importar datos, inserte el enlace compartido a un archivo de Google Drive. El enlace debe ser público:
+Cargue datos desde un archivo
+Exporte todos los datos de la aplicación
+La aplicación crea hasta 20 copias de seguridad. Puede recuperarlos aquí
+Restablecimiento completo de todos los datos y configuraciones, incluidas las copias de seguridad
