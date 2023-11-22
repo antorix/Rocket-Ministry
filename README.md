@@ -18,6 +18,8 @@ The app is translated into English, Spanish, Russian, Ukrainian, Turkish, Serbia
 
 * [Loading Territory via List of Addresses](https://github.com/antorix/Rocket-Ministry/wiki#loading-territory-via-list-of-addresses)
 
+* [Data Synchronization and Transfer](https://github.com/antorix/Rocket-Ministry/wiki#data-synchronization-and-transfer)
+
 * [Sharing individual territories between users](https://github.com/antorix/Rocket-Ministry/wiki#sharing-individual-territories-between-users)
  
 * [Frequently asked questions](https://github.com/antorix/Rocket-Ministry/wiki#faq)
