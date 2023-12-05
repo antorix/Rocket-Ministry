@@ -103,7 +103,7 @@ Which file to load?
 Bible studies
 Hours
 Credit (totally with hours %s)
-
+Choose the apartment color to save and exit:
 
 How much time to add to service time?
 How much time to add to hourly credit?
@@ -130,7 +130,7 @@ Quick phone input
 Notification on timer start
 Language
 Save failed!
-
+Copied to clipboard.
 Load
 Recover
 Wipe
@@ -190,7 +190,7 @@ Input error. This list should contain only numbers and commas. No other characte
 Cancel
 List
 Data wiped successfully
-Setting an apartment to the gray color will delete all its information! Proceed?
+Setting an apartment to the light-gray color will delete all its information! Proceed?
 Delete territory
 Before deleting the territory, make sure that all householders you want to keep have the green-light color. Otherwise they will be deleted along with the territory! Proceed with deletion?
 Delete entrance
@@ -300,11 +300,11 @@ Reduce the amount of flats on this floor?
 Night
 Evening
 Morning
-Sepia
 Eco
 Teal
 Purple
-Clarity
+Sepia
+Add addresses as a list
 Export failed! The territory name may contain invalid characters.
 1, 2b, Park St 1a, 5th Avenue 119
 New version found! It will be updated on the next program start.
@@ -314,7 +314,7 @@ No phone numbers to export in this territory!
 Phone numbers in %s
 Maps
 Default
-Load data from a local file
+Import data from a file
 Export all app data
-The app creates up to 20 backup copies. Recover them here
+Recover a backup copy if something went wrong
 Full reset of all program data and settings, including backups

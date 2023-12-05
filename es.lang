@@ -103,7 +103,7 @@ Registrar
 Estudios bíblicos
 Horas
 Crédito (totalmente con horas %s)
-
+Elija el color del apartamento para guardar y salir:
 
 ¿Cuánto tiempo hay que añadir al tiempo de servicio?
 ¿Cuánto tiempo hay que añadir al crédito horario?
@@ -130,7 +130,7 @@ Entrada rápida del teléfono
 Notificación de inicio del cronómetro
 Lenguaje
 ¡Guardar falló!
-
+En el portapapeles.
 Abrir
 Recuperar
 Limpiar
@@ -300,11 +300,11 @@ No
 Noche
 Tarde
 Mañana
-Sepia
 Eco
 Verde azulado
 Morado
-Claridad
+Sepia
+Agregar direcciones como una lista
 ¡Exportación fallida! El nombre del territorio puede contener caracteres no válidos.
 1, 2b, calle del parque 1a, Quinta Avenida 119
 ¡Nueva versión encontrada! Se actualizará en el próximo inicio del programa.
@@ -314,7 +314,7 @@ No hay números de teléfono para exportar en este territorio.
 Números de teléfono en %s
 Mapas
 Por defecto
-Cargue datos desde un archivo
+Importar datos desde un archivo
 Exporte todos los datos de la aplicación
-La aplicación crea hasta 20 copias de seguridad. Puede recuperarlos aquí
-Restablecimiento completo de todos los datos y configuraciones, incluidas las copias de seguridad
+Recuperar una copia de seguridad si algo salió mal
+Restablecimiento de todos los datos y configuraciones, incluidas las copias de seguridad

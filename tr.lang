@@ -103,7 +103,7 @@ Hangi dosya yüklenecek?
 Tetkik
 Saatler
 Kredi (%s saat ile toplam)
-
+Kaydetmek ve çıkmak için daire rengini seçin:
 
 Hizmet süresine ne kadar eklenir?
 Kredi süresine ne kadar eklenir?
@@ -130,7 +130,7 @@ Hızlı telefon numara girişi
 Zamanlayıcı başladığında bildirim
 Dil
 Veriler kaydedilemedi!
-
+Panoya kopyalandı.
 Aç
 Geri yükleme
 Temizle
@@ -300,11 +300,11 @@ Bu kattaki daire sayısı azaltılsın mı?
 Gece
 Akşam
 Sabah
-Sepya
 Eko
 Turkuaz
 Mor
-Netlik
+Sepya
+Adresleri liste olarak ekleyin
 Dışa aktarma başarısız oldu! Saha adı geçersiz karakterler içerebilir.
 1,2a Kurtuluş 20-5, Istiklal 19/2-15
 Yeni versiyon bulundu! Programın bir sonraki başlangıcında güncellenecektir.
@@ -316,5 +316,5 @@ Haritalar
 Varsayılan
 Bir dosyadan veri yükleyin
 Tüm uygulama verilerini dışa aktarın
-Uygulama en fazla 20 yedek kopya oluşturur. Bunlar burada geri yüklenebilir
+Bir şeyler ters giderse yedek kopyayı kurtarın
 Yedeklemeler dahil tüm program verilerinin ve ayarlarının tamamen sıfırlanması

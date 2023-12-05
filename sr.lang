@@ -103,7 +103,7 @@ Koju datoteku učitati?
 Biblijski kursevi
 Sati
 Volontereski sati (ukupno sa satima %s)
-
+Izaberite boju stana za čuvanje i izlazak:
 
 Koliko vremena u službi dodati u izveštaj?
 Koliko volonterskih sati dodati u izveštaj?
@@ -130,7 +130,7 @@ Brzi unos telefona
 Obaveštenje prilikom startovanja tajmera
 Jezik
 Sačuvaj nije uspelo!
-
+Kopirano u međuspremnik.
 Otvori
 Oporavak
 Brisanje
@@ -250,7 +250,7 @@ Dodaj brojeve sa nebrojčanim simbolima
 Neki brojevi stanova sadrže slova, tako da plan zgrade ne može biti omogućen!
 Podaci Rocket Ministry
 Podaci se uspešno izvoze u datoteku %s.
-Podaci se uspešno izvoze u fasciklu Dokumenti na vašem uređaju.
+Podaci se uspešno izvoze u fasciklu Documents (Dokumenti) na vašem uređaju.
 Podaci su uspešno sačuvani u datoteci %s.
 Izvoz baze podataka nije uspeo!
 Podaci se uspešno izvoze u direktorijum %s.
@@ -300,11 +300,11 @@ Smanjite broj stanova na ovom spratu?
 Noć
 Veče
 Jutro
-Sepija
 Eko
 Čirok
 Ljubičasta
-Jasnoća
+Sepija
+Dodavanje adresa kao liste
 Izvoz nije izvršen! Naziv teritorije može sadržati nevažeće znakove.
 1, 2a, Obalska 4a-15, Vuka Karadžića 12-23
 Pronađena nova verzija! Biće ažuriran sledeći put kada pokrenete program.
@@ -314,7 +314,7 @@ Na ovoj teritoriji nema telefonskih brojeva za izvoz!
 Telefonski brojevi na %s
 Karte
 Podrazum.
-Preuzmite podatke iz lokalne datoteke
+Uvoz podataka iz datoteke
 Izvezite sve podatke aplikacije
-Aplikacija kreira do 20 rezervnih kopija. Vratite ih ovde
+Vratite rezervnu kopiju ako nešto pođe po zlu
 Potpuno resetovanje svih podataka programa i postavki, uključujući rezervne kopije
