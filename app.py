@@ -3,49 +3,13 @@
 
 from sys import argv
 Devmode = 1 if "dev" in argv else 0
-
 Version = "2.11.001"
-
 """
 * Оптимизация отчета согласно новому бланку.
 * Выход из форм ввода по кнопке "Назад" всегда сохраняет данные.
 * Изменена стандартная светлая тема.
 * Небольшие исправления и оптимизации.
 """
-
-from kivy import platform
-if platform == "android":
-    from android.permissions import request_permissions, Permission
-    from android.storage import app_storage_path
-    from androidstorage4kivy import SharedStorage, Chooser
-    from kvdroid import activity, autoclass
-    from kvdroid.jclass.android import Rect
-    PythonActivity = autoclass('org.kivy.android.PythonActivity')
-    mActivity = PythonActivity.mActivity
-    from kivy.app import App
-    import plyer
-
-else:
-    import _thread
-    try:
-        from kivy.app import App
-        import plyer
-        import requests
-    except:
-        if Devmode: print("Что-то из модулей не найдено, устанавливаю.")
-        from subprocess import check_call
-        from sys import executable
-        check_call([executable, '-m', 'pip', 'install', 'kivy==2.1.0'])
-        check_call([executable, '-m', 'pip', 'install', 'plyer'])
-        check_call([executable, '-m', 'pip', 'install', 'requests'])
-        from kivy.app import App
-        import plyer
-        import requests
-
-if platform == "win":
-    if not Devmode: # убираем консоль
-        import ctypes
-        ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
 import utils as ut
 import os
@@ -54,12 +18,14 @@ import json
 import shutil
 import datetime
 import webbrowser
+import plyer
+import requests
 from functools import partial
 from random import random
 from copy import copy, deepcopy
 from iconfonts import icon
 from iconfonts import register
-
+from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.gridlayout import GridLayout
@@ -80,6 +46,23 @@ from kivy.uix.slider import Slider
 from kivy.animation import Animation
 from kivy.graphics import Color, RoundedRectangle
 from kivy.utils import get_hex_from_color
+from kivy import platform
+if platform == "android":
+    from android.permissions import request_permissions, Permission
+    from android.storage import app_storage_path
+    from androidstorage4kivy import SharedStorage, Chooser
+    from kvdroid import activity, autoclass
+    from kvdroid.jclass.android import Rect
+    PythonActivity = autoclass('org.kivy.android.PythonActivity')
+    mActivity = PythonActivity.mActivity
+    from kivy.app import App
+    import plyer
+else:
+    import _thread
+if platform == "win":
+    if not Devmode: # убираем консоль
+        import ctypes
+        ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
 SavedCount = 1
 
@@ -3196,16 +3179,12 @@ class RMApp(App):
                 if input == "report000":
                     self.rep.checkNewMonth(forceDebug=True)
 
-                elif 0:#input == "dev2":
-                    if self.dev2: self.dev2 = False
-                    else: self.dev2 = True
-                    self.pageTitle.text = f"dev2: {self.dev2}"
-
-                elif input == "@": # классический экспорт в облако
+                elif input == "@": # недокументированный экспорт в облако
                     self.share(email=True)
 
-                elif input == "#": # классический импорт через буфер обмена
-                    self.importDB(link=Clipboard.paste().strip())
+                elif input == "#": # недокументированный импорт через буфер обмена
+                    self.save(backup=True)
+                    self.load(clipboard=Clipboard.paste().strip())
 
                 elif input != "":
                     self.searchQuery = input
@@ -6316,19 +6295,16 @@ class RMApp(App):
 
         buffer = []
 
-        if clipboard is not None:  # импорт из буфера обмена старым способом (только через строку поиска)
+        if clipboard is not None:  # импорт из буфера обмена недокументированным способом через строку поиска
             self.dprint("Смотрим буфер обмена.")
             clipboard = str(clipboard).strip()
             try:
                 clipboard = clipboard[clipboard.index("[\"Rocket Ministry"):]
-                with open("temp", "w") as file: file.write(clipboard)
-                self.dprint("Содержимое буфера обмена записано во временный файл.")
+                with open("data.jsn", "w") as file: file.write(clipboard)
+                self.dprint("База данных перезаписана из буфера обмена, перезагружаемся!")
             except: return False
-            try:
-                with open("temp", "r") as file: buffer = json.load(file)
-                self.dprint("Буфер получен из буфера обмена.")
-            except: pass
-            if os.path.exists("temp"): os.remove("temp")
+            else:
+                self.restart()
 
         if forced:  # импорт по запросу с конкретным файлом
             try:
@@ -6390,27 +6366,17 @@ class RMApp(App):
                     self.dprint("База восстановлена из резервной копии 4.")
                     return True
 
-    def importDB(self, instance=None, link=None, file=None):
+    def importDB(self, file, instance=None):
         """ Импорт данных из буфера обмена либо файла """
         self.save()
-        if file is None:
-            self.dprint("Пытаюсь загрузить базу из буфера обмена.")
-            success = self.load(clipboard=link)
-        else:
-            self.dprint("Пытаюсь загрузить базу из файла.")
-            success = self.load(forced=True, DataFile=file, silent=True) # сначала пытаемся загрузить файл
-            if success == False: self.popup(message=self.msg[208])
-        if success == True:
+        self.dprint("Пытаюсь загрузить базу из файла.")
+        success = self.load(forced=True, DataFile=file, silent=True) # сначала пытаемся загрузить файл
+        if success == False: self.popup(message=self.msg[208])
+        elif success == True:
             self.save()
             self.restart("soft")
             self.terPressed()
             Clock.schedule_once(lambda x: self.popup(message=self.msg[209]), 0.2)
-        elif file is None:
-            if success == False:
-                self.importHelp = 1
-                self.popup(message="Clipboard is empty or has wrong data.")
-            else: # тоже неудачно, но другой вид ошибки
-                self.popup(message=success)
 
     def backupRestore(self, silent=True, allowSave=True, delete=False, restoreNumber=None):
         """ Восстановление файла из резервной копии """
