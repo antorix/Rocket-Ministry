@@ -17,7 +17,7 @@ Dim baseFolder, linkFile1, linkFile2, targetPath, objShell1, objShell2, desktopP
         baseFolder = .BuildPath( .GetParentFolderName( WScript.ScriptFullName ), "\")
         linkFile1   = .BuildPath( desktopPath, "Rocket Ministry.lnk" )
 		linkFile2   = .BuildPath( progPath, "Rocket Ministry.lnk" )
-	targetPath = .BuildPath( baseFolder, "main.py" )
+	targetPath = .BuildPath( baseFolder, "Rocket Ministry.vbs" )
     End With 
 
     With WScript.CreateObject("WScript.Shell").CreateShortcut( linkFile1 )
@@ -35,5 +35,3 @@ Dim baseFolder, linkFile1, linkFile2, targetPath, objShell1, objShell2, desktopP
 		.IconLocation= baseFolder & "icon.ico"
         .Save
     End With
-	
-	
