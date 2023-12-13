@@ -9,7 +9,7 @@ No se ha encontrado nada
 Error en la base de datos
 El programa no puede seguir funcionando. Intente eliminar la última entidad creada.
 Agregar
-Agregar una o mas casas
+Agregar casa(s)
 Junto a un territorio, puede ver su porcentaje de progreso de trabajo.
 Territorio:
 Dirección:
@@ -104,7 +104,7 @@ Estudios bíblicos
 Horas
 Crédito (totalmente con horas %s)
 Elija el color del apartamento para guardar y salir:
-
+¿Estás interesado en Rocket Ministry para Windows/Linux?
 ¿Cuánto tiempo hay que añadir al tiempo de servicio?
 ¿Cuánto tiempo hay que añadir al crédito horario?
 Enviar
@@ -166,7 +166,7 @@ Introduzca el nombre del territorio:
 Ejemplo: Calle del Río
 Introduzca el primer y el último número del rango a añadir:
 Tema de la interface
-Disminuir la cantidad de departamentos en este piso
+
 No preguntar de nuevo
 Este es un cambio entre la vista de "rejilla" por piso y una simple lista de apartamentos. Sólo funciona en territorios de tipo condominio. La vista por piso visualiza bien el bloque, mientras que la vista de lista permite ordenar y previsualizar el contenido de los apartamentos.
 ¿Incluir en la exportación los apartamentos sin números de teléfono?
@@ -181,7 +181,7 @@ Horas restantes
 Promedio mensual
 Equivale a 12 x necesidad mensual (a partir de los ajustes).
 Promedio de horas a servir cada mes durante el resto de los meses (no añadidos).
-¡Pero tenga en cuenta que esto desactivará la vista por piso!
+El tiempo de servicio ha comenzado. Para finalizar su sesión de servicio, sólo tiene que volver a hacer clic en el botón del cronómetro. El tiempo se añadirá automáticamente a su informe. ¡Puedes desactivar la función de cronómetro en la configuración!
 Lista de números
 Pegar desde el portapapeles
 Aquí puede añadir nuevos números utilizando una lista de números separados por comas o saltos de línea.
@@ -212,9 +212,9 @@ sección
 entrada
 Agregar el primer %s
 #
-Ya no puede reducir pisos en este bloque, ¡porque el último apartamento con contenido desaparecerá! Pero puede cambiar el rango de números de apartamentos o el número de pisos en la pantalla "%s".
-Se ha solicitado una relación no estándar entre apartamentos y pisos. Tuvimos que añadir %d apartamento(s) que ahora tiene que eliminar manualmente en los pisos correspondientes. Para ello, haga clic en el botón [b]%s[/b] en los detalles de [u]cualquier apartamento en este piso[/u].
-El tiempo de servicio ha comenzado. Para finalizar su sesión de servicio, sólo tiene que volver a hacer clic en el botón del cronómetro. El tiempo se añadirá automáticamente a su informe. ¡Puedes desactivar la función de cronómetro en la configuración!
+Ya no puede reducir pisos en este bloque, ¡porque el último apartamento con contenido desaparecerá!
+¿Eliminar un piso en esta posición? El número del apartamento permanecerá intacto.
+Eliminar posición
 Revisa actualizaciones:
 Empezar ministerio?
 Añadir la primera llamada
@@ -227,7 +227,7 @@ Cronómetro parado, añadido al informe: %s h.
 Cronómetro parado, agregado al informe: %s h. de crédito
 Agregado al informe
 Ahora se encuentra en la pantalla de primera coonversación. Sólo aparece cuando visita a una persona por primera vez.
-Ha conseguido reducir el número de apartamentos en este piso. El rango de números es ahora 1 menos. Si no está satisfecho con el resultado, no hay problema: restaure la numeración original en la ventana "%s" y vuelva a intentarlo.
+¿Actualizar parámetros de entrada?
 1 hora agregada al informe
 %s hora(s) agregada(s) al informe
 1 hora de crédito agregada al informe
@@ -246,8 +246,8 @@ Puede ser una lista de palabras aleatorias, incluso direcciones de distintos lug
 Cargando base de datos
 Consejo
 ¡Fallo en la creación de la copia de seguridad!
-Sumar números con caracteres no numéricos
-Algunos números de apartamentos contienen caracteres no numéricos, por lo que no se puede habilitar la vista de cuadrícula.
+Agregar números manualmente
+¡Los números de los apartamentos deben comenzar con un número no inferior a 1!
 Datos de Rocket Ministry
 Datos exportados correctamente al archivo %s.
 Datos exportados correctamente a la carpeta Documents (Documentos) de su dispositivo.
@@ -296,7 +296,7 @@ hrs
 min
 Si
 No
-¿Disminuir la cantidad de departamentos en este piso?
+
 Noche
 Tarde
 Mañana

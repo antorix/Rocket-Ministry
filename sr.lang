@@ -104,7 +104,7 @@ Biblijski kursevi
 Sati
 Volontereski sati (ukupno sa satima %s)
 Izaberite boju stana za čuvanje i izlazak:
-
+Da li vas zanima Rocket Ministry za Vindovs/Linuk?
 Koliko vremena u službi dodati u izveštaj?
 Koliko volonterskih sati dodati u izveštaj?
 Pošalji
@@ -166,7 +166,7 @@ Unesi naziv područja:
 Primer: ul. Obalska
 Unesite prvi i zadnji broj u nizu za dodavanje:
 Tema interfejsa
-Smanjiti broj stanova na ovom spratu
+
 Ne pitaj ovo više
 Ovo je prekidač izmedđu pregledu po spratu i jednostavne liste stanova. Ovo važi samo za poručja sa stambenim zgradam. Pregled po spratu dobro ilustruje ulaze, dok pregled liste ima zgodno sortiranje i pregled sadržaja stanova.
 Uključiti stanove bez broja telefona u izvoz?
@@ -181,7 +181,7 @@ Preostali sati
 Mesećni prosek
 Jednako 12 x mesećni zahtev (iz podešavanja).
 Prosećan broj sati službe svakog meseca tokom ostalih (ne dodatih) meseci.
-Obratite pažnju da će ovo isključiti pregled po spratu!
+Vreme propovedi je počelo! Da biste završili sesiju propovedi, samo ponovo dodirnite dugme tajmera. Vreme će se automatski dodati u vaš izveštaj. Možete isključiti funkciju tajmera u podešavanjima!
 Lista brojeva
 Nalepi iz privremene memorije
 Ovde možete dodati nove brojeve koristeći listu brojevu odvojenu zarezima ili novim redovima.
@@ -212,9 +212,9 @@ deo
 ulaz
 Dodajte prvi %s
 br.
-Više nećete moći da smanjite broj spratova u ovom bloku, jer će poslednji stan sa sadržajem nestati! Ali možete promeniti raspored stanova i podova na ekranu "%s".
-Tražen je nestandardni odnos između stanova i spratova. Morali smo da dodamo %d stana, koje sada morate ručno ukloniti na odgovarajućim podovima. Da biste to uradili, kliknite na dugme [b]%s[/b] u rekvizitima [u]bilo kog stana na tom spratu[/u].
-Vreme propovedi je počelo! Da biste završili sesiju propovedi, samo ponovo dodirnite dugme tajmera. Vreme će se automatski dodati u vaš izveštaj. Možete isključiti funkciju tajmera u podešavanjima!
+Više nećete moći da smanjite broj spratova u ovom bloku, jer će poslednji stan sa sadržajem nestati!
+Uklonite broj stana u ovom položaju? Sam broj stana će ostati nepromenjen.
+Uklonite položaj
 Proverite da li postoje ispravke:
 Započnite službu?
 Dodajte prvi poziv
@@ -227,7 +227,7 @@ Tajmer je zaustavljen, dodan u izveštaj: %s s.
 Tajmer je zaustavljen, dodan u izveštaj: %s s. VS
 Dodato u izveštaj
 Sada ste na ekranu prvog poziva. Pojavljuje se samo kada prvi put posetite osobu.
-Uspešno ste smanjili broj stanova na ovom spratu! Raspon brojeva je sada 1 manji. Ako niste zadovoljni rezultatom, nema problema: samo vratite originalno numerisanje u prozoru "%s", a zatim pokušajte ponovo.
+Ažuriranje ulaznih parametara?
 1 sat je dodat izveštaju
 %s s. dodato u izveštaj
 1 sat VS dodan u izveštaj
@@ -246,8 +246,8 @@ To može biti lista slučajnih reči, čak i adresa na različitim lokacijama.
 Učitavanje baze podataka
 Savet
 Nije moguće napraviti rezervnu kopiju!
-Dodaj brojeve sa nebrojčanim simbolima
-Neki brojevi stanova sadrže slova, tako da plan zgrade ne može biti omogućen!
+Dodajte brojeve ručno
+Brojevi stanova moraju početi sa cifrom ne manjom od 1!
 Podaci Rocket Ministry
 Podaci se uspešno izvoze u datoteku %s.
 Podaci se uspešno izvoze u fasciklu Documents (Dokumenti) na vašem uređaju.
@@ -296,7 +296,7 @@ s
 m
 Da
 Ne
-Smanjite broj stanova na ovom spratu?
+
 Noć
 Veče
 Jutro

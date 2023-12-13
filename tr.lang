@@ -9,7 +9,7 @@ Bir şey bulunmadı
 Sistem hatası
 Program devam edemiyor. En son oluşturulan nesneyi silmeyi deneyin.
 İlk
-Bir ya-da birkaç ev oluştur
+Ev(ler) ekle
 Bir bölgenin yanında, iş ilerleme yüzdesini görebilirsiniz.
 Saha:
 Adres:
@@ -104,7 +104,7 @@ Tetkik
 Saatler
 Kredi (%s saat ile toplam)
 Kaydetmek ve çıkmak için daire rengini seçin:
-
+Windows/Linux için Roket Ministry ile ilgileniyor musunuz?
 Hizmet süresine ne kadar eklenir?
 Kredi süresine ne kadar eklenir?
 Gönder
@@ -166,7 +166,7 @@ Saha'yı adlandırın
 Örneğin: Kurtuluş şok.
 Eklenecek aralığın ilk ve son numaralarını girin:
 Arayüz teması
-Bu kattaki daire sayısı azaltılsın mı
+
 Artık sorma
 Bu, her bir kat için "ızgara" görünümü ile daire listesi arasında geçiş sağlayan bir butondur. Çok daireli alanlarda kullanılabilir. Kat kat modu giriş yolunu iyi bir şekilde görselleştirirken, liste modunda sıralama ve dairelerdeki girişlerin önizlemesi vardır.
 Telefon numaraları olmadan ihracat dairelerine dahil edilsin mi?
@@ -181,7 +181,7 @@ Kalan saatler
 Aylık ortalama
 12 * aylık orana eşittir (ayarlarda).
 Kalan (girilmemiş) aylarda her ay hizmet edilecek ortalama saat sayısı.
-Ancak bunun girişin kat görünümünü kapatacağına dikkat edin!
+Hizmet süresi doldu! Bitirmek için zamanlayıcı düğmesine tekrar basmanız yeterlidir. Zaman otomatik olarak rapora girilecektir. Zamanlayıcı özelliğini ayarlardan devre dışı bırakabilirsiniz!
 Sayı listesi
 Panodan yapıştır
 Burada yeni numaraları virgülle ayrılmış basit bir listeye veya yeni bir satıra ekleyebilirsiniz
@@ -212,9 +212,9 @@ bölüm
 blok
 İlk %s'yi oluştur
 No
-Bu girişte katları küçültmek artık mümkün değil çünkü girişi olan son daire kaybolacak! Ancak "%s" ekranından daire aralığını veya kat sayısını değiştirebilirsiniz.
-Standart olmayan bir daire ve kat oranı talep edildi. Gerekli katlarda manuel olarak kaldırmanız gereken %d daire eklemeye ihtiyaç duyuldu. Bunu yapmak için, [u]yerdeki herhangi bir daireyi[/u] başlatmak üzere [b]%s[/b] düğmesine basın.
-Hizmet süresi doldu! Bitirmek için zamanlayıcı düğmesine tekrar basmanız yeterlidir. Zaman otomatik olarak rapora girilecektir. Zamanlayıcı özelliğini ayarlardan devre dışı bırakabilirsiniz!
+Bu girişte katları küçültmek artık mümkün değil çünkü girişi olan son daire kaybolacak!
+Bu konumdaki bir daire silinsin mi? Daire numarasının kendisi bozulmadan kalacaktır.
+Konumu sil
 Güncellemeleri kontrol et:
 Hizmet başlansın mı?
 İlk ziyaretinizi oluşturun
@@ -227,7 +227,7 @@ Zamanlayıcı durduruldu ve rapora %s saat eklendi.
 Zamanlayıcı durduruldu, rapora %s saat kredi eklendi
 Rapora eklendi
 Önünüzde ilk ziyaret ekranı. Sadece kişiyi ilk kez ziyaret ettiğinizde ortaya çıkar.
-Bu kattaki daire sayısını başarıyla azalttınız! Girişteki dairelerin toplam sayısı 1 azaltıldı. Sonucu beğenmediyseniz, sadece "%s" penceresindeki orijinal numaralandırmayı geri yükleyin ve tekrar deneyin.
+Blok parametreleri güncellensin mi?
 Rapora 1 saat eklendi.
 Bildirmek için %s saat eklendi.
 Rapora 1 saatlik kredi eklendi
@@ -246,8 +246,8 @@ Tamamen keyfi kelimelerden, hatta farklı yerlerdeki adreslerden oluşan bir lis
 Veritabanının indirilmesi
 İpucu
 Yedekleme başarısız oldu!
-Sayısal olmayan karakterler içeren sayılar ekleme
-Bazı daire numaraları sayısal olmayan karakterler içerdiğinden tablo görünümü etkinleştirilemez!
+Numaraları manuel olarak ekleyin
+Daire numaraları 1'den küçük olmayan bir rakamla başlamalıdır!
 Rocket Ministry verileri
 Veriler, %s dosyasına başarıyla aktarıldı.
 Veriler cihazınızdaki Documents (Belgeler) klasörüne başarıyla aktarıldı.
@@ -296,7 +296,7 @@ s
 d
 Evet
 Hayır
-Bu kattaki daire sayısı azaltılsın mı?
+
 Gece
 Akşam
 Sabah

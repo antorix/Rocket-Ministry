@@ -143,10 +143,16 @@ def timeFloatToHHMM(hours=None, delta=None):
 def numberize(line):
     """ Убирает из слова все нечисловые символы, чтобы получилось отсортировать по номеру """
     result = 0
-    l = len(line)
-    while l > 0:
-        if line[:l].isnumeric():
-            result = int(line[:l])
-            break
-        else: l -= 1
+    try:
+        return float(line)
+    except:
+        l = len(line)
+        while l > 0:
+            if line[:l].isnumeric():
+                result = float(line[:l])
+                break
+            else: l -= 1
     return result
+
+def alpha(line):
+    return "000"+line

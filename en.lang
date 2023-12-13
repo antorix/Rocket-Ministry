@@ -9,7 +9,7 @@ Nothing found
 Database error
 The program cannot continue working. Try to delete the last created entity.
 Add
-Add one or more houses
+Add house(s)
 Next to a territory, you can see its work progress percentage.
 Territory:
 Address:
@@ -104,7 +104,7 @@ Bible studies
 Hours
 Credit (totally with hours %s)
 Choose the apartment color to save and exit:
-
+Are you interested in Rocket Ministry for Windows/Linux?
 How much time to add to service time?
 How much time to add to hourly credit?
 Share
@@ -166,7 +166,7 @@ Enter territory name:
 Example: River st.
 Enter the first and the last number of the range to add:
 Interface theme
-Reduce the amount of flats on this floor
+
 Don't ask this anymore
 This is a switch between the per-floor "grid" view and a simple list of apartments. It works only in condominium-type territories. The per-floor view well visualizes the block, while the list view has handy sorting and preview of flats' content.
 Include into export apartments without phone numbers?
@@ -181,7 +181,7 @@ Hours remaining
 Monthly average
 Equals 12 x monthly requirement (from settings).
 Average number of hours to serve each month during the rest (not added) months.
-But take note that this will disable the per-floor view!
+Service time has started! To finish your service session, just click on the timer button once again. The time will be added to your report automatically. You can disable the timer feature in the settings!
 List of numbers
 Paste from clipboard
 Here you can add new numbers using a list of numbers separated by commas or line breaks.
@@ -212,9 +212,9 @@ section
 entrance
 Add the first %s
 #
-You cannot reduce floors in this block anymore, because the last apartment with content will disappear! But you can adjust the apartments and floors layout on the "%s" screen.
-A non-standard relation between apartments and floors requested. We had to add %d apartment(s) that you now have to manually delete on corresponding floors. To do this, click on the button [b]%s[/b] in the details of [u]any apartment on this floor[/u].
-Service time has started! To finish your service session, just click on the timer button once again. The time will be added to your report automatically. You can disable the timer feature in the settings!
+You cannot reduce floors in this block anymore, because the last apartment with content will disappear!
+Delete a flat in this position? The flat number itself will stay intact.
+Delete position
 Check for updates:
 Start ministry?
 Add the first call
@@ -227,7 +227,7 @@ Timer stopped, added to report: %s h.
 Timer stopped, added to report: %s h. of credit
 Added to report
 You are now on the first call screen. It appears only when you are visiting a person for the first time.
-You have successfully reduced the amount of flats on this floor! The number range is now 1 less. If you are not happy with the result, no problem: just restore the original numeration in the "%s" window and then try again.
+Update entrance parameters?
 1 hour added to report
 %s hour(s) added to report
 1 hour of credit added to report
@@ -246,8 +246,8 @@ It can be a list of random words, even addresses in different places.
 Loading database
 Tip
 Backup copy creation failed!
-Add numbers with non-numeric characters
-Some apartment numbers contain non-numeric characters, so the grid view cannot be enabled!
+Add numbers manually
+Apartment numbers must begin with a number not lower than 1!
 Rocket Ministry Data
 Data successfully exported to file %s.
 Data successfully exported to the Documents folder on your device.
@@ -296,7 +296,7 @@ h
 m
 Yes
 No
-Reduce the amount of flats on this floor?
+
 Night
 Evening
 Morning
