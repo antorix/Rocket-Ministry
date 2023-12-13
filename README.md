@@ -16,10 +16,6 @@ The app is translated into English, Spanish, Russian, Ukrainian, Turkish, Serbia
  
 * [Install on Linux](https://github.com/antorix/Rocket-Ministry/wiki#linux)
 
-* [Condominiums and Reducing Floors](https://github.com/antorix/Rocket-Ministry/wiki#condominiums-and-reducing-floors)
-
-* [Loading Territory via List of Addresses](https://github.com/antorix/Rocket-Ministry/wiki#loading-territory-via-list-of-addresses)
-
 * [Data Synchronization and Transfer](https://github.com/antorix/Rocket-Ministry/wiki#data-synchronization-and-transfer)
  
 * [Frequently asked questions](https://github.com/antorix/Rocket-Ministry/wiki#faq)
