@@ -2692,7 +2692,7 @@ class RMApp(App):
                 self.pageTitle.text = str(self.error)
                 self.error = None
 
-            if self.resources[0][1][8] == 0:
+            if not self.desktop and self.resources[0][1][8] == 0:
                 self.resources[0][1][8] = 1
                 self.save()
                 def __ask(*args):
