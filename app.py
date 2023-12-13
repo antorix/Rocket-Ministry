@@ -5131,7 +5131,7 @@ class RMApp(App):
         # 45 - центральная кнопка
         # 100 - большинство кнопок (по умолчанию)
         # 250 - почти квадратные маленькие кнопки
-        if self.theme == "3D" or (self.desktop and rad >= 100):
+        if self.theme == "3D" or (self.desktop and rad >= 50):
             buttonRadius = 0
         else:
             buttonRadius = (Window.size[0] * Window.size[1]) / (Window.size[0] * rad)
