@@ -344,15 +344,10 @@ class Porch(object):
     def showFlats(self, sort=False):
         """ Вывод квартир для вида подъезда """
         if sort: self.sortFlats() # сортируем, если нужно
-        self.rows = 1
-        self.columns = 999
-        if str(self.flatsLayout).isnumeric(): # определяем тип сортировки
+        options = []
+        if str(self.flatsLayout).isnumeric(): # вывод подъезда в этажной раскладке
             self.rows = int(self.flatsLayout)
             self.columns = int(len(self.flats) / self.rows)
-        else:
-            self.flatsLayout = "н"
-        options = []
-        if str(self.flatsLayout).isnumeric(): # вывод многоквартирного подъезда в табличной раскладке
             i = 0
             for r in range(self.rows):
                 options.append(str(self.rows - r + self.floor1 - 1))
@@ -360,6 +355,8 @@ class Porch(object):
                     options.append(self.flats[i])
                     i += 1
         else: # вывод подъезда/сегмента простым списком
+            self.rows = 1
+            self.columns = 999
             options = self.flats
         if len(options) == 0 and self.type == "сегмент":
             RM.createFirstFlat = True
@@ -1268,7 +1265,7 @@ class FlatButtonSquare(FlatButton):
         self.flat = flat
         self.text = flat.number
         self.status = flat.status
-        if not RM.desktop: self.font_size = RM.fontXS * RM.fontScale(cap=1.2)
+        if not RM.desktop: self.font_size = RM.fontS * RM.fontScale(cap=1.2)
 
 class FlatHiddenButton(FlatButton):
     """ Кнопка удаленной квартиры (с плюсиком) """
@@ -2916,9 +2913,7 @@ class RMApp(App):
         if len(self.stack) > 0 and not self.showSlider: del self.stack[0]
 
         if self.displayed.form == 'porchView' and self.stack[0] == "porchView":
-            del self.stack[0]
-
-        print(self.stack)  # при правильной работе должно выводить название текущей формы
+            del self.stack[0] # для решения бага, когда в подъезде требовалось 2 клика для выхода
 
         if self.displayed.form == "rep":  # при этих действиях кнопка "назад" сохраняет данные
             self.saveReport()  # отчет
@@ -3617,10 +3612,10 @@ class RMApp(App):
             address = f" {self.allcontacts[i][2]}{gap}{porch}{hyphen}{self.allcontacts[i][3]}"\
                 if self.allcontacts[i][2] != "" else ""
             listIcon = f"[color={get_hex_from_color(self.getColorForStatus('1'))}]{self.button['user']}[/color]"
-            options.append(f"{self.allcontacts[i][1]}[size={self.listIconSize}]{listIcon}[/size] [b]{self.allcontacts[i][0]}[/b]")
+            options.append(f"{self.allcontacts[i][1]}[size={self.listIconSize}]{listIcon}[/size] {self.allcontacts[i][0]}")
             footer.append([
                 f"{self.button['chat']} {self.allcontacts[i][4]}" if self.allcontacts[i][4] is not None else "",
-                "" if address=="" else f"{icon('icon-home-1')} {address}"
+                "" if address == "" else f"{icon('icon-home-1')} {address}"
             ])
 
         self.displayed.update(
@@ -3644,6 +3639,8 @@ class RMApp(App):
             except: pass
 
         self.updateMainMenuButtons()
+
+        self.clickedBtnIndex = 0
 
     def repPressed(self, instance=None, jumpToPrevMonth=False):
         self.func = self.repPressed
@@ -4114,6 +4111,7 @@ class RMApp(App):
         self.func = self.searchPressed
         if self.confirmNonSave(): return
         self.displayed.form = "search"
+        self.clickedBtnIndex = 0
         self.clearTable()
         self.createInputBox(
             title=f"[b]{self.msg[146]}[/b]",
@@ -4280,6 +4278,8 @@ class RMApp(App):
             if index == len(self.btn): index -= 1
             try: self.scroll.scroll_to(widget=self.btn[index], padding=0, animate=False)
             except: pass
+
+        self.clickedBtnIndex = 0
 
     def flatView(self, call=True, instance=None):
         """ Вид квартиры - список записей посещения """

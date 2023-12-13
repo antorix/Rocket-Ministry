@@ -153,6 +153,3 @@ def numberize(line):
                 break
             else: l -= 1
     return result
-
-def alpha(line):
-    return "000"+line
