@@ -87,8 +87,8 @@ k
 Cümlenin ilk kelimesini büyük harfle yaz
 Tüm alanlar doldurulmalı ve sayısal değerlere sahip olmalıdır. Kat sayısı 0'dan yüksek olmalı. Aralık'taki son dairenin numarası ilk daireden az olmamalıdır.
 Başlıkta noktalara ve virgüllere izin verilmez!
+Başlıkta virgüllere izin verilmiyor!
 Her iki değer de sayı içermelidir, birincisi ikinciden büyük olmalıdır.
-Maksimum %s karakter!
 Tarih YYYY-AA-GG formatında olmalıdır! Örneğin 2023-03-25.
 Bu numara zaten var!
 Bu giriş kapısı için henüz bir kat belirlenmemiştir. Bunları "%s" bölümünde ayarlayın.
@@ -186,7 +186,7 @@ Sayı listesi
 Panodan yapıştır
 Burada yeni numaraları virgülle ayrılmış basit bir listeye veya yeni bir satıra ekleyebilirsiniz
 Ekle
-Giriş hatası. Yalnızca sayılara ve virgüllere izin verilir. Alfabetik karakterler içeren bir liste oluşturmak istiyorsanız, normal (çok birimli olmayan) bir saha oluşturun.
+Максимум %s символів!
 İptal
 Liste
 Veriler başarıyla temizlendi

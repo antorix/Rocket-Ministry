@@ -87,8 +87,8 @@ f
 Capitalize the first word of a sentence
 All fields should be filled with numerical values. The number of floors should be more than 0. The last apartment of the range should have the number no less than the first one.
 Periods and commas are not allowed!
+Commas are not allowed!
 Both values should be numerical, and the first one should not be greater than the second one!
-Max. %s characters!
 Date should have the format YYYY-MM-DD! For example: 2023-03-25.
 This number already exists!
 Floors have not yet been enabled for this entrance. Set them up in the "%s" section.
@@ -186,7 +186,7 @@ List of numbers
 Paste from clipboard
 Here you can add new numbers using a list of numbers separated by commas or line breaks.
 Add
-Input error. This list should contain only numbers and commas. No other characters are allowed. If you need to use alphabetical characters, create a non-condominium type territory.
+
 Cancel
 List
 Data wiped successfully

@@ -87,8 +87,8 @@ m
 Rečenica počinje velikim slovom
 Sva polja trebaju biti popunena sa brojčanim vrednostima. Broj spratova mora biti veći od 0. Zadnji stan u nizu ne može imati manji broj od početnog.
 Tačke i zarezi nisu dozvoljeni!
+Zarezi nisu dozvoljeni!
 Obe vrednosti treba da budu numeričke i prva vrednost ne može biti veća od druge.
-Najviše %s karaktera!
 Datum mora biti u formatu GGGG-MM-DD. Na primer: 2023-03-25.
 Ovaj broj već postoji!
 Spratovi još uvek nisu podešeni za ovaj ulaz. Podesite ih u odeljku "%s".
@@ -186,7 +186,7 @@ Lista brojeva
 Nalepi iz privremene memorije
 Ovde možete dodati nove brojeve koristeći listu brojevu odvojenu zarezima ili novim redovima.
 Dodaj
-Greška unosa. Ova lista treba da sadrži samo brojeve i zareze. Nijedan drugi znak nije dozvoljen. Ako treba da koristite slova, kreirajte teren bez zgrada.
+Максимум %s символов!
 Otkaži
 Lista
 Podaci su uspešno obrisani

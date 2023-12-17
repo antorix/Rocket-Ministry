@@ -87,8 +87,8 @@ f
 Poner en mayúscula la primera palabra de una oración
 Todos los campos deben rellenarse con valores numéricos. El número de pisos debe ser superior a 0. El último apartamento del rango debe tener el número no inferior al primero.
 !Puntos y comas no están permitidos!
+!Comas no están permitidos!
 ¡Ambos valores deben ser numéricos, y el primero no debe ser mayor que el segundo!
-Máximo de %s caracteres!
 La fecha debe tener el formato ¡AAAA-MM-DD! Por ejemplo: 2023-03-25.
 ¡Este numero ya existe!
 Los pisos aún no se han habilitado para esta entrada. Habilítelos en la sección "%s''.
@@ -186,7 +186,7 @@ Lista de números
 Pegar desde el portapapeles
 Aquí puede añadir nuevos números utilizando una lista de números separados por comas o saltos de línea.
 Agregar
-Error de entrada. Esta lista sólo debe contener números y comas. No se permiten otros caracteres. Si necesita utilizar caracteres alfabéticos, cree un territorio de tipo no condominio.
+
 Cancelar
 Lista
 Datos borrados correctamente

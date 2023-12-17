@@ -3,12 +3,9 @@
 
 from sys import argv
 Devmode = 1 if "dev" in argv else 0
-Version = "2.12.000"
+Version = "2.12.001"
 """
-* Полностью переработана система редактирования квартир и подъездов.
-* Повышено быстродействие отрисовки больших подъездов.
-* Освеженный дизайн.
-* Исправления и оптимизации.
+* Исправление багов и оптимизации.
 """
 
 import utils as ut
@@ -53,15 +50,15 @@ if platform == "android":
     from androidstorage4kivy import SharedStorage, Chooser
     from kvdroid import activity, autoclass
     from kvdroid.jclass.android import Rect
+    rect = Rect(instantiate=True)
     PythonActivity = autoclass('org.kivy.android.PythonActivity')
     mActivity = PythonActivity.mActivity
 else:
     import _thread
     import requests
-if platform == "win":
-    if not Devmode: # убираем консоль
-        import ctypes
-        ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+if platform == "win" and not Devmode:  # убираем консоль
+    import ctypes
+    ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
 
 SavedCount = 1
 
@@ -69,12 +66,12 @@ SavedCount = 1
 
 class House(object):
     """ Класс участка """
-    def __init__(self):
-        self.title = ""
-        self.porchesLayout = "а"
+    def __init__(self, title="", porchesLayout="а", note="", type=""):
+        self.title = title
+        self.porchesLayout = porchesLayout
         self.date = time.strftime("%Y-%m-%d", time.localtime())
-        self.note = ""
-        self.type = ""
+        self.note = note
+        self.type = type
         self.porches = []
 
     def getHouseStats(self):
@@ -82,7 +79,7 @@ class House(object):
         visited = interest = totalFlats = 0
         for porch in self.porches:
             for flat in porch.flats:
-                if not "." in str(flat.number): totalFlats += 1
+                if not "." in str(flat.number) or self.type == "private": totalFlats += 1
                 if len(flat.records) > 0: visited += 1
                 if flat.status == "1": interest += 1
         ratio = visited / totalFlats if totalFlats != 0 else 0
@@ -103,28 +100,12 @@ class House(object):
 
     def showPorches(self):
 
-        def __getFlatsRange(porch):
-            """ Выдает диапазон квартир в подъезде многоквартирного дома """
-            list = []
-            for flat in porch.flats:
-                if not "." in flat.number:
-                    list.append(str(flat.number))
-            if len(list) == 0:
-                range = ""
-            elif len(list) == 1:
-                range = f" {RM.msg[214]} [i]{list[0]}[/i]"
-            elif len(list) > 1:
-                list.sort(key=lambda x: ut.numberize(x))
-                last = len(list) - 1
-                range = f" {RM.msg[214]} [i]{list[0]}–{list[last]}[/i]"
-            return range
-
         list = []
         self.porches.sort(key=lambda x: ut.numberize(x.title), reverse=False)
         porchString = RM.msg[212][0].upper() + RM.msg[212][1:] if RM.language != "ka" else RM.msg[212]
         for porch in self.porches:
             listIcon = f"{RM.button['porch']} {porchString}" if self.type == "condo" else RM.button['pin']
-            list.append(f"{listIcon} [b]{porch.title}[/b] {__getFlatsRange(porch)}")
+            list.append(f"{listIcon} [b]{porch.title}[/b] {porch.getFlatsRange()}")
         if self.type != "condo" and len(list) == 0:
             list.append(f"{RM.button['plus-1']}{RM.button['pin']} {RM.msg[213] % self.getPorchType()[1]}")
         if self.type == "condo":
@@ -141,9 +122,7 @@ class House(object):
         return number
 
     def addPorch(self, input="", type="подъезд"):
-        self.porches.append(Porch())
-        self.porches[len(self.porches)-1].title = input.strip()
-        self.porches[len(self.porches)-1].type = type
+        self.porches.append(Porch(title=input.strip(), type=type))
 
     def deletePorch(self, porch):
         selectedPorch = self.porches.index(porch)
@@ -164,19 +143,19 @@ class House(object):
 
 class Porch(object):
     """ Класс подъезда """
-    def __init__(self):
-        self.title = ""
-        self.status = ""
-        self.flatsLayout = "н"
-        self.floor1 = 1 # number of first floor
-        self.note = ""
-        self.flats = [] # list of Flat instances, initially empty
-        self.type = ""
+    def __init__(self, title="", status="", flatsLayout="н", floor1=1, note="", type=""):
+        self.title = title
+        self.status = status
+        self.flatsLayout = flatsLayout
+        self.floor1 = floor1 # number of first floor
+        self.note = note
+        self.type = type
+        self.flats = []  # list of Flat instances, initially empty
         self.flatsNonFloorLayoutTemp = None # несохраняемая переменная
+        self.highestNumber = 0 # максимальный номер квартиры в подъезде (несохр.)
 
     def restoreFlat(self, instance):
         """ Восстанавление квартир (нажатие на плюсик) """
-
         def __oldRandomNumber(number):
             """ Проверка, что это не длинный номер, созданный random() в предыдущих версиях"""
             if "." in number:
@@ -185,64 +164,40 @@ class Porch(object):
                 if length <= 1: return False
                 else: return True
             else: return False
-
         if ".5" in instance.number and not __oldRandomNumber(instance.number): # восстановление удаленной квартиры с таким же номером
-            for flat in self.flats:
-                if flat.number == instance.number:
-                    flat.number = instance.number[ : instance.number.index(".")]
-        elif "." in instance.number: # либо удаление заглушки путем сдвига квартир налево
-            self.sortFlats("н")
-            for flat in self.flats:
-                if flat.number == instance.number:
-                    self.deleteFlat(flat)
-                    break
-            for flat in self.flats: # сдвиг всех квартир ".1" справа на 1 вверх, чтобы они не переезжали
-                if ".1" in flat.number and ut.numberize(flat.number) > ut.numberize(instance.number):
-                    flat.number = str(ut.numberize(flat.number)+1)
-            lastFlat = self.flats[len(self.flats)-1]
-            self.flats.append(Flat(number=f"{int(ut.numberize(lastFlat.number))+1}"))
-            self.flatsLayout = str(self.rows)
+            instance.flat.number = instance.number[ : instance.number.index(".")]
+        elif "." in instance.flat.number: # либо удаление заглушки путем сдвига квартир налево
+            self.deleteFlat(instance.flat, regularDelete=True)
+            if 1:# сдвиг всех квартир ".1" справа на 1 вверх, чтобы они не переезжали
+                for flat in self.flats:
+                    if ".1" in flat.number and float(flat.number) > float(instance.flat.number):
+                        flat.number = "%.1f" % (float(flat.number)+1)
+            self.flats.append(Flat(number=f"{int(self.highestNumber+1)}"))
         RM.save()
         RM.porchView()
 
-    def deleteFlat(self, deletedFlat):
+    def deleteFlat(self, deletedFlat, regularDelete=False):
         """ Удаление квартиры - переводит на сдвиг (если подъезд) или простое удаление (если не подъезд) """
-        if self.floors(): # если подъезд c сеткой
-            tempNumber = deletedFlat.number
-            self.sortFlats("о")
-            keepLastFlat = True if ".1" in self.flats[0].number else False
-            if self.flats[0].status != "": # определяем, нет ли в конце списка квартиры с записями, которую нельзя сдвигать
-                RM.popup(message=RM.msg[215])
-                self.sortFlats(str(self.rows))
-            else:
-                fPos = self.flats.index(deletedFlat)
-                if 1:#fPos != 0: # если не последняя квартира подъезда
-                    self.flats.insert(fPos, Flat(number=str(ut.numberize(tempNumber)-1+0.1)))
-                    del self.flats[0]
-                else: # если последняя – пока нельзя удалять последнюю квартиру!
-                    deletedFlat.number = str(ut.numberize(tempNumber)-1+0.1)
-                for flat in self.flats: # сдвиг всех квартир ".1" справа на 1 вниз, чтобы они не переезжали
-                    if ".1" in flat.number and ut.numberize(flat.number) > ut.numberize(tempNumber):
-                        flat.number = str( ut.numberize(flat.number) - 1 )
-                if 0:#keepLastFlat: # для решения бага, при котором последняя квартира всегда восстанавливается после удаления предыдущих
-                    self.flats[0].number = str(ut.numberize(self.flats[0].number)-1+0.1)
-                self.sortFlats(str(self.rows))
-        else:
-            ind = self.flats.index(deletedFlat)
-            del self.flats[ind] # если не подъезд или нет сетки, простое удаление
-
-    def getFloorPosition(self, number):
-        """ Определяет позицию заданной квартиры на этаже, работает только при этажной раскладке """
-        r = self.rows
-        c = 1
-        for flat in self.flats:
-            if flat.number == number:
-                return c
-            if c == self.columns:
-                r -= 1
-                c = 1
-            else:
-                c += 1
+        if self.floors() and not regularDelete: # если подъезд c сеткой
+            for f in self.flats:
+                if f.number == str(self.highestNumber):
+                    if f.status != "": # проверка, чтобы последняя квартира была пустой
+                        RM.popup(message=RM.msg[215])
+                        return
+                    break
+            i = self.flats.index(deletedFlat)
+            popped = self.flats.pop(i)
+            self.flats.append(popped)
+            adjustedNumber = ut.numberize(deletedFlat.number) - 1 + .1
+            self.flats.insert(i, Flat(number="%.1f" % adjustedNumber))
+            if 1:# сдвиг всех квартир ".1" справа на 1 вниз, чтобы они не переезжали
+                for i in range(len(self.flats)):
+                    if ".1" in self.flats[i].number and float(self.flats[i].number) > adjustedNumber:
+                        self.flats[i].number = "%.1f" % (float(self.flats[i].number)-1)
+            self.flatsLayout = str(self.rows)
+        else: # простое удаление
+            i = self.flats.index(deletedFlat)
+            del self.flats[i]
 
     def getFirstAndLastNumbers(self):
         """ Возвращает первый и последний номера в подъезде и кол-во этажей """
@@ -265,6 +220,31 @@ class Porch(object):
                 floors = "5"
         return first, last, floors
 
+    def getFlatsRange(self):
+        """ Выдает диапазон квартир в подъезде """
+        list = []
+        alpha = False
+        check = True
+        for flat in self.flats:
+            if not "." in flat.number or self.type == "сегмент":
+                list.append(flat)
+                if check and not flat.number.isnumeric():
+                    alpha = True
+                    check = False
+        if len(list) == 0:
+            range = ""
+        elif len(list) == 1:
+            range = f" {RM.msg[214]} [i]{list[0].number}[/i]"
+        elif len(list) > 1:
+            if not alpha:
+                list.sort(key=lambda x: int(x.number))
+            else:
+                list.sort(key=lambda x: x.number)
+                list.sort(key=lambda x: ut.numberize(x.number))
+            last = len(list) - 1
+            range = f" {RM.msg[214]} [i]{list[0].number}–{list[last].number}[/i]"
+        return range
+
     def sortFlats(self, type=None):
         """ Сортировка квартир """
         if type is not None: self.flatsLayout = type
@@ -281,22 +261,19 @@ class Porch(object):
 
         elif self.flatsLayout=="с": # alphabetic by status character
             self.flatsNonFloorLayoutTemp = self.flatsLayout
-            #self.flats.sort(key=lambda x: ut.numberize(x.number))
             self.flats.sort(key=lambda x: x.getStatus()[1])
 
         elif self.flatsLayout=="т": # by phone number
             self.flatsNonFloorLayoutTemp = self.flatsLayout
-            #self.flats.sort(key=lambda x: ut.numberize(x.number))
             self.flats.sort(key=lambda x: x.phone, reverse=True)
 
         elif self.flatsLayout=="з": # by note
             self.flatsNonFloorLayoutTemp = self.flatsLayout
-            #self.flats.sort(key=lambda x: ut.numberize(x.number))
             self.flats.sort(key=lambda x: x.note, reverse=True)
 
         if str(self.flatsLayout).isnumeric(): # сортировка по этажам
             self.flats.sort(key=lambda x: x.number)
-            self.flats.sort(key=lambda x: float(ut.numberize(x.number)))
+            self.flats.sort(key=lambda x: ut.numberize(x.number))
             self.rows = int(self.flatsLayout)
             self.columns = int(len(self.flats) / self.rows)
             row = [i for i in range(self.rows)]
@@ -321,7 +298,7 @@ class Porch(object):
         finish = False
         while not finish:
             for i in range(len(self.flats)):
-                if "." in self.flats[i].number:
+                if "." in self.flats[i].number and "подъезд" in self.type:
                     del self.flats[i]
                     break
             else:
@@ -341,18 +318,21 @@ class Porch(object):
                 self.sortFlats()
                 break
 
-    def showFlats(self, sort=False):
+    def showFlats(self):
         """ Вывод квартир для вида подъезда """
-        if sort: self.sortFlats() # сортируем, если нужно
+        self.sortFlats()
         options = []
         if str(self.flatsLayout).isnumeric(): # вывод подъезда в этажной раскладке
             self.rows = int(self.flatsLayout)
             self.columns = int(len(self.flats) / self.rows)
-            i = 0
+            i = self.highestNumber = 0
             for r in range(self.rows):
                 options.append(str(self.rows - r + self.floor1 - 1))
                 for c in range(self.columns):
                     options.append(self.flats[i])
+                    highest = int(ut.numberize(self.flats[i].number))
+                    if highest > self.highestNumber: # обновляем значение максимального номера в подъезде
+                        self.highestNumber = highest
                     i += 1
         else: # вывод подъезда/сегмента простым списком
             self.rows = 1
@@ -368,8 +348,7 @@ class Porch(object):
         if input == "": return None
         self.flats.append(Flat())
         last = len(self.flats)-1
-        if not virtual:
-            self.flats[last].title = self.flats[last].number = input.strip()
+        if not virtual: self.flats[last].title = self.flats[last].number = input.strip()
         else:
             self.flats[last].title = input.strip()
             self.flats[last].number = "virtual"
@@ -377,32 +356,16 @@ class Porch(object):
             delete = False
             for i in range(last):
                 if self.flats[i].number == self.flats[last].number: # flat with identical number (i) found
-                    if self.flats[i].status == "":
-                        delete = True # no tenant and no records, delete silently
-                    else:
-                        del self.flats[last] # delete the newly created empty flat
+                    if self.flats[i].status == "": delete = True # no tenant and no records, delete silently
+                    else: del self.flats[last] # delete the newly created empty flat
                     break
             if delete: del self.flats[i]
 
-    def addFlats(self, input):
-        """ Массовое создание квартир через дефис или пробел (внутренний синтаксис) """
-        s = f = 0
-        floors = None
-        if str(self.flatsLayout).isnumeric(): self.flatsLayout = "н"
-        for i in range(len(input)):
-            if input[i]=="-":
-                s=i
-            if input[i]=="[":
-                f=i
-                floors = input[f+1:] # извлекаем кол-во этажей из цифры после [
-        start = int(input[0:s])
-        end = int(input[s+1:]) if f == 0 else int(input[s+1:f])
-        for i in range(start, end+1):
-            self.addFlat("%s" % (str(i)))
-        if f != 0: self.flatsLayout = input[f+1:]
-        if "подъезд" in self.type:
-            if floors is None: floors = self.rows
-            self.forceFloors(int(floors)) # для форсированного задания этажей
+    def addFlats(self, start, finish, floors=None):
+        """ Массовое создание квартир """
+        for i in range(start, finish+1): self.addFlat("%s" % (str(i)))
+        self.flatsLayout = str(floors)
+        if "подъезд" in self.type: self.forceFloors(int(floors))
 
     def export(self):
         return [
@@ -417,14 +380,14 @@ class Porch(object):
 
 class Flat(object):
     """ Класс квартиры/контакта"""
-    def __init__(self, number="virtual"):
-        self.title = "" # объединенный заголовок квартиры, например: "20, Василий 30 лет"
-        self.note = ""  # заметка
-        self.number = number # у адресных жильцов автоматически создается из первых символов title до запятой: "20" (в примере выше);
-                                # у виртуальных автоматически присваивается "virtual", а обычного номера нет
-        self.status = "" # статус, формируется динамически
-        self.phone = "" # телефон
-        self.lastVisit = 0 # дата последней встречи в абсолютных секундах (формат time.time())
+    def __init__(self, title="", note="", number="virtual", status="", phone="", lastVisit=0):
+        self.title = title # объединенный заголовок квартиры, например: "20, Василий 30 лет"
+        self.note = note # заметка
+        self.number = number # у адресных жильцов автоматически создается из первых символов title до запятой: "20"
+                         # у виртуальных автоматически присваивается "virtual", а обычного номера нет
+        self.status = status # статус, формируется динамически
+        self.phone = phone # телефон
+        self.lastVisit = lastVisit # дата последней встречи в абсолютных секундах (формат time.time())
         self.records = [] # список записей посещений
         self.porchRef = None # указатель на подъезд, в котором находится квартира. Не сохраняется
 
@@ -479,15 +442,14 @@ class Flat(object):
 
     def showRecords(self):
         options = []
-        if len(self.records)==0: options.append(RM.msg[220])
+        if len(self.records) == 0: options.append(RM.msg[220])
         else:
             for i in range(len(self.records)): # добавляем записи разговоров
-                options.append(f"{RM.button['entry']} [b]{self.records[i].date}[/b][i]{self.records[i].title}[/i]")
+                options.append(f"{RM.button['entry']} {self.records[i].date}[i]{self.records[i].title}[/i]")
         return options
 
     def addRecord(self, input):
-        self.records.insert(0, Record())
-        self.records[0].title = input
+        self.records.insert(0, Record(title=input))
         if len(self.records)==1 and self.status == "" and self.number != "virtual": # при первой записи ставим статус ?
             self.status="?"
         date = time.strftime("%d", time.localtime())
@@ -591,9 +553,9 @@ class Flat(object):
 
 class Record(object):
     """ Класс записи посещения """
-    def __init__(self):
-        self.date = ""
-        self.title = ""
+    def __init__(self, title="", date=""):
+        self.title = title
+        self.date = date
 
     def export(self):
         return [self.date, self.title]
@@ -812,7 +774,7 @@ class DisplayedList(object):
         self.sort = sort
         self.details = details
         self.resize = resize
-        self.footer = footer,
+        self.footer = footer
         self.back = back
         self.tip = tip
 
@@ -919,13 +881,13 @@ class MyTextInput(TextInput):
             self.background_color = RM.textInputBGColor
         else:
             self.foreground_color = [1, 1, 1]
-            self.background_color = [.26, .26, .27, .95]
+            self.background_color = [.26, .26, .26]
 
     def insert_text(self, char, from_undo=False):
         """ Делаем буквы заглавными """
         if len(self.text) >= self.limit:
             if not RM.desktop and RM.allowCharWarning:
-                RM.log(RM.msg[91] % RM.charLimit, timeout=2)
+                RM.log(RM.msg[189] % RM.charLimit, timeout=2)
                 RM.allowCharWarning = False
                 def __turnToTrue(*args):
                     RM.allowCharWarning = True
@@ -1209,6 +1171,15 @@ class PopupButton(Button):
         self.background_normal = ""
         if pos_hint is not None: self.pos_hint = pos_hint
 
+class PopupButtonGray(PopupButton):
+    """ Кнопка на всплывающем окне, совпадающая по цвету с текстовым полем ввода """
+    def __init__(self, text, height=None, size_hint_x=None, size_hint_y=None, **kwargs):
+        super(PopupButtonGray, self).__init__()
+        self.text = text
+        if size_hint_x is not None: self.size_hint_x = size_hint_x
+        if size_hint_y is not None: self.size_hint_y = size_hint_y
+        if height is not None: self.height = height
+
 class FirstCallButton(Button):
     """ Кнопки на плашке первого посещения, базовый класс """
     def __init__(self, text=""):
@@ -1241,7 +1212,7 @@ class FirstCallButton3(FirstCallButton):
 
 class FlatButton(Button):
     """ Кнопка квартиры – базовый класс """
-    def __init__(self, text="", status="", flat=None, size_hint_x=1, size_hint_y=1, width=0, height=0):
+    def __init__(self, text="", status="", flat=None, size_hint_x=1, size_hint_y=1, width=0, height=0, id=0):
         super(FlatButton, self).__init__()
         self.text = text
         self.size_hint_x = size_hint_x
@@ -1250,6 +1221,7 @@ class FlatButton(Button):
         self.width = width
         self.height = height
         self.flat = flat
+        self.id = id # только для обработки в scrollClick
         if size_hint_x is not None and not RM.desktop: self.font_size = RM.fontM*.9 * RM.fontScale()
 
     def on_release(self):
@@ -1265,12 +1237,16 @@ class FlatButtonSquare(FlatButton):
         self.flat = flat
         self.text = flat.number
         self.status = flat.status
-        if not RM.desktop: self.font_size = RM.fontS * RM.fontScale(cap=1.2)
+        self.font_size *= RM.fontScale(cap=1.2)
+        if not RM.desktop:
+            self.font_size = RM.fontXS if RM.scaling else RM.fontS
+            self.font_size *= RM.fontScale(cap=1.2)
 
 class FlatHiddenButton(FlatButton):
     """ Кнопка удаленной квартиры (с плюсиком) """
     def __init__(self, flat):
         super(FlatHiddenButton, self).__init__()
+        self.flat = flat
         self.number = flat.number
         self.text = icon('icon-plus-circled')
         self.font_size = RM.fontXXS * RM.fontScale(cap=1.2)
@@ -1383,7 +1359,7 @@ class LastRecButton(Button):
         self.background_down = ""
         self.background_normal = ""
         if not RM.desktop: self.font_size = RM.fontS * RM.fontScale()
-        self.padding = 0, RM.padding*5
+        self.padding = 0, RM.padding * 5
         self.spacing = RM.spacing
         self.pos_hint = {"right": .99}
         self.size_hint_x = .9
@@ -1460,6 +1436,7 @@ class Counter(AnchorLayout):
             else:
                 RM.counterChanged = True
         btnUp.bind(on_release=__plusPress)
+
         def __countUp(instance=None):
             if type != "time":
                 self.input.text = str(int(self.input.text) + 1)
@@ -1705,10 +1682,8 @@ class RMApp(App):
     def build(self):
         if platform == "android":
             request_permissions(["com.google.android.gms.permission.AD_ID"])
-
             temp = SharedStorage().get_cache_dir() # очистка SharedStorage при запуске
             if temp and os.path.exists(temp): shutil.rmtree(temp)
-
             if os.path.exists("../data.jsn"): # перенос данных из старого местоположения на Android в новое
                 shutil.move("../data.jsn", self.userPath + "data.jsn")
                 try: shutil.rmtree("../backup")
@@ -1746,6 +1721,7 @@ class RMApp(App):
         self.rep.checkNewMonth()
         self.rep.optimizeReportLog()
         self.checkCrashFlag()
+        Clock.schedule_interval(self.checkDate, 60)
         return self.interface
 
     # Подготовка переменных
@@ -1807,7 +1783,8 @@ class RMApp(App):
         self.standardBarWidth = self.standardTextHeight
         self.standardTextWidth = self.standardTextHeight * 1.3
         self.orientationPrev = ""
-        self.horizontalShrinkRatio = .15 # ширина левой боковой полосы на горизонтальной ориентации
+        self.flatRangePresaved = None # пока не используется
+        self.horizontalShrinkRatio = 80 # ширина левой боковой полосы на горизонтальной ориентации
         self.titleSizeHintY = .11  # ширина полосы заголовка
         self.tableSizeHintY = .09#1  # ширина полосы верхних табличных кнопок
         self.bottomButtonsSizeHintY = .095  # .12 # ширина полосы центральной кнопки
@@ -1838,9 +1815,6 @@ class RMApp(App):
             self.allowCharWarning = True
             self.defaultKeyboardHeight = Window.size[1]*.4
             self.popups = []  # стек попапов, которые могут открываться один над другим
-            self.listOnScreenLimit = 8 # кол-во пунктов списка, после которого будет прокручивание до этого пункта
-            self.onClickColK  = .9 # коэффициент затемнения фона кнопки при клике
-            self.onClickFlash = .15 # время появления теневого эффекта на кнопках
             self.fontXXL =  int(Window.size[1] / 25) # размеры шрифтов
             self.fontXL =   int(Window.size[1] / 30)
             self.fontL =    int(Window.size[1] / 35)
@@ -1930,6 +1904,7 @@ class RMApp(App):
         self.topButtonColor = [.73, .73, .73, 1] # "lightgray" # поиск, настройки и кнопки счетчиков
         ck = .9
         self.popupButtonColor = [.97, .97, .97]
+        self.popupBackgroundColor = [.16, .16, .16]
 
         if self.theme == "dark" or self.theme == "morning": # темная тема
             self.mode = "dark"
@@ -1945,7 +1920,6 @@ class RMApp(App):
             self.standardTextColor = [.9, .9, .9, 1] # основной текст всех шрифтов
             self.titleColor = self.mainMenuActivated = [.3, .82, 1, 1] # неон - цвет нажатой кнопки и заголовка
             self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .6] # иконка списка
-            self.popupBackgroundColor = [0,0,0,0] # фон всплывающего окна
             self.linkColor = self.tableColor = [.95, .95, .96, 1] # цвет текста на плашках таблицы и кнопках главного меню
             self.createNewPorchButton = [.2, .2, .2, 1] # пункт списка создания нового подъезда
             self.interestColor = get_hex_from_color(self.getColorForStatus("1")) # "00BC7F" # "00CA94" # должен соответствовать зеленому статусу или чуть светлее
@@ -1996,7 +1970,6 @@ class RMApp(App):
             self.roundButtonColorPressed[1] += 0.01
             self.sortButtonBackgroundColorPressed = self.roundButtonColorPressed
             self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .6]
-            self.popupBackgroundColor = [.16, .16, .16]
             self.createNewPorchButton = "dimgray"
             self.interestColor = get_hex_from_color(self.getColorForStatus("1"))
             self.saveColor = "008E85"
@@ -2125,7 +2098,7 @@ class RMApp(App):
         self.button = { # главный список
             "building": f" [size={self.listIconSize}][color={self.scrollColor}][b]{icon('icon-building-filled')}[/b][/color][/size] ",
             "porch":    f" [size={self.listIconSize}][color={self.scrollColor}]{icon('icon-login')}[/color][/size] ",
-            "porch_inv":f" [size={self.listIconSize}][color={get_hex_from_color(self.globalBGColor)}]{icon('icon-login')}[/color][/size] ",
+            "porch_inv":f" [size={self.listIconSize}][color={get_hex_from_color([0,0,0,0])}]{icon('icon-login')}[/color][/size] ",
             "pin":      f" [size={self.listIconSize}][color={self.scrollColor}]{icon('icon-pin')}[/color][/size] ",
             "map":      f" [size={self.listIconSize}][color={self.scrollColor}]{icon('icon-map')}[/color][/size] ",
             "entry":    f" [size={self.listIconSize}][color={self.scrollColor}]{icon('icon-chat')}[/color][/size] ",
@@ -2185,7 +2158,7 @@ class RMApp(App):
             "yes":      self.msg[297].lower(),
             "no":       self.msg[298].lower(),
             "cancel":   self.msg[190].lower(),
-            "link":    icon("icon-link-ext"),
+            "link":    f"[color={self.titleColor2}]{icon('icon-link-ext-alt')}[/color]",
             "":         ""
         }
 
@@ -2359,7 +2332,7 @@ class RMApp(App):
 
     # Основные действия с центральным списком
 
-    def updateList(self):
+    def updateList(self, instance=None):
         """ Заполнение главного списка элементами """
 
         try:
@@ -2432,8 +2405,6 @@ class RMApp(App):
                 self.navButton.disabled = False
                 self.navButton.text = self.button['nav']
 
-            footer = self.displayed.footer[0]
-
             # Обычный список (этажей нет)
 
             floorK = 1 if self.desktop else .8 # коэффициент размера цифры этажа
@@ -2473,6 +2444,7 @@ class RMApp(App):
 
                 self.btn = []  # список кнопок
 
+                invisibleFlatsCount = 0
                 for i in range(len(self.displayed.options)):
                     label = self.displayed.options[i]
 
@@ -2491,33 +2463,34 @@ class RMApp(App):
                     if self.displayed.form == "repLog":
                         # отдельный механизм добавления записей журнала отчета + ничего не найдено в поиске
                         self.btn.append(MyLabel(text=label.strip(), color=self.standardTextColor, halign="left",
-                                                           valign="top", size_hint_y=None, height=height1, markup=True,
-                                                            text_size=(Window.size[0]*self.SR-self.standardTextHeight, height1)))
+                                                valign="top", size_hint_y=None, height=height1, markup=True,
+                                                text_size=(Window.size[0]*self.SR-self.standardTextHeight, height1)))
                         self.scrollWidget.add_widget(self.btn[i])
 
                     else: # стандартное добавление
                         box = BoxLayout(orientation="vertical", size_hint_y=None)
+                        self.getRadius()
 
                         if self.displayed.form != "porchView":
                             # вид для всех списков, кроме подъезда - без фона (а также кнопки "Создайте дом")
-                            self.getRadius()
                             self.btn.append(ScrollButton(id=i, text=label.strip(), height=height*2))
 
                         else: # вид для списка подъезда - с фоном и закругленными квадратиками
+                            self.getRadius(120)
                             self.scaling = False
-                            self.getRadius()
                             if self.desktop: self.scrollWidget.spacing = self.spacing
-                            if not self.desktop:
-                                self.scrollWidget.spacing = (self.spacing, 0)
-                            if not "." in flat.number:
+                            else: self.scrollWidget.spacing = (self.spacing, 0)
+                            if not "." in flat.number or self.house.type == "private":
                                 self.btn.append(FlatButton(text=f"[b]{flat.number}[/b] {flat.getName()}",
                                                            height=height, status=flat.status,
-                                                           flat=flat, size_hint_y=None))
+                                                           id=i, flat=flat, size_hint_y=None))
                             else:
+                                invisibleFlatsCount += 1
                                 continue
 
-                        last = len(self.btn)-1
-                        box.add_widget(self.btn[last])
+                        last = len(self.btn) - 1  # адресация кнопки, которая обрабатывается в данный момент
+                        button = self.btn[last]
+                        box.add_widget(button)
 
                         if addRecord or addPhone or addNote: # если есть запись посещения, телефон или заметка, добавляем снизу
                             gray = get_hex_from_color(self.topButtonColor if self.mode=="light" else self.standardTextColor)
@@ -2551,40 +2524,37 @@ class RMApp(App):
                         else:
                             box.height = height * gap
 
-                        button = self.btn[len(self.btn) - 1] # адресация кнопки, которая обрабатывается в данный момент
-
-                        if footer != []: # создаем индикаторы-футеры, если они есть
+                        if self.displayed.footer != []: # индикаторы-футеры, если они есть
                             self.scrollWidget.spacing = self.spacing * 8
                             box.height = height * 1.32 * gap
-                            footerGrid = GridLayout(rows=1, cols=len(footer[i]), size_hint_y=None,
+                            footerGrid = GridLayout(rows=1, cols=len(self.displayed.footer[i]), size_hint_y=None,
                                                     pos_hint={"center_x": .5}, size_hint_x=.96, height=height * .36)
                             if self.displayed.form == "con": footerGrid.cols_minimum = {1: button.size[0] * .6}
                             count = 0
-                            for b in range(len(footer[i])):
+                            for b in range(len(self.displayed.footer[i])):
                                 if self.displayed.form == "ter" and self.fontScale() <= 1: limit = 5
                                 elif self.displayed.form == "ter": limit = 3
                                 else: limit = 1
                                 if count == 0: self.footerRadius = [0, 0, 0, rad * 1.1]
                                 elif count < limit: self.footerRadius = [0, ]
                                 else: self.footerRadius = [0, 0, rad * 1.1, 0]
-                                button.footers.append(FooterButton(text=str(footer[i][b]), parentIndex=i))
+                                button.footers.append(FooterButton(text=str(self.displayed.footer[i][b]), parentIndex=i))
                                 count += 1
                                 footerGrid.add_widget(button.footers[len(button.footers)-1])
                             box.add_widget(footerGrid)
 
-                        elif self.displayed.form == "flatView" and len(self.flat.records[0].title)>0:
-                            # показываем запись посещения
+                        if self.displayed.form == "flatView": # запись посещения
                             record = label[label.index("[i]"):]
                             string = ""
                             for char in record:
                                 if char == "\n": string += " "
                                 else: string += char
                             lastRec = LastRecButton(text=string, id=i)
+                            box.add_widget(lastRec)
                             button.text = button.text[: button.text.index("[i]")]
                             button.valign = "center"
                             button.size_hint_y = None
                             button.height = height * 1.05
-                            box.add_widget(lastRec)
                             if len(string) < 30: bh = self.standardTextHeight * 1.8
                             elif len(string) < 60: bh = self.standardTextHeight * 3.6
                             elif len(string) < 90: bh = self.standardTextHeight * 5.4
@@ -2594,6 +2564,7 @@ class RMApp(App):
                                 bh = self.standardTextHeight * 3.6
                             box.height = button.height + bh
                             box.spacing = self.spacing
+
                         self.scrollWidget.add_widget(box)
 
                 self.scrollWidget.add_widget(Button(size_hint_y=None, # пустая кнопка для решения бага последней записи
@@ -2603,16 +2574,30 @@ class RMApp(App):
                 self.scroll.add_widget(self.scrollWidget)
                 self.mainList.add_widget(self.scroll)
 
-                if self.displayed.form == "ter" and len(self.houses) == 0: # слегка анимируем запись "Создайте первый участок"
+                limit = 5 if self.displayed.form == "ter" or self.displayed.form == "con" else 8
+
+                if self.displayed.form == "porchView": # коррекция на кол-во удаленных квартир
+                    self.clickedBtnIndex -= invisibleFlatsCount
+
+                if len(self.btn) > limit and self.clickedBtnIndex < len(self.btn) and self.clickedBtnIndex >= 0:
+                    self.scroll.scroll_to(widget=self.btn[self.clickedBtnIndex], padding=self.mainList.size[1]*.3,
+                                          animate=False)
+                    self.clickedBtnIndex = 0
+                elif self.displayed.form == "ter" and len(self.houses) == 0: # слегка анимируем запись "Создайте первый участок"
                     self.mainList.padding = (0, self.padding*5, 0, Window.size[1]*.3)
                     self.scroll.scroll_to(widget=self.btn[0], animate=True)
+                    self.clickedBtnIndex = 0
 
             # Вид подъезда с этажами
 
             elif self.settings[0][7] == 1:  # поэтажная раскладка с масштабированием
-                self.scaling = True
-                self.getRadius(220)
-                spacing = self.spacing * (2 if self.desktop else 1.3)
+                if self.porch.columns >= 10 or self.porch.rows >= 20:
+                    self.scaling = True
+                    self.getRadius(240)
+                else:
+                    self.scaling = False
+                    self.getRadius(160)
+                spacing = self.spacing * (2 if self.desktop else 1.2)
                 self.floorview = GridLayout(cols=self.porch.columns+1, rows=self.porch.rows, spacing=spacing,
                                             padding=(self.padding*2, 0))
                 self.mainList.add_widget(self.floorview)
@@ -2631,13 +2616,13 @@ class RMApp(App):
                 self.sliderToggle()
 
             else:  # без масштабирования
-                self.scaling = True
-                self.getRadius(180)
+                self.scaling = False
+                self.getRadius(160)
                 if self.settings[0][8] != 0: # расчеты расстояний и зазоров
                     size = self.standardTextHeight * self.settings[0][8] * 1.5
                 else:
                     size = self.standardTextHeight
-                noScaleSpacing = self.spacing * (2 if self.desktop else 1.3)
+                noScaleSpacing = self.spacing * (2 if self.desktop else 1.5)
                 floorLabelWidth = size / 6
                 diffX = self.mainList.size[0] - (size * self.porch.columns + size/4) - (noScaleSpacing * self.porch.columns)
                 diffY = self.mainListsize1 - (size * self.porch.rows) - (noScaleSpacing * self.porch.rows)
@@ -2682,8 +2667,6 @@ class RMApp(App):
                 self.sliderToggle()
 
             # Технические проверки после отрисовки списка
-
-            self.checkDate()
 
             if self.error is not None and self.dev2:
                 self.pageTitle.text = str(self.error)
@@ -2740,7 +2723,8 @@ class RMApp(App):
 
     def scrollClick(self, instance):
         """ Действия, которые совершаются на указанных списках по нажатию на пункт списка """
-        def __do(*args): # действие всегда выполняется с запаздыванием, чтобы отобразилась анимация на кнопке
+        def __click(*args): # действие всегда выполняется с запаздыванием, чтобы отобразилась анимация на кнопке
+            self.clickedBtnIndex = instance.id
             if self.msg[6] in instance.text: # "создать подъезд"
                 text = instance.text[len(self.msg[6])+74 : ] # число символов во фразе msg[6] + 4 на форматирование
                 #print(text) # должно выглядеть: 1[/i]
@@ -2770,43 +2754,39 @@ class RMApp(App):
 
             elif self.displayed.form == "porchView":
                 self.flat = instance.flat
-                self.clickedBtnIndex = self.porch.flats.index(self.flat)
                 self.flatView(call=False, instance=instance)
 
             elif self.displayed.form == "flatView": # режим редактирования записей
                 self.record = self.flat.records[instance.id]
-                self.clickedBtnIndex = self.flat.records.index(self.record)
                 self.recordView(instance=instance) # вход в запись посещения
 
             elif self.displayed.form == "con": # контакты
-                selectedCon = self.clickedBtnIndex = instance.id
-                h = self.allcontacts[selectedCon][7][0]  # получаем дом, подъезд и квартиру выбранного контакта
-                p = self.allcontacts[selectedCon][7][1]
-                f = self.allcontacts[selectedCon][7][2]
-                if self.allcontacts[selectedCon][8] != "virtual": self.house = self.houses[h]
+                selection = instance.id
+                h = self.allcontacts[selection][7][0]  # получаем дом, подъезд и квартиру выбранного контакта
+                p = self.allcontacts[selection][7][1]
+                f = self.allcontacts[selection][7][2]
+                if self.allcontacts[selection][8] != "virtual": self.house = self.houses[h]
                 else: self.house = self.resources[1][h] # заменяем дом на ресурсы для отдельных контактов
                 self.porch = self.house.porches[p]
                 self.flat = self.porch.flats[f]
                 self.contactsEntryPoint = 1
                 self.searchEntryPoint = 0
-                self.clickedBtnIndex = selectedCon
                 self.flatView(instance=instance)
 
             elif self.displayed.form == "search": # поиск
+                selection = instance.id
                 if not self.msg[8] in instance.text:
-                    selectedCon = self.clickedBtnIndex = instance.id
-                    h = self.searchResults[selectedCon][0][0]  # получаем номера дома, подъезда и квартиры
-                    p = self.searchResults[selectedCon][0][1]
-                    f = self.searchResults[selectedCon][0][2]
-                    if self.searchResults[selectedCon][1] != "virtual": self.house = self.houses[h] # regular contacts
+                    h = self.searchResults[selection][0][0]  # получаем номера дома, подъезда и квартиры
+                    p = self.searchResults[selection][0][1]
+                    f = self.searchResults[selection][0][2]
+                    if self.searchResults[selection][1] != "virtual": self.house = self.houses[h] # regular contacts
                     else: self.house = self.resources[1][h]
                     self.porch = self.house.porches[p]
                     self.flat = self.porch.flats[f]
                     self.searchEntryPoint = 1
                     self.contactsEntryPoint = 0
                     self.flatView(instance=instance)
-        #__do()
-        Clock.schedule_once(__do, 0)
+        Clock.schedule_once(__click, 0)
 
     def titlePressed(self, instance, value):
         """ Нажатие на заголовок экрана """
@@ -2897,7 +2877,6 @@ class RMApp(App):
                 positive=self.button["top"],
                 tip=tip
             )
-            if instance is not None: self.stack.insert(0, self.displayed.form)
             self.updateList()
 
         elif self.displayed.form == "set": # Помощь
@@ -2908,12 +2887,7 @@ class RMApp(App):
 
     def backPressed(self, instance=None):
         """ Нажата кнопка «назад» """
-
-
         if len(self.stack) > 0 and not self.showSlider: del self.stack[0]
-
-        if self.displayed.form == 'porchView' and self.stack[0] == "porchView":
-            del self.stack[0] # для решения бага, когда в подъезде требовалось 2 клика для выхода
 
         if self.displayed.form == "rep":  # при этих действиях кнопка "назад" сохраняет данные
             self.saveReport()  # отчет
@@ -3016,7 +2990,7 @@ class RMApp(App):
                         elif instance.text == sortTypes[3]: self.porch.flatsLayout = "з"
                         elif instance.text == sortTypes[4]: self.porch.flatsLayout = "т"
                         self.save()
-                        self.porchView(sortFlats=True, scroll_to=0)
+                        self.porchView()
                         self.dropSortMenu.dismiss()
                     btn.bind(on_release=__resortFlats)
                     self.dropSortMenu.add_widget(btn)
@@ -3043,9 +3017,8 @@ class RMApp(App):
     def maleButtonPressed(self, instance):
         """ Быстрый выбор пола и возраста (для мужчин) """
         self.maleMenu.clear_widgets()
-        sortTypes = ["<18", "18", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75", "80", "80+"]
-        for i in range(len(sortTypes)):
-            btn = SortListButton(text=sortTypes[i])
+        for age in ["<18", "18", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75", "80", "80+"]:
+            btn = SortListButton(text=age)
             def __select(instance=None):
                 self.multipleBoxEntries[self.row].text = f"{self.msg[85]}{instance.text} "
                 self.maleMenu.dismiss()
@@ -3057,9 +3030,8 @@ class RMApp(App):
     def femaleButtonPressed(self, instance):
         """ Быстрый выбор пола и возраста (для женщин) """
         self.femaleMenu.clear_widgets()
-        sortTypes = ["<18", "18", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75", "80", "80+"]
-        for i in range(len(sortTypes)):
-            btn = SortListButton(text=sortTypes[i])
+        for age in ["<18", "18", "25", "30", "35", "40", "45", "50", "55", "60", "65", "70", "75", "80", "80+"]:
+            btn = SortListButton(text=age)
             def __select(instance=None):
                 self.multipleBoxEntries[self.row].text = f"{self.msg[86]}{instance.text} "
                 self.femaleMenu.dismiss()
@@ -3092,7 +3064,6 @@ class RMApp(App):
         if mode == "press" and self.timer.text == icon("icon-play-circled-1"): # первоначальный лик
             self.popup("timerPressed", title=self.msg[40], message=self.msg[219],
                        options=[self.button["yes"], self.button["no"]])
-
         else: # вызов с положительного ответа в диалоге
             if self.resources[0][1][2] == 0:
                 self.popup(title=self.msg[247], message=self.msg[184])
@@ -3200,7 +3171,7 @@ class RMApp(App):
                         grid.pos_hint={"center_x": .65}
                     align = "center"
                     if len(self.porch.flats)==0: # определяем номер первой и последней квартир, сначала если это первый подъезд:
-                        if len(self.house.porches)==1: # если это первый подъезд дома, пытаемся загрузить параметры из настроек:
+                        if len(self.house.porches) == 1: # если это первый подъезд дома, пытаемся загрузить параметры из настроек:
                             try: # попытка загрузить первичные параметры этажей из настроек
                                 firstflat, lastflat, floors = self.settings[0][9]
                             except:
@@ -3376,23 +3347,18 @@ class RMApp(App):
                     else:
                         self.popupPressed(instance=Button(text=self.button["yes"]))
                 else: # сохранение домов в сегменте универсального участка
-                    addFlat = self.inputBoxEntry.text.strip()
+                    start = self.decommify(self.inputBoxEntry.text)
                     if not self.checkbox.active:
-                        if not "." in addFlat and not "," in addFlat:
-                            self.porch.addFlat(addFlat)
-                            self.save()
-                            self.porchView()
-                        else:
-                            self.popup(message=self.msg[89])
-                            self.porchView()
-                            self.positivePressed()
+                        self.porch.addFlat(start)
+                        self.save()
+                        self.porchView()
                     else:
-                        addFlat2 = self.inputBoxEntry2.text.strip()
+                        finish = self.inputBoxEntry2.text.strip()
                         try:
-                            if int(addFlat) > int(addFlat2): 5/0
-                            self.porch.addFlats("%d-%d" % (int(addFlat), int(addFlat2)))
+                            if int(start) > int(finish): 5/0
+                            self.porch.addFlats(int(start), int(finish))
                         except:
-                            self.popup(message=self.msg[90])
+                            self.popup(message=self.msg[91])
                             def __repeat(*args):
                                 self.porchView()
                                 self.positivePressed()
@@ -3410,7 +3376,7 @@ class RMApp(App):
 
             elif self.displayed.form == "createNewCon": # сохранение нового контакта
                 self.displayed.form = "con"
-                name = self.inputBoxEntry.text.strip()
+                name = self.decommify(self.inputBoxEntry.text)
                 if name == "": name = f"{self.msg[158]} {len(self.resources[1])+1}"
                 self.addHouse(self.resources[1], "", "virtual")  # создается новый виртуальный дом
                 self.resources[1][len(self.resources[1]) - 1].addPorch(input="", type="virtual")
@@ -3452,8 +3418,6 @@ class RMApp(App):
                 self.porchView()
 
             elif self.displayed.form == "flatDetails": # детали квартиры/контакта
-                success = True
-                allow = True
                 self.displayed.form = "flatView"
                 newName = self.multipleBoxEntries[0].text.strip() # имя
                 if newName != "" or self.house.type != "virtual": self.flat.updateName(newName)
@@ -3474,8 +3438,9 @@ class RMApp(App):
                     return
                 self.flat.editNote(self.multipleBoxEntries[5].text)  # заметка
                 # проверяем, чтобы не было точек и запятых
-                if "." in self.multipleBoxEntries[4].text.strip() or "," in self.multipleBoxEntries[4].text.strip():
-                    self.popup(message=self.msg[89])
+                if ("." in self.multipleBoxEntries[4].text.strip() and self.house.type == "condo") \
+                        or "," in self.multipleBoxEntries[4].text.strip():
+                    self.popup(message=self.msg[89 if self.house.type == "condo" else 90])
                 else:
                     self.flat.updateTitle(newNumber)
                     self.save()
@@ -3483,8 +3448,7 @@ class RMApp(App):
                         self.flatView()
                     else:
                         self.popupEntryPoint = 0
-                        self.porchView(sortFlats=True,
-                                       scroll_to=False if allow and self.porch.floors() else 0)
+                        self.porchView()
         Clock.schedule_once(__press, 0)
 
     def neutralPressed(self, instance=None, value=None):
@@ -3504,15 +3468,10 @@ class RMApp(App):
                 if self.porch.flatsLayout == "":
                     self.popup(message=self.msg[94] % self.msg[155])
             self.save()
-            self.porchView(sortFlats=True)
+            self.porchView()
 
         elif self.button["phone"] in instance.text:
-            if platform == "android": request_permissions([Permission.CALL_PHONE])
-            try: plyer.call.makecall(tel=self.flat.phone)
-            except:
-                if self.desktop and self.flat.phone.strip() != "":
-                    Clipboard.copy(self.flat.phone)
-                    self.popup(message=self.msg[28] % self.flat.phone)
+            self.phoneCall()
 
     # Действия других кнопок
 
@@ -3557,8 +3516,8 @@ class RMApp(App):
             intIcon = self.button['user'] if int(stats[1]) != 0 else icon("icon-user-o")
             footer.append([
                 f"{icon('icon-home-1')} {stats[3]}", # кол-во квартир
-                f"[color={self.interestColor}]{intIcon} {interested}[/color]",# интересующиеся
-                f"{self.button['calendar']} {str(shortenedDate)}{dateDue}",  # дата
+                f"[color={self.interestColor}]{intIcon} {interested}[/color]", # интересующиеся
+                f"{self.button['calendar']} {str(shortenedDate)}{dateDue}", # дата
                 f"{self.button['worked']} {int(stats[2] * 100)}%", # обработка
                 ])
             if self.fontScale() <= 1:
@@ -3580,7 +3539,7 @@ class RMApp(App):
             positive=f"{self.button['plus']} {self.msg[98]}",
             back=False
         )
-        if instance is not None: self.stack.insert(0, self.displayed.form)
+        self.stack = [self.displayed.form]
         self.updateList()
         self.updateMainMenuButtons()
 
@@ -3626,27 +3585,16 @@ class RMApp(App):
             footer=footer,
             sort=self.button['sort'],
             positive=f"{self.button['plus']} {self.msg[100]}",
-            back=False,
             tip=self.msg[99] % self.msg[100] if len(options) == 0 else None
         )
-        if instance is not None: self.stack.insert(0, self.displayed.form)
+        self.stack = ['con', 'ter']
         self.updateList()
-
-        if len(options) >= self.listOnScreenLimit: # пытаемся всегда вернуться на последний контакт
-            index = self.clickedBtnIndex + 1
-            if index == len(self.btn): index -= 1
-            try: self.scroll.scroll_to(widget=self.btn[index], padding=0, animate=False)
-            except: pass
-
         self.updateMainMenuButtons()
-
-        self.clickedBtnIndex = 0
 
     def repPressed(self, instance=None, jumpToPrevMonth=False):
         self.func = self.repPressed
         if self.confirmNonSave(): return
         self.buttonRep.activate()
-        if len(self.stack) > 0: self.stack.insert(0, self.stack[0])  # дублирование последнего шага стека, чтобы предотвратить уход со страницы
         self.clearTable()
         self.counterChanged = False
         self.counterTimeChanged = False
@@ -3659,6 +3607,7 @@ class RMApp(App):
         self.detailsButton.text = f"{self.button['log']} {self.msg[101]}"
         self.detailsButton.disabled = False
         self.displayed.form = "rep"
+        self.stack.insert(0, self.displayed.form)
         self.positive.text = self.button["save"]
         self.positive.disabled = False
         self.pageTitle.text = f"[b][ref=report]{self.msg[4]}{self.rep.getCurrentHours()[2]}[/ref][/b]"
@@ -3999,11 +3948,20 @@ class RMApp(App):
         self.mainList.add_widget(self.settingsPanel)
         self.checkDate()
 
+    def phoneCall(self, instance=None):
+        """ Телефонный звонок """
+        if platform == "android": request_permissions([Permission.CALL_PHONE])
+        try: plyer.call.makecall(tel=self.flat.phone)
+        except:
+            if self.desktop and self.flat.phone.strip() != "":
+                Clipboard.copy(self.flat.phone)
+                self.popup(message=self.msg[28] % self.flat.phone)
+
     def chooser_callback(self, uri_list):
-        """ Копируем файл, выбранный пользователем, в Private Storage """
-        for uri in uri_list:
-            self.openedFile = SharedStorage().copy_from_shared(uri)
-        self.loadShared()
+            """ Копируем файл, выбранный пользователем, в Private Storage """
+            for uri in uri_list:
+                self.openedFile = SharedStorage().copy_from_shared(uri)
+            self.loadShared()
 
     def saveSettings(self, clickOnSave=True):
         if self.settingsPanel.current_tab.text == self.msg[52]: # Настройки
@@ -4110,8 +4068,6 @@ class RMApp(App):
         """ Нажата кнопка поиск """
         self.func = self.searchPressed
         if self.confirmNonSave(): return
-        self.displayed.form = "search"
-        self.clickedBtnIndex = 0
         self.clearTable()
         self.createInputBox(
             title=f"[b]{self.msg[146]}[/b]",
@@ -4127,55 +4083,53 @@ class RMApp(App):
         self.contactsEntryPoint = 0
         allContacts = self.getContacts(forSearch=True)
         self.searchResults = []
-        for i in range(len(allContacts)): # start search in flats/contacts
+        for con in allContacts: # start search in flats/contacts
             found = False
-            if self.searchQuery in allContacts[i][2].lower() or self.searchQuery in allContacts[i][2].lower() or self.searchQuery in \
-                    allContacts[i][3].lower() or self.searchQuery in allContacts[i][8].lower() or self.searchQuery in \
-                    allContacts[i][10].lower() or self.searchQuery in allContacts[i][11].lower() or self.searchQuery in \
-                    allContacts[i][12].lower() or self.searchQuery in allContacts[i][13].lower() or\
-                    self.searchQuery in allContacts[i][9].lower():
+            if self.searchQuery in con[2].lower() or self.searchQuery in con[2].lower() or self.searchQuery in \
+                    con[3].lower() or self.searchQuery in con[8].lower() or self.searchQuery in \
+                    con[10].lower() or self.searchQuery in con[11].lower() or self.searchQuery in \
+                    con[12].lower() or self.searchQuery in con[13].lower() or\
+                    self.searchQuery in con[9].lower():
                 found = True
 
-            if allContacts[i][8] != "virtual":
-                for r in range(len(self.houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[
-                                       allContacts[i][7][2]].records)):  # in records in flats
-                    if self.searchQuery in self.houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[
-                        allContacts[i][7][2]].records[r].title.lower():
+            if con[8] != "virtual":
+                for r in range(len(self.houses[con[7][0]].porches[con[7][1]].flats[
+                                       con[7][2]].records)):  # in records in flats
+                    if self.searchQuery in self.houses[con[7][0]].porches[con[7][1]].flats[
+                        con[7][2]].records[r].title.lower():
                         found = True
-                    if self.searchQuery in self.houses[allContacts[i][7][0]].porches[allContacts[i][7][1]].flats[
-                        allContacts[i][7][2]].records[r].date.lower():
+                    if self.searchQuery in self.houses[con[7][0]].porches[con[7][1]].flats[
+                        con[7][2]].records[r].date.lower():
                         found = True
             else:
-                for r in range(len(self.resources[1][allContacts[i][7][0]].porches[0].flats[0].records)): # in records in contacts
-                    if self.searchQuery in self.resources[1][allContacts[i][7][0]].porches[0].flats[0].records[
+                for r in range(len(self.resources[1][con[7][0]].porches[0].flats[0].records)): # in records in contacts
+                    if self.searchQuery in self.resources[1][con[7][0]].porches[0].flats[0].records[
                         r].title.lower():
                         found = True
-                    if self.searchQuery in self.resources[1][allContacts[i][7][0]].porches[0].flats[0].records[
+                    if self.searchQuery in self.resources[1][con[7][0]].porches[0].flats[0].records[
                         r].date.lower():
                         found = True
 
-            if found: self.searchResults.append([allContacts[i][7], allContacts[i][8], allContacts[i][2]])
+            if found: self.searchResults.append([con[7], con[8], con[2]])
 
         options = []
-        for i in range(len(self.searchResults)):  # save results
+        for res, i in zip(self.searchResults, range(len(self.searchResults))):  # save results
             number = "%d) " % (i + 1)
-            if self.searchResults[i][1] != "virtual":  # for regular flats
-                if self.houses[self.searchResults[i][0][0]].getPorchType()[0] == "подъезд":
-                    options.append(f"[b]%s%s-%s[/b]" % (number, self.houses[self.searchResults[i][0][0]].title,
-                                             self.houses[self.searchResults[i][0][0]].porches[self.searchResults[i][0][1]].flats[
-                                             self.searchResults[i][0][2]].title))
+            if res[1] != "virtual":  # for regular flats
+                if self.houses[res[0][0]].getPorchType()[0] == "подъезд":
+                    options.append(
+                        f"%s%s-%s" % (number, self.houses[res[0][0]].title,
+                                      self.houses[res[0][0]].porches[res[0][1]].flats[res[0][2]].title))
                 else:
-                    options.append(f"[b]%s%s, %s, %s[/b]" % (number,
-                        self.houses[self.searchResults[i][0][0]].title,
-                        self.houses[self.searchResults[i][0][0]].porches[self.searchResults[i][0][1]].title,
-                        self.houses[self.searchResults[i][0][0]].porches[self.searchResults[i][0][1]].flats[self.searchResults[i][0][2]].title
+                    options.append(
+                        f"%s%s, %s, %s" % (number, self.houses[res[0][0]].title,
+                                           self.houses[res[0][0]].porches[res[0][1]].title,
+                                           self.houses[res[0][0]].porches[res[0][1]].flats[res[0][2]].title
                         ))
-
             else: # for standalone contacts
-                title = "" if self.resources[1][self.searchResults[i][0][0]].title == "" else \
-                    self.resources[1][self.searchResults[i][0][0]].title + ", "
-                options.append(f"[b]%s%s%s[/b]" % (number, title,
-                    self.resources[1][self.searchResults[i][0][0]].porches[0].flats[0].title))
+                title = "" if self.resources[1][res[0][0]].title=="" else self.resources[1][res[0][0]].title + ", "
+                options.append(
+                    f"%s%s%s" % (number, title, self.resources[1][res[0][0]].porches[0].flats[0].title))
 
         if len(options) == 0: options.append(self.msg[149])
 
@@ -4186,14 +4140,8 @@ class RMApp(App):
             options=options,
             positive=f" {self.button['search2']} {self.msg[84]}"
         )
-        if instance is not None: self.stack.insert(0, self.displayed.form)
+        self.stack = ['search', 'ter']
         self.updateList()
-
-        if len(options) >= self.listOnScreenLimit: # пытаемся всегда вернуться в последний элемент поиска
-            index = self.clickedBtnIndex + 1
-            if index == len(self.btn): index -= 1
-            try: self.scroll.scroll_to(widget=self.btn[index], padding=0, animate=False)
-            except: pass
 
     # Экраны иерархии участка
 
@@ -4204,7 +4152,6 @@ class RMApp(App):
             elif self.searchEntryPoint: self.find(instance=instance)
             return
         self.updateMainMenuButtons()
-        self.blockPorchView = False
         note = self.house.note if self.house.note != "" else None
         self.mainListsize1 = self.mainList.size[1]
         self.displayed.update(
@@ -4215,14 +4162,14 @@ class RMApp(App):
             positive=f"{self.button['plus']} {self.msg[78]} {self.house.getPorchType()[1]}",
             tip=[note, "note"]
         )
-        if instance is not None: self.stack.insert(0, self.displayed.form)
+        self.stack = ['houseView', 'ter']
         self.updateList()
         if self.house.due(): self.mainList.add_widget(self.tip(text=self.msg[152], icon="warn"))
 
-    def porchView(self, instance=None, sortFlats=True, scroll_to=None):
+    def porchView(self, instance=None):
         """ Вид подъезда - список квартир или этажей """
         if "virtual" in self.porch.type: # страховка от захода в виртуальный подъезд
-            if self.contactsEntryPoint: self.conPressed()
+            if self.contactsEntryPoint: self.conPressed(instance=instance)
             elif self.searchEntryPoint: self.find(instance=instance)
             return
         self.updateMainMenuButtons()
@@ -4250,7 +4197,7 @@ class RMApp(App):
 
         self.displayed.update(
             title=self.house.title+segment,
-            options=self.porch.showFlats(sort=sortFlats),
+            options=self.porch.showFlats(),
             form="porchView",
             sort=sort,
             resize=noteButton,
@@ -4259,33 +4206,17 @@ class RMApp(App):
             neutral=neutral,
             tip=[note, "note"]
         )
-        if instance is not None: self.stack.insert(0, self.displayed.form)
-        self.updateList()
+        self.stack = ['porchView', 'houseView', 'ter']
+        self.updateList(instance=instance)
+        #print("\nPORCH:")
+        #for f in self.porch.flats: print(f.number)
 
         if self.house.type == "condo" and len(self.porch.flats) == 0: # если нет квартир, сразу форма создания
             self.positivePressed()
             return
 
-        if scroll_to == "last" and len(self.btn) >= self.listOnScreenLimit: # после сортировки прокручиваем список
-            index = len(self.btn)-1
-            self.clickedBtnIndex = index
-            self.scroll.scroll_to(widget=self.btn[index], padding=0, animate=False)
-        elif scroll_to is not None and len(self.btn) >= self.listOnScreenLimit:
-            self.clickedBtnIndex = scroll_to
-            self.scroll.scroll_to(widget=self.btn[scroll_to], padding=0, animate=False)
-        elif not self.porch.floors() and len(self.porch.flats) >= self.listOnScreenLimit: # пытаемся вернуться в последнюю квартиру
-            index = self.clickedBtnIndex+1
-            if index == len(self.btn): index -= 1
-            try: self.scroll.scroll_to(widget=self.btn[index], padding=0, animate=False)
-            except: pass
-
-        self.clickedBtnIndex = 0
-
     def flatView(self, call=True, instance=None):
         """ Вид квартиры - список записей посещения """
-        try:
-            if "." in str(self.flat.number): return # страховка от случайного захода в удаленную квартиру
-        except: return
         self.updateMainMenuButtons()
         number = " " if self.flat.number == "virtual" else self.flat.number + " " # прячем номера отдельных контактов
         flatPrefix = f"{self.msg[214]} " if "подъезд" in self.porch.type else ""
@@ -4308,7 +4239,7 @@ class RMApp(App):
             tip=[note, "note"]
         )
 
-        if not call and len(self.flat.records)==0: # всплывающее окно первого посещения
+        if not call and len(self.flat.records) == 0: # всплывающее окно первого посещения
             self.clickedInstance = instance
             self.popup(firstCall=True)
 
@@ -4331,8 +4262,12 @@ class RMApp(App):
                     sort="",
                     note=note
                 )
-                self.stack = list(dict.fromkeys(self.stack))
-            else: self.updateList()
+            else:
+                self.stack = ['flatView', 'houseView', 'ter']
+                if self.contactsEntryPoint: self.stack.insert(1, "con")
+                elif self.searchEntryPoint: self.stack.insert(1, "search")
+                else:                       self.stack.insert(1, "porchView")
+                self.updateList(instance=instance)
 
             if self.house.type != "virtual" and not self.contactsEntryPoint:
                 if self.resources[0][1][7] == 0 and len(self.flat.records) == 0 and instance is not None: # показываем подсказку о первом посещении
@@ -4367,10 +4302,6 @@ class RMApp(App):
                 else:
                     self.colorBox.padding = self.padding * 2, self.padding * 2, self.padding * 2, 0
 
-            if len(records) >= self.listOnScreenLimit: # пытаемся всегда вернуться на последнюю запись посещения
-                try: self.scroll.scroll_to(widget=self.btn[self.clickedBtnIndex], padding=0, animate=False)
-                except: pass
-
     def recordView(self, instance=None, focus=False):
         self.displayed.form = "recordView"
         self.createInputBox(
@@ -4389,7 +4320,7 @@ class RMApp(App):
                        positive=None, sort=None, resize=None, details=None, neutral=None, multiline=False, tip=None,
                        link=None, limit=99999, focus=False):
         """ Форма ввода данных с одним полем """
-        if len(self.stack) > 0: self.stack.insert(0, self.stack[0]) # дублирование последнего шага стека, чтобы предотвратить уход со страницы
+        if len(self.stack) > 0: self.stack.insert(0, self.stack[0])
         if form is None: form = self.mainList
         form.padding = 0
         form.clear_widgets()
@@ -4516,7 +4447,6 @@ class RMApp(App):
         """ Форма ввода данных с несколькими полями """
         if form is None: form = self.mainList
         form.clear_widgets()
-        if len(self.stack) > 0: self.stack.insert(0, self.stack[0]) # дублирование последнего шага стека, чтобы предотвратить уход со страницы
         self.backButton.disabled = False
         self.positive.text = self.button["save"]
         self.positive.disabled = False
@@ -4621,7 +4551,6 @@ class RMApp(App):
                                 size_hint_x=entrySize_hint[0], size_hint_y=entrySize_hint[1] if multiline else None,
                                 limit=limit, input_type=input_type, disabled=disable, height=height*.9,
                                 shrink=True if multiline and self.displayed.form=="flatView" else False))
-
             else:
                 self.multipleBoxEntries.append(
                     MyCheckBox(active=default, size_hint=(entrySize_hint[0], entrySize_hint[1]),
@@ -4637,8 +4566,9 @@ class RMApp(App):
                                             size_hint_x=.2 if self.orientation == "v" else .1)
                 textbox.spacing = self.spacing
                 textbox.padding = (0, self.padding)
-                def calPress(instance): self.popup("showDatePicker")
-                calButton.bind(on_release=calPress)
+                def __calPress(instance):
+                    self.popup("showDatePicker")
+                calButton.bind(on_release=__calPress)
                 textbox.add_widget(self.multipleBoxEntries[row])
                 textbox.add_widget(calButton)
                 grid.add_widget(textbox)
@@ -4649,14 +4579,14 @@ class RMApp(App):
             if self.displayed.form == "flatView" and self.multipleBoxLabels[row].text == self.msg[22]:  # добавляем кнопки М и Ж
                 gap = self.standardTextHeight/2
                 textbox2 = BoxLayout(orientation="vertical", size_hint=entrySize_hint,
-                                     height=height*2 + self.padding*2,
+                                     height=height*2.2 + self.padding*2,
                                      padding=0 if not multiline else (0, self.spacing, 0, 0))
                 grid.remove_widget(textbox)
-                textbox.size_hint = (1, 1)
+                textbox.size_hint = 1, 1
                 textbox.padding = 0
                 textbox2.add_widget(textbox)
                 self.multipleBoxLabels[row].text_size[1] = self.standardTextHeight * 3
-                mfBox = BoxLayout(spacing=self.spacing*2, size_hint_x=.5)
+                mfBox = BoxLayout(spacing=self.spacing*2, size_hint_x=.5, pos_hint={"top": 0})
                 self.row = row
                 self.maleMenu = DropDown()
                 if self.theme != "3D":
@@ -4686,7 +4616,7 @@ class RMApp(App):
         if self.displayed.form == "flatView" and len(self.flat.records)==0:
             grid.padding = (self.padding*2, self.padding*2, self.padding*2, 0)
 
-        elif "Details" in self.displayed.form: # добавление корзины
+        elif "Details" in self.displayed.form: # добавление корзины и еще двух ячеек для кнопок
             self.getRadius()
             lowGrid = GridLayout(cols=3, size_hint=(1, .3))
             form.add_widget(lowGrid)
@@ -4783,10 +4713,8 @@ class RMApp(App):
         string = f"{self.button['share']} {self.msg[153]}"
         text = ""
         for char in string:
-            if char == " ":
-                text += "\n"
-            else:
-                text += char
+            if char == " ": text += "\n"
+            else: text += char
         w = h = self.mainList.size[0] * .25 if not self.desktop else 90 # размер (сторона квадрата)
         if self.language == "tr":
             w *= 1.1
@@ -4826,7 +4754,8 @@ class RMApp(App):
             flats = []
             for porch in self.house.porches:
                 for flat in porch.flats:
-                    if includeWithoutNumbers and not "." in flat.number: flats.append(flat)
+                    if includeWithoutNumbers and (not "." in flat.number or self.house.type == "private"):
+                        flats.append(flat)
                     elif not includeWithoutNumbers and flat.phone != "": flats.append(flat)
             if len(flats) == 0: self.popup(message=self.msg[313])
             else:
@@ -4876,7 +4805,7 @@ class RMApp(App):
             textHeight = None
         elif icon == "note":
             color = self.titleColor2
-            size_hint_y = .05 if self.desktop else None
+            size_hint_y = (.15 if self.orientation == "h" else .07) if self.desktop else None
             textHeight = self.standardTextHeight
             halign = "center"
         elif icon == "link":
@@ -4908,38 +4837,48 @@ class RMApp(App):
     def retrieve(self, containers, h, p, f, contacts):
         """ Retrieve and append contact list """
 
-        number = "" if containers[h].type == "virtual" else containers[h].porches[p].flats[f].number
+        cont = containers[h]
+        number = "" if cont.type == "virtual" else cont.porches[p].flats[f].number
 
-        if len(containers[h].porches[p].flats[f].records) > 0:
-                lastRecordDate = containers[h].porches[p].flats[f].records[0].date
+        if len(cont.porches[p].flats[f].records) > 0:
+                lastRecordDate = cont.porches[p].flats[f].records[0].date
         else:   lastRecordDate = None#""
-        if containers[h].porches[p].flats[f].lastVisit == "": containers[h].porches[p].flats[f].lastVisit = 0
+        if cont.porches[p].flats[f].lastVisit == "": cont.porches[p].flats[f].lastVisit = 0
         contacts.append([  # create list with one person per line with values:
-            containers[h].porches[p].flats[f].getName(),  # 0 contact name
-            "",#containers[h].porches[p].flats[f].getStatus()[0],  # 1 status
-            containers[h].title,  # 2 house title
+            cont.porches[p].flats[f].getName(),  # 0 contact name
+            "",#cont.porches[p].flats[f].getStatus()[0],  # 1 status
+            cont.title,  # 2 house title
             number,  # 3 flat number
             lastRecordDate,  # 4 дата последней встречи - отображаемая, record.date
-            containers[h].porches[p].flats[f].lastVisit, # 5 дата последней встречи - абсолютная, record.lastVisit
+            cont.porches[p].flats[f].lastVisit, # 5 дата последней встречи - абсолютная, record.lastVisit
             "",  # не используется
             [h, p, f],  # 7 reference to flat
-            containers[h].porches[p].type,  # 8 porch type ("virtual" as key for standalone contacts)
-            containers[h].porches[p].flats[f].phone,  # 9 phone number
+            cont.porches[p].type,  # 8 porch type ("virtual" as key for standalone contacts)
+            cont.porches[p].flats[f].phone,  # 9 phone number
 
             # Used only for search function:
-
-            containers[h].porches[p].flats[f].title,  # 10 flat title
-            containers[h].porches[p].flats[f].note,  # 11 flat note
-            containers[h].porches[p].title,  # 12 porch type
-            containers[h].note,  # 13 house note
-            True if (len(containers[h].porches) > 1 and containers[h].porches[p].type == "сегмент") else False,# 14 True = универсальный участок и несколько сегментов, False = все остальное
+            cont.porches[p].flats[f].title,  # 10 flat title
+            cont.porches[p].flats[f].note,  # 11 flat note
+            cont.porches[p].title,  # 12 porch type
+            cont.note,  # 13 house note
+            True if (len(cont.porches) > 1 and cont.porches[p].type == "сегмент") else False,# 14 True = универсальный участок и несколько сегментов, False = все остальное
 
             # Used for checking house type:
 
-            containers[h].type,  # 15 house type ("virtual" as key for standalone contacts)
-            ""#containers[h].porches[p].flats[f].getStatus()[1],  # 16 sortable status ("value")
+            cont.type,  # 15 house type ("virtual" as key for standalone contacts)
+            ""#cont.porches[p].flats[f].getStatus()[1],  # 16 sortable status ("value")
         ])
         return contacts
+
+    def decommify(self, string):
+        """ Замена запятых на точки с запятой в строке """
+        result = ""
+        if "," in string:
+            for char in string:
+                if char == ",": result += ";"
+                else: result += char
+        else: result = string
+        return result.strip()
 
     def getContacts(self, forSearch=False):
         """ Returns list of all contacts """
@@ -4952,7 +4891,7 @@ class RMApp(App):
                         if flat.status == "1" or flat.number == "virtual":
                             self.retrieve(self.houses, h, p, f, contacts)
                     else:  # поиск для поиска - все контакты вне зависимости от статуса
-                        if not "." in flat.number:
+                        if not "." in flat.number or self.houses[h].type == "private":
                             self.retrieve(self.houses, h, p, f, contacts)
         for h in range(len(self.resources[1])):
             self.retrieve(self.resources[1], h, 0, 0, contacts)  # отдельные контакты - все
@@ -4984,13 +4923,13 @@ class RMApp(App):
     def getColorForStatusPressed(self, status):
         """ Возвращает цвет кнопки статуса в нажатом состоянии """
         color = self.getColorForStatus(status)
-        k = .8# if self.mode == "light" else 1.2
+        k = .8
         return color[0]*k, color[1]*k, color[2]*k, 1
 
     def keyboardHeight(self, *args):
         """ Возвращает высоту клавиатуры в str """
         if platform == "android":
-            rect = Rect(instantiate=True)
+            #rect = Rect(instantiate=True)
             activity.getWindow().getDecorView().getWindowVisibleDisplayFrame(rect)
             rect.top = 0
             height = activity.getWindowManager().getDefaultDisplay().getHeight() - (rect.bottom - rect.top)
@@ -5033,7 +4972,7 @@ class RMApp(App):
             self.bottomButtons.size_hint_y = self.bottomButtonsSizeHintY
         else:
             self.orientation = "h"
-            self.SR = 1 - self.horizontalShrinkRatio
+            self.SR = 1# - self.horizontalShrinkRatio
             if self.theme == "morning" or self.theme == "purple": self.globalFrame.padding = (self.padding * 5, 0, 0, 0)
             if self.orientation != self.orientationPrev: self.drawMainButtons()
             self.orientationPrev = self.orientation
@@ -5078,7 +5017,8 @@ class RMApp(App):
                     self.boxFooter.orientation = "vertical"
                     self.boxFooter.padding = (0, 0, 0, self.padding * 3)
                     if self.desktop:
-                        self.desktopModeFrame.size_hint_x = self.horizontalShrinkRatio
+                        self.desktopModeFrame.size_hint_x = None
+                        self.desktopModeFrame.width = self.horizontalShrinkRatio
                         self.desktopModeFrame.add_widget(self.boxFooter)
                 self.boxFooter.add_widget(self.buttonTer)
                 self.boxFooter.add_widget(self.buttonCon)
@@ -5168,10 +5108,10 @@ class RMApp(App):
         """ Adding new house """
         if type == True: type = "condo"
         elif type == False: type = "private"
-        houses.append(House())
-        newHouse = len(houses) - 1
-        houses[newHouse].title = input.strip() if not forceUpper or self.language == "ge" else (input.strip()).upper()
-        houses[newHouse].type = type
+        houses.append(House(
+            title=input.strip() if not forceUpper or self.language == "ge" else (input.strip()).upper(),
+            type=type
+        ))
 
     def editLastMonthReport(self, instance=None, value=None):
         """ Правка отчета прошлого месяца на странице отчета """
@@ -5199,7 +5139,6 @@ class RMApp(App):
             else:
                 self.settings[4][i] = None
                 month.background_color = self.textInputBGColor
-
         hourSum = 0.0  # total sum of hours
         monthNumber = 0  # months entered
         for i in range(len(self.settings[4])):
@@ -5350,12 +5289,13 @@ class RMApp(App):
             if self.button["yes"] in instance.text.lower():
                 self.displayed.form = "porchView"
                 self.porch.deleteHiddenFlats()
-                self.porch.forceFloors()
-                self.porch.sortFlats(str(self.porch.rows))
                 try:
-                    start = int(self.flatRangeStart.text.strip())
-                    finish = int(self.flatRangeEnd.text.strip())
-                    floors = int(self.floors.get())
+                    if 0:#self.flatRangePresaved is not None:
+                        start, finish, floors = self.flatRangePresaved
+                    else:
+                        start = int(self.flatRangeStart.text.strip())
+                        finish = int(self.flatRangeEnd.text.strip())
+                        floors = int(self.floors.get())
                     f1 = int(self.floor1.get())
                     if start > finish or start < 1 or floors < 1:  #
                         5 / 0  # создаем ошибку
@@ -5363,29 +5303,22 @@ class RMApp(App):
                     self.popup(message=self.msg[88])
                     self.positivePressed()
                 else:
-                    numbers = []
+                    self.flatRangePresaved = None
+                    self.porch.flatsLayout = "н" # удаляем квартиры до и после заданного диапазона
+                    newFlats = []
                     for flat in self.porch.flats:
-                        if ut.numberize(flat.number) < ut.numberize(start):
-                            numbers.append(flat.number)
-                    for number in numbers:  # удаляем квартиры до и после заданного диапазона
-                        for i in range(len(self.porch.flats)):
-                            if self.porch.flats[i].number == number:
-                                del self.porch.flats[i]
-                                break
-                    del numbers[:]
-                    for flat in self.porch.flats:
-                        if ut.numberize(flat.number) > ut.numberize(finish):
-                            numbers.append(flat.number)
-                    for number in numbers:
-                        for i in range(len(self.porch.flats)):
-                            if self.porch.flats[i].number == number:
-                                del self.porch.flats[i]
-                                break
-                    self.porch.addFlats("%d-%d[%d" % (start, finish, floors))
+                        num = ut.numberize(flat.number)
+                        if num >= start and num <= finish:
+                            newFlats.append(flat)
+                    del self.porch.flats[:]
+                    self.porch.flats = newFlats
+                    self.porch.addFlats(start, finish, floors)
+                    self.porch.forceFloors(floors)
                     self.porch.floor1 = f1
                     if len(self.house.porches) == 1:  # если это первое создание квартир в доме, выгружаем параметры в настройку
                         self.settings[0][9] = start, finish, floors
                     self.save()
+                self.porch.flatsLayout = str(self.porch.rows)
                 self.porchView()
             elif self.exitToPorch:
                 self.porchView()
@@ -5408,10 +5341,10 @@ class RMApp(App):
                 elif self.house.type == "condo":
                     if self.deleteOnFloor: # удаление квартиры с буквой на табличном виде подъезда
                         self.deleteOnFloor = False
-                        self.flat.number = str(ut.numberize(self.flat.number)+.5) # удаленная квартира получает ".5" к номеру
+                        self.flat.number = "%.1f" % (ut.numberize(self.flat.number)+.5) # удаленная квартира получает ".5" к номеру
                         self.flat.wipe()
                         self.dismissTopPopup(all=True)
-                        self.porchView()
+                        self.porchView(instance=instance)
                     elif self.contactsEntryPoint: # удаление из контактов
                         self.flat.wipe()
                         self.conPressed()
@@ -5422,11 +5355,11 @@ class RMApp(App):
                         if self.resources[0][1][0] == 0 and self.porch.floors():
                             self.popup("confirmShrinkFloor", title=self.msg[203], message=self.msg[216],
                                        checkboxText=self.msg[170], options=[self.button["yes"], self.button["no"]])
-                            if "porchView" in self.stack: self.stack.remove("porchView")
+                            #if "porchView" in self.stack: self.stack.remove("porchView")
                             return
                         else:
                             self.porch.deleteFlat(self.flat)
-                        self.porchView()
+                            self.porchView(instance=instance)
                 else: # обычное удаление в сегменте
                     self.porch.deleteFlat(self.flat)
                     if self.contactsEntryPoint:
@@ -5434,7 +5367,7 @@ class RMApp(App):
                     elif self.searchEntryPoint:
                         self.find()
                     else:
-                        self.porchView()
+                        self.porchView(instance=instance)
                 self.save()
                 self.updateMainMenuButtons()
 
@@ -5519,6 +5452,7 @@ class RMApp(App):
         # Специальный попап для первого посещения
 
         if title is None: title = self.msg[203]
+        separator = True
         if popupForm != "": self.popupForm = popupForm
         if options == "Close": options = [self.msg[39]]
         size_hint = [.85, .6] if self.orientation == "v" else [.6, .85]
@@ -5526,20 +5460,27 @@ class RMApp(App):
 
         if firstCall:
             self.popupForm = "firstCall"
+            separator = False
             title = self.flatTitle
-            size_hint = [.8, .55] if self.orientation == "v" else [.4, .75]
+            size_hint = [.8, .58] if self.orientation == "v" else [.4, .75]
             contentMain = BoxLayout(orientation="vertical")
             content = GridLayout(rows=1, cols=1, padding=self.padding, spacing=self.spacing)
             content2 = GridLayout(rows=1, cols=1, padding=[self.padding, 0, self.padding, self.padding])
-            buttonsGrid = BoxLayout(orientation="horizontal",
-                                    spacing=self.spacing, height=self.standardTextHeight,
-                                    width=self.standardTextHeight * 2 + self.spacing,
-                                    pos_hint={"right": 1}, padding=(0, self.padding))
+            buttonsGrid = GridLayout(rows=1, cols=0, size_hint_y=None, spacing=self.spacing, pos_hint={"right": 1},
+                                     padding=(0, self.padding))
 
-            shrink = PopupButton(text=self.button['shrink'] if self.porch.floors() else icon('icon-trash-1'), # кнопка удаления обычная (двойная)
-                                 font_size = self.fontS * 1.2 * RM.fontScale(cap=1.1),
-                                 form=self.popupForm, size_hint_x=None, size_hint_y=None,
-                                 size=(self.standardTextHeight, self.standardTextHeight))
+            font_size = self.fontS * RM.fontScale(cap=1.3) # общие параметры для маленьких кнопок
+            size = (self.standardTextHeight, self.standardTextHeight)
+
+            if self.flat.phone != "": # кнопка телефона
+                buttonsGrid.cols += 1
+                phoneCall = PopupButton(text=self.button['phone1'], form=self.popupForm, font_size=font_size,
+                                        size_hint_x=None, size_hint_y=None, size=size)
+                phoneCall.bind(on_release=self.phoneCall)
+                buttonsGrid.add_widget(phoneCall)
+
+            shrink = PopupButton(text=self.button['shrink'] if self.porch.floors() else icon('icon-trash-1'), # кнопка удаления или урезания (универсальная)
+                form=self.popupForm, font_size=font_size, size_hint_x=None, size_hint_y=None, size=size)
 
             def __shrink(instance):
                 self.dismissTopPopup()
@@ -5547,23 +5488,18 @@ class RMApp(App):
                 self.blockFirstCall = 1
                 self.deletePressed(forced=True)
             shrink.bind(on_release=__shrink)
+            buttonsGrid.cols += 1
             buttonsGrid.add_widget(shrink)
 
             if self.porch.floors(): # кнопка удаления на подъезде
-                floorDelete = PopupButton(text=icon('icon-trash-1'),
-                                     font_size=self.fontS * 1.2 * RM.fontScale(cap=1.1),
-                                     form=self.popupForm, size_hint_x=None, size_hint_y=None,
-                                     size=(self.standardTextHeight, self.standardTextHeight))
+                floorDelete = PopupButton(text=icon('icon-trash-1'), form=self.popupForm, font_size=font_size,
+                                          size_hint_x=None, size_hint_y=None, size=size)
                 floorDelete.bind(on_release=self.deleteFlatOnFloors)
+                buttonsGrid.cols += 1
                 buttonsGrid.add_widget(floorDelete)
-                buttonsGrid.size_hint = (.49, None)
-            else:
-                buttonsGrid.size_hint = (.34, None)
 
-            details = PopupButton(text=self.button["cog"], size_hint_x=None, size_hint_y=None, # кнопка настроек
-                                  font_size = self.fontS * 1.2 * RM.fontScale(cap=1.1),
-                                  color=self.popupButtonColor, form=self.popupForm,
-                                  size=(self.standardTextHeight, self.standardTextHeight))
+            details = PopupButton(text=self.button["cog"], size_hint_x=None, # кнопка настроек
+                                  form=self.popupForm, font_size=font_size, size_hint_y=None, size=size)
 
             def __details(instance):
                 self.dismissTopPopup()
@@ -5573,21 +5509,26 @@ class RMApp(App):
                 del self.stack[0]
                 self.detailsPressed()
             details.bind(on_release=__details)
+            buttonsGrid.cols += 1
             buttonsGrid.add_widget(details)
             contentMain.add_widget(buttonsGrid)
 
+            buttonsGrid.size_hint = .5, None#(buttonsGrid.cols*.125, None)
+            buttonsGrid.height = details.height + self.padding*2
+
             if self.settings[0][20] == 1 or self.flat.phone != "":  # если нужно добавить телефон
                 self.keyboardCloseTime = .1
-                size_hint[1] = size_hint[1] * 1.06
+                size_hint[1] = size_hint[1] * 1.04
                 self.quickPhone = MyTextInput(size_hint_y=None, hint_text=self.msg[35], height=self.standardTextHeight,
-                                              text=self.flat.phone, background_color=[.2, .2, .2],
+                                              size_hint_x=1, text=self.flat.phone, popup=True, multiline=False,
                                               focus=True if self.settings[0][20] == 1 and self.desktop else False,
-                                              multiline=False, popup=True, input_type="text")
-
-                #phoneBox = BoxLayout(orientation="horizontal", size_hint_y=None)
-                #phoneBox.add_widget(self.quickPhone)
-                #phoneBox.add_widget(Button(size_hint=(None, None), width=20))
-                contentMain.add_widget(self.quickPhone)
+                                              input_type="text")
+                phoneBox = BoxLayout(orientation="horizontal", size_hint_y=None, height=self.quickPhone.height)
+                phoneBox.add_widget(self.quickPhone)
+                savePhoneBtn = PopupButtonGray(text=icon("icon-ok-1"), size_hint_x=.12, size_hint_y=None,
+                                               height=self.quickPhone.height)
+                phoneBox.add_widget(savePhoneBtn)
+                contentMain.add_widget(phoneBox)
 
                 def __getPhone(instance):
                     self.dismissTopPopup()
@@ -5599,12 +5540,13 @@ class RMApp(App):
                     else: self.porchView()
                     self.quickPhone.text = ""
                 self.quickPhone.bind(on_text_validate=__getPhone)
+                savePhoneBtn.bind(on_release=__getPhone)
                 def __dismiss(instance, value):
                     if value == 0: self.dismissTopPopup()
 
             r = self.getRadius(150)[0] # first call radius – значения радиусов для всех кнопок первого посещения
             self.FCRadius = [
-                [r, 0, 0, 0],  # нет дома
+                [r, 0, 0, 0], # нет дома
                 [0, r, 0, 0] if self.settings[0][13] == 1 else [r, r, 0, 0],  # запись
                 [0, 0, r, r]  # отказ
             ]
@@ -5671,6 +5613,7 @@ class RMApp(App):
 
         elif self.popupForm == "showTimePicker":
             self.popupForm = ""
+            separator = False
             pickerForm = BoxLayout(orientation="vertical", padding=self.padding, spacing=self.spacing*2)
             from circulartimepicker import CircularTimePicker
             picker = CircularTimePicker() # часы
@@ -5721,6 +5664,7 @@ class RMApp(App):
 
         elif self.popupForm == "showDatePicker":
             self.popupForm = ""
+            separator = False
             title=""
             contentMain = BoxLayout(orientation="vertical", padding=self.padding, spacing=self.spacing*2)
             self.datePicked = DatePicker(padding=(0, 0, 0, self.padding*7))
@@ -5735,14 +5679,20 @@ class RMApp(App):
             title = self.msg[191]
             if self.orientation == "v": size_hint[1] *= self.fontScale()
             width = self.mainList.width * size_hint[0] * .9
-            contentMain = BoxLayout(orientation="vertical", spacing=self.spacing, padding=self.padding)
+            contentMain = BoxLayout(orientation="vertical", padding=self.padding)
+            btnSave = PopupButton(
+                text=f"{icon('icon-plus-squared-alt')} {self.msg[188].upper() if self.language != 'ka' else self.msg[188]}",
+                padding=(0, self.padding)
+            )
+            bBox = BoxLayout(size_hint_y=None, height=btnSave.height, padding=(0, self.padding))
+            bBox.add_widget(btnSave)
+            contentMain.add_widget(bBox)
             text = MyTextInput(hint_text=self.msg[185] if self.house.type == "condo" else self.msg[309],
-                               multiline=True, shrink=False)
+                               popup=True, multiline=True, shrink=False)
             contentMain.add_widget(text)
             if self.theme != "3D":
-                btnPaste = RoundButton(text=f"{icon('icon-paste')} {self.msg[186]}", size_hint_x=1, size_hint_y=None,
-                                       radius=self.getRadius(250),
-                                       size=(width, self.standardTextHeight * (1.2 if not self.desktop else 1)))
+                btnPaste = PopupButtonGray(text=f"{icon('icon-paste')} {self.msg[186]}",
+                                           size=(width, self.standardTextHeight * (1.2 if not self.desktop else 1)))
             else:
                 btnPaste = RetroButton(text=f"{icon('icon-paste')} {self.msg[186]}", size_hint_x=1, size_hint_y=None,
                                        width=width, height=self.standardTextHeight * (1.2 if not self.desktop else 1))
@@ -5754,16 +5704,13 @@ class RMApp(App):
                                   text_size=(width, None), font_size=self.fontXS * self.fontScale(),
                                   valign="center", color=[.95, .95, .95])
             contentMain.add_widget(description)
-            box = BoxLayout(size_hint_y=None)
-            btnSave = PopupButton(text=self.msg[188])
-
             def __save(instance):
                 flats = text.text.strip()
                 if flats != "":
                     newstr = ""
                     for char in flats:
                         if char == "\n": newstr += ","
-                        elif char == ".": newstr += ";"
+                        elif self.house.type == "condo" and char == ".": newstr += ";"
                         else: newstr += char
                     if self.house.type == "private":
                         flats = [x for x in newstr.split(',')]
@@ -5774,21 +5721,24 @@ class RMApp(App):
                     showWarning = False
                     for flat in flats:
                         try:
-                            if self.porch.floors() and int(flat[0]) == 0: 5/0
+                            if self.house.type == "condo" and int(flat[0]) == 0: 5/0
                             else: pass
                         except: showWarning = True
                         else: self.porch.addFlat(f"{flat}")
-                    self.dismissTopPopup()
+                    self.dismissTopPopup(all=True)
                     if showWarning:
-                        self.dismissTopPopup(all=True)
                         self.popup(title=self.msg[203], message=self.msg[250])
                     if self.house.type == "condo":
                         tempLayout = self.porch.flatsLayout
                         tempType = self.porch.type
-                        self.porch.forceFloors()
-                        if tempLayout == "н":
+                        if tempLayout == "н" and tempType[7:].isnumeric():
                             self.porch.forceFloors(int(tempType[7:]))
                             self.porch.flatsLayout = "н"
+                        else:
+                            self.porch.forceFloors()
+                        self.flatRangePresaved = (int(self.flatRangeStart.text.strip()),
+                                                  int(self.flatRangeEnd.text.strip()),
+                                                  int(self.floors.get()))
                         self.porchView()
                         self.exitToPorch = True
                         self.positivePressed()
@@ -5796,18 +5746,12 @@ class RMApp(App):
                     else:
                         self.porchView()
                     self.save()
-
             btnSave.bind(on_release=__save)
             btnClose = PopupButton(text=self.msg[190])
-
             def __close(*args):
                 self.popupPressed()
             btnClose.bind(on_release=__close)
-
-            box.add_widget(btnSave)
-            box.add_widget(Widget(size_hint_x=.2))
-            box.add_widget(btnClose)
-            contentMain.add_widget(box)
+            contentMain.add_widget(btnClose)
             self.popupForm = ""
 
         # Восстановление резервных копий
@@ -5849,12 +5793,11 @@ class RMApp(App):
             btn = [] # раскладываем кнопки
             self.backups = ScrollView(size=(self.mainList.size[0] * .9, self.mainList.size[1] * .9),
                                      bar_width=self.standardBarWidth, scroll_type=['bars', 'content'])
-
             gridList = GridLayout(cols=1, size_hint_y=None, spacing=self.spacing * 2, padding=self.padding)
             gridList.bind(minimum_height=gridList.setter('height'))
             for i in range(len(self.fileDates)):
                 if self.theme != "3D":
-                    button = PopupButton(text=self.fileDates[i], size_hint_y=None, height = self.standardTextHeight * 1.5,
+                    button = PopupButtonGray(text=self.fileDates[i], size_hint_y=None, height = self.standardTextHeight * 1.5,
                                          font_size=self.fontS * self.fontScale())
                 else:
                     button = RetroButton(text=self.fileDates[i], size_hint_y=None, height=self.standardTextHeight * 1.5)
@@ -5864,10 +5807,8 @@ class RMApp(App):
             gridList.add_widget(Widget(height=self.standardTextHeight, size_hint_y=None))
             self.backups.add_widget(gridList)
             contentMain.add_widget(self.backups)
-
             grid = GridLayout(rows=2, cols=1, size_hint_y=None) # добавляем кнопку "Отмена"
             self.confirmButtonPositive = PopupButton(text=options[0], pos_hint={"bottom": 1})
-
             self.confirmButtonPositive.bind(on_release=lambda x=True: self.dismissTopPopup(all=x))
             grid.add_widget(Widget())
             grid.add_widget(self.confirmButtonPositive)
@@ -5906,12 +5847,11 @@ class RMApp(App):
                     box.add_widget(self.confirmButtonNegative)
                 contentMain.add_widget(box)
 
-        self.popups.insert(0, PopupNoAnimation(title=title, content=contentMain, size_hint=size_hint,
-                                        separator_color=self.titleColor if not firstCall and
-                                                                           title != "" and
-                                                                           title != self.msg[108] and title != self.msg[109] \
-                                                                        else self.popupBackgroundColor,
-                                        auto_dismiss=auto_dismiss))
+        self.popups.insert(0,
+                           PopupNoAnimation(title=title, content=contentMain, size_hint=size_hint,
+                                            auto_dismiss=auto_dismiss,
+                                            separator_color=self.titleColor if separator else self.popupBackgroundColor
+        ))
 
         if firstCall == True:
             def __gotoPorch(instance):
@@ -6162,10 +6102,10 @@ class RMApp(App):
 
         return curMonthUp, curMonthLow, lastMonthUp, lastMonthLow, lastMonthEn, curMonthRuShort, monthNum, lastTheoMonthNum, curTheoMonthNum
 
-    def checkDate(self):
+    def checkDate(self, *args):
         """ Проверка сегодняшней даты. Если она изменилась, делаем резервную копию """
         if self.today == time.strftime('%d', time.localtime()):
-            pass#self.dprint("Дата не изменилась.")
+            self.dprint("Дата не изменилась.")
         else:
             message = "Изменилась дата, делаем резервную копию..."
             self.dprint(message)
@@ -6196,8 +6136,8 @@ class RMApp(App):
         return True
 
     @mainthread
-    def loadShared(self):#on_resume(self):
-        """ Проверяем загруженный файл в момент возврата из состояния паузы """
+    def loadShared(self):
+        """ Получение загруженного файла на Android """
         if self.openedFile is not None:
             self.importDB(file=self.openedFile)
             self.openedFile = None
@@ -6231,8 +6171,6 @@ class RMApp(App):
                 if self.displayed.form == "ter":
                     self.save()
                     activity.moveTaskToBack(True)
-                elif self.displayed.form == "con":
-                    self.terPressed()
             elif not self.desktop:
                 self.save()
                 self.stop()
@@ -6534,79 +6472,58 @@ class RMApp(App):
                      [[self.resources[0], [self.resources[1][i].export() for i in range(len(self.resources[1]))], self.resources[2]]]
             for house in self.houses:
                 output.append(house.export())
-
         else: # экспорт одного участка
             output = ["Rocket Ministry application data file. Do NOT edit manually! Single territory export."] + [self.settings] + \
                      [[self.resources[0], [self.resources[1][i].export() for i in range(len(self.resources[1]))], self.resources[2]]]
             output.append(ter.export())
-
         return output
 
     def houseRetrieve(self, containers, housesNumber, h):
         """ Retrieves houses from JSON buffer into objects """
         for a in range(housesNumber):
             self.addHouse(containers, h[a][0], h[a][4])  # creating house and writing its title and type
-            containers[a].porchesLayout = h[a][1]
-            containers[a].date = h[a][2]
-            containers[a].note = h[a][3]
-
-            porchesNumber = len(h[a][5])  # counting porches
-            for b in range(porchesNumber):
-                containers[a].addPorch(h[a][5][b][0])  # creating porch and writing its title and layout
-                containers[a].porches[b].status = h[a][5][b][1]
-                containers[a].porches[b].flatsLayout = h[a][5][b][2]
-                containers[a].porches[b].floor1 = h[a][5][b][3]
-                containers[a].porches[b].note = h[a][5][b][4]
-                containers[a].porches[b].type = h[a][5][b][5]
-
-                flatsNumber = len(h[a][5][b][6])  # counting flats
-                for c in range(flatsNumber):
-                    containers[a].porches[b].flats.append(Flat())  # creating flat and writing its title
-                    containers[a].porches[b].flats[c].title = h[a][5][b][6][c][0]
-                    containers[a].porches[b].flats[c].note = h[a][5][b][6][c][1]
-                    containers[a].porches[b].flats[c].number = h[a][5][b][6][c][2]
-                    containers[a].porches[b].flats[c].status = h[a][5][b][6][c][3]
-                    containers[a].porches[b].flats[c].phone = h[a][5][b][6][c][4]
-                    containers[a].porches[b].flats[c].lastVisit = h[a][5][b][6][c][5]
-
-                    visitNumber = len(h[a][5][b][6][c][6])  # counting visits
-                    for d in range(visitNumber):
-                        containers[a].porches[b].flats[c].records.append(Record())
-                        containers[a].porches[b].flats[c].records[d].date = h[a][5][b][6][c][6][d][0]
-                        containers[a].porches[b].flats[c].records[d].title = h[a][5][b][6][c][6][d][1]
+            cont = containers[a]
+            cont.porchesLayout = h[a][1]
+            cont.date = h[a][2]
+            cont.note = h[a][3]
+            porches = h[a][5]
+            for b in range(len(porches)):
+                cont.porches.append(
+                    Porch(title=porches[b][0], status=porches[b][1], flatsLayout=porches[b][2],
+                          floor1=porches[b][3], note=porches[b][4], type=porches[b][5]))
+                flats = porches[b][6]
+                for c in range(len(flats)):
+                    cont.porches[b].flats.append(
+                        Flat(title=flats[c][0], note=flats[c][1], number=flats[c][2],
+                             status=flats[c][3], phone=flats[c][4], lastVisit=flats[c][5]))
+                    records = flats[c][6]
+                    for d in range(len(records)):
+                        cont.porches[b].flats[c].records.append(Record(date=records[d][0], title=records[d][1]))
 
     def loadOutput(self, buffer, singleTer):
         """ Загружает данные из буфера """
         try:
             if singleTer: # загрузка только одного участка, который добавляется к уже существующей базе
                 a=len(self.houses)
-
                 self.addHouse(self.houses, buffer[2][0], buffer[2][4])  # creating house and writing its title and type
-                self.houses[a].porchesLayout = buffer[2][1]
-                self.houses[a].date = buffer[2][2]
-                self.houses[a].note = buffer[2][3]
-                porchesNumber = len(buffer[2][5])  # counting porches
-                for b in range(porchesNumber):
-                    self.houses[a].addPorch(buffer[2][5][b][0])  # creating porch and writing its title and layout
-                    self.houses[a].porches[b].status = buffer[2][5][b][1]
-                    self.houses[a].porches[b].flatsLayout = buffer[2][5][b][2]
-                    self.houses[a].porches[b].floor1 = buffer[2][5][b][3]
-                    self.houses[a].porches[b].note = buffer[2][5][b][4]
-                    self.houses[a].porches[b].type = buffer[2][5][b][5]
-                    flatsNumber = len(buffer[2][5][b][6])  # counting flats
-                    for c in range(flatsNumber):
-                        self.houses[a].porches[b].flats.append(Flat())  # creating flat and writing its title
-                        self.houses[a].porches[b].flats[c].title = buffer[2][5][b][6][c][0]
-                        self.houses[a].porches[b].flats[c].note = buffer[2][5][b][6][c][1]
-                        self.houses[a].porches[b].flats[c].number = buffer[2][5][b][6][c][2]
-                        self.houses[a].porches[b].flats[c].status = buffer[2][5][b][6][c][3]
-                        self.houses[a].porches[b].flats[c].phone = buffer[2][5][b][6][c][4]
-                        self.houses[a].porches[b].flats[c].lastVisit = buffer[2][5][b][6][c][5]
-                        visitNumber = len(buffer[2][5][b][6][c][6])  # counting visits
-                        for d in range(visitNumber):
-                            self.houses[a].porches[b].flats[c].records.append(Record())
-                            self.houses[a].porches[b].flats[c].records[d].date = buffer[2][5][b][6][c][6][d][0]
-                            self.houses[a].porches[b].flats[c].records[d].title = buffer[2][5][b][6][c][6][d][1]
+                house = self.houses[a] 
+                house.porchesLayout = buffer[2][1]
+                house.date = buffer[2][2]
+                house.note = buffer[2][3]
+                porches = buffer[2][5]
+                for b in range(len(porches)):
+                    house.porches.append(
+                        Porch(status=porches[b][1], flatsLayout=porches[b][2], floor1=porches[b][3],
+                              note=porches[b][4], type=porches[b][5]))
+                    flats = porches[b][6]
+                    for c in range(len(flats)):
+                        house.porches[b].flats.append(
+                            Flat(title=flats[c][0], note=flats[c][1], number=flats[c][2],
+                                 status=flats[c][3], phone=flats[c][4], lastVisit=flats[c][5]))
+                        records = flats[c][6]
+                        for d in range(len(records)):
+                            house.porches[b].flats[c].records.append(
+                                Record(date=records[d][0], title=records[d][1]))
 
             else: # загрузка и обновление базы целиком
                 self.clearDB()

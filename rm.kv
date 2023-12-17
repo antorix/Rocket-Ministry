@@ -55,7 +55,7 @@
             radius: app.FCRadius[0]
 
 <FirstCallButton2@FirstCallButton>:
-    color: (app.linkColor if app.mode == "light" else app.getColorForStatus("?")) if self.state=='normal' else app.titleColorOnBlack#app.themeDefault[1]
+    color: (app.linkColor if app.mode == "light" else app.getColorForStatus("?")) if self.state=='normal' else app.titleColorOnBlack
     background_color: [1,1,1,0]
     canvas.before:
         Color:
@@ -81,12 +81,17 @@
     background_color: [0,0,0,0] if self.state=='normal' else [1,1,1,.05]
     text_size: self.size
 
+<PopupButtonGray@PopupButton>:
+    color: "lightgray" if self.state=='normal' else app.titleColorOnBlack
+    background_color: [.25, .25, .25, 1] if self.state=='normal' else [1,1,1,.05]
+    text_size: self.size
+
 <RetroButton@Button>:
     text_size: self.size
 
 <MainMenuButton@Button>:
     color: app.mainMenuButtonColor
-    background_color: app.mainMenuButtonBackgroundColor if app.theme != "3D" else [1,1,1,0]#app.globalBGColor
+    background_color: app.mainMenuButtonBackgroundColor if app.theme != "3D" else [1,1,1,0]
     canvas.before:
         Color:
             rgba: app.globalBGColor if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else (app.roundButtonColorPressed2 if app.theme != "3D" else [1,1,1,.05]))
@@ -129,11 +134,10 @@
     color: "white"
     background_color: app.getColorForStatus(self.status) if self.state=='normal' else app.getColorForStatusPressed(self.status)
     status: self.status
-    #text_size:
 
 <FlatHiddenButton@FlatButton>:
     color: (app.getColorForStatus("") if app.mode == "light" else app.getColorForStatus("")) if self.state=='normal' else "white"
-    background_color: [1,1,1,0]#[app.globalBGColor[0], app.globalBGColor[1], app.globalBGColor[2], 1] if self.state=='normal' else app.getColorForStatusPressed(self.status)
+    background_color: [1,1,1,0]
     canvas.before:
         Color:
             rgba: [app.globalBGColor[0], app.globalBGColor[1], app.globalBGColor[2], 1] if self.state=='normal' else app.getColorForStatusPressed(self.status)
