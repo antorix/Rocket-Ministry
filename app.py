@@ -3,7 +3,7 @@
 
 from sys import argv
 Devmode = 1 if "dev" in argv else 0
-Version = "2.12.001"
+Version = "2.12.002"
 """
 * Исправление багов и оптимизации.
 """
@@ -2729,6 +2729,77 @@ class RMApp(App):
     def scrollClick(self, instance):
         """ Действия, которые совершаются на указанных списках по нажатию на пункт списка """
         def __click(*args): # действие всегда выполняется с запаздыванием, чтобы отобразилась анимация на кнопке
+            if self.msg[6] in instance.text: # "создать подъезд"
+                text = instance.text[len(self.msg[6])+74 : ] # число символов во фразе msg[6] + 4 на форматирование
+                #print(text) # должно выглядеть: 1[/i]
+                if "[/i]" in text: text = text[ : text.index("[")]
+                self.house.addPorch(text.strip())
+                self.save()
+                self.clickedBtnIndex = instance.id
+                self.houseView(instance=instance)
+                return
+            elif self.msg[11] in instance.text or self.msg[12] in instance.text: # "создайте"
+                self.positivePressed()
+                return
+
+            if self.displayed.form == "porchView" or self.displayed.form == "con":
+                if self.showSlider:
+                    self.showSlider = False
+                    self.sliderToggle()
+                self.contactsEntryPoint = 0
+                self.searchEntryPoint = 0
+
+            if self.displayed.form == "ter":
+                self.house = self.houses[instance.id]
+                self.clickedBtnIndex = self.houses.index(self.house)
+                self.houseView(instance=instance)
+
+            elif self.displayed.form == "houseView":
+                self.porch = self.house.porches[instance.id]
+                self.clickedBtnIndex = self.house.porches.index(self.porch)
+                self.porchView(instance=instance)
+
+            elif self.displayed.form == "porchView":
+                self.flat = instance.flat
+                self.clickedBtnIndex = self.porch.flats.index(self.flat)
+                self.flatView(call=False, instance=instance)
+
+            elif self.displayed.form == "flatView": # режим редактирования записей
+                self.record = self.flat.records[instance.id]
+                self.clickedBtnIndex = self.flat.records.index(self.record)
+                self.recordView(instance=instance) # вход в запись посещения
+
+            elif self.displayed.form == "con": # контакты
+                selection = self.clickedBtnIndex = instance.id
+                h = self.allcontacts[selection][7][0]  # получаем дом, подъезд и квартиру выбранного контакта
+                p = self.allcontacts[selection][7][1]
+                f = self.allcontacts[selection][7][2]
+                if self.allcontacts[selection][8] != "virtual": self.house = self.houses[h]
+                else: self.house = self.resources[1][h] # заменяем дом на ресурсы для отдельных контактов
+                self.porch = self.house.porches[p]
+                self.flat = self.porch.flats[f]
+                self.contactsEntryPoint = 1
+                self.searchEntryPoint = 0
+                self.flatView(instance=instance)
+
+            elif self.displayed.form == "search": # поиск
+                if not self.msg[8] in instance.text:
+                    selection = self.clickedBtnIndex = instance.id
+                    h = self.searchResults[selection][0][0]  # получаем номера дома, подъезда и квартиры
+                    p = self.searchResults[selection][0][1]
+                    f = self.searchResults[selection][0][2]
+                    if self.searchResults[selection][1] != "virtual": self.house = self.houses[h] # regular contacts
+                    else: self.house = self.resources[1][h]
+                    self.porch = self.house.porches[p]
+                    self.flat = self.porch.flats[f]
+                    self.searchEntryPoint = 1
+                    self.contactsEntryPoint = 0
+                    self.flatView(instance=instance)
+        Clock.schedule_once(__click, 0)
+
+    def scrollClick_(self, instance):
+        """ Действия, которые совершаются на указанных списках по нажатию на пункт списка """
+        def __click(*args): # действие всегда выполняется с запаздыванием, чтобы отобразилась анимация на кнопке
             self.clickedBtnIndex = instance.id
             if self.msg[6] in instance.text: # "создать подъезд"
                 text = instance.text[len(self.msg[6])+74 : ] # число символов во фразе msg[6] + 4 на форматирование
@@ -3344,6 +3415,7 @@ class RMApp(App):
                 self.houseView()
 
             elif self.displayed.form == "createNewFlat":  # сохранение новых квартир
+                print(1)
                 if self.house.type == "condo":  # многоквартирный подъезд
                     self.popupForm = "updatePorch"
                     if len(self.porch.flats) > 0:
@@ -3352,17 +3424,21 @@ class RMApp(App):
                     else:
                         self.popupPressed(instance=Button(text=self.button["yes"]))
                 else: # сохранение домов в сегменте универсального участка
+                    print(2)
                     start = self.decommify(self.inputBoxEntry.text)
                     if not self.checkbox.active:
+                        print(2.5)
                         self.porch.addFlat(start)
                         self.save()
                         self.porchView()
                     else:
                         finish = self.inputBoxEntry2.text.strip()
                         try:
+                            print(3)
                             if int(start) > int(finish): 5/0
                             self.porch.addFlats(int(start), int(finish))
                         except:
+                            print(4)
                             self.popup(message=self.msg[91])
                             def __repeat(*args):
                                 self.porchView()
@@ -3370,8 +3446,10 @@ class RMApp(App):
                                 self.checkbox.active = True
                             Clock.schedule_once(__repeat, 0.5)
                         else:
-                            self.porchView()
+                            print(5)
                             self.save()
+                            print("SAVED")
+                            self.porchView()
 
             elif self.displayed.form == "recordView": # сохранение уже существующей записи посещения
                 self.displayed.form = "flatView"
@@ -4178,6 +4256,9 @@ class RMApp(App):
 
     def porchView(self, instance=None):
         """ Вид подъезда - список квартир или этажей """
+        #for f in self.porch.flats:
+        #    print(f.number)
+        print(f"flats in this porch: {len(self.porch.flats)}")
         self.updateMainMenuButtons()
         self.blockFirstCall = 0
         self.exitToPorch = False
@@ -4214,8 +4295,6 @@ class RMApp(App):
         )
         self.stack = ['porchView', 'houseView', 'ter']
         self.updateList(instance=instance)
-        #print("\nPORCH:")
-        #for f in self.porch.flats: print(f.number)
 
         if self.house.type == "condo" and len(self.porch.flats) == 0: # если нет квартир, сразу форма создания
             self.positivePressed()
@@ -5528,10 +5607,10 @@ class RMApp(App):
                 self.quickPhone = MyTextInput(size_hint_y=None, hint_text=self.msg[35], height=self.standardTextHeight,
                                               size_hint_x=1, text=self.flat.phone, popup=True, multiline=False,
                                               focus=True if self.settings[0][20] == 1 and self.desktop else False,
-                                              input_type="text")
+                                              input_type="number")
                 phoneBox = BoxLayout(orientation="horizontal", size_hint_y=None, height=self.quickPhone.height)
                 phoneBox.add_widget(self.quickPhone)
-                savePhoneBtn = PopupButtonGray(text=icon("icon-ok-1"), size_hint_x=.12, size_hint_y=None,
+                savePhoneBtn = PopupButtonGray(text=icon("icon-ok-squared"), size_hint_x=.12, size_hint_y=None,
                                                height=self.quickPhone.height)
                 phoneBox.add_widget(savePhoneBtn)
                 contentMain.add_widget(phoneBox)
