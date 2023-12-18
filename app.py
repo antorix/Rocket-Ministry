@@ -2519,7 +2519,10 @@ class RMApp(App):
                             box.add_widget(MyLabel(
                                 text=text, markup=True, color=self.standardTextColor, halign="left", valign="top",
                                 size_hint_y=None, height=height1*self.fontScale(),
-                                text_size = (Window.size[0]*self.SR-self.standardTextHeight, height1)))
+                                text_size=(
+                                    Window.size[0] - (self.standardTextHeight if self.orientation == "v" else 110),
+                                    height1)
+                            ))
                             box.height = height * gap + height1*self.fontScale()
                         else:
                             box.height = height * gap
@@ -2594,10 +2597,12 @@ class RMApp(App):
                 if self.porch.columns >= 10 or self.porch.rows >= 20:
                     self.scaling = True
                     self.getRadius(240)
+                    spacing = self.spacing * (2 if self.desktop else 1.2)
                 else:
                     self.scaling = False
                     self.getRadius(160)
-                spacing = self.spacing * (2 if self.desktop else 1.2)
+                    spacing = self.spacing * (2 if self.desktop else 1.5)
+
                 self.floorview = GridLayout(cols=self.porch.columns+1, rows=self.porch.rows, spacing=spacing,
                                             padding=(self.padding*2, 0))
                 self.mainList.add_widget(self.floorview)
@@ -3950,6 +3955,11 @@ class RMApp(App):
 
     def phoneCall(self, instance=None):
         """ Телефонный звонок """
+        try:
+            self.flat.editPhone(self.quickPhone.text)
+            self.save()
+        except: pass
+
         if platform == "android": request_permissions([Permission.CALL_PHONE])
         try: plyer.call.makecall(tel=self.flat.phone)
         except:
@@ -4168,10 +4178,6 @@ class RMApp(App):
 
     def porchView(self, instance=None):
         """ Вид подъезда - список квартир или этажей """
-        if "virtual" in self.porch.type: # страховка от захода в виртуальный подъезд
-            if self.contactsEntryPoint: self.conPressed(instance=instance)
-            elif self.searchEntryPoint: self.find(instance=instance)
-            return
         self.updateMainMenuButtons()
         self.blockFirstCall = 0
         self.exitToPorch = False
@@ -5462,7 +5468,7 @@ class RMApp(App):
             self.popupForm = "firstCall"
             separator = False
             title = self.flatTitle
-            size_hint = [.8, .58] if self.orientation == "v" else [.4, .75]
+            size_hint = [.8, .55] if self.orientation == "v" else [.4, .75]
             contentMain = BoxLayout(orientation="vertical")
             content = GridLayout(rows=1, cols=1, padding=self.padding, spacing=self.spacing)
             content2 = GridLayout(rows=1, cols=1, padding=[self.padding, 0, self.padding, self.padding])
