@@ -112,10 +112,11 @@
             size: self.size
             radius: app.radius
 
-<FlatButton@Button>: # закругленный вариант
-    color: [1,1,1,.95] if self.state == "normal" else "white"
+<FlatButton@Button>:
+    color: ([1,1,1,.95] if self.state == "normal" else "white") if not "." in self.text else ((app.getColorForStatus("") if app.mode == "light" else app.getColorForStatus("")) if self.state=='normal' else "white")
     background_color: [0,0,0,0]
     status: self.status
+    text: self.text
     text_size: self.size if not app.scaling else (None, None)
     background_normal: ""
     background_down: ""
@@ -124,23 +125,7 @@
     valign: "center"
     canvas.before:
         Color:
-            rgba: app.getColorForStatus(self.status) if self.state=='normal' else app.getColorForStatusPressed(self.status)
-        RoundedRectangle:
-            pos: self.pos
-            size: self.size
-            radius: app.radius
-
-<FlatButtonSquare_@FlatButton>: # квадратный вариант – откомментировать для активации
-    color: "white"
-    background_color: app.getColorForStatus(self.status) if self.state=='normal' else app.getColorForStatusPressed(self.status)
-    status: self.status
-
-<FlatHiddenButton@FlatButton>:
-    color: (app.getColorForStatus("") if app.mode == "light" else app.getColorForStatus("")) if self.state=='normal' else "white"
-    background_color: [1,1,1,0]
-    canvas.before:
-        Color:
-            rgba: [app.globalBGColor[0], app.globalBGColor[1], app.globalBGColor[2], 1] if self.state=='normal' else app.getColorForStatusPressed(self.status)
+            rgba: (app.getColorForStatus(self.status) if self.state=='normal' else app.getColorForStatusPressed(self.status)) if not "." in self.text else ([app.globalBGColor[0], app.globalBGColor[1], app.globalBGColor[2], 1] if self.state=='normal' else app.getColorForStatusPressed(self.status))
         RoundedRectangle:
             pos: self.pos
             size: self.size
