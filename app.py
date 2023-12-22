@@ -1031,14 +1031,17 @@ class SettingsButton(Button):
     def __init__(self, id):
         super(SettingsButton, self).__init__()
         self.id = id
-        self.text = RM.button['ellipsis']
+        self.text = RM.button['ellipsis'] if id is not None else ""
         self.size_hint_x = RM.ellipsisWidth
         self.font_size = RM.fontL
         self.markup = True
+        self.background_normal = ""
+        self.background_down = ""
+        if self.id is None: self.disabled = True
 
     def on_release(self):
         def __press(*args):
-            RM.detailsPressed(id=self.id)
+            if self.id is not None: RM.detailsPressed(id=self.id)
         Clock.schedule_once(__press, 0)
 
 class Timer(Button):
@@ -2533,7 +2536,7 @@ class RMApp(App):
 
                     else: # стандартное добавление
                         if (self.displayed.form == "ter" and len(self.houses)>0) or self.displayed.form == "con" or self.displayed.form == "houseView" \
-                                and not self.button['porch_inv'] in label and not self.button['plus-1'] in label:
+                                and not self.button['plus-1'] in label:
                             addEllipsis = True # флаг, что нужно добавить три точки настроек
                             box = GridLayout(rows=2, cols=3, size_hint_y=None, spacing=(1, 0))
                             box.add_widget(Widget(size_hint=(.03, 0)))
@@ -2566,9 +2569,10 @@ class RMApp(App):
                         box.add_widget(button)
 
                         if addEllipsis: # добавляем три точки
-                            box.add_widget(
-                                SettingsButton(id=i) if self.displayed.form != "con" else Widget(size_hint=(.03, 0))
-                            )
+                            if self.displayed.form != "con":
+                                box.add_widget(SettingsButton(id=i if not self.button['porch_inv'] in label else None))
+                            else:
+                                box.add_widget(Widget(size_hint_x=.03))
                             box.add_widget(Widget(size_hint=(0, 0)))
 
                         if addRecord or addPhone or addNote: # если есть запись посещения, телефон или заметка, добавляем снизу
