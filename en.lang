@@ -126,7 +126,7 @@ Monthly hour requirement
 Transfer minutes to next month
 "Not interested" color
 Hourly credit
-Quick phone input
+Telephone witnessing
 Notification on timer start
 Language
 Save failed!
@@ -201,11 +201,11 @@ Delete visit record
 Delete record from
 In brackets, you may see how much time you are ahead (+) or behind (-) your monthly requirement for the current day of the month. For example, with the requirement of 50 hours, if you have had no service for today, this value will decrease approximately by 1:40 tomorrow.
 Attention
-
+Info
 You can disable the "%s" button in the app settings!
 Not at home
 Not interested
-Cannot load file. It likely has a wrong format or does not contain necessary data.
+In brackets, you may see how much time you are ahead (+) or behind (-) your monthly requirement for the current day of the month. For example, with the requirement of 50 hours, if you have had no service for today, this value will decrease approximately by 1:40 tomorrow.
 Data successfully loaded!
 Please wait
 section
