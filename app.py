@@ -450,7 +450,7 @@ class Flat(object):
         if date[0] == "0": date = date[1:]
         month = RM.monthName()[5]
         timeCur = time.strftime("%H:%M", time.localtime())
-        self.records[0].date = "%s %s %s" % (date, month, timeCur)        
+        self.records[0].date = "%s %s %s" % (date, month, timeCur)
         self.lastVisit = time.time()
         return len(self.records)-1
 
@@ -1775,7 +1775,7 @@ class RMApp(App):
         self.terPressed()
         self.updateTimer()
         self.backupRestore(delete=True, silent=True)
-        if self.update(): self.popup(message=self.msg[310], dismiss=False)
+        self.update()
         self.rep.checkNewMonth()
         self.rep.optimizeReportLog()
         self.checkCrashFlag()
@@ -1842,7 +1842,7 @@ class RMApp(App):
         self.enlargedTextCo = 1.2 if not self.desktop else 1  # увеличенная текстовая строка на некоторых окнах
         self.ellipsisWidth = .06 # ширина кнопки с тремя точками либо пустого виджета вместо нее, справа и слева
         self.orientationPrev = ""
-        self.lag = .1 # задержка в секундах после действий на квартире из попапа
+        self.newVersionFound = False
         self.flatRangePresaved = None # пока не используется
         self.horizontalShrinkRatio = 80 # ширина левой боковой полосы на горизонтальной ориентации на компьютере
         self.titleSizeHintY = .11  # ширина полосы заголовка
@@ -2759,6 +2759,10 @@ class RMApp(App):
                 return
 
             self.sliderToggle()
+
+        if self.newVersionFound:
+            self.newVersionFound = False
+            #self.popup(message=self.msg[310], dismiss=False)
 
         if not self.desktop and self.resources[0][1][8] == 0: # интересует версия для ПК?
             self.resources[0][1][8] = 1
@@ -5129,7 +5133,7 @@ class RMApp(App):
         # 45 - центральная кнопка
         # 100 - большинство кнопок (по умолчанию)
         # 250 - почти квадратные маленькие кнопки
-        if self.theme == "3D" or (platform == "windows" and rad >= 50):
+        if self.theme == "3D" or (platform == "win" and rad >= 50):
             buttonRadius = 0
         else:
             buttonRadius = (Window.size[0] * Window.size[1]) / (Window.size[0] * rad)
@@ -5607,7 +5611,7 @@ class RMApp(App):
                                                     height=self.quickPhone.height)
                 phoneBox.add_widget(self.savePhoneBtn)
                 contentMain.add_widget(phoneBox)
-                
+
                 def __savePhone(instance):
                     self.flat.editPhone(self.quickPhone.text)
                     self.save()
@@ -6000,8 +6004,7 @@ class RMApp(App):
 
     def update(self):
         """ Проверяем новую версию и при наличии обновляем программу с GitHub """
-        result = False
-        if not self.desktop or Devmode: return result  # мобильная версия не проверяет обновления, а также в режиме разработчика
+        if not self.desktop or Devmode: return  # мобильная версия не проверяет обновления, а также в режиме разработчика
         else: self.dprint("Проверяем обновления настольной версии.")
 
         def __update(threadName, delay):
@@ -6010,7 +6013,7 @@ class RMApp(App):
                     newVersion = line.decode('utf-8').strip()
             except:
                 self.dprint("Не удалось подключиться к серверу.")
-                return result
+                #return result
             else:  # успешно подключились, сохраняем сегодняшнюю дату последнего обновления (пока не используется)
                 """Version = '2.09.005' # тестирование версий
                 print(Version)
@@ -6027,6 +6030,8 @@ class RMApp(App):
                 today = today[0: today.index(" ")]
                 self.settings[1] = today
                 if newVersion > Version:
+                    self.newVersionFound = True
+                    Clock.schedule_once(lambda x: self.popup(message=self.msg[310], dismiss=False), 10)
                     self.dprint("Найдена новая версия, скачиваем.")
                     response = requests.get("https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip")
                     import tempfile
@@ -6045,11 +6050,8 @@ class RMApp(App):
                             except: self.dprint("Не удалось переместить файл %s." % source)
                     os.remove(file)
                     shutil.rmtree(downloadedFolder)
-                    result = True
                 else: self.dprint("Обновлений нет.")
         _thread.start_new_thread(__update, ("Thread-Update", 0,))
-
-        return result
 
     def monthName(self, monthCode=None, monthNum=None):
         """ Returns names of current and last months in lower and upper cases """
