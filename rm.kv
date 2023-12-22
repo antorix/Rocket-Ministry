@@ -112,11 +112,11 @@
             radius: app.radius
 
 <TableButton@Button>:
-    color: ([1,1,1,.95] if self.text == app.button['phone'] and self.disabled == False else app.tableColor) if self.state=='normal' else app.titleColor
+    color: (([.15,.15,.15,1] if app.mode == "dark" else [1,1,1,.95]) if self.text == app.button['phone'] and self.disabled == False else app.tableColor) if self.state=='normal' else app.titleColor
     background_color: app.roundButtonBGColor
     canvas.before:
         Color:
-            rgba: (app.getColorForStatus("1") if self.text == app.button['phone'] and self.disabled == False else app.globalBGColor) if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)
+            rgba: (app.titleColor if self.text == app.button['phone'] and self.disabled == False else app.globalBGColor) if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -156,19 +156,10 @@
             size: self.size
             radius: app.radius
 
-<SettingsButton_@Button>: # вариант с картинкой
-    color: app.topButtonColor if self.state=='normal' else (app.titleColor if app.theme != "3D" else app.topButtonColor)
-    background_color: [1,1,1,0]
-    Image:
-        source: 'dots.png'
-        center_x: self.parent.center_x
-        center_y: self.parent.center_y
-        size: app.mainList.size[0]*.05, app.mainList.size[0]*.06
-        #allow_stretch: True
-
 <SettingsButton@Button>:
     color: app.topButtonColor if self.state=='normal' else (app.titleColor if app.theme != "3D" else app.topButtonColor)
     background_color: [1,1,1,0]
+    #text_size: self.size
     canvas.before:
         Color:
             rgba: app.globalBGColor if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else (app.roundButtonColorPressed2 if app.theme != "3D" else [1,1,1,.05]))
@@ -240,3 +231,4 @@
             pos: self.pos
             size: self.size
             radius: app.radius
+
