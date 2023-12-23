@@ -127,7 +127,7 @@
     background_color: [0,0,0,0]
     status: self.status
     text: self.text
-    text_size: self.size if not app.scaling else (None, None)
+    text_size: (None, None) if app.grid else self.size
     background_normal: ""
     background_down: ""
     markup: True
@@ -147,7 +147,6 @@
 <TopButton@Button>:
     color: app.topButtonColor if self.state=='normal' else (app.titleColor if app.theme != "3D" else app.topButtonColor)
     background_color: [1,1,1,0]
-    #text_size: self.size
     canvas.before:
         Color:
             rgba: app.globalBGColor if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else (app.roundButtonColorPressed2 if app.theme != "3D" else [1,1,1,.05]))
