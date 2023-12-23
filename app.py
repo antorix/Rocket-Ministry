@@ -2126,7 +2126,7 @@ class RMApp(App):
         self.mainMenuButtonColor2 = get_hex_from_color(self.mainMenuButtonColor)
         self.titleColor2 = get_hex_from_color(self.titleColor)
         self.timerOffColor[3] = .9
-        if self.theme == "purple": self.RoundButtonColor = get_hex_from_color(self.linkColor)
+        if self.theme == "purple": self.RoundButtonColor = get_hex_from_color(self.titleColor)
         elif self.theme == "morning": self.RoundButtonColor = get_hex_from_color(self.scrollIconColor)
         else: self.RoundButtonColor = self.titleColor2
         self.scrollColor = get_hex_from_color(self.scrollIconColor)
@@ -3185,8 +3185,11 @@ class RMApp(App):
                 if input == "report000":
                     self.rep.checkNewMonth(forceDebug=True)
 
-                elif input == "@": # недокументированный экспорт в облако
+                elif input == "@": # недокументированный экспорт в облако с выбором приложения
                     self.share(email=True)
+
+                elif input == "%": # недокументированный экспорт в Google Drive (?)
+                    plyer.email.send(subject=self.msg[4], text=self.rep.getCurrentMonthReport(), create_chooser=False)
 
                 elif input == "#": # недокументированный импорт через буфер обмена
                     self.save(backup=True)
@@ -6536,7 +6539,7 @@ class RMApp(App):
                     if len(str(output)) == len(str(buffer)):
                         message2 = "Успешно!"
                         verified = True
-                        self.dprint(message=message1 + message2)
+                        self.dprint(message1 + message2)
                     else: message2 = f"Ошибка! Пробуем еще раз, попытка № {count}..."
                     self.dprint(message1 + message2)
                     if verified: break
@@ -6690,7 +6693,7 @@ class RMApp(App):
 
         elif email: # экспорт в сообщении
             if not self.desktop:
-                plyer.email.send(subject=self.msg[251] if ter==None else ter.title, text=str(buffer), create_chooser=True)
+                plyer.email.send(subject=self.msg[251] if ter==None else ter.title, text=str(buffer), create_chooser=False)#True)
             else: # на компьютере просто кладем в буфер обмена
                 Clipboard.copy(str(buffer))
                 self.popup(message=self.msg[133])

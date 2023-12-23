@@ -213,7 +213,7 @@ entrada
 Agregar el primer %s
 #
 Ya no puede reducir pisos en este bloque, ¡porque el último apartamento con contenido desaparecerá!
-¿Eliminar un piso en esta posición? El número del apartamento permanecerá intacto.
+¿Eliminar un piso en esta posición? El número del apartamento permanecerá intacto (excepto el último).
 Eliminar posición
 Revisa actualizaciones:
 Empezar ministerio?

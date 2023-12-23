@@ -213,7 +213,7 @@ entrance
 Add the first %s
 #
 You cannot reduce floors in this block anymore, because the last apartment with content will disappear!
-Delete a flat in this position? The flat number itself will stay intact.
+Delete a flat in this position? The flat number itself will stay intact (except the last one).
 Delete position
 Check for updates:
 Start ministry?
