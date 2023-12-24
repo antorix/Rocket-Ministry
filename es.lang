@@ -99,7 +99,7 @@ Agregar territorio
 Aquí encontrará todas las personas interesadas de todos sus territorios, así como contactos independientes que puede añadir utilizando el botón "%s".
 Agregar contacto
 Registrar
-¿Qué archivo cargar?
+Elija el archivo a cargar:
 Estudios bíblicos
 Horas
 Crédito (totalmente con horas %s)
@@ -315,6 +315,8 @@ Números de teléfono en %s
 Mapas
 Por defecto
 Importar datos desde un archivo
-Exporte todos los datos de la aplicación
+Guarde todos los datos de la aplicación en un archivo
 Recuperar una copia de seguridad si algo salió mal
 Restablecimiento de todos los datos y configuraciones, incluidas las copias de seguridad
+Exportar
+Exportar datos al almacenamiento en la nube

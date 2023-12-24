@@ -945,7 +945,7 @@ class MyTextInput(TextInput):
             try:
                 #print("key up")
                 if RM.quickPhone.text != RM.flat.phone:
-                    RM.savePhoneBtn.text = icon("icon-ok-1")
+                    RM.savePhoneBtn.text = RM.button["check"]
                     RM.savePhoneBtn.disabled = False
                 else:
                     RM.savePhoneBtn.text = ""
@@ -1038,7 +1038,7 @@ class SettingsButton(Button):
         self.id = id
         self.text = RM.button['ellipsis'] if id is not None else ""
         self.size_hint_x = RM.ellipsisWidth
-        self.font_size = RM.fontL * 1.22#1.075
+        self.font_size = RM.fontM# * 1.22#1.075
         self.markup = True
         self.background_normal = ""
         self.background_down = ""
@@ -1076,7 +1076,7 @@ class Timer(Button):
 
     def off(self):
         """ Выключение таймера """
-        self.text = icon("icon-play-circled-1")
+        self.text = icon("icon-play-circle")
         self.color = RM.timerOffColor
 
 class RetroButton(Button):
@@ -1090,7 +1090,6 @@ class RetroButton(Button):
         if size is not None: self.size = size
         self.disabled = disabled
         if font_name is not None: self.font_name = font_name
-        #if text_size is not None: self.text_size = text_size
         if not RM.desktop: self.font_size = RM.fontS
         if RM.specialFont is not None: self.font_name = RM.specialFont
         if font_name is not None: self.font_name = font_name
@@ -1293,14 +1292,14 @@ class FlatButton(Button):
         self.font_size = self.font_size * RM.fontScale(cap=1.2)
         if flat is not None: # размеры кнопок квартир в режиме сетки
             if "." in flat.number:
-                self.text = icon('icon-plus-circled')
+                self.text = icon('icon-plus-circle')
                 if not RM.desktop: self.font_size = RM.fontXXS * RM.fontScale(cap=1.2)
             elif not RM.desktop:
                 self.font_size = RM.fontXS if RM.scaling else RM.fontS
                 self.font_size *= RM.fontScale(cap=1.2)
 
     def on_release(self):
-        if icon('icon-plus-circled') in self.text:
+        if icon('icon-plus-circle') in self.text:
             RM.porch.restoreFlat(instance=self)
             RM.save()
             RM.porchView(update=False)
@@ -1397,7 +1396,7 @@ class FooterButton(Button):
         self.background_down = ""
         self.background_normal = ""
         self.valign = "center"
-        self.halign = "left" if icon('icon-home-1') in text and RM.displayed.form == "con" else "center"
+        self.halign = "left" if icon('icon-home') in text and RM.displayed.form == "con" else "center"
         self.font_size = (RM.fontS if RM.desktop else RM.fontXXS*.9) * RM.fontScale(cap=1.2)
 
     def on_press(self, *args):
@@ -1462,8 +1461,8 @@ class Counter(AnchorLayout):
                               spacing=RM.spacing if RM.theme != "3D" else 0)
         box.add_widget(buttonBox)
 
-        if RM.theme != "3D": btnDown = RoundButton(text=icon("icon-minus-1"), radius=RM.getRadius(300), disabled=disabled) # кнопка вниз
-        else: btnDown = RetroButton(text=icon("icon-minus-1"), disabled=disabled)
+        if RM.theme != "3D": btnDown = RoundButton(text=icon("icon-minus"), radius=RM.getRadius(300), disabled=disabled) # кнопка вниз
+        else: btnDown = RetroButton(text=icon("icon-minus"), disabled=disabled)
         def __minusPress(instance):
             RM.counterChanged = True
         btnDown.bind(on_release=__minusPress)
@@ -1485,8 +1484,8 @@ class Counter(AnchorLayout):
         btnDown.bind(on_release=__countDown)
         buttonBox.add_widget(btnDown)
 
-        if RM.theme != "3D": btnUp = RoundButton(text=icon("icon-plus-1"), radius=RM.getRadius(300), disabled=disabled) # кнопка вверх
-        else: btnUp = RetroButton(text=icon("icon-plus-1"), disabled=disabled)
+        if RM.theme != "3D": btnUp = RoundButton(text=icon("icon-plus"), radius=RM.getRadius(300), disabled=disabled) # кнопка вверх
+        else: btnUp = RetroButton(text=icon("icon-plus"), disabled=disabled)
 
         def __plusPress(self):
             if picker == RM.msg[108] or picker == RM.msg[109]:
@@ -1578,13 +1577,13 @@ class MainMenuButton(Button):
         if RM.specialFont is not None: self.font_name = RM.specialFont
         self.text = text
         self.iconTer1 = 'icon-map'
-        self.iconTer1ru = 'icon-building-filled'
+        self.iconTer1ru = 'icon-building'
         self.iconTer2 = 'icon-map-o'
-        self.iconTer2ru = 'icon-building'
-        self.iconCon1 = 'icon-address-book-1'
+        self.iconTer2ru = 'icon-building-o'
+        self.iconCon1 = 'icon-address-book'
         self.iconCon2 = 'icon-address-book-o'
-        self.iconRep1 = 'icon-doc-text-inv'
-        self.iconRep2 = 'icon-doc-text'
+        self.iconRep1 = 'icon-file-text'
+        self.iconRep2 = 'icon-file-text-o'
         self.valign = self.halign = "center"
         self.size_hint = (1, 1)
         self.markup = True
@@ -1675,14 +1674,14 @@ class DatePicker(BoxLayout):
         self.header.clear_widgets()
         k, r, bg =.3, 0.7, [.22, .22, .22, .9]
         if RM.theme != "3D":
-            previous_month = PopupButton(text = icon("icon-left-open"), color="white", size_hint_x=k,
+            previous_month = PopupButton(text=RM.button["chevron-left"], color="white", size_hint_x=k,
                                          background_color=bg)
-            next_month = PopupButton(text=icon("icon-right-open"), color="white", size_hint_x=k,
+            next_month = PopupButton(text=RM.button["chevron-right"], color="white", size_hint_x=k,
                                      background_color=bg)
         else:
-            previous_month = RetroButton(text = icon("icon-left-open"), size_hint_x=k,
+            previous_month = RetroButton(text=RM.button["chevron-left"], size_hint_x=k,
                                          color = RM.mainMenuButtonColor)
-            next_month = RetroButton(text=icon("icon-right-open"), size_hint_x=k,
+            next_month = RetroButton(text=RM.button["chevron-right"], size_hint_x=k,
                                      color=RM.mainMenuButtonColor)
         previous_month.bind(on_release=partial(self.move_previous_month))
         next_month.bind(on_release=partial(self.move_next_month))
@@ -2126,7 +2125,7 @@ class RMApp(App):
         self.mainMenuButtonColor2 = get_hex_from_color(self.mainMenuButtonColor)
         self.titleColor2 = get_hex_from_color(self.titleColor)
         self.timerOffColor[3] = .9
-        if self.theme == "purple": self.RoundButtonColor = get_hex_from_color(self.titleColor)
+        if self.theme == "purple": self.RoundButtonColor = get_hex_from_color(self.linkColor)
         elif self.theme == "morning": self.RoundButtonColor = get_hex_from_color(self.scrollIconColor)
         else: self.RoundButtonColor = self.titleColor2
         self.scrollColor = get_hex_from_color(self.scrollIconColor)
@@ -2150,71 +2149,71 @@ class RMApp(App):
         # Иконки для кнопок
         self.listIconSize = self.fontL
         self.button = { # главный список
-            "building": f" [size={self.listIconSize}][color={self.scrollColor}][b]{icon('icon-building-filled')}[/b][/color][/size] ",
-            "porch":    f" [size={self.listIconSize}][color={self.scrollColor}]{icon('icon-login')}[/color][/size] ",
-            "porch_inv":f" [size={self.listIconSize}][color={get_hex_from_color([0,0,0,0])}]{icon('icon-login')}[/color][/size] ",
-            "pin":      f" [size={self.listIconSize}][color={self.scrollColor}]{icon('icon-pin')}[/color][/size] ",
+            "building": f" [size={self.listIconSize}][color={self.scrollColor}][b]{icon('icon-building')}[/b][/color][/size] ",
+            "porch":    f" [size={self.listIconSize}][color={self.scrollColor}]{icon('icon-sign-in')}[/color][/size] ",
+            "porch_inv":f" [size={self.listIconSize}][color={get_hex_from_color([0,0,0,0])}]{icon('icon-sign-in')}[/color][/size] ",
+            "pin":      f" [size={self.listIconSize}][color={self.scrollColor}]{icon('icon-thumb-tack')}[/color][/size] ",
             "map":      f" [size={self.listIconSize}][color={self.scrollColor}]{icon('icon-map')}[/color][/size] ",
-            "entry":    f" [size={self.listIconSize}][color={self.scrollColor}]{icon('icon-chat')}[/color][/size] ",
-            "plus-1":   f" [size={self.listIconSize}][color={self.scrollColor}][b]{icon('icon-plus-1')}[/b][/color][/size]",
-            "home":     f" [size={self.listIconSize}][color={self.scrollColor}][b]{icon('icon-home-1')}[/b][/color][/size] ",
-            "user":     icon("icon-user-1"),
+            "entry":    f" [size={self.listIconSize}][color={self.scrollColor}]{icon('icon-comments')}[/color][/size] ",
+            "plus-1":   f" [size={self.listIconSize}][color={self.scrollColor}][b]{icon('icon-plus')}[/b][/color][/size]",
+            "home":     f" [size={self.listIconSize}][color={self.scrollColor}][b]{icon('icon-home')}[/b][/color][/size] ",
+            "user":     icon("icon-user"),
 
-            "plus":     f"[b][color={self.RoundButtonColor}]{icon('icon-plus-squared-alt')}[/color][/b]", # центральная кнопка
-            "edit":     f"[b][color={self.RoundButtonColor}]{icon('icon-edit-1')}[/color][/b]",
-            "search2":  f"[b][color={self.RoundButtonColor}]{icon('icon-search-circled')}[/color][/b]",
-            "top":      f"[b][color={self.RoundButtonColor}]{icon('icon-up-open')}[/color][/b] {self.msg[143]}",
-            "save":     f"[b][color={self.saveColor}]{icon('icon-ok-circled')} {self.msg[5]}[/b][/color]",
-            "add":      f"[b][color={self.saveColor}]{icon('icon-ok-circled')} {self.msg[188]}[/b][/color]",
+            "plus":     f"[b][color={self.RoundButtonColor}]{icon('icon-plus-square-o')}[/color][/b]", # центральная кнопка
+            "edit":     f"[b][color={self.RoundButtonColor}]{icon('icon-pencil-square-o')}[/color][/b]",
+            "search2":  f"[b][color={self.RoundButtonColor}]{icon('icon-search')}[/color][/b]",
+            "top":      f"[b][color={self.RoundButtonColor}]{icon('icon-chevron-up')}[/color][/b] {self.msg[143]}",
+            "save":     f"[b][color={self.saveColor}]{icon('icon-check-circle')} {self.msg[5]}[/b][/color]",
+            "add":      f"[b][color={self.saveColor}]{icon('icon-check-circle')} {self.msg[188]}[/b][/color]",
 
-            "ok":       icon("icon-ok-1") + " OK",
-            "back":     icon("icon-left-2"),
-            "details":  icon("icon-pencil-1"),
-            "search":   icon("icon-search-1"),
-            "dot":      icon("icon-dot-circled"),
-            "menu":     icon("icon-menu"),
-            "floppy":   icon("icon-floppy"),
-            "calendar": icon("icon-calendar-1"),
-            "worked":   icon("icon-arrows-cw-1"),
-            "cog":      icon("icon-cog-1"),
-            "ellipsis": icon("icon-dots"),
-            "contact":  icon("icon-user-1"), # на кнопках "Инфо"
-            "phone1":   icon("icon-phone-1"),
-            "resize":   icon("icon-resize-full-alt-2"),
-            "sort":     icon("icon-sort-alt-up"),
-            "target":   icon("icon-target-1"),
+            "back":     icon("icon-arrow-left2"), # IcoMoon Free
+            "check":    icon("icon-check"),
+            "details":  icon("icon-pencil"),
+            "search":   icon("icon-search"),
+            "dot":      icon("icon-dot-circle-o"),
+            "menu":     icon("icon-bars"),
+            "floppy":   icon("icon-floppy-o"),
+            "calendar": icon("icon-calendar"),
+            "worked":   icon("icon-refresh"),
+            "ellipsis": icon("icon-dots-three-vertical"), # Entypo
+            "contact":  icon("icon-user"), # на кнопках "Инфо"
+            "phone1":   icon("icon-phone"),
+            "resize":   icon("icon-arrows-alt"),
+            "sort":     icon("icon-sort-amount-asc"),
             "shrink":   icon('icon-scissors'),
-            "list":     icon("icon-doc-text-inv"),
-            "bin":   f"{icon('icon-trash-1')}\n{self.msg[173]}",
+            "list":     icon("icon-file-text"),
+            "bin":   f"{icon('icon-trash')}\n{self.msg[173]}",
             "note":     icon("icon-sticky-note"),
-            "chat":     icon("icon-chat"),
+            "chat":     icon("icon-comments"),
             "log":      icon("icon-history"),
-            "info":     icon('icon-info-circled'),
-            "share":    icon("icon-share-squared"),
-            "export":   icon("icon-upload-cloud"),
-            "import":   icon("icon-download-cloud"),
+            "info":     icon('icon-info-circle'),
+            "share":    icon("icon-share-alt"),
+            "export":   icon("icon-cloud-upload"),
+            "import":   icon("icon-cloud-download"),
             "open":     icon("icon-folder-open"),
-            "restore":  icon("icon-upload-1"),
-            "wipe":     icon("icon-trash-1"),
-            "help":     icon("icon-help-circled"),
-            "arrow":    icon("icon-right-dir"),
-            "nav":      icon("icon-location-circled"),
+            "restore":  icon("icon-upload"),
+            "trash":    icon("icon-trash"),
+            "help":     icon("icon-question-circle"),
+            "arrow":    icon("icon-caret-right"),
+            "chevron-left":  icon("icon-chevron-left"),
+            "chevron-right": icon("icon-chevron-right"),
+            "nav":      icon("icon-map-marker"), # replace icon
             "flist":    icon("icon-align-justify"),
             "fgrid":    icon("icon-th-large"),
-            "phone":    icon("icon-phone-circled"),
-            "phone0":   icon("icon-phone-circled", color=self.disabledColor),
-            "lock":  f"{icon('icon-lock-1')}\n[b]{self.msg[206]}[/b]",
-            "record":f"{icon('icon-pencil-1')}\n[b]{self.msg[163]}[/b]",
-            "reject":f"{icon('icon-block-1')}\n[b]{self.msg[207]}[/b]",
-            "warn":     icon("icon-attention"),
-            "up":       icon("icon-up-1"),
-            "down":     icon("icon-down-1"),
+            "phone":    icon("icon-phone"),
+            "phone0":   icon("icon-phone", color=self.disabledColor),
+            "lock":  f"{icon('icon-lock')}\n[b]{self.msg[206]}[/b]",
+            "record":f"{icon('icon-pencil')}\n[b]{self.msg[163]}[/b]",
+            "reject":f"{icon('icon-ban')}\n[b]{self.msg[207]}[/b]",
+            "warn":     icon("icon-warning"),
+            "up":       icon("icon-long-arrow-up"),
+            "down":     icon("icon-long-arrow-down"),
             "male":     icon("icon-male"),
             "female":   icon("icon-female"),
             "yes":      self.msg[297].lower(),
             "no":       self.msg[298].lower(),
             "cancel":   self.msg[190].lower(),
-            "link":    f"[color={self.titleColor2}]{icon('icon-link-ext-alt')}[/color]",
+            "link":    f"[color={self.titleColor2}]{icon('icon-external-link')}[/color]",
             "":         ""
         }
 
@@ -2303,10 +2302,6 @@ class RMApp(App):
         if self.theme != "3D": self.detailsButton = TableButton(size_hint_x=tbWidth[3],
                                                                 disabled=True)
         else: self.detailsButton = RetroButton(size_hint_x=tbWidth[3], disabled=True)
-        """self.backButton.font_size = self.fontL
-        self.sortButton.font_size = self.fontL
-        self.resizeButton.font_size = self.fontL
-        self.detailsButton.font_size = self.fontL"""
 
         self.detailsButton.bind(on_release=self.detailsPressed)
         self.titleBox.add_widget(self.detailsButton)
@@ -2791,7 +2786,6 @@ class RMApp(App):
                 if "[/i]" in text: text = text[ : text.index("[")]
                 self.house.addPorch(text.strip())
                 self.save()
-                #self.clickedBtnIndex = instance.id
                 self.houseView(instance=instance)
                 self.jump(len(self.btn)-1)
                 return
@@ -3124,7 +3118,7 @@ class RMApp(App):
         self.timer.on() if self.timerText.text != "" else self.timer.off()
 
     def timerPressed(self, mode="press", instance=None):
-        if mode == "press" and self.timer.text == icon("icon-play-circled-1"): # первоначальный лик
+        if mode == "press" and self.timer.text == icon("icon-play-circle"): # первоначальный лик
             self.popup("timerPressed", title=self.msg[40], message=self.msg[219],
                        options=[self.button["yes"], self.button["no"]])
         else: # вызов с положительного ответа в диалоге
@@ -3185,11 +3179,8 @@ class RMApp(App):
                 if input == "report000":
                     self.rep.checkNewMonth(forceDebug=True)
 
-                elif input == "@": # недокументированный экспорт в облако с выбором приложения
+                elif input == "@": # недокументированный экспорт в облако
                     self.share(email=True)
-
-                elif input == "%": # недокументированный экспорт в Google Drive (?)
-                    plyer.email.send(subject=self.msg[4], text=self.rep.getCurrentMonthReport(), create_chooser=False)
 
                 elif input == "#": # недокументированный импорт через буфер обмена
                     self.save(backup=True)
@@ -3577,7 +3568,7 @@ class RMApp(App):
             interested = f"[b]{(stats[1])}[/b]" if int(stats[1]) > 0 else str((int(stats[1])))
             intIcon = self.button['user'] if int(stats[1]) != 0 else icon("icon-user-o")
             footer.append([
-                f"{icon('icon-home-1')} {stats[3]}", # кол-во квартир
+                f"{icon('icon-home')} {stats[3]}", # кол-во квартир
                 f"[color={self.interestColor}]{intIcon} {interested}[/color]", # интересующиеся
                 f"{self.button['calendar']} {str(shortenedDate)}{dateDue}", # дата
                 f"{self.button['worked']} {int(stats[2] * 100)}%", # обработка
@@ -3644,7 +3635,7 @@ class RMApp(App):
             options.append(f"{self.allcontacts[i][1]}[size={self.listIconSize}]{listIcon}[/size] {self.allcontacts[i][0]}")
             footer.append([
                 f"{self.button['chat']} {self.allcontacts[i][4]}" if self.allcontacts[i][4] is not None else "",
-                "" if address == "" else f"{icon('icon-home-1')} {address}"
+                "" if address == "" else f"{icon('icon-home')} {address}"
             ])
 
         self.displayed.update(
@@ -3953,9 +3944,9 @@ class RMApp(App):
 
         clearBox = BoxLayout(orientation="vertical", padding=padding, spacing=sp) # Очистка
         if self.theme != "3D":
-            clearBtn = RoundButton(text=f"{self.button['wipe']}\n{self.msg[136]}", size_hint_y=size_hint_y)
+            clearBtn = RoundButton(text=f"{self.button['trash']}\n{self.msg[136]}", size_hint_y=size_hint_y)
         else:
-            clearBtn = RetroButton(text=f"{self.button['wipe']}\n{self.msg[136]}", size_hint_y=size_hint_y)
+            clearBtn = RetroButton(text=f"{self.button['trash']}\n{self.msg[136]}", size_hint_y=size_hint_y)
         def __clear(instance):
             self.popup("clearData", message=self.msg[138], options=[self.button["yes"], self.button["no"]])
         clearBtn.bind(on_release=__clear)
@@ -3999,7 +3990,7 @@ class RMApp(App):
                            f"[color={self.titleColor2}][b]Rocket Ministry {Version}[/b][/color]\n\n" + \
                            f"[i]{self.msg[140]}[/i]\n\n" + \
                            f"{self.msg[141]}\n[ref=web][color={linkColor}]{icon('icon-github')} [u]Github[/u][/color][/ref]\n\n" + \
-                           f"{self.msg[142]}\n[ref=email][color={linkColor}]{icon('icon-mail-alt')} [u]inoblogger@gmail.com[/u][/color][/ref]\n\n" + \
+                           f"{self.msg[142]}\n[ref=email][color={linkColor}]{icon('icon-envelope')} [u]inoblogger@gmail.com[/u][/color][/ref]\n\n" + \
                            GooglePlay,
                            markup=True, halign="center", valign="center", color=self.standardTextColor,
                            text_size=[self.mainList.size[0] * .8, None]
@@ -5225,10 +5216,10 @@ class RMApp(App):
         gap = (12 - monthNumber) * float(self.settings[0][3]) - (yearNorm - hourSum)
         average = (yearNorm - hourSum) / (12 - monthNumber) if monthNumber != 12 else (yearNorm - hourSum)
         if gap >= 0:
-            gapEmo = icon("icon-smile")
+            gapEmo = icon("icon-smile-o")
             gapWord = self.msg[174]
         elif gap < 0:
-            gapEmo = icon("icon-frown")
+            gapEmo = icon("icon-frown-o")
             gapWord = self.msg[175]
         else:
             gapEmo = ""
@@ -5562,7 +5553,7 @@ class RMApp(App):
                 self.quickPhoneCallButton.bind(on_release=self.phoneCall)
                 self.buttonsGrid.add_widget(self.quickPhoneCallButton)
 
-            shrink = PopupButton(text=self.button['shrink'] if self.porch.floors() else icon('icon-trash-1'),
+            shrink = PopupButton(text=self.button['shrink'] if self.porch.floors() else self.button['trash'],
                                  # кнопка удаления или урезания (универсальная)
                                  form=self.popupForm, font_size=font_size, size_hint_x=None, size_hint_y=None, size=size)
 
@@ -5576,7 +5567,7 @@ class RMApp(App):
             self.buttonsGrid.add_widget(shrink)
 
             if self.porch.floors():  # кнопка удаления на подъезде
-                floorDelete = PopupButton(text=icon('icon-trash-1'), form=self.popupForm, font_size=font_size,
+                floorDelete = PopupButton(text=self.button['trash'], form=self.popupForm, font_size=font_size,
                                           size_hint_x=None, size_hint_y=None, size=size)
                 floorDelete.bind(on_release=self.deleteFlatInCondo)
                 self.buttonsGrid.cols += 1
@@ -6693,7 +6684,7 @@ class RMApp(App):
 
         elif email: # экспорт в сообщении
             if not self.desktop:
-                plyer.email.send(subject=self.msg[251] if ter==None else ter.title, text=str(buffer), create_chooser=False)#True)
+                plyer.email.send(subject=self.msg[251] if ter==None else ter.title, text=str(buffer), create_chooser=True)
             else: # на компьютере просто кладем в буфер обмена
                 Clipboard.copy(str(buffer))
                 self.popup(message=self.msg[133])

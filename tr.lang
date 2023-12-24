@@ -99,7 +99,7 @@ Yeni saha
 "%s" düğmesini kullanarak eklenebilecek bireysel kişilerin yanı sıra, tüm sahalardan ilgilenen sakinler burada gösterilecektir.
 Yeni kişi
 Dergi
-Hangi dosya yüklenecek?
+Yüklenecek dosyayı seçin:
 Tetkik
 Saatler
 Kredi (%s saat ile toplam)
@@ -315,6 +315,8 @@ Bu alanda telefon numarası yok!
 Haritalar
 Varsayılan
 Bir dosyadan veri yükleyin
-Tüm uygulama verilerini dışa aktarın
+Tüm uygulama verilerini bir dosyaya kaydedin
 Bir şeyler ters giderse yedek kopyayı kurtarın
 Yedeklemeler dahil tüm program verilerinin ve ayarlarının tamamen sıfırlanması
+Dışa aktar
+Verileri bulut depolama alanına aktarın

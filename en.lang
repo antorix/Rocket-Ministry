@@ -99,7 +99,7 @@ Add territory
 You will find here all the interested persons from all your territories, as well as standalone contacts you can add using the button "%s."
 Add contact
 Log
-Which file to load?
+Choose the file to load:
 Bible studies
 Hours
 Credit (totally with hours %s)
@@ -314,7 +314,9 @@ No phone numbers to export in this territory!
 Phone numbers in %s
 Maps
 Default
-Import data from a file
-Export all app data
+Load data from a file
+Save all app data to a file
 Recover a backup copy if something went wrong
 Full reset of all program data and settings, including backups
+Export
+Export data to the cloud storage
