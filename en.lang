@@ -7,7 +7,7 @@ Add entrance
 Are you a pioneer? We will set up the monthly hour requirement in settings. You may change it manually.
 Nothing found
 Database error
-
+Report log
 Add
 Add house(s)
 Next to a territory, you can see its work progress percentage.
@@ -23,8 +23,8 @@ Person (name, description):
 Phone:
 Apartment:
 Number/address:
-Report log
-Using this button, you can adjust the size of the flat grid by moving the slider above, as well as its position in one of the 9 points with the buttons in the bottom right corner. Click on the same button %s to finish editing.
+Adjustment mode
+Click %s to adjust the size and position of the entrance grid, as well as the font size.
 Phone number %s copied into clipboard.
 Name
 Date
@@ -48,7 +48,7 @@ credit: %s
 Saved changes: hours: %s, %sBS: %d
 Service Year
 Yes
-During the previous launch, the application crashed due to a memory write error. If this error occurs frequently, please contact the developer via the email address shown in the settings of this application and on the Google Play Store.
+During the previous launch, the application crashed due to a memory write error. If this error occurs frequently, please contact the developer.
 Settings
 Settings saved
 Data
@@ -79,7 +79,7 @@ Add
 Add contact
 Enter contact name and/or description:
 You are creating a standalone contact not associated with any territory. People from all your territories are listed in the contacts automatically if they are assigned the light-green status.
-Congratulations, you have your first interested person! He/she will be automatically added to the Contacts screen due to the light-green color. Also, you can see the total amount of interested ones in Territories screen.
+Congratulations, you have your first interested person! He/she will be automatically added to the Contacts screen due to the light-green color.
 Visit info:
 New search
 m
@@ -168,7 +168,7 @@ Enter the first and the last number of the range to add:
 Interface theme
 
 Don't ask this anymore
-This is a switch between the per-floor "grid" view and a simple list of apartments. It works only in condominium-type territories. The per-floor view well visualizes the block, while the list view has handy sorting and preview of flats' content.
+This is a switch between the per-floor "grid" view and a simple list of apartments. It works only in condominium-type territories.
 Include into export apartments without phone numbers?
 Delete
 Ahead of requirement
@@ -314,9 +314,9 @@ No phone numbers to export in this territory!
 Phone numbers in %s
 Maps
 Default
-Load data
+Load data into the app
 Save all app data to a file
 Recover a backup copy if something went wrong
 Full reset of all program data and settings, including backups
 Export
-Export data to Google Drive
+Export to Google Drive

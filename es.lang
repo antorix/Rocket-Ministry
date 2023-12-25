@@ -7,7 +7,7 @@ Agregar entrada
 ¿Eres precursor? Estableceremos el requisito de horas mensuales en los ajustes. Puedes cambiarlo manualmente
 No se ha encontrado nada
 Error en la base de datos
-
+Informe de registro
 Agregar
 Agregar casa(s)
 Junto a un territorio, puede ver su porcentaje de progreso de trabajo.
@@ -23,8 +23,8 @@ Persona (nombre, descripción):
 Teléfono:
 Apartamento:
 Número/dirección:
-Informe de registro
-Usando este botón, puedes ajustar el tamaño de la rejilla de números moviendo el deslizador de arriba, así como su posición en uno de los 9 puntos con los botones de la esquina inferior derecha. Haga clic en el mismo botón %s para finalizar la edición.
+Modo de ajuste
+Haga clic en %s para ajustar el tamaño y la posición de la cuadrícula de entrada, así como el tamaño de fuente.
 Número de teléfono %s copiado en el portapapeles.
 Nombre
 Fecha
@@ -48,7 +48,7 @@ crédito: %s
 Cambios guardados: horas: %s, %sEB: %d
 Año de Serv.
 si
-Durante el lanzamiento anterior, la aplicación falló debido a un error de escritura en la memoria. Si este error ocurre con frecuencia, comuníquese con el desarrollador a través de la dirección de correo electrónico que se muestra en la configuración de esta aplicación y en Google Play Store.
+Durante el lanzamiento anterior, la aplicación falló debido a un error de escritura en la memoria. Si este error ocurre con frecuencia, comuníquese con el desarrollador.
 Ajustes
 Ajustes guardados
 Datos
@@ -79,7 +79,7 @@ Agregar
 Agregar contacto
 Introduzca nombre de contacto y/o descripción:
 Está creando un contacto independiente no asociado a ningún territorio. Las personas de todos sus territorios aparecen automáticamente en los contactos si se les asigna el estado verde claro.
-Enhorabuena, ¡ya tiene a su primer interesado! Se añadirá automáticamente a la pantalla de Contactos gracias a su color verde claro. Además, podrá ver la cantidad total de interesados en la pantalla Territorios.
+Enhorabuena, ¡ya tiene a su primer interesado! Se añadirá automáticamente a la pantalla de Contactos gracias a su color verde claro.
 Informacion de la visita:
 Nueva búsqueda
 m
@@ -168,7 +168,7 @@ Introduzca el primer y el último número del rango a añadir:
 Tema de la interface
 
 No preguntar de nuevo
-Este es un cambio entre la vista de "rejilla" por piso y una simple lista de apartamentos. Sólo funciona en territorios de tipo condominio. La vista por piso visualiza bien el bloque, mientras que la vista de lista permite ordenar y previsualizar el contenido de los apartamentos.
+Este es un cambio entre la vista de "rejilla" por piso y una simple lista de apartamentos. Sólo funciona en territorios de tipo condominio.
 ¿Incluir en la exportación los apartamentos sin números de teléfono?
 Borrar
 Antes de lo requerido
@@ -314,9 +314,9 @@ No hay números de teléfono para exportar en este territorio.
 Números de teléfono en %s
 Mapas
 Por defecto
-Cargar datos
+Cargar datos en la aplicación
 Guarde todos los datos de la aplicación en un archivo
 Recuperar una copia de seguridad si algo salió mal
 Restablecimiento de todos los datos y configuraciones, incluidas las copias de seguridad
 Exportar
-Exportar datos a Google Drive
+Exportar a Google Drive

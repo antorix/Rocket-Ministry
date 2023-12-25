@@ -7,7 +7,7 @@ Blok oluştur
 Öncü müsün? O zaman aylık saat sayısını ayarlarda belirleyeceğiz. Onu kendiniz de değiştirebilirsiniz.
 Bir şey bulunmadı
 Sistem hatası
-
+Rapor notları
 İlk
 Ev(ler) ekle
 Bir bölgenin yanında, iş ilerleme yüzdesini görebilirsiniz.
@@ -23,8 +23,8 @@ Kişi (isim, açıklama):
 İletişim:
 Daire:
 No/adres:
-Rapor notları
-Bu düğme aracılığıyla, yukarıdaki kaydırıcıyı hareket ettirerek giriş kapı boyutunu ve sağ alt köşedeki düğmelerle 9 noktadan birindeki konumunu ayarlayabilirsiniz. Düzenlemeyi bitirmek için aynı düğmeye %s tıklayın.
+Ayar modu
+Giriş ızgarasının boyutu ve konumunun yanı sıra yazı tipi boyutunu da ayarlamak için %s öğesine tıklayın.
 %s Telefon numarası panoya kopyalandı.
 Başlık
 Tarih
@@ -48,7 +48,7 @@ kredi: %s
 Değişiklikler kaydedildi: saatler: %s, %stetkik: %d
 Hizmet yılı
 evet
-Önceki başlatma sırasında uygulama, belleğe yazma hatası nedeniyle çöktü. Bu hata sık sık meydana geliyorsa lütfen bu uygulamanın ayarlarında ve Google Play Store'da gösterilen e-posta adresi aracılığıyla geliştiriciyle iletişime geçin.
+Önceki başlatma sırasında uygulama, belleğe yazma hatası nedeniyle çöktü. Bu hata sık sık meydana geliyorsa lütfen geliştiriciyle iletişime geçin.
 Ayarlar
 Ayarlar kaydedildi
 Veriler
@@ -79,7 +79,7 @@ Yeni
 Yeni kişi numarası
 Kişinin adını ve/veya açıklamasını girin
 Sahaya bağlı olmayan bir kişi oluşturuyorsunuz. Tüm sahalardaki sakinler açık yeşil statüsünde olmaları koşuluyla, kişiler bölümünde otomatik olarak görüntülenir.
-Tebrikler, ilk ilgilenen kişiniz var! Kişiler ekranına otomatik olarak eklenecektir. Bu açık yeşil renkle yapılır. Ayrıca, site ekranında toplamda ilgilenen kişi sayısı gösterilir.
+Tebrikler, ilk ilgilenen kişiniz var! Kişiler ekranına otomatik olarak eklenecektir. Bu açık yeşil renkle yapılır.
 Görüşme detayları:
 Yeni arama
 e
@@ -168,7 +168,7 @@ Eklenecek aralığın ilk ve son numaralarını girin:
 Arayüz teması
 
 Artık sorma
-Bu, her bir kat için "ızgara" görünümü ile daire listesi arasında geçiş sağlayan bir butondur. Çok daireli alanlarda kullanılabilir. Kat kat modu giriş yolunu iyi bir şekilde görselleştirirken, liste modunda sıralama ve dairelerdeki girişlerin önizlemesi vardır.
+Bu, her bir kat için "ızgara" görünümü ile daire listesi arasında geçiş sağlayan bir butondur. Çok daireli alanlarda kullanılabilir.
 Telefon numaraları olmadan ihracat dairelerine dahil edilsin mi?
 Sil
 Stok
@@ -314,9 +314,9 @@ Bu alanda telefon numarası yok!
 %s saha telefon numaraları
 Haritalar
 Varsayılan
-Veri yükle
+Uygulamaya veri yükleyin
 Tüm uygulama verilerini bir dosyaya kaydedin
 Bir şeyler ters giderse yedek kopyayı kurtarın
 Yedeklemeler dahil tüm program verilerinin ve ayarlarının tamamen sıfırlanması
 Dışa aktar
-Verileri Google Drive'a aktarın
+Google Drive'a aktar

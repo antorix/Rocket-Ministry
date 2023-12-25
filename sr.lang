@@ -7,7 +7,7 @@ Kreiraj ulaz
 Da li ste Vi pionir? Onda upisaćemo kvotu sati u podešavanjima. Vi možete nju da promenite.
 Ništa nije pronađeno
 Greška baze podataka
-
+Dnevnik izveštaja
 Dodajte
 Dodajte jedan ili više kuća
 Pored područja možete videti njegov procenat obrađenosti.
@@ -23,8 +23,8 @@ Osoba (ime, opis):
 Telefon:
 Stan:
 Broj/adresa:
-Dnevnik izveštaja
-Koristeći ovo dugme, možete podesiti veličinu plana zgrade pomerajući klizač iznad, kao i njegovu poziciju u jednoj od 9 tačaka pomoću dugmića i donjem desnom uglu. Pritisnite isto dugme %s da biste sačuvali izmene.
+Režim podešavanja
+Kliknite na %s da biste prilagodili veličinu i položaj ulazne mreže, kao i veličinu fonta.
 Broj telefona %s je kopiran u međuspremnik.
 Naziv
 Datum
@@ -48,7 +48,7 @@ volonterski sati: %s
 Promene su sačuvane: sati: %s, %sBK: %d
 Službena god.
 da
-Tokom prethodnog pokretanja, aplikacija se ugasila zbog greške u pisanju memorije. Ako se ova greška često javlja, kontaktirajte programera na adresu e-pošte navedenu u podešavanjima ove aplikacije i u Google Plai prodavnici.
+Tokom prethodnog pokretanja, aplikacija se ugasila zbog greške u pisanju memorije. Ako se ova greška često javlja, kontaktirajte programera.
 Podešavanja
 Podešavanja su sačuvana
 Podaci
@@ -79,7 +79,7 @@ Dodaj
 Novi kontakt
 Upišite ime i/ili opis osobe:
 Kreirate samostalni kontakt koji nije povezan ni sa jednom teritorijom. Ljudi sa svih vaših teritorija se automatski navode u kontaktima ako im se dodeli svetlozeleni status.
-Čestimate, našli ste prvu zainteresovanu osobu! Ona će automatski biti dodana u odeljak Kontakti i biće označena svetlo-zelenom bojom. Takođe možete videti ukupan broj zainteresovanih osoba u odeljku Područja.
+Čestimate, našli ste prvu zainteresovanu osobu! Ona će automatski biti dodana u odeljak Kontakti i biće označena svetlo-zelenom bojom.
 Informacija o poseti:
 Nova pretraga
 m
@@ -168,7 +168,7 @@ Unesite prvi i zadnji broj u nizu za dodavanje:
 Tema interfejsa
 
 Ne pitaj ovo više
-Ovo je prekidač izmedđu pregledu po spratu i jednostavne liste stanova. Ovo važi samo za poručja sa stambenim zgradam. Pregled po spratu dobro ilustruje ulaze, dok pregled liste ima zgodno sortiranje i pregled sadržaja stanova.
+Ovo je prekidač izmedđu pregledu po spratu i jednostavne liste stanova. Ovo važi samo za poručja sa stambenim zgradam.
 Uključiti stanove bez broja telefona u izvoz?
 izbriši
 Višak
@@ -314,9 +314,9 @@ Na ovoj teritoriji nema telefonskih brojeva za izvoz!
 Telefonski brojevi na %s
 Karte
 Podrazum.
-Uvoz podataka
+Учитајте податке у апликацију
 Sačuvajte sve podatke aplikacije u datoteku
 Vratite rezervnu kopiju ako nešto pođe po zlu
 Potpuno resetovanje svih podataka programa i postavki, uključujući rezervne kopije
 Izvezi
-Izvoz podataka na Google Disk
+Izvoz na Google Disk
