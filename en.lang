@@ -314,9 +314,9 @@ No phone numbers to export in this territory!
 Phone numbers in %s
 Maps
 Default
-Load data from a file
+Load data
 Save all app data to a file
 Recover a backup copy if something went wrong
 Full reset of all program data and settings, including backups
 Export
-Export data to the cloud storage
+Export data to Google Drive
