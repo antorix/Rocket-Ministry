@@ -48,11 +48,22 @@
     background_color: [1,1,1,0]
     canvas.before:
         Color:
-            rgba: ([.3,.3,.3,1] if app.mode == "light" else [.25,.25,.25,1]) if self.state=='normal' else [1,1,1,.05]
+            rgba: [.25,.25,.25,1] if self.state=='normal' else [1,1,1,.05]
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: app.FCRadius[0]
+
+<FirstCallButtonExtra@FirstCallButton>:
+    color: [1,1,1,.95] if self.state=='normal' else app.titleColorOnBlack
+    background_color: [1,1,1,0]
+    canvas.before:
+        Color:
+            rgba: [.25,.25,.25,1] if self.state=='normal' else [1,1,1,.05]
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [0,]
 
 <FirstCallButton2@FirstCallButton>:
     color: (app.linkColor if app.mode == "light" else app.getColorForStatus("?")) if self.state=='normal' else app.titleColorOnBlack
@@ -94,7 +105,7 @@
 
 <PopupButtonGray@PopupButton>:
     color: "lightgray" if self.state=='normal' else app.titleColorOnBlack
-    background_color: [.26, .26, .26, 1] if self.state=='normal' else [1,1,1,.05]
+    background_color: [.3, .3, .3, 1] if self.state=='normal' else [1,1,1,.05]
     text_size: self.size
 
 <RetroButton@Button>:
@@ -201,7 +212,7 @@
 <FooterButton@Button>:
     color: get_hex_from_color([app.linkColor[0],app.linkColor[1],app.linkColor[2],.9]) if app.mode == "light" else app.standardTextColor
     background_color: app.globalBGColor
-    text_size: self.size
+    text_size: None, self.size[1]
     canvas.before:
         Color:
             rgba: (app.scrollButtonBackgroundColor if self.state == "normal" else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)) if app.theme != "3D" else [0,0,0,0]
@@ -230,4 +241,3 @@
             pos: self.pos
             size: self.size
             radius: app.radius
-

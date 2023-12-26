@@ -122,7 +122,7 @@ Jun
 Jul
 Aug
 Monthly hour requirement
-"%s" with one click
+
 Transfer minutes to next month
 "Not interested" color
 Hourly credit
@@ -308,7 +308,7 @@ Add addresses as a list
 Export failed! The territory name may contain invalid characters.
 1, 2b, Park St 1a, 5th Avenue 119
 New version found! It will be updated on the next program start.
-Re-arranging numbers and floors does not affect existing visits data.
+Updating entrance parameters does not delete existing call records.
 Press %s to add flats to the entrance:
 No phone numbers to export in this territory!
 Phone numbers in %s
@@ -320,3 +320,5 @@ Recover a backup copy if something went wrong
 Full reset of all program data and settings, including backups
 Export
 Export to Google Drive
+No doorbell
+N/A

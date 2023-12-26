@@ -122,7 +122,7 @@ jun
 jul
 ago
 Requisito de horas mensual
-"%s" con un click
+
 Transferir minutos al mes siguiente
 "No interesado" color
 Crédito por hora
@@ -320,3 +320,5 @@ Recuperar una copia de seguridad si algo salió mal
 Restablecimiento de todos los datos y configuraciones, incluidas las copias de seguridad
 Exportar
 Exportar a Google Drive
+Sin timbre
+No disponible
