@@ -33,7 +33,7 @@ Worked
 Address
 Number
 Phone
-Status
+Color
 Note
 Size
 Close
@@ -81,7 +81,7 @@ Enter contact name and/or description:
 You are creating a standalone contact not associated with any territory. People from all your territories are listed in the contacts automatically if they are assigned the light-green status.
 Congratulations, you have your first interested person! He/she will be automatically added to the Contacts screen due to the light-green color.
 Visit info:
-New search
+
 m
 f
 Capitalize the first word of a sentence
@@ -202,7 +202,7 @@ Delete record from
 In brackets, you may see how much time you are ahead (+) or behind (-) your monthly requirement for the current day of the month. For example, with the requirement of 50 hours, if you have had no service for today, this value will decrease approximately by 1:40 tomorrow.
 Attention
 Info
-You can disable the "%s" button in the app settings!
+
 Not at home
 Not interested
 In brackets, you may see how much time you are ahead (+) or behind (-) your monthly requirement for the current day of the month. For example, with the requirement of 50 hours, if you have had no service for today, this value will decrease approximately by 1:40 tomorrow.

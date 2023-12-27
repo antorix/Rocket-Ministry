@@ -33,7 +33,7 @@ Trabajados
 Dirección
 Número
 Teléfono
-Estado
+Color
 Nota
 Tamaño
 Cerrar
@@ -81,7 +81,7 @@ Introduzca nombre de contacto y/o descripción:
 Está creando un contacto independiente no asociado a ningún territorio. Las personas de todos sus territorios aparecen automáticamente en los contactos si se les asigna el estado verde claro.
 Enhorabuena, ¡ya tiene a su primer interesado! Se añadirá automáticamente a la pantalla de Contactos gracias a su color verde claro.
 Informacion de la visita:
-Nueva búsqueda
+
 m
 f
 Poner en mayúscula la primera palabra de una oración
@@ -202,7 +202,7 @@ Borrar registro desde
 Entre paréntesis, puede ver cuánto tiempo lleva de adelanto (+) o de retraso (-) con respecto a su requisito mensual para el día actual del mes. Por ejemplo, con el requisito de 50 horas, si no ha tenido servicio durante el día de hoy, este valor disminuirá aproximadamente a las 1:40 de mañana.
 Atención
 Detalles
-¡Puedes desactivar el botón "%s" en los ajustes de la aplicación!
+
 No en casa
 No interesado
 No se puede cargar el archivo. Es probable que tenga un formato incorrecto o que no contenga los datos necesarios.

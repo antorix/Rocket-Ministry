@@ -33,7 +33,7 @@ Tarih
 Adres
 No
 İletişim
-Statü
+Renk
 Not
 Büyüklüğü
 Kapat
@@ -81,7 +81,7 @@ Kişinin adını ve/veya açıklamasını girin
 Sahaya bağlı olmayan bir kişi oluşturuyorsunuz. Tüm sahalardaki sakinler açık yeşil statüsünde olmaları koşuluyla, kişiler bölümünde otomatik olarak görüntülenir.
 Tebrikler, ilk ilgilenen kişiniz var! Kişiler ekranına otomatik olarak eklenecektir. Bu açık yeşil renkle yapılır.
 Görüşme detayları:
-Yeni arama
+
 e
 k
 Cümlenin ilk kelimesini büyük harfle yaz
@@ -202,7 +202,7 @@ Ziyaret kaydının silinmesi
 Parantezlerde, ayın geçerli günü için aylık normla karşılaştırıldığında bir hisse senedi (+) veya gecikme (-) belirtilir. Örneğin, 50 saat normunda bir gün hizmet etmezseniz, ertesi gün bu rakam yaklaşık 1:40 oranında düşecektir.
 Dikkat
 Bilgi
-«%s» düğmesi ayarlardan devre dışı bırakılabilir!
+
 Kimse yok
 Ret
 Dosya yüklenemedi. Büyük olasılıkla hatalı biçimlendirilmiş veya gerekli verileri içermiyor.

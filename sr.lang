@@ -33,7 +33,7 @@ Obrada
 Adresa
 Broj
 Telefon
-Status
+Boja
 Primedba
 Veličina
 Zatvori
@@ -81,7 +81,7 @@ Upišite ime i/ili opis osobe:
 Kreirate samostalni kontakt koji nije povezan ni sa jednom teritorijom. Ljudi sa svih vaših teritorija se automatski navode u kontaktima ako im se dodeli svetlozeleni status.
 Čestimate, našli ste prvu zainteresovanu osobu! Ona će automatski biti dodana u odeljak Kontakti i biće označena svetlo-zelenom bojom.
 Informacija o poseti:
-Nova pretraga
+
 m
 ž
 Rečenica počinje velikim slovom
@@ -202,7 +202,7 @@ Izbriši beleške od
 U zagradama možete videti koliko vremena ste ispred (+) ili zaostajete (-) za mesečnom potrebom za tekućim danom u mesecu. Na primer, sa zahtevom od 50 sati, ako danas niste imali propoved, ta vrednost će se sutra smanjiti za oko 1:40.
 Pažnja
 Детаљи
-Možete da onemogućite dugme "%s" u podešavanjima aplikacije!
+
 Nema kući
 Nezainteresovan
 Nije moguće učitati datoteku. Najverovatnije je u pogrešnom formatu ili ne sadrži potrebne podatke.
