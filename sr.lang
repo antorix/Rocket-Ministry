@@ -80,8 +80,8 @@ Novi kontakt
 Upišite ime i/ili opis osobe:
 Kreirate samostalni kontakt koji nije povezan ni sa jednom teritorijom. Ljudi sa svih vaših teritorija se automatski navode u kontaktima ako im se dodeli svetlozeleni status.
 Čestimate, našli ste prvu zainteresovanu osobu! Ona će automatski biti dodana u odeljak Kontakti i biće označena svetlo-zelenom bojom.
-Informacija o poseti:
-
+Nije bilo poziva
+Nije dostupan
 m
 ž
 Rečenica počinje velikim slovom
@@ -122,7 +122,7 @@ jun
 jul
 avg
 Mesećna kvota sati
-
+Informacija o poseti:
 Prenositi minute u sledeći mesec
 Boja nezainteresovanih
 Volonterski sati
@@ -217,7 +217,7 @@ Uklonite broj stana u ovom položaju? Sam broj stana će ostati nepromenjen (о�
 Uklonite položaj
 Proverite da li postoje ispravke:
 Započnite službu?
-Dodajte prvi poziv
+
 Počeo je novi mesec! Da li ste već predali svoj izveštaj?
 volonterski sati
 Izveštaj za %s:
@@ -320,5 +320,3 @@ Vratite rezervnu kopiju ako nešto pođe po zlu
 Potpuno resetovanje svih podataka programa i postavki, uključujući rezervne kopije
 Izvezi
 Izvoz na Google Disk
-Nije bilo poziva
-Nije dostupan

@@ -80,8 +80,8 @@ Agregar contacto
 Introduzca nombre de contacto y/o descripción:
 Está creando un contacto independiente no asociado a ningún territorio. Las personas de todos sus territorios aparecen automáticamente en los contactos si se les asigna el estado verde claro.
 Enhorabuena, ¡ya tiene a su primer interesado! Se añadirá automáticamente a la pantalla de Contactos gracias a su color verde claro.
-Informacion de la visita:
-
+Sin timbre
+No disponible
 m
 f
 Poner en mayúscula la primera palabra de una oración
@@ -122,7 +122,7 @@ jun
 jul
 ago
 Requisito de horas mensual
-
+Informacion de la visita:
 Transferir minutos al mes siguiente
 "No interesado" color
 Crédito por hora
@@ -217,7 +217,7 @@ Ya no puede reducir pisos en este bloque, ¡porque el último apartamento con co
 Eliminar posición
 Revisa actualizaciones:
 Empezar ministerio?
-Añadir la primera llamada
+
 ¡Es un nuevo mes! ¿Ya ha entregado su informe?
 credito
 Informe para %s:
@@ -320,5 +320,3 @@ Recuperar una copia de seguridad si algo salió mal
 Restablecimiento de todos los datos y configuraciones, incluidas las copias de seguridad
 Exportar
 Exportar a Google Drive
-Sin timbre
-No disponible

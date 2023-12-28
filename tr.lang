@@ -80,8 +80,8 @@ Yeni kişi numarası
 Kişinin adını ve/veya açıklamasını girin
 Sahaya bağlı olmayan bir kişi oluşturuyorsunuz. Tüm sahalardaki sakinler açık yeşil statüsünde olmaları koşuluyla, kişiler bölümünde otomatik olarak görüntülenir.
 Tebrikler, ilk ilgilenen kişiniz var! Kişiler ekranına otomatik olarak eklenecektir. Bu açık yeşil renkle yapılır.
-Görüşme detayları:
-
+Zil yok
+Müsait değil
 e
 k
 Cümlenin ilk kelimesini büyük harfle yaz
@@ -122,7 +122,7 @@ Haz
 Tem
 Ağu
 Aylık saat oranı
-
+Görüşme detayları:
 Dakikaları bir sonraki aya aktar
 Ret rengi
 Saat kredisi
@@ -217,7 +217,7 @@ Bu konumdaki bir daire silinsin mi? Daire numarasının kendisi bozulmadan kalac
 Konumu sil
 Güncellemeleri kontrol et:
 Hizmet başlansın mı?
-İlk ziyaretinizi oluşturun
+
 Yeni bir ay başladı! Raporunuzu gönderdiniz mi?
 kredi
 %s için rapor:
@@ -320,5 +320,3 @@ Bir şeyler ters giderse yedek kopyayı kurtarın
 Yedeklemeler dahil tüm program verilerinin ve ayarlarının tamamen sıfırlanması
 Dışa aktar
 Google Drive'a aktar
-Zil yok
-Müsait değil

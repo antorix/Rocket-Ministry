@@ -49,8 +49,18 @@
     text_size: self.size
     canvas.before:
         Color:
-            #rgba: [app.buttonBackgroundColor[0], app.buttonBackgroundColor[1], app.buttonBackgroundColor[2], .8] if self.state=='normal' else app.roundButtonColorPressed
-            rgba: ([.9,.9,.9,.85] if app.mode == "light" else [.5,.5,.5,.85]) if self.state=='normal' else app.roundButtonColorPressed
+            rgba: ([.9,.9,.9,.85] if app.mode == "light" else [.3,.3,.3,.85]) if self.state=='normal' else app.roundButtonColorPressed
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: app.radius
+
+<ProgressButton@Button>:
+    color: [app.titleColor[0], app.titleColor[1], app.titleColor[2], .7]
+    background_color: [0,0,0,0]
+    canvas.before:
+        Color:
+            rgba: [.8,.8,.8,.5] if app.mode == "light" else [.2,.2,.2,.5]
         RoundedRectangle:
             pos: self.pos
             size: self.size

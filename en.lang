@@ -80,8 +80,8 @@ Add contact
 Enter contact name and/or description:
 You are creating a standalone contact not associated with any territory. People from all your territories are listed in the contacts automatically if they are assigned the light-green status.
 Congratulations, you have your first interested person! He/she will be automatically added to the Contacts screen due to the light-green color.
-Visit info:
-
+No doorbell
+N/A
 m
 f
 Capitalize the first word of a sentence
@@ -122,7 +122,7 @@ Jun
 Jul
 Aug
 Monthly hour requirement
-
+Visit info:
 Transfer minutes to next month
 "Not interested" color
 Hourly credit
@@ -201,7 +201,7 @@ Delete visit record
 Delete record from
 In brackets, you may see how much time you are ahead (+) or behind (-) your monthly requirement for the current day of the month. For example, with the requirement of 50 hours, if you have had no service for today, this value will decrease approximately by 1:40 tomorrow.
 Attention
-Info
+Details
 
 Not at home
 Not interested
@@ -217,7 +217,7 @@ Delete a flat in this position? The flat number itself will stay intact (except 
 Delete position
 Check for updates:
 Start ministry?
-Add the first call
+
 It's a new month! Have you turned in your report already?
 credit
 Report for %s:
@@ -320,5 +320,3 @@ Recover a backup copy if something went wrong
 Full reset of all program data and settings, including backups
 Export
 Export to Google Drive
-No doorbell
-N/A
