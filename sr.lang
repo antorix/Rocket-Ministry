@@ -24,7 +24,7 @@ Telefon:
 Stan:
 Broj/adresa:
 Režim podešavanja
-Kliknite na %s da biste prilagodili veličinu i položaj ulazne mreže, kao i veličinu fonta.
+Kliknite na %s da biste prilagodili veličinu i položaj ulazne mreže.
 Broj telefona %s je kopiran u međuspremnik.
 Naziv
 Datum
@@ -217,7 +217,7 @@ Uklonite broj stana u ovom položaju? Sam broj stana će ostati nepromenjen (о�
 Uklonite položaj
 Proverite da li postoje ispravke:
 Započnite službu?
-
+To je filter za tamno sive stanove. Stan postaje tamno siva ako sadrži neke podatke, ali boja nije dodeljena.
 Počeo je novi mesec! Da li ste već predali svoj izveštaj?
 volonterski sati
 Izveštaj za %s:

@@ -24,7 +24,7 @@ Kişi (isim, açıklama):
 Daire:
 No/adres:
 Ayar modu
-Giriş ızgarasının boyutu ve konumunun yanı sıra yazı tipi boyutunu da ayarlamak için %s öğesine tıklayın.
+Giriş ızgarasının boyutunu ve konumunu ayarlamak için %s öğesine tıklayın.
 %s Telefon numarası panoya kopyalandı.
 Başlık
 Tarih
@@ -217,7 +217,7 @@ Bu konumdaki bir daire silinsin mi? Daire numarasının kendisi bozulmadan kalac
 Konumu sil
 Güncellemeleri kontrol et:
 Hizmet başlansın mı?
-
+Bu koyu gri dairelere yönelik bir filtredir. Bir daire, bir miktar veri içeriyor ancak renk atanmamışsa koyu gri olur.
 Yeni bir ay başladı! Raporunuzu gönderdiniz mi?
 kredi
 %s için rapor:

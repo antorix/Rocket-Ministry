@@ -24,7 +24,7 @@ Teléfono:
 Apartamento:
 Número/dirección:
 Modo de ajuste
-Haga clic en %s para ajustar el tamaño y la posición de la cuadrícula de entrada, así como el tamaño de fuente.
+Haga clic en %s para ajustar el tamaño y la posición de la cuadrícula de entrada.
 Número de teléfono %s copiado en el portapapeles.
 Nombre
 Fecha
@@ -217,7 +217,7 @@ Ya no puede reducir pisos en este bloque, ¡porque el último apartamento con co
 Eliminar posición
 Revisa actualizaciones:
 Empezar ministerio?
-
+Este es un filtro para apartamentos de color gris oscuro. Un apartamento se vuelve gris oscuro si contiene algunos datos, pero no hay ningún color asignado.
 ¡Es un nuevo mes! ¿Ya ha entregado su informe?
 credito
 Informe para %s:

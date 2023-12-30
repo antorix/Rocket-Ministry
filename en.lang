@@ -24,7 +24,7 @@ Phone:
 Apartment:
 Number/address:
 Adjustment mode
-Click %s to adjust the size and position of the entrance grid, as well as the font size.
+Click %s to adjust the size and position of the entrance grid.
 Phone number %s copied into clipboard.
 Name
 Date
@@ -190,7 +190,7 @@ Add
 Cancel
 List
 Data wiped successfully
-Setting an apartment to the light-gray color will delete all its information! Proceed?
+Setting an apartment to the light gray color will delete all its information! Proceed?
 Delete territory
 Before deleting the territory, make sure that all householders you want to keep have the green-light color. Otherwise they will be deleted along with the territory! Proceed with deletion?
 Delete entrance
@@ -217,7 +217,7 @@ Delete a flat in this position? The flat number itself will stay intact (except 
 Delete position
 Check for updates:
 Start ministry?
-
+This is a filter for dark gray apartments. An apartment becomes dark gray if contains some data, but no color assigned.
 It's a new month! Have you turned in your report already?
 credit
 Report for %s:

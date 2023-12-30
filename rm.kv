@@ -43,7 +43,7 @@
             size: self.size
             radius: app.radius
 
-<QuickScrollButton@Button>:
+<FloatButton@Button>:
     color: (app.linkColor if app.theme != "3D" else app.blackTint) if self.state=='normal' else app.titleColor
     background_color: app.roundButtonBGColor if app.theme != "3D" else [0,0,0,.5]
     text_size: self.size
@@ -146,11 +146,11 @@
             radius: app.radius
 
 <TableButton@Button>:
-    color: (([.15,.15,.15,1] if app.mode == "dark" else [1,1,1,.95]) if self.text == app.button['phone'] and self.disabled == False else app.tableColor) if self.state=='normal' else app.titleColor
+    color: ([1,1,1,.95] if app.button["eye"] in self.text or app.button["eye_closed"] in self.text else app.tableColor) if self.state=='normal' else app.titleColor
     background_color: app.roundButtonBGColor
     canvas.before:
         Color:
-            rgba: (app.titleColor if self.text == app.button['phone'] and self.disabled == False else app.globalBGColor) if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)
+            rgba: (app.getColorForStatus("?") if app.button["eye"] in self.text or app.button["eye_closed"] in self.text else app.globalBGColor) if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)
         RoundedRectangle:
             pos: self.pos
             size: self.size
