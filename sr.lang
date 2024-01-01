@@ -202,7 +202,7 @@ Izbriši beleške od
 U zagradama možete videti koliko vremena ste ispred (+) ili zaostajete (-) za mesečnom potrebom za tekućim danom u mesecu. Na primer, sa zahtevom od 50 sati, ako danas niste imali propoved, ta vrednost će se sutra smanjiti za oko 1:40.
 Pažnja
 Детаљи
-
+"%s" jednim klikom
 Nema kući
 Nezainteresovan
 Nije moguće učitati datoteku. Najverovatnije je u pogrešnom formatu ili ne sadrži potrebne podatke.
@@ -217,7 +217,7 @@ Uklonite broj stana u ovom položaju? Sam broj stana će ostati nepromenjen (о�
 Uklonite položaj
 Proverite da li postoje ispravke:
 Započnite službu?
-To je filter za tamno sive stanove. Stan postaje tamno siva ako sadrži neke podatke, ali boja nije dodeljena.
+Značke
 Počeo je novi mesec! Da li ste već predali svoj izveštaj?
 volonterski sati
 Izveštaj za %s:

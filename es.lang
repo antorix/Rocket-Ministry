@@ -202,7 +202,7 @@ Borrar registro desde
 Entre paréntesis, puede ver cuánto tiempo lleva de adelanto (+) o de retraso (-) con respecto a su requisito mensual para el día actual del mes. Por ejemplo, con el requisito de 50 horas, si no ha tenido servicio durante el día de hoy, este valor disminuirá aproximadamente a las 1:40 de mañana.
 Atención
 Detalles
-
+"%s" con un click
 No en casa
 No interesado
 No se puede cargar el archivo. Es probable que tenga un formato incorrecto o que no contenga los datos necesarios.
@@ -217,7 +217,7 @@ Ya no puede reducir pisos en este bloque, ¡porque el último apartamento con co
 Eliminar posición
 Revisa actualizaciones:
 Empezar ministerio?
-Este es un filtro para apartamentos de color gris oscuro. Un apartamento se vuelve gris oscuro si contiene algunos datos, pero no hay ningún color asignado.
+Iconos
 ¡Es un nuevo mes! ¿Ya ha entregado su informe?
 credito
 Informe para %s:

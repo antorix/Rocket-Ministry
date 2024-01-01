@@ -55,6 +55,28 @@
             size: self.size
             radius: app.radius
 
+<RoundColorButton@Button>:
+    background_color: app.roundButtonBGColor if app.theme != "3D" else [0,0,0,0]
+    color: [1,1,1,1]
+    side: self.side
+    canvas.before:
+        Color:
+            rgba: app.globalBGColor if self.state=='normal' else ([1,1,1,.05] if app.callFromPopup else app.globalBGColor)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: app.radius
+        Color:
+            rgba: self.color if self.state=='normal' else ([1,1,1,.05] if app.callFromPopup else self.color)
+        Ellipse:
+            pos: self.pos
+            size: self.size
+        Color:
+            rgba: ([.1,.1,.1,1] if app.theme == "3D" else app.sortButtonBackgroundColor) if not app.callFromPopup else [.4, .4, .4, 1]
+        Line:
+            width: 1 if app.callFromPopup else (2 if self.color == app.getColor2(0) else 1)
+            circle: self.pos[0]+self.size[0]/2, self.pos[1]+self.size[1]/2, (self.size[0]*.5 if self.color == app.getColor2(0) else 0)
+
 <ProgressButton@Button>:
     color: [app.titleColor[0], app.titleColor[1], app.titleColor[2], .7]
     background_color: [0,0,0,0]
@@ -88,7 +110,7 @@
             size: self.size
             radius: [0,]
 
-<FirstCallButton2@FirstCallButton>:
+<FirstCallButton2@FirstCallButton>: # запись
     color: (app.linkColor if app.mode == "light" else app.getColorForStatus("?")) if self.state=='normal' else app.titleColorOnBlack
     background_color: [1,1,1,0]
     canvas.before:
@@ -97,7 +119,7 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: app.FCRadius[1]
+            radius: app.FCRadius[1] if app.settings[0][13] == 1 else app.FCRadius[3]
 
 <FirstCallButton3@FirstCallButton>:
     color: [1,1,1,.95] if self.state=='normal' else app.titleColorOnBlack
@@ -132,7 +154,7 @@
     text_size: self.size
 
 <RetroButton@Button>:
-    text_size: self.size
+    text_size: self.size[0], None
 
 <MainMenuButton@Button>:
     color: app.mainMenuButtonColor
@@ -146,34 +168,47 @@
             radius: app.radius
 
 <TableButton@Button>:
-    color: ([1,1,1,.95] if app.button["eye"] in self.text or app.button["eye_closed"] in self.text else app.tableColor) if self.state=='normal' else app.titleColor
+    color: app.tableColor if self.state=='normal' else app.titleColor
     background_color: app.roundButtonBGColor
     canvas.before:
         Color:
-            rgba: (app.getColorForStatus("?") if app.button["eye"] in self.text or app.button["eye_closed"] in self.text else app.globalBGColor) if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)
+            rgba: app.globalBGColor if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: app.radius
 
 <FlatButton@Button>:
-    color: ([1,1,1,.95] if self.state == "normal" else "white") if not "." in self.text or not app.porch.floors() else ((app.getColorForStatus("") if app.mode == "light" else app.getColorForStatus("")) if self.state=='normal' else "white")
+    color: ([1,1,1,.95] if self.state == "normal" else "white") if (self.number is not None and not "." in self.number) or not app.porch.floors() else ((app.getColorForStatus("") if app.mode == "light" else app.getColorForStatus("")) if self.state=='normal' else "white")
     background_color: [0,0,0,0]
     status: self.status
+    color2: self.color2
     text: self.text
+    number: self.number
     text_size: (None, None) if app.grid else self.size
     background_normal: ""
     background_down: ""
     markup: True
     halign: "center"
     valign: "center"
+    k: .15
     canvas.before:
         Color:
-            rgba: (app.getColorForStatus(self.status) if self.state=='normal' else app.getColorForStatusPressed(self.status)) if not "." in self.text or not app.porch.floors() else ([app.globalBGColor[0], app.globalBGColor[1], app.globalBGColor[2], 1] if self.state=='normal' else app.getColorForStatusPressed(self.status))
+            rgba: (app.getColorForStatus(self.status) if self.state=='normal' else app.getColorForStatusPressed(self.status)) if (self.number is not None and not "." in self.number) or not app.porch.floors() else ([app.globalBGColor[0], app.globalBGColor[1], app.globalBGColor[2], 1] if self.state=='normal' else app.getColorForStatusPressed(self.status))
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: app.radius
+        Color:
+            rgba: app.getColor2(self.color2)
+        RoundedRectangle:
+            pos: self.pos[0]+2, self.pos[1]+2
+            size: (self.size[0]*self.k, self.size[0]*self.k) if self.size[0] < self.size[1] else (self.size[1]*self.k, self.size[1]*self.k)
+            radius: [50,] if app.platform != "win" else [0,]
+        Color:
+            rgba: [1,1,1,.5]
+        Line:
+            #circle: self.pos[0]+self.size[0]/2, self.pos[1]+self.size[1]/2, self.size[0]*.25
 
 <TipButton@Button>:
     text_size: self.size[0] * .95, self.size[1]

@@ -202,7 +202,7 @@ Delete record from
 In brackets, you may see how much time you are ahead (+) or behind (-) your monthly requirement for the current day of the month. For example, with the requirement of 50 hours, if you have had no service for today, this value will decrease approximately by 1:40 tomorrow.
 Attention
 Details
-
+%s with one click
 Not at home
 Not interested
 In brackets, you may see how much time you are ahead (+) or behind (-) your monthly requirement for the current day of the month. For example, with the requirement of 50 hours, if you have had no service for today, this value will decrease approximately by 1:40 tomorrow.
@@ -217,7 +217,7 @@ Delete a flat in this position? The flat number itself will stay intact (except 
 Delete position
 Check for updates:
 Start ministry?
-This is a filter for dark gray apartments. An apartment becomes dark gray if contains some data, but no color assigned.
+Icons
 It's a new month! Have you turned in your report already?
 credit
 Report for %s:

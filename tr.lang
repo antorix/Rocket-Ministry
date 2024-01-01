@@ -202,7 +202,7 @@ Ziyaret kaydının silinmesi
 Parantezlerde, ayın geçerli günü için aylık normla karşılaştırıldığında bir hisse senedi (+) veya gecikme (-) belirtilir. Örneğin, 50 saat normunda bir gün hizmet etmezseniz, ertesi gün bu rakam yaklaşık 1:40 oranında düşecektir.
 Dikkat
 Bilgi
-
+Tek tıklamayla "%s"
 Kimse yok
 Ret
 Dosya yüklenemedi. Büyük olasılıkla hatalı biçimlendirilmiş veya gerekli verileri içermiyor.
@@ -217,7 +217,7 @@ Bu konumdaki bir daire silinsin mi? Daire numarasının kendisi bozulmadan kalac
 Konumu sil
 Güncellemeleri kontrol et:
 Hizmet başlansın mı?
-Bu koyu gri dairelere yönelik bir filtredir. Bir daire, bir miktar veri içeriyor ancak renk atanmamışsa koyu gri olur.
+Simgeler
 Yeni bir ay başladı! Raporunuzu gönderdiniz mi?
 kredi
 %s için rapor:
