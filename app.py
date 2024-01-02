@@ -901,7 +901,7 @@ class MyTextInput(TextInput):
                 self.padding[1] = self.height * .15
         self.width = width
         self.input_type = input_type
-        self.text = u"%s" % text
+        self.text = text
         self.disabled = disabled
         self.blockPositivePress = blockPositivePress
         self.hint_text = hint_text
@@ -960,7 +960,8 @@ class MyTextInput(TextInput):
             def __capitalize():
                 string = self.text[: self.cursor_index()].strip()
                 l = len(string) - 1
-                if len(string) > 0 and (string[l] == "." or string[l] == "!" or string[l] == "?") or self.cursor_col == 0:
+                if len(string) > 0 and (string[l] == "." or string[l] == "!" or string[l] == "?") or \
+                        self.cursor_col == 0:
                     return True # можно
                 else: return False # нельзя
             if __capitalize() and RM.language != "ka" and RM.settings[0][11] and not RM.desktop:
@@ -973,7 +974,7 @@ class MyTextInput(TextInput):
 
     def on_focus(self, instance=None, value=None):
         if platform == "android":
-            self.keyboard_mode = "managed"
+            #self.keyboard_mode = "managed"
             Window.softinput_mode = self.mode
         elif RM.desktop:
             return
@@ -992,7 +993,7 @@ class MyTextInput(TextInput):
 
         else:
             self.hide_keyboard()
-            self.keyboard_mode = "auto"
+            #self.keyboard_mode = "auto"
             if self.shrink:
                 RM.boxHeader.size_hint_y = RM.titleSizeHintY
                 RM.titleBox.size_hint_y = RM.tableSizeHintY
@@ -1021,7 +1022,7 @@ class MyTextInput(TextInput):
     def create_keyboard(self, *args):
         self.show_keyboard()
 
-    def remove_focus_decorator(function):
+    """def remove_focus_decorator(function):
         def wrapper(self, touch):
             if not self.collide_point(*touch.pos): self.focus = False
             function(self, touch)
@@ -1029,7 +1030,7 @@ class MyTextInput(TextInput):
 
     @remove_focus_decorator
     def on_touch_down(self, touch):
-        super().on_touch_down(touch)
+        super().on_touch_down(touch)"""
 
 class MyCheckBox(CheckBox):
     """ Галочки """
@@ -2346,6 +2347,7 @@ class RMApp(App):
             "cancel":   self.msg[190].lower(),
             "wait":     icon("icon-spinner3"), # IcoMoon
             "link":    f"[color={self.titleColor2}]{icon('icon-external-link-square')}[/color]",
+            "empty_image": icon("icon-add_photo_alternate"),
             "":         ""
         }
 
@@ -4669,7 +4671,7 @@ class RMApp(App):
                 self.floaterBox.add_widget(color2Selector)
 
             pos2 = pos[0], pos[1] + self.standardTextHeight * 2  # смайлик
-            emoji = self.flat.emoji if self.flat.emoji != "" else "-"
+            emoji = self.flat.emoji if self.flat.emoji != "" else self.button["empty_image"]
             if self.theme != "3D":
                 self.getRadius(1 if not self.desktop else 1000)
                 self.emojiSelector = FloatButton(text=emoji, font_size=self.fontXXL*.9, pos=pos2,
@@ -4814,6 +4816,7 @@ class RMApp(App):
         form.add_widget(grid)
 
         if self.displayed.form == "recordView": # прокручивание текста до конца и добавление корзины
+            self.getRadius()
             Clock.schedule_once(lambda x: self.inputBoxEntry.do_cursor_movement(action="cursor_pgup", control="cursor_home"), 0)
             lowGrid = GridLayout(cols=3, size_hint=(1, .3))
             form.add_widget(lowGrid)
@@ -4934,12 +4937,20 @@ class RMApp(App):
             elif checkbox == False:
                 input_type = "number" if settings or self.msg[17] in self.multipleBoxLabels[row].text\
                     else "text"
-                self.multipleBoxEntries.append(
-                    MyTextInput(text=str(default) if default != "virtual" else "", halign=halign, multiline=multiline,
-                                size_hint_x=entrySize_hint[0], size_hint_y=entrySize_hint[1] if multiline else None,
-                                limit=limit, input_type=input_type, disabled=disable,
-                                height=(self.standardTextHeight*self.enlargedTextCo) if settings else height*.9,
-                                shrink=True if multiline else False))
+                if 1:#self.displayed.form != "flatView" or self.desktop: # баг с падением по пробелу, временное решение
+                    self.multipleBoxEntries.append(
+                        MyTextInput(text=str(default) if default != "virtual" else "", halign=halign, multiline=multiline,
+                                    size_hint_x=entrySize_hint[0], size_hint_y=entrySize_hint[1] if multiline else None,
+                                    limit=limit, input_type=input_type, disabled=disable,
+                                    height=(self.standardTextHeight*self.enlargedTextCo) if settings else height*.9,
+                                    shrink=True if multiline else False))
+                else:
+                    self.multipleBoxEntries.append(
+                        TextInput(text=str(default) if default != "virtual" else "", halign=halign, multiline=multiline,
+                                  size_hint_x=entrySize_hint[0], size_hint_y=entrySize_hint[1] if multiline else None,
+                                  input_type=input_type, disabled=disable, background_normal="",
+                                  background_color=self.textInputBGColor, foreground_color=self.textInputColor,
+                                  height=(self.standardTextHeight*self.enlargedTextCo) if settings else height*.9))
             else:
                 self.multipleBoxEntries.append(
                     MyCheckBox(active=default, size_hint=(entrySize_hint[0], entrySize_hint[1]),
@@ -4966,10 +4977,10 @@ class RMApp(App):
                 grid.add_widget(textbox)
 
             if self.displayed.form == "flatView" and self.multipleBoxLabels[row].text == self.msg[22]:  # добавляем кнопки М и Ж
-                gap = self.standardTextHeight/2
+                gap = self.standardTextHeight * .4
                 textbox2 = BoxLayout(orientation="vertical", size_hint=entrySize_hint,
-                                     height=height*2.7 + self.padding*2, #height*2.2 + self.padding*2,
-                                     padding=0 if not multiline else (0, self.spacing, 0, 0))
+                                     height=height*2.7 + self.padding*2)#,
+                                     #padding=0 if not multiline else (0, self.spacing, 0, 0))
                 grid.remove_widget(textbox)
                 textbox.size_hint = 1, 1
                 textbox.padding = 0
@@ -4977,11 +4988,11 @@ class RMApp(App):
                 self.multipleBoxEntries[row].padding[1] = self.multipleBoxEntries[row].height * .25
                 textbox2.add_widget(textbox)
                 self.multipleBoxLabels[row].text_size[1] = self.standardTextHeight * 3
-                mfBox = BoxLayout(spacing=self.spacing, size_hint_x=.5, pos_hint={"top": 0})
+                mfBox = BoxLayout(spacing=self.spacing*2, size_hint_x=.5, pos_hint={"top": 1})
                 self.row = row
                 self.maleMenu = DropDown()
                 if self.theme != "3D":
-                    self.maleButton = RoundButton(text=self.button['male'],  size_hint_y=1, pos_hint={"top": 1})
+                    self.maleButton = RoundButton(text=self.button['male'], size_hint_y=1, pos_hint={"top": 1})
                 else:
                     self.maleButton = RetroButton(text=self.button['male'],  size_hint_y=1, pos_hint={"top": 1})
                 self.maleButton.bind(on_press=self.maleButtonPressed)
@@ -6268,8 +6279,9 @@ class RMApp(App):
             def __emojiClick(instance):
                 self.flat.emoji = instance.text if instance.text != "-" else ""
                 self.save()
-                self.emojiSelector.text = self.flat.emoji if self.flat.emoji != "" else "-"
+                self.emojiSelector.text = self.flat.emoji if self.flat.emoji != "" else self.button["empty_image"]
                 self.dismissTopPopup()
+
             button1 = PopupButton(text="-", size_hint_y=1, font_size=self.fontXXL, forceSize=True)
             button1.bind(on_release=__emojiClick)
             grid.add_widget(button1)
