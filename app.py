@@ -3,7 +3,7 @@
 
 from sys import argv
 Devmode = 1 if "dev" in argv else 0
-Version = "2.13.000"
+Version = "2.13.001"
 """
 * Иконки и смайлики. 
 * Вторичный цвет квартир на маленьких кружочках.
@@ -970,11 +970,13 @@ class MyTextInput(TextInput):
             return super().insert_text(char, from_undo=from_undo)
 
     def on_text_validate(self):
-        if not self.popup and not self.blockPositivePress: RM.positivePressed(instance=self)
+        try:
+            if not self.popup and not self.blockPositivePress: RM.positivePressed(instance=self)
+        except: pass
 
     def on_focus(self, instance=None, value=None):
         if platform == "android":
-            #self.keyboard_mode = "managed"
+            self.keyboard_mode = "managed"
             Window.softinput_mode = self.mode
         elif RM.desktop:
             return
@@ -993,7 +995,7 @@ class MyTextInput(TextInput):
 
         else:
             self.hide_keyboard()
-            #self.keyboard_mode = "auto"
+            self.keyboard_mode = "auto"
             if self.shrink:
                 RM.boxHeader.size_hint_y = RM.titleSizeHintY
                 RM.titleBox.size_hint_y = RM.tableSizeHintY
@@ -1006,23 +1008,25 @@ class MyTextInput(TextInput):
         if RM.displayed.form == "rep" and RM.reportPanel.current_tab.text == RM.msg[49]: # служебный год
             RM.recalcServiceYear(allowSave=True)
         elif RM.callFromPopup: # плашка первого посещения, активация кнопки телефона при вводе номера
-            if RM.quickPhone.text != RM.flat.phone:
-                RM.savePhoneBtn.text = RM.button["check"]
-                RM.savePhoneBtn.disabled = False
-            else:
-                RM.savePhoneBtn.text = ""
-                RM.savePhoneBtn.disabled = True
-            if RM.quickPhone.text != "":
-                RM.quickPhoneCallButton.text = RM.button['phone']
-                RM.quickPhoneCallButton.disabled = False
-            else:
-                RM.quickPhoneCallButton.text = ""
-                RM.quickPhoneCallButton.disabled = True
+            try:
+                if RM.quickPhone.text != RM.flat.phone:
+                    RM.savePhoneBtn.text = RM.button["check"]
+                    RM.savePhoneBtn.disabled = False
+                else:
+                    RM.savePhoneBtn.text = ""
+                    RM.savePhoneBtn.disabled = True
+                if RM.quickPhone.text != "":
+                    RM.quickPhoneCallButton.text = RM.button['phone']
+                    RM.quickPhoneCallButton.disabled = False
+                else:
+                    RM.quickPhoneCallButton.text = ""
+                    RM.quickPhoneCallButton.disabled = True
+            except: pass
 
     def create_keyboard(self, *args):
         self.show_keyboard()
 
-    """def remove_focus_decorator(function):
+    def remove_focus_decorator(function):
         def wrapper(self, touch):
             if not self.collide_point(*touch.pos): self.focus = False
             function(self, touch)
@@ -1030,7 +1034,7 @@ class MyTextInput(TextInput):
 
     @remove_focus_decorator
     def on_touch_down(self, touch):
-        super().on_touch_down(touch)"""
+        super().on_touch_down(touch)
 
 class MyCheckBox(CheckBox):
     """ Галочки """

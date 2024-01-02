@@ -61,12 +61,6 @@
     side: self.side
     canvas.before:
         Color:
-            rgba: app.globalBGColor if self.state=='normal' else ([1,1,1,.05] if app.callFromPopup else app.globalBGColor)
-        RoundedRectangle:
-            pos: self.pos
-            size: self.size
-            radius: app.radius
-        Color:
             rgba: self.color if self.state=='normal' else ([1,1,1,.05] if app.callFromPopup else self.color)
         Ellipse:
             pos: self.pos
