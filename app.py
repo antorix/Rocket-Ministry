@@ -6255,9 +6255,16 @@ class RMApp(App):
 
         elif self.popupForm == "emoji":
             title = self.msg[220]
-            size_hint[1] *= 1.3
             contentMain = BoxLayout(orientation="vertical")
-            grid = GridLayout(cols=5, rows=10, padding=(0, self.padding*2), spacing=self.spacing)
+            grid = GridLayout(padding=(0, self.padding*2), spacing=self.spacing)
+            if self.orientation == "v":
+                size_hint[1] *= 1.3
+                grid.cols = 5
+                grid.rows = 10
+            else:
+                size_hint = .8, .7
+                grid.cols = 10
+                grid.rows = 5
             def __emojiClick(instance):
                 self.flat.emoji = instance.text if instance.text != "-" else ""
                 self.save()
