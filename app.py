@@ -3,10 +3,11 @@
 
 from sys import argv
 Devmode = 1 if "dev" in argv else 0
-Version = "2.13.001"
+Version = "2.13.002"
 """
-* Иконки и смайлики. 
-* Вторичный цвет квартир на маленьких кружочках.
+* 17 новых иконок.
+* Повышение быстродействия при работе в подъезде.
+* Сортировка подъездов по номеру или количеству квартир.
 * Исправления и оптимизации. 
 """
 
@@ -69,11 +70,11 @@ SavedCount = 1
 
 class House(object):
     """ Класс участка """
-    def __init__(self, title="", porchesLayout="а", note="", type=""):
+    def __init__(self, title="", porchesLayout="н", note="", type=""):
         self.title = title
-        self.porchesLayout = porchesLayout # сортировка подъездов, пока не используется
+        self.porchesLayout = porchesLayout # сортировка подъездов
         self.note = note
-        self.type = type
+        self.type = type # condo, private
         self.porches = []
         self.date = time.strftime("%Y-%m-%d", time.localtime())
 
@@ -104,8 +105,13 @@ class House(object):
     def showPorches(self):
         """ Вывод списка подъездов """
         list = []
-        self.porches.sort(key=lambda x: x.title, reverse=False)
-        self.porches.sort(key=lambda x: ut.numberize(x.title), reverse=False)
+        if self.porchesLayout == "н" or self.porchesLayout == "а": # сортировка подъездов по номеру/названию
+            self.porches.sort(key=lambda x: x.title, reverse=False)
+            self.porches.sort(key=lambda x: ut.numberize(x.title), reverse=False)
+        elif self.porchesLayout == "р": # сортировка подъездов по размеру (кол-ву квартир)
+            self.porches.sort(key=lambda x: x.getSize(), reverse=False)
+        elif self.porchesLayout == "о": # сортировка по размеру обратная
+            self.porches.sort(key=lambda x: x.getSize(), reverse=True)
         porchString = RM.msg[212][0].upper() + RM.msg[212][1:] if RM.language != "ka" else RM.msg[212]
         for porch in self.porches:
             listIcon = f"{RM.button['porch']} {porchString}" if self.type == "condo" else RM.button['pin']
@@ -148,17 +154,20 @@ class Porch(object):
     """ Класс подъезда """
     def __init__(self, title="", status="", flatsLayout="н", floor1=1, note="", type=""):
         self.title = title
-        self.status = status
+        self.status = status # пока не используется
         self.flatsLayout = flatsLayout
         self.floor1 = floor1 # number of first floor
         self.note = note
-        self.type = type
-        self.flats = []  # list of Flat instances, initially empty
+        self.type = type # "сегмент" или "подъезд"/"подъездX", где Х - число этажей
+        self.flats = []
         self.flatsNonFloorLayoutTemp = None # несохраняемая переменная
         self.highestNumber = 0 # максимальный номер квартиры в подъезде (несохр.)
+        self.floorview = None # кешированная сетка подъезда (несохр.)
+        self.scrollview = None # кешированный список подъезда (несохр.)
 
     def restoreFlat(self, instance):
         """ Восстанавление квартир (нажатие на плюсик) """
+        self.scrollview = None
         def __oldRandomNumber(number):
             """ Проверка, что это не длинный номер, созданный random() в предыдущих версиях """
             if "." in number:
@@ -178,6 +187,7 @@ class Porch(object):
 
     def deleteFlat(self, deletedFlat, regularDelete=False):
         """ Удаление квартиры - переводит на сдвиг (если подъезд) или простое удаление (если не подъезд) """
+        self.scrollview = None
         if self.floors() and not regularDelete: # если подъезд c сеткой
             for f in self.flats:
                 if f.number == str(self.highestNumber):
@@ -219,6 +229,16 @@ class Porch(object):
                 floors = "5"
         return first, last, floors
 
+    def getSize(self):
+        """ Выдает размер подъезда (кол-во квартир) в целях сортировки подъездов """
+        if self.type == "сегмент":
+            count = len(self.flats)
+        else:
+            count = 0
+            for flat in self.flats:
+                if "." not in flat.number: count += 1
+        return count
+
     def getFlatsRange(self):
         """ Выдает диапазон квартир в подъезде """
         list = []
@@ -245,9 +265,23 @@ class Porch(object):
             else: range = f" [i]{list[0].number}–{list[len(list)-1].number}[/i]"
         return range
 
+    def clearCache(self, type=""):
+        """ Удаляет кеш раскладки в зависимости от сортировки. Если получает тип сортировки, то удаляет только при совпадении """
+        result = False
+        if type != "":
+            if type == self.flatsLayout:
+                self.scrollview = None
+                result = True
+        elif self.flatsLayout == "с" or self.flatsLayout == "с2" or self.flatsLayout == "т" \
+            or self.flatsLayout == "з":
+            self.scrollview = None
+            result = True
+        return result
+
     def sortFlats(self, type=None):
         """ Сортировка квартир """
         if type is not None: self.flatsLayout = type
+        self.clearCache()
 
         if self.flatsLayout == "н":  # numeric by number
             self.flatsNonFloorLayoutTemp = self.flatsLayout
@@ -411,7 +445,8 @@ class Flat(object):
         self.lastVisit = lastVisit # дата последней встречи в абсолютных секундах (формат time.time())
         self.records = [] # список записей посещений
         self.extra = extra # пустой список на будущее
-        self.porchRef = None # указатель на подъезд, в котором находится квартира. Не сохраняется
+        self.porchRef = None # указатель на подъезд, в котором находится квартира (не сохр.)
+        self.buttonID = None # указатель на кнопку этой квартиры, если она есть (не сохр.)
 
     def getName(self):
         """ Генерирует имя жильца из title """
@@ -901,7 +936,7 @@ class MyTextInput(TextInput):
                 self.padding[1] = self.height * .15
         self.width = width
         self.input_type = input_type
-        self.text = text
+        self.text = f"{text}"
         self.disabled = disabled
         self.blockPositivePress = blockPositivePress
         self.hint_text = hint_text
@@ -935,7 +970,7 @@ class MyTextInput(TextInput):
         elif popup == False:
             self.background_color = RM.textInputBGColor
         else:
-            self.background_color = [.3, .3, .3, 1]
+            self.background_color = [.2, .2, .2, 1]
 
     def insert_text(self, char, from_undo=False):
         """ Делаем буквы заглавными """
@@ -1007,21 +1042,19 @@ class MyTextInput(TextInput):
         """ Реагирование на ввод в реальном времени в зависимости от формы """
         if RM.displayed.form == "rep" and RM.reportPanel.current_tab.text == RM.msg[49]: # служебный год
             RM.recalcServiceYear(allowSave=True)
-        elif RM.callFromPopup: # плашка первого посещения, активация кнопки телефона при вводе номера
-            try:
-                if RM.quickPhone.text != RM.flat.phone:
-                    RM.savePhoneBtn.text = RM.button["check"]
-                    RM.savePhoneBtn.disabled = False
-                else:
-                    RM.savePhoneBtn.text = ""
-                    RM.savePhoneBtn.disabled = True
-                if RM.quickPhone.text != "":
-                    RM.quickPhoneCallButton.text = RM.button['phone']
-                    RM.quickPhoneCallButton.disabled = False
-                else:
-                    RM.quickPhoneCallButton.text = ""
-                    RM.quickPhoneCallButton.disabled = True
-            except: pass
+        elif RM.firstCallPopup and RM.phoneInputOnPopup: # плашка первого посещения, активация кнопки телефона при вводе номера
+            if RM.quickPhone.text != RM.flat.phone:
+                RM.savePhoneBtn.text = RM.button["check"]
+                RM.savePhoneBtn.disabled = False
+            else:
+                RM.savePhoneBtn.text = ""
+                RM.savePhoneBtn.disabled = True
+            if RM.quickPhone.text != "":
+                RM.quickPhoneCallButton.text = RM.button['phone']
+                RM.quickPhoneCallButton.disabled = False
+            else:
+                RM.quickPhoneCallButton.text = ""
+                RM.quickPhoneCallButton.disabled = True
 
     def create_keyboard(self, *args):
         self.show_keyboard()
@@ -1190,9 +1223,11 @@ class FloatButton(Button):
         self.size_hint = None, None
         if pos is not None: self.pos = pos
         if font_size is not None: self.font_size = font_size
+        #self.background_color = background_color if background_color is not None else [.3,.3,.3,.85]
+        #self.background_normal = ""
+        #self.background_down = ""
         self.halign = "center"
         self.valign = "center"
-
 
 class RoundColorButton(Button):
     def __init__(self, color, side=None, pos=None, size_hint=(None, None), text="", pos_hint=None):
@@ -1336,32 +1371,28 @@ class FirstCallButton1(FirstCallButton):
     def __init__(self, **kwargs):
         super(FirstCallButton1, self).__init__()
         self.text = RM.button['lock']
-        if not RM.desktop: self.font_size = RM.fontXS * RM.fontScale(cap=1)
-
-class FirstCallButtonExtra(FirstCallButton):
-    """ Кнопки нет звонка и домофона """
-    def __init__(self, text, **kwargs):
-        super(FirstCallButtonExtra, self).__init__()
-        self.text = text
-        if not RM.desktop: self.font_size = RM.fontXS * RM.fontScale(cap=1)
+        #self.font_size = RM.fontM
 
 class FirstCallButton2(FirstCallButton):
     """ Кнопка запись """
     def __init__(self, **kwargs):
         super(FirstCallButton2, self).__init__()
         self.text = RM.button['record']
+        #self.font_size = RM.fontM
 
 class FirstCallButton3(FirstCallButton):
     """ Кнопка отказ """
     def __init__(self, **kwargs):
         super(FirstCallButton3, self).__init__()
         self.text = RM.button['reject']
+        #self.font_size = RM.fontM
 
 class FirstCallButtonPhone(FirstCallButton):
     """ Кнопка телефона большая """
     def __init__(self, **kwargs):
         super(FirstCallButtonPhone, self).__init__()
         self.text = RM.button['phone']
+        self.font_size = RM.fontL
 
 class FloorLabel(Label):
     """ Кнопка квартиры (обычная или скрытая) – базовый класс """
@@ -1386,7 +1417,7 @@ class FloorLabel(Label):
 
 class FlatButton(Button):
     """ Кнопка квартиры (обычная или скрытая) – базовый класс """
-    def __init__(self, text="", status="", color2=0, emoji="", flat=None, size_hint_y=1, height=0, id=0):
+    def __init__(self, text="", status="", color2=0, emoji="", flat=None, size_hint_y=1, height=0, id=0, recBox=None):
         super(FlatButton, self).__init__()
         self.markup = True
         emo = f" {emoji}" if emoji != "" else ""
@@ -1395,6 +1426,7 @@ class FlatButton(Button):
         self.color2 = color2
         self.height = height
         self.flat = flat
+        self.recBox = recBox
         self.size_hint_y = size_hint_y
         self.id = id
         if self.height > 0 and not RM.desktop:
@@ -1404,16 +1436,50 @@ class FlatButton(Button):
         """ Обновление отрисовки кнопки в режиме сетки без ее перемонтировки - либо при создании,
         либо при удалении/восстановлении квартиры """
         self.flat = flat
-        self.number = flat.number
-        gap = RM.emojiGap if self.flat.emoji != "" else ""
-        self.text = f"{flat.number}{gap}{self.flat.emoji}"
-        self.status = flat.status
-        self.color2 = flat.color2
-        if flat is not None:
+        if RM.porch.floors():
+            gap = RM.emojiGap if flat.emoji != "" else ""
+            number = flat.number
             if not RM.desktop: self.font_size = RM.flatSizeInGrid
-            if "." in flat.number: self.text = icon('icon-plus-circle')
+        else:
+            name = flat.getName()
+            gap = " " if name != "" else ""
+            number = f"[b]{flat.number}[/b] {name}"
+            if self.recBox is not None: self.updateRecord()
+        if self.text != f"{number}{gap}{flat.emoji}": self.text = f"{number}{gap}{flat.emoji}"
+        if self.number != flat.number: self.number = flat.number
+        if self.status != flat.status: self.status = flat.status
+        if self.color2 != flat.color2: self.color2 = flat.color2
+        if "." in flat.number: self.text = icon('icon-plus-circle')
+
+    def updateRecord(self):
+        """ Обновление записей под кнопкой в режиме списка """
+        if self.flat.phone != "":
+            myicon = RM.button["phone-thin"]
+            phone = f"[color={RM.recordGray}]{myicon}[/color]\u00A0{self.flat.phone}\u00A0\u00A0"
+        else: phone = ""
+        if self.flat.note != "":
+            myicon = RM.button["note"]
+            if RM.msg[206].lower() in self.flat.note[:30]:
+                limit = self.flat.note.index("\n") if "\n" in self.flat.note else len(self.flat.note)
+            else: limit = RM.defaultLimit
+            note = f"[color={RM.recordGray}]{myicon}[/color]\u00A0{self.flat.note[:limit]}\u00A0\u00A0"
+            if "\n" in note: note = note[: note.index("\n")] + "  "
+        else: note = ""
+        if len(self.flat.records) > 0:
+            myicon = RM.button["chat"]
+            record = f"[color={RM.recordGray}]{myicon}[/color]\u00A0{self.flat.records[0].title}"
+        else: record = ""
+        if 1:#RM.settings[0][20] == 1: # служение по телефону - телефон вперед
+            text = phone + note + record
+        else:
+            text = note + phone + record
+        if len(self.recBox.children) == 1: self.recBox.add_widget(FlatFooterLabel(text))
+        label = self.recBox.children[0]
+        if label.text != text: label.text = text
+        self.recBox.height = RM.height1 * (1 if label.text == "" else 1.85)
 
     def on_release(self):
+        self.flat.buttonID = self
         if icon('icon-plus-circle') in self.text:
             RM.porch.restoreFlat(instance=self)
             RM.save()
@@ -1426,6 +1492,20 @@ class FlatButtonSquare(FlatButton):
     def __init__(self, flat):
         super(FlatButtonSquare, self).__init__()
         self.update(flat)
+
+class FlatFooterLabel(Label):
+    """ Записи под квартирой в режиме списка """
+    def __init__(self, text, *args, **kwargs):
+        super(FlatFooterLabel, self).__init__()
+        self.text = text
+        self.markup = True
+        self.color = RM.standardTextColor
+        self.halign = "left"
+        self.valign = "top"
+        self.size_hint = .98, 1
+        self.pos_hint = {"right": 1}
+        self.font_size = (RM.fontXS * RM.fontScale(cap=1.2)) if not RM.desktop else RM.fontS
+        if RM.specialFont is not None: self.font_name = RM.specialFont
 
 class PopupNoAnimation(Popup):
     """ Попап, в котором отключена анимация при закрытии """
@@ -1523,9 +1603,10 @@ class FooterButton(Button):
         RM.btn[self.parentIndex].state = "down"
         RM.btn[self.parentIndex].on_release()
 
-class LastRecButton(Button):
+class RecordButton(Button):
+    """ Кнопка записи посещения на экране квартиры """
     def __init__(self, text, id):
-        super(LastRecButton, self).__init__()
+        super(RecordButton, self).__init__()
         self.text = text
         self.markup = True
         self.halign = "left"
@@ -1534,10 +1615,10 @@ class LastRecButton(Button):
         self.background_down = ""
         self.background_normal = ""
         if not RM.desktop: self.font_size = RM.fontS * RM.fontScale()
-        self.padding = 0, RM.padding * 5
+        self.padding = RM.padding * 2, RM.padding * 5
         self.spacing = RM.spacing
-        self.pos_hint = {"right": .99}
-        self.size_hint_x = .9
+        self.pos_hint = {"right": 1}
+        self.size_hint_x = .88
 
     def on_release(self):
         RM.btn[self.id].on_release()
@@ -1673,7 +1754,8 @@ class ColorStatusButton(Button):
                 break
         RM.save()
         if RM.searchEntryPoint: RM.find(instance=True)
-        else: RM.porchView()
+        else:
+            RM.porchView()
 
 class MainMenuButton(Button):
     """ Три главные кнопки внизу экрана """
@@ -1960,6 +2042,8 @@ class RMApp(App):
         self.ellipsisWidth = .06  # ширина кнопки с тремя точками либо пустого виджета вместо нее, справа и слева
         self.orientationPrev = ""
         self.scalingPrev = None
+        self.emojiPopup = None # форма для иконок
+        self.FCP = PopupNoAnimation(title="") # попап первого посещения
         self.horizontalOffset = 80  # ширина левой боковой полосы на горизонтальной ориентации на компьютере
         self.titleSizeHintY = .11  # ширина полосы заголовка
         self.tableSizeHintY = .09  # ширина полосы верхних табличных кнопок
@@ -1992,6 +2076,8 @@ class RMApp(App):
             self.allowCharWarning = True
             self.defaultKeyboardHeight = Window.size[1]*.4
             self.popups = []  # стек попапов, которые могут открываться один над другим
+            self.сharLimit = int(30 / RM.fontScale()) if not RM.desktop else int(Window.size[0] / 13)
+            self.defaultLimit = int(self.сharLimit / RM.fontScale())  # лимит обрезки строк в записях под квартирами
             self.fontXXL =  int(Window.size[1] / 25) # размеры шрифтов
             self.fontXL =   int(Window.size[1] / 30)
             self.fontL =    int(Window.size[1] / 35)
@@ -2000,6 +2086,7 @@ class RMApp(App):
             self.fontXS =   int(Window.size[1] / 50)
             self.fontXXS =  int(Window.size[1] / 55)
             self.fontBigEntry = int(Window.size[1] / 41 * self.fontScale())  # шрифт для увеличенных полей ввода
+            self.flatSizeInList = self.fontM * .9 * self.fontScale()  # размер шрифта квартир в режиме списка
 
             if Devmode: # в режиме разработчика задаем размер окна принудительно
                 k = .38
@@ -2038,8 +2125,6 @@ class RMApp(App):
 
         self.rep = Report()  # инициализация отчета
         register('default_font', 'icomoon.ttf', 'icomoon.fontd')  # шрифты с иконками
-
-        # Создание интерфейса
 
     # Первичное создание интерфейса
 
@@ -2227,8 +2312,7 @@ class RMApp(App):
                 self.textInputBGColor = [.3, .3, .3, .95]
                 self.textInputColor = [1, 1, 1]
                 self.scrollButtonBackgroundColor = [1,1,1,1]
-                self.sortButtonBackgroundColor = [.1,.1,.1,.85]
-                self.sortButtonBackgroundColor = [.2, .2, .2]
+                self.sortButtonBackgroundColor = [.2, .2, .2, .95]
                 self.sortButtonBackgroundColorPressed = [.4,.42,.42,1]
                 self.roundButtonColorPressed2 = [0,.8,.8,1]
                 self.standardTextColor = [.9, .9, .9]
@@ -2251,13 +2335,28 @@ class RMApp(App):
         if self.mode == "light":
             self.lightGrayFlat = [.6, .6, .6, 1] # квартира без посещения
             self.darkGrayFlat = [.38, .38, .38, 1] # квартира "нет дома"
+            self.floatButtonBGColor = [.85, .85, .85, .8]
         else:
             self.lightGrayFlat = [.53, .53, .53, 1]
             self.darkGrayFlat = [.31, .31, .31, 1]
+            self.floatButtonBGColor = copy(self.sortButtonBackgroundColor)
+        self.floatButtonBGColor[3] = .78
 
-        self.titleColorOnBlack = [.76, .65, .89] if self.theme == "purple" else (
-            self.titleColor[0], self.titleColor[1], self.titleColor[2]
-        ) # вариант titlecolor для темного фона
+        if self.theme == "purple":  # вариант titlecolor для темного фона
+            self.titleColorOnBlack = [.76, .65, .89]
+        elif self.theme == "sepia":
+            k=1.2
+            self.titleColorOnBlack = [self.titleColor[0]*k, self.titleColor[1]*k, self.titleColor[2]*k]
+        elif self.theme == "gray":
+            self.titleColorOnBlack = [.63,.78,.99]
+        else:
+            self.titleColorOnBlack = (self.titleColor[0], self.titleColor[1], self.titleColor[2])
+
+        self.recordGray = get_hex_from_color(self.topButtonColor if self.mode == "light" else \
+                                                 self.standardTextColor) # серый цвет для записей под кнопками
+
+        self.popupButtonColor2 = [.25, .25, .25, 1] # цвет больших кнопок на плашке первого посещения
+        self.popupBGColorPressed = [1,1,1,.05]
 
         self.color2List = [] # список цветов для вторичного цвета
         for i in range(4): self.color2List.append(self.getColor2(i))
@@ -2267,6 +2366,8 @@ class RMApp(App):
 
         # Иконки для кнопок
         self.listIconSize = self.fontL
+        self.FCPIconSize = self.fontL
+        br = '\n' if self.settings[0][13] == 1 else "  "
         self.button = {
             # иконки элементов списка
             "building": f" [size={self.listIconSize}][color={self.scrollColor}][b]{icon('icon-building')}[/b][/color][/size] ",
@@ -2298,9 +2399,9 @@ class RMApp(App):
             "down-left": icon("icon-arrow-down-left2"),
 
             # плашка первого посещения
-            "lock": f"[b]{icon('icon-lock')}[/b]\n{self.msg[206]}",  #  нет дома
-            "record": f"[b]{icon('icon-pencil')}\n{self.msg[163]}[/b]",  # запись
-            "reject": f"[b]{icon('icon-ban')}\n{self.msg[207]}[/b]",  # отказ
+            "lock": f"[size={self.FCPIconSize}]{icon('icon-lock')}[/size]\n{self.msg[206]}",  #  нет дома
+            "record": f"[size={self.FCPIconSize}]{icon('icon-pencil')}[/size]{br}{self.msg[163]}",  # запись
+            "reject": f"[size={self.FCPIconSize}]{icon('icon-ban')}[/size]{br}{self.msg[207]}",  # отказ
 
             "check":    icon("icon-check"),
             "details":  icon("icon-pencil"),
@@ -2336,6 +2437,8 @@ class RMApp(App):
             "chevron-right": icon("icon-chevron-right"),
             "chevron-up": icon("icon-chevron-up"),
             "chevron-down": icon("icon-chevron-down"),
+            "angle-up": icon("icon-angle-up"),
+            "angle-down": icon("icon-angle-down"),
             "nav":      icon("icon-location"), # Entypo
             "flist":    icon("icon-align-justify"),
             "fgrid":    icon("icon-th-large"),
@@ -2351,7 +2454,7 @@ class RMApp(App):
             "cancel":   self.msg[190].lower(),
             "wait":     icon("icon-spinner3"), # IcoMoon
             "link":    f"[color={self.titleColor2}]{icon('icon-external-link-square')}[/color]",
-            "empty_image": icon("icon-add_photo_alternate"),
+            "add_emoji": icon("icon-add_photo_alternate"),
             "":         ""
         }
 
@@ -2374,44 +2477,60 @@ class RMApp(App):
             icon('icon-crying'),
             icon('icon-baffled'),
             icon('icon-confused'),
+            icon('icon-hipster'),
             icon('icon-tongue'),
             icon('icon-neutral'),
+            icon('icon-star_outline'),
+            icon('icon-star_half'),
+            icon('icon-star1'),
+            icon('icon-bookmark1'),
             icon('icon-warning1'),
             icon('icon-remove_circle_outline'),
             icon('icon-menu_book'),
+            icon('icon-create'),
             icon('icon-message'),
             icon('icon-mark_chat_read'),
-            icon('icon-sms_failed'),
+            icon('icon-videocam'),
             icon('icon-remove_red_eye'),
-            icon('icon-vpn_key'),
             icon('icon-access_time'),
             icon('icon-mail_outline'),
-            icon('icon-notifications_off'),
+            icon('icon-alternate_email'),
+            icon('icon-phone1'),
+            icon('icon-phone_locked'),
             icon('icon-phone_disabled'),
+            icon('icon-notifications_off'),
             icon('icon-volume_off'),
-            icon('icon-mic_off'),
             icon('icon-location_off'),
+            icon('icon-hourglass_disabled'),
             icon('icon-no_cell'),
             icon('icon-check1'),
             icon('icon-clear'),
             icon('icon-pets'),
+            icon('icon-format_paint'),
+            icon('icon-vpn_key'),
             icon('icon-sensor_door'),
+            icon('icon-device_thermostat'),
             icon('icon-repeat1'),
-            icon('icon-replay'),
+            icon('icon-fast_forward'),
+            icon('icon-accessible_forward'),
             icon('icon-child_care'),
             icon('icon-child_friendly'),
-            icon('icon-accessible_forward'),
             icon('icon-flag1'),
             icon('icon-bolt1'),
             icon('icon-send1'),
-            icon('icon-how_to_reg'),
+            icon('icon-directions_car'),
+            icon('icon-rocket'),
+            icon('icon-person_add_alt_1'),
+            icon('icon-person_search'),
+            icon('icon-shield1'),
             icon('icon-favorite'),
             icon('icon-https'),
             icon('icon-date_range'),
             icon('icon-pending_actions'),
+            icon('icon-delete'),
+            icon('icon-brightness_low'),
             icon('icon-bedtime'),
             icon('icon-stop_circle'),
-
         ]
 
     def createInterface(self):
@@ -2551,7 +2670,7 @@ class RMApp(App):
 
         # Нижние кнопки таблицы
 
-        self.bottomButtons = BoxLayout(size_hint_y=self.bottomButtonsSizeHintY, spacing=self.spacing*2,
+        self.bottomButtons = BoxLayout(size_hint_y=self.bottomButtonsSizeHintY, spacing=self.spacing*3,
                                        padding=self.padding*2)
         self.listarea.add_widget(self.bottomButtons)
         if self.theme != "3D": self.navButton = TableButton(radius=self.getRadius(45), text=self.button['nav'],
@@ -2594,15 +2713,15 @@ class RMApp(App):
 
     def updateList(self, instance=None, remount=True, progress=False):
         """ Заполнение главного списка элементами """
-
         form = self.displayed.form
 
         def __continue(*args):
+            instance = args[0] if len(args) > 0 else None
             self.stack = list(dict.fromkeys(self.stack))
             if remount: self.mainList.clear_widgets()
             self.mainList.padding = 0
             self.popupEntryPoint = 0
-            self.callFromPopup = False
+            self.firstCallPopup = False
             if not self.showSlider: self.sortButton.disabled = True
 
             # Считываем содержимое Feed/displayed
@@ -2625,11 +2744,11 @@ class RMApp(App):
             if self.displayed.neutral != "":
                 self.neutral.disabled = False
                 self.neutral.text = self.displayed.neutral
-                if self.neutral.text == self.button['phone'] and self.flat.phone == "":
-                    self.neutral.text = self.button['phone0']
-                    self.neutral.disabled = True
             else:
                 self.neutral.text = ""
+                self.neutral.disabled = True
+            if self.neutral.text == self.button['phone'] and self.flat.phone == "":
+                self.neutral.text = self.button['phone0']
                 self.neutral.disabled = True
 
             if self.displayed.sort is not None:
@@ -2676,24 +2795,18 @@ class RMApp(App):
 
         # Обычный список (этажей нет)
 
-            height1 = self.standardTextHeight * 2 / self.fontScale() # высота кнопки списка
-            if form == "porchView": height1 *= .9 # список квартир - чуть уменьшаем
-            if self.desktop: height1 = height1 * (.7 if self.orientation == "v" or form == "ter" or form == "con" else .5)
-            height = height1
-            gap = 1.05  # зазор между квартирами в списке
+            self.height1 = RM.standardTextHeight * 2 / RM.fontScale()  # высота кнопки списка
+            if self.desktop:
+                self.height1 = self.height1 * (.8 if form == "ter" or form == "con" else .6)
             rad = self.getRadius(90)[0]  # радиус закругления подсветки списка
             if form == "ter": self.scrollRadius = [rad, ] if len(self.houses) == 0 else [rad, rad, 0, 0]
             elif form == "con": self.scrollRadius = [rad, rad, 0, 0]
             else: self.scrollRadius = [rad, ]
-            gray = get_hex_from_color(self.topButtonColor if self.mode == "light" else self.standardTextColor)
-            сharLimit = int(30 / self.fontScale()) if not self.desktop else int(Window.size[0] / 13)
-            defaultLimit = int(сharLimit / self.fontScale()) # лимит обрезки строк в записях под квартирами
-            recordHeight = height1*self.fontScale()
-
             self.scrollWidget = GridLayout(cols=1, spacing=self.spacing * 1.5, padding=self.padding * 2,
                                            size_hint_y=None)
             self.scrollWidget.bind(minimum_height=self.scrollWidget.setter('height'))
             self.scroll = ScrollView(size=self.mainList.size, scroll_type=['content'])
+
             if form == "search" or form == "porchView" or form == "repLog" \
                     or form == "flatView":
                 self.scroll.scroll_type = ['bars', 'content']
@@ -2701,7 +2814,7 @@ class RMApp(App):
 
             if self.createFirstHouse: # запись "создайте один или несколько домов" для пустого сегмента
                 self.createFirstHouse = False
-                box1 = BoxLayout(orientation="vertical", size_hint_y=None, height=height*1.05)
+                box1 = BoxLayout(orientation="vertical", size_hint_y=None, height=self.height1*1.05)
                 box1.add_widget(ScrollButton(
                     id=None, height=box1.height,
                     text=f"{RM.button['plus-1']}{RM.button['home']} {RM.msg[12]}"))
@@ -2712,61 +2825,57 @@ class RMApp(App):
             elif form != "porchView" or \
                     (form == "porchView" and not self.porch.floors()): # все прочие списки
 
+                if form == "porchView":
+                    self.getRadius(150)
+                    self.grid = False
+                    self.scaling = False
+                    self.height1 *= .9
+                    self.scrollWidget.spacing = self.spacing * 2
+
+                height = self.height1
                 self.btn = []  # список кнопок
-                self.flatSizeInList = self.fontM * .9 * self.fontScale()  # размер шрифта квартир в режиме списка
 
                 for i in range(len(self.displayed.options)):
                     label = self.displayed.options[i]
-                    addPhone = addNote = addRecord = False
-                    if form == "porchView":
-                        flat = label
-                        if len(self.porch.flats) > 0 and "object" in str(flat):
-                            if len(flat.records) > 0: addRecord = True
-                            if flat.phone != "": addPhone = True
-                            if flat.note != "": addNote = True
-                    elif form == "flatView":
-                        height = height1
+                    if form == "porchView": flat = label
 
                     # Добавление пункта списка
 
                     if form == "repLog":
                         # отдельный механизм добавления записей журнала отчета + ничего не найдено в поиске
                         self.btn.append(MyLabel(text=label.strip(), color=self.standardTextColor, halign="left",
-                                                valign="top", size_hint_y=None, height=height1, markup=True,
-                                                text_size=(Window.size[0]*self.SR-self.standardTextHeight, height1)))
+                                                valign="top", size_hint_y=None, height=self.height1, markup=True,
+                                                text_size=(Window.size[0]-self.standardTextHeight, self.height1)))
                         self.scrollWidget.add_widget(self.btn[i])
 
                     else: # стандартное добавление
                         if (form == "ter" and len(self.houses)>0) or form == "con" or form == "houseView" \
                                 and not self.button['plus-1'] in label:
                             addEllipsis = True # флаг, что нужно добавить три точки настроек
-                            box = GridLayout(rows=2, cols=3, size_hint_y=None, spacing=(1, 0))
+                            box = GridLayout(rows=2, cols=3, height=height, size_hint_y=None)
                             box.add_widget(Widget(size_hint=(.03, 0)))
                         else:
                             addEllipsis = False
-                            box = BoxLayout(orientation="vertical", size_hint_y=None)
+                            box = BoxLayout(orientation="vertical", height=height, size_hint_y=None)
 
                         if form != "porchView":
                             # вид для всех списков, кроме подъезда - без фона (а также кнопки "Создайте дом")
                             self.getRadius()
                             self.btn.append(ScrollButton(id=i, text=label.strip(), height=height*2))
 
-                        else: # вид для списка подъезда - с фоном и закругленными квадратиками
-                            self.getRadius(150)
-                            self.grid = False
-                            self.scaling = False
-                            if self.desktop: self.scrollWidget.spacing = self.spacing
-                            else: self.scrollWidget.spacing = (self.spacing, 0)
+                        elif self.porch.scrollview is None: # вид для списка подъезда - с фоном и закругленными квадратиками
                             if not "." in flat.number or self.house.type == "private":
                                 self.btn.append(FlatButton(text=f"[b]{flat.number}[/b] {flat.getName()}",
-                                                           height=height, status=flat.status,
+                                                           height=height, status=flat.status, recBox=box,
                                                            color2=flat.color2, emoji=flat.emoji,
                                                            id=i, flat=flat, size_hint_y=None))
+
                             else: continue
 
-                        last = len(self.btn) - 1  # адресация кнопки, которая обрабатывается в данный момент
-                        button = self.btn[last]
-                        box.add_widget(button)
+                        if form != "porchView" or self.porch.scrollview is None:
+                            last = len(self.btn) - 1  # адресация кнопки, которая обрабатывается в данный момент
+                            button = self.btn[last]
+                            box.add_widget(button)
 
                         if addEllipsis: # добавляем три точки
                             if form != "con":
@@ -2775,47 +2884,14 @@ class RMApp(App):
                                 box.add_widget(Widget(size_hint_x=.03))
                             box.add_widget(Widget(size_hint=(0, 0)))
 
-                        if addRecord or addPhone or addNote: # если есть запись посещения, телефон или заметка, добавляем снизу
-                            if flat.phone != "":
-                                myicon = self.button["phone-thin"]
-                                phone = f"[color={gray}]{myicon}[/color]\u00A0{flat.phone}\u00A0\u00A0"
-                            else:
-                                phone = ""
-                            if flat.note != "":
-                                myicon = self.button["note"]
-                                if self.msg[206].lower() in flat.note[:30]: # если в заметке есть "нет дома", обрезаем заметку по это слово
-                                    limit = flat.note.index("\n") if "\n" in flat.note else len(flat.note)
-                                else:
-                                    limit = defaultLimit
-                                note = f"[color={gray}]{myicon}[/color]\u00A0{flat.note[:limit]}\u00A0\u00A0"
-                                if "\n" in note: note = note[ : note.index("\n")] + "  "
-                            else:
-                                note = ""
-                            if len(flat.records) > 0:
-                                myicon = self.button["chat"]
-                                record = f"[color={gray}]{myicon}[/color]\u00A0{flat.records[0].title}"
-                            else:
-                                record = ""
-                            text = phone + note + record
-                            box.add_widget(MyLabel(
-                                text=text, markup=True, color=self.standardTextColor, halign="left", valign="top",
-                                size_hint_y=None, height=recordHeight,
-                                text_size=(
-                                    Window.size[0] - (self.standardTextHeight if self.orientation == "v" else 110),
-                                    recordHeight)
-                            ))
-                            box.height = height * gap + recordHeight
-                        else:
-                            box.height = height * gap
-
                         if self.displayed.footer != []: # индикаторы-футеры, если они есть
                             self.getRadius(90)
                             self.scrollWidget.spacing = self.spacing * 8
-                            box.height = height * 1.32 * gap
+                            box.height = height * 1.32
                             footerGrid = GridLayout(rows=1, cols=len(self.displayed.footer[i]), size_hint_y=None,
-                                                    pos_hint={"center_x": .5}, size_hint_x=.96, height=height * .36)
-                            if form == "con": footerGrid.cols_minimum =\
-                                {1: self.btn[len(self.btn)-1].size[0] * .6}
+                                                    pos_hint={"center_x": .5}, size_hint_x=.96, height=height*.36)
+                            if form == "con": footerGrid.cols_minimum = {1: button.size[0] * .7}
+
                             count = 0
                             for b in range(len(self.displayed.footer[i])):
                                 if form == "ter" and self.fontScale() <= 1: limit = 5
@@ -2824,7 +2900,8 @@ class RMApp(App):
                                 if count == 0: self.footerRadius = [0, 0, 0, rad * 1.1]
                                 elif count < limit: self.footerRadius = [0, ]
                                 else: self.footerRadius = [0, 0, rad * 1.1, 0]
-                                button.footers.append(FooterButton(text=str(self.displayed.footer[i][b]), parentIndex=i))
+                                button.footers.append(FooterButton(text=str(self.displayed.footer[i][b]),
+                                                                   parentIndex=i))
                                 count += 1
                                 footerGrid.add_widget(button.footers[len(button.footers)-1])
                             box.add_widget(footerGrid)
@@ -2835,7 +2912,7 @@ class RMApp(App):
                             for char in record:
                                 if char == "\n": string += " "
                                 else: string += char
-                            lastRec = LastRecButton(text=string, id=i)
+                            lastRec = RecordButton(text=string, id=i)
                             box.add_widget(lastRec)
                             button.text = button.text[: button.text.index("[i]")]
                             button.valign = "center"
@@ -2851,48 +2928,79 @@ class RMApp(App):
                             box.height = button.height + bh
                             box.spacing = self.spacing
 
-                        self.scrollWidget.add_widget(box)
-                        
-                self.btn.append(Widget(size_hint_y=None, height=height)) # пустой виджет для бага некликабельного последнего элемента
-                self.scrollWidget.add_widget(self.btn[len(self.btn)-1])
-                self.scroll.add_widget(self.scrollWidget)
-                self.mainList.add_widget(self.scroll)
+                    self.scrollWidget.add_widget(box)
+
                 self.floaterBox.clear_widgets()
 
-                if form == "ter" or form == "con" or form == "flatView": self.listLimit = 7
-                elif form == "porchView": self.listLimit = 10
-                else: self.listLimit = 8
+                self.btn.append(Widget(size_hint_y=None, height=height))  # пустой виджет для бага некликабельного последнего элемента
+                self.scrollWidget.add_widget(self.btn[len(self.btn) - 1])
 
-                if len(self.btn) > self.listLimit:  # кнопки для прокрутки вниз и вверх списка
-                    btnSize = self.standardTextHeightUncorrected * 2, self.standardTextHeightUncorrected * 2
-                    fBox = BoxLayout(orientation="vertical", spacing=self.spacing if self.theme != "3D" else 0,
-                                     size_hint=(None, None), pos=[Window.size[0] - btnSize[0] - self.padding*3,
-                                                                  self.bottomButtons.size[1] + self.padding*10])
-                    if self.orientation == "v": fBox.pos[1] += self.boxFooter.size[1]
-                    if self.theme != "3D":
-                        self.getRadius(1 if not self.desktop else 1000)
-                        scrollBtnUp = FloatButton(text=self.button["chevron-up"], size=btnSize)
-                        scrollBtnDown = FloatButton(text=self.button["chevron-down"], size=btnSize)
+                if form != "porchView":
+                    self.scroll.add_widget(self.scrollWidget)
+                    self.mainList.add_widget(self.scroll)
+                else:
+                    if self.porch.scrollview is None:
+                        self.scroll.add_widget(self.scrollWidget)
+                        self.porch.scrollview = self.scroll
+                        self.porch.btn = self.btn
+                        self.flat = None
+                        self.updateList() # повторный вызов, где список уже на scrollview, дальше манипуляции там
                     else:
-                        scrollBtnUp = RetroButton(text=self.button["chevron-up"], width=btnSize[0], height=btnSize[1],
+                        self.mainList.add_widget(self.porch.scrollview)
+                        switchedFromGrid = True if "TableButton" in str(instance) \
+                                                   and instance.text == self.button["flist"] else False
+                        if not switchedFromGrid and self.flat is not None and self.porch.flatsLayout != "с" \
+                                and self.porch.flatsLayout != "с2" and self.porch.flatsLayout != "т" \
+                                and self.porch.flatsLayout != "з":
+                            # при возврате из квартиры перерисовываем только квартиру, но если сортировка позволяет
+                            self.flat.buttonID.update(self.flat)
+                        else:
+                            for b in self.porch.scrollview.children[0].children: # перерисовка всего списка в остальных случаях
+                                for widget in b.children:
+                                    if "FlatButton" in str(widget):
+                                        widget.update(flat=widget.flat)
+                                        break
+
+                if form == "ter" or form == "con" or form == "flatView": # лимиты для прокрутки
+                    self.listLimit = 7
+                elif form == "porchView":
+                    self.listLimit = 10
+                    self.btn = self.porch.btn
+                    self.scroll = self.porch.scrollview
+                else:
+                    self.listLimit = 8
+
+                if len(self.btn) > self.listLimit:  # кнопки прокрутки списка вниз и вверх
+                    btnSize = (self.standardTextHeightUncorrected * 1.8, self.standardTextHeightUncorrected * 1.8) \
+                        if not self.desktop else (50, 50)
+                    fBox = BoxLayout(orientation="vertical", spacing=self.spacing if self.theme != "3D" else 0,
+                                     size_hint=(None, None), pos=[Window.size[0] - btnSize[0] - self.padding,
+                                                                  self.mainList.size[1]*.35])
+                    if self.theme != "3D":
+                        self.getRadius(1 if platform != "win" else 1000)
+                        scrollselfUp = FloatButton(text=self.button["chevron-up"], size=btnSize)
+                        scrollselfDown = FloatButton(text=self.button["chevron-down"], size=btnSize)
+                    else:
+                        scrollselfUp = RetroButton(text=self.button["chevron-up"], width=btnSize[0], height=btnSize[1],
                                                   size_hint_x=None, size_hint_y=None, halign="center", valign="center")
-                        scrollBtnDown = RetroButton(text=self.button["chevron-down"], width=btnSize[0], height=btnSize[1],
+                        scrollselfDown = RetroButton(text=self.button["chevron-down"], width=btnSize[0], height=btnSize[1],
                                                     size_hint_x=None, size_hint_y=None, halign="center", valign="center")
                     def __scrollClick(instance):
                         if self.button["chevron-down"] in instance.text:
                             self.scroll.scroll_to(self.btn[len(self.btn)-1])
-                        else: self.scroll.scroll_to(self.btn[0])
-                    scrollBtnUp.bind(on_release=__scrollClick)
-                    scrollBtnDown.bind(on_release=__scrollClick)
-                    fBox.add_widget(scrollBtnUp)
-                    fBox.add_widget(scrollBtnDown)                    
+                        else:
+                            self.scroll.scroll_to(self.btn[0])
+                    scrollselfUp.bind(on_release=__scrollClick)
+                    scrollselfDown.bind(on_release=__scrollClick)
+                    fBox.add_widget(scrollselfUp)
+                    fBox.add_widget(scrollselfDown)
                     self.floaterBox.add_widget(fBox)
 
                 # прокручиваем до выбранного элемента, если получается
-                if self.displayed.jump is not None and self.displayed.jump >= self.listLimit and \
-                        self.displayed.jump <= len(self.btn)-1:
-                    self.scroll.scroll_to(widget=self.btn[self.displayed.jump],
-                                          padding=self.mainList.size[1] * .3, animate=False)
+                if self.displayed.jump is not None and self.displayed.jump <= len(self.btn)-1:
+                    if self.displayed.jump >= self.listLimit or form == "porchView":
+                        self.scroll.scroll_to(widget=self.btn[self.displayed.jump],
+                                              padding=self.mainList.size[1] * .3, animate=False)
 
             # Вид подъезда с этажами (сеткой)
 
@@ -2925,53 +3033,61 @@ class RMApp(App):
                 else:                           self.noScalePadding = [diffX / 2, diffY / 2, diffX / 2, diffY / 2]  # по центру
 
                 if remount:
-                    BL = BoxLayout()
-                    self.floorview = GridLayout(row_force_default=True, row_default_height=size,
+                    if self.porch.floorview is None:
+                        self.porch.floorview = GridLayout(row_force_default=True, row_default_height=size,
                                             col_force_default=True, col_default_width=size,
                                             cols_minimum={0: floorLabelWidth}, cols=self.porch.columns + 1,
                                             rows=self.porch.rows, spacing=noScaleSpacing, padding=self.noScalePadding)
-                    for flat in self.displayed.options:
-                        if "object" in str(flat): # показ квартиры
-                            self.floorview.add_widget(FlatButtonSquare(flat))
-                        else: # показ цифры этажа
-                            self.floorview.add_widget(FloorLabel(flat=flat, width=floorLabelWidth, height=size,
-                                                                 font_size=floorSize))
-                    BL.add_widget(self.floorview)
-                    self.mainList.add_widget(BL)
+                        for flat in self.displayed.options:
+                            if "object" in str(flat): # показ квартиры
+                                self.porch.floorview.add_widget(FlatButtonSquare(flat))
+                            else: # показ цифры этажа
+                                self.porch.floorview.add_widget(FloorLabel(flat=flat, width=floorLabelWidth, height=size,
+                                                                     font_size=floorSize))
+                    else:
+                        switchedFromList = True if "TableButton" in str(instance) \
+                                                   and instance.text == self.button["fgrid"] else False
+                        if not switchedFromList and self.flat is not None:
+                            self.flat.buttonID.update(self.flat) # перерисовка одной квартиры
+                        else:
+                            for b in self.porch.floorview.children:
+                                if "FlatButtonSquare" in str(b): b.update(flat=b.flat) # или всего подъезда
+                    self.mainList.add_widget(self.porch.floorview)
 
                 else: # без remount - только масштабирование через слайдер, виджеты не перемонтируются
-                    self.floorview.spacing = noScaleSpacing
-                    self.floorview.padding = self.noScalePadding
-                    self.floorview.col_force_default = True
-                    self.floorview.row_default_height = size
-                    self.floorview.col_default_width = size
-                    self.floorview.cols_minimum = {0: floorLabelWidth}
-                    self.floorview.cols = self.porch.columns + 1
-                    self.floorview.rows = self.porch.rows
+                    self.porch.floorview.spacing = noScaleSpacing
+                    self.porch.floorview.padding = self.noScalePadding
+                    self.porch.floorview.col_force_default = True
+                    self.porch.floorview.row_default_height = size
+                    self.porch.floorview.col_default_width = size
+                    self.porch.floorview.cols_minimum = {0: floorLabelWidth}
+                    self.porch.floorview.cols = self.porch.columns + 1
+                    self.porch.floorview.rows = self.porch.rows
                     self.porch.grayFlats = 0
-                    for widget in self.floorview.children:
+                    for widget in self.porch.floorview.children:
                         if "app.FloorLabel" in str(widget):
                             widget.width = floorLabelWidth
                             widget.text_size[0] = size
+                            widget.font_size = floorSize
 
                 if self.noScalePadding[0] < 0 or self.noScalePadding[1] < 0 or self.noScalePadding[2] < 0 or \
                         self.noScalePadding[3] < 0:  # если дошло до границ экрана, масштабируем под экран
                     self.scaling = True
                     if self.porch.columns >= 15 or self.porch.rows >= 30:
-                        self.floorview.spacing = 1
+                        self.porch.floorview.spacing = 1
                         self.flatSizeInGrid = self.fontXXS * self.fontScale(cap=1.2)
                     elif self.porch.columns >= 10 or self.porch.rows >= 20:
                         self.flatSizeInGrid = self.fontXS * self.fontScale(cap=1.2)
-                        self.floorview.spacing = self.spacing * (2 if self.desktop else 1)
+                        self.porch.floorview.spacing = self.spacing * (2 if self.desktop else 1)
                     else:
                         self.flatSizeInGrid = self.fontS * self.fontScale(cap=1.2)
-                        self.floorview.spacing = self.spacing * (2 if self.desktop else 1.5)
-                    self.floorview.row_force_default = False
-                    self.floorview.col_force_default = False
-                    self.floorview.col_default_width = 0
-                    self.floorview.row_default_height = 0
-                    self.floorview.padding = self.padding * 2, 0
-                    for widget in self.floorview.children:
+                        self.porch.floorview.spacing = self.spacing * (2 if self.desktop else 1.5)
+                    self.porch.floorview.row_force_default = False
+                    self.porch.floorview.col_force_default = False
+                    self.porch.floorview.col_default_width = 0
+                    self.porch.floorview.row_default_height = 0
+                    self.porch.floorview.padding = self.padding * 2, 0
+                    for widget in self.porch.floorview.children:
                         if "app.FloorLabel" in str(widget): widget.scale()
                         else: widget.font_size = self.flatSizeInGrid
 
@@ -2980,7 +3096,7 @@ class RMApp(App):
 
         if progress:
             self.showProgress()
-            Clock.schedule_once(__continue, 0)
+            Clock.schedule_once(lambda x: __continue(instance), 0)
         else:
             __continue()
 
@@ -2994,12 +3110,13 @@ class RMApp(App):
 
     def scrollClick(self, instance):
         """ Действия, которые совершаются на указанных списках по нажатию на пункт списка """
+        self.clickedBtn = instance
         self.clickedBtnIndex = instance.id
 
         def __click(*args): # действие всегда выполняется с запаздыванием, чтобы отобразилась анимация на кнопке
             if self.msg[6] in instance.text: # "создать подъезд"
                 text = instance.text[len(self.msg[6])+73 : ] # число символов во фразе msg[6] + 4 на форматирование
-                print(text) # должно выглядеть: 1[/i]
+                #print(text) # должно выглядеть: 1[/i]
                 if "[/i]" in text: text = text[ : text.index("[")]
                 newPorch = self.house.addPorch(text.strip())
                 self.save()
@@ -3022,6 +3139,7 @@ class RMApp(App):
 
             elif self.displayed.form == "houseView":
                 self.porch = self.house.porches[instance.id]
+                self.flat = None
                 self.porchView(instance=instance)
 
             elif self.displayed.form == "porchView":
@@ -3144,12 +3262,10 @@ class RMApp(App):
 
     def backPressed(self, instance=None):
         """ Нажата кнопка «назад» """
-
         form = self.displayed.form
         if len(self.stack) > 0 and not self.showSlider: del self.stack[0]
         if len(self.stack) > 0:
             stack = self.stack[0]
-
             if form == "rep":  # при этих действиях кнопка "назад" сохраняет данные
                 self.saveReport()  # отчет
             elif form == "set" and self.settingsPanel.current_tab.text == self.msg[55]:
@@ -3164,7 +3280,6 @@ class RMApp(App):
                 or "recordView" in form or "Details" in form:
                 self.positivePressed()
                 return
-
             if form == "repLog": self.repPressed()
             elif self.showSlider:
                 self.sliderToggle("off")
@@ -3181,18 +3296,19 @@ class RMApp(App):
                 self.porchView(instance=instance)
             elif stack == "flatView":
                 self.flatView(instance=instance)
-
             self.updateMainMenuButtons()
+        elif form == "search":
+            self.stack = ["ter"]
+            self.searchPressed()
+        elif len(self.stack) == 0:
+            self.terPressed()
 
     def resizePressed(self, instance=None):
         """ Нажата кнопка слайдера """
         if self.resources[0][1][1] == 0:
             self.resources[0][1][1] = 1
             self.popup(title=self.msg[26], message=self.msg[27] % self.button['resize'])
-        if self.showSlider:
-            self.showSlider = False
-        else:
-            self.showSlider = True
+        self.showSlider = False if self.showSlider else True
         self.porchView(remount=False)
         self.changePorchPos(self.settings[0][1])
         self.sliderToggle("on")
@@ -3211,10 +3327,10 @@ class RMApp(App):
                 "[u][b]"+self.msg[38]+"[/u][/b]" if self.settings[0][19] == "р" else self.msg[38], # размер
                 "[u][b]"+self.msg[31]+"[/u][/b]" if self.settings[0][19] == "и" else self.msg[31], # интерес
                 "[u][b]"+self.msg[30]+"[/u][/b]" if self.settings[0][19] == "д" else self.msg[30], # дата
-               f"[u][b]{self.msg[32]}[/u][/b] {self.button['down-thin']}" if self.settings[0][19] == "п" else\
-               f"{self.msg[32]} {self.button['down-thin']}",     # обработка
-               f"[u][b]{self.msg[32]}[/u][/b] {self.button['up-thin']}" if self.settings[0][19] == "о" else\
-               f"{self.msg[32]} {self.button['up-thin']}"        # обработка назад
+               f"[u][b]{self.msg[32]}[/u][/b] {self.button['angle-down']}" if self.settings[0][19] == "п" else\
+               f"{self.msg[32]} {self.button['angle-down']}",     # обработка
+               f"[u][b]{self.msg[32]}[/u][/b] {self.button['angle-up']}" if self.settings[0][19] == "о" else\
+               f"{self.msg[32]} {self.button['angle-up']}"        # обработка назад
             ]
             for i in range(len(sortTypes)):
                 btn = SortListButton(text=sortTypes[i])
@@ -3231,14 +3347,35 @@ class RMApp(App):
                 btn.bind(on_release=__resortHouses)
                 self.dropSortMenu.add_widget(btn)
 
+        if self.displayed.form == "houseView": # меню сортировки подъездов
+            sortTypes = [
+                "[u][b]"+self.msg[29]+"[/u][/b]" if self.house.porchesLayout == "н" else self.msg[29], # название
+               f"[u][b]{self.msg[38]}[/u][/b] {self.button['angle-down']}" if self.house.porchesLayout == "р" else\
+               f"{self.msg[38]} {self.button['angle-down']}",     # размер вниз
+               f"[u][b]{self.msg[38]}[/u][/b] {self.button['angle-up']}" if self.house.porchesLayout == "о" else\
+               f"{self.msg[38]} {self.button['angle-up']}"        # обработка размер вверх
+            ]
+            for i in range(len(sortTypes)):
+                btn = SortListButton(text=sortTypes[i])
+                def __resortPorches(instance=None):
+                    if instance.text == sortTypes[0]:   self.house.porchesLayout = "н"
+                    elif instance.text == sortTypes[1]: self.house.porchesLayout = "р"
+                    elif instance.text == sortTypes[2]: self.house.porchesLayout = "о"
+                    self.save()
+                    self.houseView()
+                    self.dropSortMenu.dismiss()
+                btn.bind(on_release=__resortPorches)
+                self.dropSortMenu.add_widget(btn)
+
         elif self.displayed.form == "porchView":
             self.porch.flatsNonFloorLayoutTemp = None
+            self.porch.scrollview = None
             if not self.porch.floors(): # меню сортировки квартир в подъезде
                 sortTypes = [
-                    f"[u][b]{self.msg[34]}[/u][/b] {self.button['down-thin']}" if self.porch.flatsLayout == "н" else\
-                    f"{self.msg[34]} {self.button['down-thin']}",    # номер
-                    f"[u][b]{self.msg[34]}[/u][/b] {self.button['up-thin']}" if self.porch.flatsLayout == "о" else\
-                    f"{self.msg[34]} {self.button['up-thin']}",      # номер обратно
+                    f"[u][b]{self.msg[34]}[/u][/b] {self.button['angle-down']}" if self.porch.flatsLayout == "н" else \
+                    f"{self.msg[34]} {self.button['angle-down']}", # номер
+                    f"[u][b]{self.msg[34]}[/u][/b] {self.button['angle-up']}" if self.porch.flatsLayout == "о" else \
+                    f"{self.msg[34]} {self.button['angle-up']}",   # номер обратно
                     f"[u][b]{self.msg[36]} 1[/u][/b]" if self.porch.flatsLayout == "с" else f"{self.msg[36]} 1", # цвет
                     f"[u][b]{self.msg[36]} 2[/u][/b]" if self.porch.flatsLayout == "с2" else f"{self.msg[36]} 2", # цвет2
                      "[u][b]"+self.msg[37]+"[/u][/b]" if self.porch.flatsLayout == "з" else self.msg[37], # заметка
@@ -3372,6 +3509,7 @@ class RMApp(App):
         """ Считывание показателя слайдера """
         self.settings[0][8] = self.slider.value
         if self.scaling != self.scalingPrev: # масштабирование переключилось
+            self.porch.floorview = None
             self.updateList()
             self.scalingPrev = self.scaling
             for button in self.scaleButtons:
@@ -3489,7 +3627,7 @@ class RMApp(App):
                     if self.orientation=="v": # ширина колонок основной таблицы
                         grid.cols_minimum = {0: self.mainList.size[0] * .4, 1: self.mainList.size[0] * .55}
                     else:
-                        grid.cols_minimum = {0: self.mainList.size[0]*self.SR * .3, 1: self.mainList.size[0]*self.SR * .4}
+                        grid.cols_minimum = {0: self.mainList.size[0] * .3, 1: self.mainList.size[0] * .4}
                         grid.pos_hint={"center_x": .65}
                     align = "center"
                     if len(self.porch.flats) == 0: # определяем номер первой и последней квартир, сначала если это первый подъезд:
@@ -3769,11 +3907,12 @@ class RMApp(App):
                     else: self.flatView()
         Clock.schedule_once(__press, 0)
 
-    def neutralPressed(self, instance=None, value=None):
+    def neutralPressed(self, instance=None):
         self.showSlider = False
         self.sliderToggle()
         if self.displayed.form == "porchView":
             def __continue(*args):
+                #self.flat = None
                 if self.resources[0][1][3] == 0:
                     self.popup(title=self.msg[247], message=self.msg[171])
                     self.resources[0][1][3] = 1
@@ -3785,8 +3924,8 @@ class RMApp(App):
                     self.porch.flatsLayout = self.porch.type[7:] # определение этажей по цифре в типе подъезда
                     if self.porch.flatsLayout == "":
                         self.popup(message=self.msg[94] % self.msg[155])
+                self.porchView(instance=instance)
                 self.save()
-                self.porchView()
             Clock.schedule_once(__continue, 0)
 
         elif self.button["phone"] in instance.text:
@@ -3839,7 +3978,7 @@ class RMApp(App):
                 f"{icon('icon-home')} {stats[3]}", # кол-во квартир
                 f"[color={self.interestColor}]{intIcon} {interested}[/color]", # интересующиеся
                 f"{self.button['calendar']} {str(shortenedDate)}{dateDue}", # дата
-                f"{self.button['worked']} {int(stats[2] * 100)}%", # обработка
+                f"{self.button['worked']} {int(stats[2] * 100)}%" # обработка
                 ])
             if self.fontScale() <= 1:
                 footer[i].insert(0, "")
@@ -3898,9 +4037,8 @@ class RMApp(App):
             address = f" {self.allcontacts[i][2]}{gap}{porch}{hyphen}{self.allcontacts[i][3]}"\
                 if self.allcontacts[i][2] != "" else ""
             listIcon = f"[color={get_hex_from_color(self.getColorForStatus('1'))}]{self.button['user']}[/color]"
-            options.append(f"[size={self.listIconSize}]{listIcon}[/size] {self.allcontacts[i][0]}")
+            options.append(f"[size={self.listIconSize}]{listIcon}[/size] {self.allcontacts[i][0]} {self.allcontacts[i][1]}")
             footer.append([
-                #self.emojiToButton(self.allcontacts[i][1]),
                 f"{self.button['chat']} {self.allcontacts[i][4]}" if self.allcontacts[i][4] is not None else "",
                 "" if address == "" else f"{icon('icon-home')} {address}"
             ])
@@ -3959,8 +4097,7 @@ class RMApp(App):
 
         if self.theme != "3D":
             btnSend = RoundButton(text=f"{self.button['share']} {self.msg[110]}", size_hint_x=1, size_hint_y=None,
-                                  radius=self.getRadius(250), size=(0, self.standardTextHeightUncorrected * 1.3)
-                                  )
+                                  radius=self.getRadius(250), size=(0, self.standardTextHeightUncorrected * 1.3))
         else:
             btnSend = RetroButton(text=f"{self.button['share']} {self.msg[110]}", size_hint_x=1, size_hint_y=None,
                                   height=self.standardTextHeightUncorrected * 1.3)
@@ -3975,7 +4112,7 @@ class RMApp(App):
         # Вторая вкладка: текущий месяц
 
         tab1 = TTab(text=self.monthName()[0])
-        text_size = [(Window.size[0] * .4) * self.SR, None]
+        text_size = [(Window.size[0] * .4), None]
         g = GridLayout(rows=3, cols=1)
 
         levelsSizeY = [ # доли трех секций экрана по высоте
@@ -4022,7 +4159,7 @@ class RMApp(App):
         self.hours = Counter(picker=self.msg[108], type="time", text=ut.timeFloatToHHMM(self.rep.hours))
         report.add_widget(self.hours)
 
-        if self.settings[0][2]==1: # кредит
+        if self.settings[0][2] == 1: # кредит
             self.creditLabel = MyLabel(text=self.msg[105] % self.rep.getCurrentHours()[0], markup=True,
                                        halign="center", valign="center", text_size = text_size, color=self.standardTextColor)
             report.add_widget(self.creditLabel)
@@ -4072,10 +4209,10 @@ class RMApp(App):
                 self.months.append(monthAmount)
                 mGrid.add_widget(self.months[i])
                 self.analyticsMessage = MyLabel(markup=True, color=self.standardTextColor, valign="center",
-                                                text_size=(Window.size[0]*self.SR / 2, self.mainList.size[1]),
+                                                text_size=(Window.size[0] / 2, self.mainList.size[1]),
                                                 height=self.mainList.size[1],
                                                 font_size=self.fontXS * self.fontScale(cap=1.2),
-                                                width=Window.size[0]*self.SR / 2, pos_hint={"center_y": .5})
+                                                width=Window.size[0] / 2, pos_hint={"center_y": .5})
             b3.add_widget(mGrid)
             b3.add_widget(self.analyticsMessage)
             self.recalcServiceYear(allowSave=False)
@@ -4164,8 +4301,8 @@ class RMApp(App):
         ratio1 = .43 if self.orientation == "v" else .25
         size_hint_y = 1
         padding = (0, self.padding*3)
-        g.cols_minimum = {0: (self.mainList.size[0]*self.SR-self.padding*4-self.spacing*4)*ratio0,
-                          1: (self.mainList.size[0]*self.SR-self.padding*4-self.spacing*4)*ratio1}
+        g.cols_minimum = {0: (self.mainList.size[0]-self.padding*4-self.spacing*4)*ratio0,
+                          1: (self.mainList.size[0]-self.padding*4-self.spacing*4)*ratio1}
         text_size = [g.cols_minimum[0]-self.padding*5, None]
         self.getRadius()
 
@@ -4347,7 +4484,13 @@ class RMApp(App):
                 self.updateTimer()
             self.save()
             self.restart("soft")
-            if clickOnSave: Clock.schedule_once(self.settingsPressed, .1)
+
+            for house in self.houses:
+                for porch in house.porches:
+                    porch.scrollview = porch.floorview = None
+
+
+            if clickOnSave: Clock.schedule_once(self.settingsPressed, 0)
             self.log(self.msg[53])
 
         elif self.settingsPanel.current_tab.text == self.msg[54]: # Данные
@@ -4507,6 +4650,7 @@ class RMApp(App):
         self.displayed.update(
             form="houseView",
             title=f"{self.house.title}",
+            sort=self.button["sort"],
             options=self.house.showPorches(),
             positive=f"{self.button['plus']} {self.msg[78]} {self.house.getPorchType()[1]}",
             jump=self.house.porches.index(self.porch) if jump is None and self.porch is not None and \
@@ -4517,7 +4661,7 @@ class RMApp(App):
         self.updateList()
         if self.house.due(): self.mainList.add_widget(self.tip(text=self.msg[152], icon="warn"))
 
-    def porchView(self, instance=None, update=True, remount=True, jump=None):
+    def porchView(self, instance=None, update=True, remount=True):
         """ Вид подъезда - список квартир или этажей """
         self.updateMainMenuButtons()
         self.blockFirstCall = 0
@@ -4553,12 +4697,13 @@ class RMApp(App):
             tip=tip
         )
         self.stack = ['porchView', 'houseView', 'ter']
-        if update: self.updateList(instance=instance, remount=remount,
-                                   progress=True if len(self.porch.flats)>0 else False)
+        if update:
+            self.updateList(instance=instance, remount=remount,
+                            progress=True if len(self.porch.flats) > 0 else False)
         # после удаления или восстановления квартиры не перемонтируем всю таблицу, а только обновляем кнопки
         else:
             f = len(self.porch.flats) - 1
-            for button in self.floorview.children:
+            for button in self.porch.floorview.children:
                 if "FlatButtonSquare" in str(button):
                     button.update(flat=self.porch.flats[f])
                     f -= 1
@@ -4594,7 +4739,7 @@ class RMApp(App):
         )
 
         if not call and len(self.flat.records) == 0: # всплывающее окно первого посещения
-            self.popup(firstCall=True)
+            self.createFirstCallPopup(instance=instance)
 
         else:
             self.stack = ["flatView"]
@@ -4603,6 +4748,7 @@ class RMApp(App):
             else: self.stack.append("porchView")
             if len(self.flat.records) == 0: # форма первого посещения
                 self.scrollWidget.clear_widgets()
+                self.firstCallPopup = False
                 self.navButton.disabled = False
                 self.navButton.text = self.button['nav']
                 self.createMultipleInputBox(
@@ -4653,19 +4799,24 @@ class RMApp(App):
                 else:
                     self.colorBox.padding = self.padding * 2, self.padding * 2, self.padding * 2, 0
 
-            # Кнопки вторичного цвета и смайлика
+            # Круглые кнопки слева (снизу вверх)
 
-            pos = [self.padding*2 if self.orientation == "v" else 85, # цвет
-                   self.mainList.size[1] * (.26 if len(self.flat.records) == 0 else .35)]
-            if not self.contactsEntryPoint and not self.searchEntryPoint:
+            pos = [self.padding if self.orientation == "v" else self.horizontalOffset + self.padding,
+                   self.mainList.size[1] * .35 - (0 if self.orientation == "v" else Window.size[1] * .06)]
+            if len(self.flat.records) == 0: pos[1] *= .75
+            side = (self.standardTextHeightUncorrected * 1.5) if not self.desktop else 45 # диаметр кнопок
+            gap = (self.standardTextHeightUncorrected * 2) if not self.desktop else 60 # разрыв между кнопками
+            font_size = self.fontXXL * .9 # размер шрифта
+            self.getRadius(1 if platform != "win" else 1000)
+
+            if not self.contactsEntryPoint and not self.searchEntryPoint: # доп. цвет
                 if len(self.flat.records) == 0 and self.resources[0][1][7] == 0:
                     pos[1] *= 1.3
                     self.resources[0][1][7] = 1
                     self.save()
-                color2Selector = RoundColorButton(color=self.getColor2(self.flat.color2), pos=pos,
-                                                  side=self.standardTextHeight*1.5)
+                color2Selector = RoundColorButton(color=self.getColor2(self.flat.color2), pos=pos, side=side)
                 def __color2Click(instance):
-                    current = self.color2List.index(color2Selector.color) # место текущего цвета в списке
+                    current = self.color2List.index(color2Selector.color)
                     if current == len(self.color2List) - 1: current = 0
                     else: current += 1
                     color2Selector.color = self.getColor2(current)
@@ -4674,19 +4825,30 @@ class RMApp(App):
                 color2Selector.bind(on_release=__color2Click)
                 self.floaterBox.add_widget(color2Selector)
 
-            pos2 = pos[0], pos[1] + self.standardTextHeight * 2  # смайлик
-            emoji = self.flat.emoji if self.flat.emoji != "" else self.button["empty_image"]
+            pos2 = pos[0], pos[1] + gap  # смайлик
+            emoji = self.flat.emoji if self.flat.emoji != "" else self.button["add_emoji"]
+
             if self.theme != "3D":
-                self.getRadius(1 if not self.desktop else 1000)
-                self.emojiSelector = FloatButton(text=emoji, font_size=self.fontXXL*.9, pos=pos2,
-                                            size=(self.standardTextHeight*1.5, self.standardTextHeight*1.5))
+                self.emojiSelector = FloatButton(text=emoji, font_size=font_size, pos=pos2, size=(side, side))
             else:
                 self.emojiSelector = RetroButton(text=emoji, width=self.standardTextHeight*1.5, pos=pos2,
-                                            font_size=self.fontXXL, font_name=self.differentFont,
-                                            height=self.standardTextHeight*1.5, size_hint_x=None,
-                                            size_hint_y=None, halign="center", valign="center")
-            self.emojiSelector.bind(on_release=lambda x: self.popup(popupForm="emoji"))
+                                                 font_size=font_size, height=side, size_hint_x=None, size_hint_y=None,
+                                                 color=self.topButtonColor if emoji == self.button["add_emoji"] else self.linkColor,
+                                                 halign="center", valign="center")
+            self.emojiSelector.bind(on_release=self.createEmojiPopup)
             self.floaterBox.add_widget(self.emojiSelector)
+
+            if 0:#self.flat.phone != "": # телефон
+                if self.theme != "3D":
+                    phoneCall = FloatButton(text=self.button["phone-thin"], font_size=font_size,
+                                            size=(side*1.3, side*1.3))
+                else:
+                    phoneCall = RetroButton(text=self.button["phone-thin"], width=side*1.3,
+                                                     font_size=font_size, height=side*1.3, size_hint_x=None,
+                                                     size_hint_y=None, halign="center", valign="center")
+                phoneCall.pos = Window.size[0] - phoneCall.size[0] - self.padding * 2, (pos2[1]-pos[1])/2+pos[1]
+                phoneCall.bind(on_release=self.phoneCall)
+                self.floaterBox.add_widget(phoneCall)
 
     def recordView(self, instance=None, focus=False):
         self.displayed.form = "recordView"
@@ -4710,7 +4872,7 @@ class RMApp(App):
         if form is None: form = self.mainList
         form.padding = 0
         form.clear_widgets()
-        self.floaterBox.clear_widgets()
+        self.removeScrollButtons()
         self.restorePositiveButton()
         self.backButton.disabled = False
         if title is not None: self.pageTitle.text = f"[ref=title]{title}[/ref]"
@@ -4745,7 +4907,7 @@ class RMApp(App):
         if message != "":
             self.inputBoxText = MyLabel(text=message, valign="center", size_hint_y=.6 * self.fontScale(),
                                         halign="center", font_size = self.fontS * self.fontScale(),
-                                        text_size=(Window.size[0]*self.SR*.9, None))
+                                        text_size=(Window.size[0]*.9, None))
             grid.add_widget(self.inputBoxText)
 
         if input:
@@ -4778,12 +4940,12 @@ class RMApp(App):
                         textbox.remove_widget(self.inputBoxEntry)
                         self.inputBoxEntry = MyTextInput(text=filled, hint_text=self.msg[59], multiline=multiline,
                                                          height=self.standardTextHeight*self.enlargedTextCo,
-                                                         size_hint_x=Window.size[0]*self.SR/2,
+                                                         size_hint_x=Window.size[0]/2,
                                                          size_hint_y=None, pos_hint=pos_hint, input_type="number")
                         textbox.add_widget(self.inputBoxEntry)
                         self.inputBoxEntry2 = MyTextInput(hint_text=self.msg[60], multiline=multiline,
                                                           height=self.standardTextHeight*self.enlargedTextCo,
-                                                          input_type="number", size_hint_x=Window.size[0]*self.SR/2,
+                                                          input_type="number", size_hint_x=Window.size[0]/2,
                                                           size_hint_y=None, pos_hint=pos_hint)
                         self.inputBoxEntry.halign = self.inputBoxEntry2.halign ="center"
                         self.inputBoxEntry.height *= self.enlargedTextCo
@@ -4833,6 +4995,13 @@ class RMApp(App):
             lowGrid.add_widget(binAnchor)
             binAnchor.add_widget(self.bin())
 
+    def removeScrollButtons(self):
+        """ Удаляем кнопки прокрутки списка на экране настроек """
+        for widget in self.floaterBox.children:
+            if "BoxLayout" in str(widget):
+                self.floaterBox.remove_widget(widget)
+                break
+
     def createMultipleInputBox(self, form=None, title=None, options=[], defaults=[], multilines=[], disabled=[],
                                sort=None, resize=None, details=None, note=None, neutral=None):
         """ Форма ввода данных с несколькими полями """
@@ -4844,8 +5013,10 @@ class RMApp(App):
         self.detailsButton.disabled = True
         self.showSlider = False
         self.sliderToggle()
+        self.firstCallPopup = False
         self.restorePositiveButton()
-        self.floaterBox.clear_widgets()
+        self.removeScrollButtons()
+        if self.displayed.form != "flatDetails": self.floaterBox.clear_widgets()
         self.getRadius(250)
 
         if title is not None: self.pageTitle.text = f"[ref=title]{title}[/ref]"
@@ -4898,7 +5069,7 @@ class RMApp(App):
                 self.settingButtonHintY = .85
                 labelSize_hint = (1, 1)
                 entrySize_hint = ((.5 if self.orientation == "v" else .3), 1)
-                text_size = (Window.size[0]*self.SR * 0.66 * .95, None)
+                text_size = (Window.size[0] * 0.66 * .95, None)
                 font_size = self.fontXS * self.fontScale(cap=1.2)
                 halign = "center"
 
@@ -4913,7 +5084,7 @@ class RMApp(App):
                 text = options[row].strip()
                 labelSize_hint = (self.descrColWidth, y)
                 entrySize_hint = (1-self.descrColWidth, y)
-                text_size = (Window.size[0] * self.SR * self.descrColWidth * .93, None)
+                text_size = (Window.size[0] * .95 * self.descrColWidth, None)
                 font_size = self.fontS * self.fontScale()
                 halign = "left"
                 timerOK = True
@@ -4924,8 +5095,9 @@ class RMApp(App):
 
             height = self.standardTextHeight
 
-            self.multipleBoxLabels.append(MyLabel(text=text, valign="top", halign="center", size_hint=labelSize_hint,
-                                                  markup=True, text_size=text_size, pos_hint={"top": 0},
+            self.multipleBoxLabels.append(MyLabel(text=text, valign="center", halign="center", size_hint=labelSize_hint,
+                                                  markup=True, text_size=[text_size[0], None],
+                                                  pos_hint={"top": 0},
                                                   font_size=font_size, color=self.standardTextColor, height=height))
 
             if default != "virtual" and timerOK:  # скрываем поле "номер/подъезд" для виртуальных контактов
@@ -4941,20 +5113,12 @@ class RMApp(App):
             elif checkbox == False:
                 input_type = "number" if settings or self.msg[17] in self.multipleBoxLabels[row].text\
                     else "text"
-                if 1:#self.displayed.form != "flatView" or self.desktop: # баг с падением по пробелу, временное решение
-                    self.multipleBoxEntries.append(
-                        MyTextInput(text=str(default) if default != "virtual" else "", halign=halign, multiline=multiline,
-                                    size_hint_x=entrySize_hint[0], size_hint_y=entrySize_hint[1] if multiline else None,
-                                    limit=limit, input_type=input_type, disabled=disable,
-                                    height=(self.standardTextHeight*self.enlargedTextCo) if settings else height*.9,
-                                    shrink=True if multiline else False))
-                else:
-                    self.multipleBoxEntries.append(
-                        TextInput(text=str(default) if default != "virtual" else "", halign=halign, multiline=multiline,
-                                  size_hint_x=entrySize_hint[0], size_hint_y=entrySize_hint[1] if multiline else None,
-                                  input_type=input_type, disabled=disable, background_normal="",
-                                  background_color=self.textInputBGColor, foreground_color=self.textInputColor,
-                                  height=(self.standardTextHeight*self.enlargedTextCo) if settings else height*.9))
+                self.multipleBoxEntries.append(
+                    MyTextInput(text=str(default) if default != "virtual" else "", halign=halign, multiline=multiline,
+                                size_hint_x=entrySize_hint[0], size_hint_y=entrySize_hint[1] if multiline else None,
+                                limit=limit, input_type=input_type, disabled=disable,
+                                height=(self.standardTextHeight*self.enlargedTextCo) if settings else height*.9,
+                                shrink=True if multiline else False))
             else:
                 self.multipleBoxEntries.append(
                     MyCheckBox(active=default, size_hint=(entrySize_hint[0], entrySize_hint[1]),
@@ -4970,9 +5134,7 @@ class RMApp(App):
                                             size_hint_x=.2 if self.orientation == "v" else .1)
                 textbox.spacing = self.spacing
                 textbox.padding = (0, self.padding)
-                def __calPress(instance):
-                    self.popup("showDatePicker")
-                calButton.bind(on_release=__calPress)
+                calButton.bind(on_release=lambda x: self.popup("showDatePicker"))
                 textbox.add_widget(self.multipleBoxEntries[row])
                 textbox.add_widget(calButton)
                 grid.add_widget(textbox)
@@ -4983,15 +5145,13 @@ class RMApp(App):
             if self.displayed.form == "flatView" and self.multipleBoxLabels[row].text == self.msg[22]:  # добавляем кнопки М и Ж
                 gap = self.standardTextHeight * .4
                 textbox2 = BoxLayout(orientation="vertical", size_hint=entrySize_hint,
-                                     height=height*2.7 + self.padding*2)#,
-                                     #padding=0 if not multiline else (0, self.spacing, 0, 0))
+                                     height=height*2.7 + self.padding*2)
                 grid.remove_widget(textbox)
                 textbox.size_hint = 1, 1
                 textbox.padding = 0
                 self.multipleBoxEntries[row].height = self.standardTextHeight*self.enlargedTextCo
                 self.multipleBoxEntries[row].padding[1] = self.multipleBoxEntries[row].height * .25
                 textbox2.add_widget(textbox)
-                self.multipleBoxLabels[row].text_size[1] = self.standardTextHeight * 3
                 mfBox = BoxLayout(spacing=self.spacing*2, size_hint_x=.5, pos_hint={"top": 1})
                 self.row = row
                 self.maleMenu = DropDown()
@@ -5009,6 +5169,8 @@ class RMApp(App):
                 mfBox.add_widget(self.maleButton)
                 mfBox.add_widget(self.femaleButton)
                 textbox2.add_widget(mfBox)
+                self.multipleBoxLabels[0].height = textbox2.height
+                self.multipleBoxLabels[0].text_size[1] = self.multipleBoxLabels[0].height
                 grid.add_widget(textbox2)
                 grid.rows += 1
                 grid.add_widget(Widget(size_hint=labelSize_hint, height=gap))
@@ -5245,6 +5407,236 @@ class RMApp(App):
                               font_size=font_size, markup=True, halign=halign, valign=valign)
         if icon == "link": tip.bind(on_ref_press=func)
         return tip
+    
+    def createFirstCallPopup(self, instance):
+        """ Попап первого посещения """
+        self.displayed.form = "porchView"
+        self.FCP.title = self.flat.number
+        self.FCP.separator_color = [0,0,0,0]
+        self.firstCallPopup = True
+        self.phoneInputOnPopup = True if self.settings[0][20] == 1 or self.flat.phone != "" else False
+        size_hint = [.85, .53] if self.orientation == "v" else [.42, .7]
+        size_hint[1] *= self.fontScale(cap=1.2)
+        contentMain = BoxLayout(orientation="vertical", spacing = self.spacing * 2)
+        self.FCP.content = contentMain
+        SH = 1 # size_hint_x для всех элементов на окне
+        PH = {"center_x": .5}
+        pad0 = self.padding * 4
+
+        content = GridLayout(rows=1, cols=2, size_hint_x=SH, pos_hint=PH, padding=(pad0, 0))#pad0, pad0, 0))
+        content2 = GridLayout(rows=1, cols=1, size_hint_x=SH, pos_hint=PH, padding=(pad0, 0))
+        self.buttonsGrid = GridLayout(rows=0, pos_hint={"right": 1}, padding=(pad0, 0))
+
+        self.buttonsGrid.cols = 0
+        font_size = self.fontS * 1.1 * RM.fontScale(cap=1.2)  # общие параметры для маленьких кнопок
+        size = self.standardTextHeight * .85, self.standardTextHeight
+
+        self.buttonsGrid.cols += 1 # кнопка телефона 1
+        self.quickPhoneCallButton = PopupButton(form=self.popupForm, font_size=font_size, size_hint_x=None,
+                                                size_hint_y=None, size=size)
+        self.quickPhoneCallButton.bind(on_release=self.phoneCall)
+        self.buttonsGrid.add_widget(self.quickPhoneCallButton)
+
+        shrink = PopupButton( # кнопка удаления или урезания (универсальная)
+            text=self.button['shrink'] if self.porch.floors() else self.button['trash'],
+            form=self.popupForm, font_size=font_size, size_hint_x=None, size_hint_y=None, size=size)
+        def __shrink(instance):
+            self.FCP.dismiss()
+            self.blockFirstCall = 1
+            self.deletePressed(forced=True)
+
+        shrink.bind(on_release=__shrink)
+        self.buttonsGrid.cols += 1
+        self.buttonsGrid.add_widget(shrink)
+
+        if self.porch.floors():  # кнопка удаления на подъезде
+            floorDelete = PopupButton(text=self.button['trash'], form=self.popupForm, font_size=font_size,
+                                      size_hint_x=None, size_hint_y=None, size=size)
+            floorDelete.bind(on_release=self.deleteFlatInCondo)
+            self.buttonsGrid.cols += 1
+            self.buttonsGrid.add_widget(floorDelete)
+
+        details = PopupButton(text=self.button['contact'], size_hint_x=None,  # кнопка настроек
+                              form=self.popupForm, font_size=font_size, size_hint_y=None, size=size)
+        def __details(instance):
+            if self.phoneInputOnPopup: self.flat.editPhone(self.quickPhone.text)
+            self.FCP.dismiss()
+            self.popupEntryPoint = 1
+            self.blockFirstCall = 1
+            self.flatView(instance=instance)
+            self.detailsPressed()
+        details.bind(on_release=__details)
+        self.buttonsGrid.cols += 1
+        self.buttonsGrid.add_widget(details)
+        self.buttonsGrid.height = details.height + self.padding*2
+        self.buttonsGrid.size_hint = self.buttonsGrid.cols * .175, None
+        contentMain.add_widget(self.buttonsGrid)
+
+        if self.phoneInputOnPopup:  # поле ввода телефона
+            self.keyboardCloseTime = .1
+            size_hint[1] = size_hint[1] * 1.1
+            content.padding =  pad0, pad0, pad0, 0
+            content2.padding = pad0, 0, pad0, pad0
+            phoneBox = BoxLayout(orientation="horizontal", padding=(pad0, 0), size_hint=(SH, None), pos_hint=PH,
+                                 height=self.standardTextHeight)
+            self.quickPhone = MyTextInput(hint_text=self.msg[35], size_hint_y=1,
+                                          background_normal="", text=self.flat.phone, popup=True, multiline=False,
+                                          input_type="number" if not self.desktop else "text")
+            phoneBox.add_widget(self.quickPhone)
+            if self.quickPhone.text != "":
+                self.quickPhoneCallButton.text = self.button['phone']
+                self.quickPhoneCallButton.disabled = False
+            else:
+                self.quickPhoneCallButton.text = ""
+                self.quickPhoneCallButton.disabled = True
+
+            self.savePhoneBtn = PopupButtonGray(text="", size_hint_y=1, size_hint_x=.12, disabled=True)
+            phoneBox.add_widget(self.savePhoneBtn)
+            contentMain.add_widget(phoneBox)
+
+            def __savePhone(instance):
+                self.flat.editPhone(self.quickPhone.text)
+                self.save()
+                self.quickPhone.keyboard_on_key_up()
+                self.FCP.dismiss()
+                if self.porch.clearCache("т") or self.porch.clearCache("с"): self.porchView()
+                else: self.clickedInstance.update(self.flat)
+            self.quickPhone.bind(on_text_validate=__savePhone)
+            self.savePhoneBtn.bind(on_release=__savePhone)
+
+        r = self.getRadius(50)[0] # first call radius – значения радиусов для всех кнопок первого посещения
+        self.FCRadius = [
+            [r, 0, 0, 0], # нет дома
+            [0, r, 0, 0], # нет дома и т. д.
+            [0, 0, r, r],  # отказ
+            [r, r, 0, 0]
+        ]
+
+        if self.settings[0][13] == 1:
+            content.spacing = self.spacing# * 2
+            firstCallBox = BoxLayout(orientation="vertical") # нет дома
+            if self.theme == "3D": firstCallBox.spacing = 0
+            elif self.desktop: firstCallBox.spacing = 1
+            else: firstCallBox.spacing = self.spacing
+            if self.theme != "3D":
+                firstCallNotAtHome = FirstCallButton1()
+            else:
+                firstCallNotAtHome = RetroButton(text=RM.button['lock'], color="lightgray")
+
+            def __notAtHome(instance=None):
+                date = time.strftime("%d", time.localtime())
+                month = self.monthName()[5]
+                timeCur = time.strftime("%H:%M", time.localtime())
+                newNote = f"{date} {month} {timeCur} {self.msg[206].lower()}\n" + self.flat.note
+                self.flat.editNote(newNote)
+                self.save()
+                self.FCP.dismiss()
+                if self.porch.clearCache("з") or self.porch.clearCache("с"): self.porchView()
+                else: self.clickedInstance.update(self.flat)
+            firstCallNotAtHome.bind(on_release=__notAtHome)
+            firstCallBox.add_widget(firstCallNotAtHome)
+            content.add_widget(firstCallBox)
+
+        if self.theme != "3D": # кнопка запись
+            firstCallBtnCall = FirstCallButton2()
+        else:
+            firstCallBtnCall = RetroButton(text=RM.button['record'], color=self.titleColor)
+        def __firstCall(instance):
+            if self.phoneInputOnPopup: self.flat.editPhone(self.quickPhone.text)
+            self.flatView(call=True, instance=instance)
+            self.FCP.dismiss()
+        firstCallBtnCall.bind(on_release=__firstCall)
+        content.add_widget(firstCallBtnCall)
+        if self.theme != "3D":
+            firstCallBtnReject = FirstCallButton3()
+        else:
+            firstCallBtnReject = RetroButton(text=RM.button['reject'],
+                                             color=self.getColorForStatus(self.settings[0][18]))
+
+        def __quickReject(instance): # кнопка отказ
+            self.flat.addRecord(self.msg[207][0].lower() + self.msg[207][1:])
+            self.flat.status = self.settings[0][18]  # "0"
+            self.save()
+            self.FCP.dismiss()
+            if self.porch.clearCache("с"): self.porchView()
+            else: self.clickedInstance.update(self.flat)
+        firstCallBtnReject.bind(on_release=__quickReject)
+        content2.add_widget(firstCallBtnReject)
+        contentMain.add_widget(content)
+        contentMain.add_widget(content2)
+
+        side = self.standardTextHeight * 1.1 # кнопки вторичных цветов внизу
+        pos_hint = {"center_y": .5}
+        c2box = BoxLayout(size_hint=(SH, None), pos_hint=PH, padding=(pad0, 0),
+                          spacing=self.spacing*4,
+                          height=side * (1.7 if not self.phoneInputOnPopup else 1.2))
+        def __clickOnColor2(instance):
+            color2 = 0 if instance.color == [.2, .2, .2, 1] else self.color2List.index(instance.color)
+            self.flat.color2 = color2
+            self.save()
+            self.FCP.dismiss()
+            if self.porch.clearCache("с2"): self.porchView()
+            else: self.clickedInstance.update(self.flat)
+        cb = []
+        for c in range(4):
+            cb.append(RoundColorButton(color=self.getColor2(c), side=side, pos_hint=pos_hint))
+            c2box.add_widget(cb[len(cb)-1])
+            cb[len(cb)-1].bind(on_release=__clickOnColor2)
+        contentMain.add_widget(c2box)
+
+        self.buttonClose = PopupButton(text=self.msg[190], height=self.standardTextHeight * 1.5) # кнопка отмена
+        self.buttonClose.bind(on_release=self.FCP.dismiss)
+        contentMain.add_widget(self.buttonClose)
+        self.FCP.size_hint = size_hint
+
+        try: self.FCP.open()
+        except:
+            self.dprint("Не могу открыть попап, перезагружаю данные.") # проблема возникает при смене размера окна только на ПК
+            self.FCP.dismiss()
+            self.restart("soft")
+            self.porch.scrollview = self.porch.floorview = None
+            self.porchView()
+
+    def createEmojiPopup(self, *args):
+        """ Создание и (или) запуск окна выбора иконок. Создается только один раз за работу программы """
+        if self.emojiPopup is None:
+            content = BoxLayout(orientation="vertical")
+            def __emojiClick(instance):
+                self.flat.emoji = instance.text
+                self.save()
+                self.emojiSelector.text = self.flat.emoji if self.flat.emoji != "" else self.button["add_emoji"]
+                self.emojiPopup.dismiss()
+                if self.theme == "3D":
+                    self.emojiSelector.color = self.topButtonColor if self.emojiSelector.text == self.button["add_emoji"] else self.linkColor
+            self.emojiGrid = GridLayout(padding=(0, self.padding * 2), spacing=self.spacing)
+            if self.orientation == "v":
+                size_hint = .9, .85
+                self.emojiGrid.cols = 6
+                self.emojiGrid.rows = 11
+            else:
+                size_hint = .8, .8
+                self.emojiGrid.cols = 11
+                self.emojiGrid.rows = 6
+            for emoji in self.emojis:
+                button = PopupButton(text=emoji, size_hint_y=1, font_size=self.fontXXL, forceSize=True)
+                button.bind(on_release=__emojiClick)
+                self.emojiGrid.add_widget(button)
+            buttonClose = PopupButton(text=self.msg[190])
+            buttonClose.bind(on_release=lambda x: __emojiClick(instance=Button(text="")))
+            content.add_widget(self.emojiGrid)
+            content.add_widget(buttonClose)
+            self.emojiPopup = PopupNoAnimation(title=self.msg[220], content=content, size_hint=size_hint,
+                                               separator_color=self.titleColorOnBlack)
+        for button in self.emojiGrid.children:
+            button.color = self.titleColorOnBlack if button.text == self.flat.emoji else "lightgray"
+
+        try: self.emojiPopup.open()
+        except:
+            self.dprint("Не могу открыть попап, перезагружаю данные.") # проблема возникает при смене размера окна только на ПК
+            self.emojiPopup.dismiss()
+            self.restart("soft")
+            self.floaterBox.clear_widgets()
+            self.flatView()
 
     # Обработка контактов
 
@@ -5317,7 +5709,7 @@ class RMApp(App):
         """ Возвращает цвет по полученному символу статуса """
         if self.theme == "purple" or self.theme == "morning":
             if status == "?":   return self.darkGrayFlat # темно-серый
-            elif status == "0": return [.29, .43, .65, 1] # синий
+            elif status == "0": return [.29, .44, .69,1]#[.29, .43, .65, 1] # синий
             elif status == "1": return [.16, .69, .29, 1] # зеленый
             elif status == "2": return [.29, .4, .19, 1]  # темно-зеленый
             elif status == "3": return [.48, .34, .65, 1] # фиолетовый
@@ -5327,11 +5719,11 @@ class RMApp(App):
         else:
             if status == "?":   return self.darkGrayFlat  # темно-серый
             elif status == "0": return [0, .54, .73, 1]   # синий
-            elif status == "1": return [0, .74, .50, 1]   # зеленый
+            elif status == "1": return [0, .7, .46, 1]#[0, .74, .50, 1]   # зеленый
             elif status == "2": return [.30, .50, .46, 1] # темно-зеленый
             elif status == "3": return [.53, .37, .76, 1] # фиолетовый
             elif status == "4": return [.73, .63, .33, 1] # желтый | светло-коричневый
-            elif status == "5": return [.81, .24, .17, 1] # красный
+            elif status == "5": return [.75, .29, .22, 1]#[.81, .24, .17, 1] # красный
             else:               return self.lightGrayFlat
 
     def getColorForStatusPressed(self, status):
@@ -5340,14 +5732,38 @@ class RMApp(App):
         k = .8
         return color[0]*k, color[1]*k, color[2]*k, 1
 
-    def getColor2(self, color2):
+    def getColorForReject(self):
+        """ Цвет для кнопки отказа """
+        color = self.getColorForStatus(self.settings[0][18])
+        return [color[0]*.9, color[1]*.9, color[2]*.9, .95]
+
+
+    def getColor2(self, color2, flat=None):
         """ Возвращает значение вторичного цвета (кружочка) """
-        alpha = 1
-        if color2 == 0:     return [0,0,0,0]            # полная прозрачность
-        elif color2 == 1:   return [0,.91,.99, alpha]   # голубой
-        elif color2 == 2:   return [.87,.84,.46, alpha]  # желтый
-        elif color2 == 3:   return [.99,.58,.38, alpha] # оранжевый
-        else: return [0,0,0,0]
+        alpha = .9
+        if   color2 == 1: return [.25, .9, .99, alpha]  # голубой
+        elif color2 == 2:
+            yellowDefault = [.91, .87, .47, alpha]
+            if flat is not None:
+                if flat.status == "4":
+                    return [.93, .88, .51, alpha] # желтый на желтом
+                else:
+                    return yellowDefault # желтый на остальных
+            return yellowDefault # желтый
+        elif color2 == 3:
+            redDefault = [1, .45, .5, alpha]
+            if flat is not None:
+                if flat.status == "4" and self.theme != "purple" and self.theme != "morning":
+                    return [1, .42, .53, alpha] # красный на желтом на НЕ пурпурных темах
+                elif flat.status == "4":
+                    return [1, .4, .45, alpha] # красный на желтом на пурпурных темах
+                elif flat.status == "5":
+                    return [1, .5, .55, alpha] # красный на красном
+                else:
+                    return redDefault # красный на остальных
+            else:
+                return redDefault # красный на остальных
+        else:             return [0, 0, 0, 0]
 
     def keyboardHeight(self, *args):
         """ Возвращает высоту клавиатуры в str """
@@ -5374,6 +5790,7 @@ class RMApp(App):
         self.navButton.text = ""
         self.showSlider = False
         self.sliderToggle()
+        self.mainList.padding = 0
         self.floaterBox.clear_widgets()
         self.restorePositiveButton()
 
@@ -5388,7 +5805,6 @@ class RMApp(App):
 
         if Window.size[0] <= Window.size[1]:
             self.orientation = "v"
-            self.SR = 1
             self.globalFrame.padding = 0
             if self.orientation != self.orientationPrev: self.drawMainButtons()
             self.orientationPrev = self.orientation
@@ -5399,7 +5815,6 @@ class RMApp(App):
             self.bottomButtons.size_hint_y = self.bottomButtonsSizeHintY
         else:
             self.orientation = "h"
-            self.SR = 1
             if self.theme == "morning" or self.theme == "purple": self.globalFrame.padding = (self.padding * 5, 0, 0, 0)
             if self.orientation != self.orientationPrev: self.drawMainButtons()
             self.orientationPrev = self.orientation
@@ -5496,7 +5911,7 @@ class RMApp(App):
         # 45 - центральная кнопка
         # 100 - большинство кнопок (по умолчанию)
         # 250 - почти квадратные маленькие кнопки
-        if self.theme == "3D" or rad >= 1000 or (platform == "win" and rad >= 50) or (platform == "linux" and rad >= 150):
+        if 0:#self.theme == "3D" or rad >= 1000 or (platform == "win" and rad >= 50) or (platform == "linux" and rad >= 150):
             buttonRadius = 0
         else:
             buttonRadius = (Window.size[0] * Window.size[1]) / (Window.size[0] * rad)
@@ -5623,7 +6038,8 @@ class RMApp(App):
             self.popup("confirmDeletePorch", title=f"{title}: {self.porch.title}", message=self.msg[198],
                        options=[self.button["yes"], self.button["no"]])
 
-        elif self.displayed.form == "flatDetails" or self.displayed.form == "flatView" or forced: # удаление квартиры
+        elif self.displayed.form == "flatDetails" or self.displayed.form == "flatView" \
+                or self.displayed.form == "porchView" or forced: # удаление квартиры
             self.popupForm = "confirmDeleteFlat"
             if self.contactsEntryPoint or self.searchEntryPoint or (self.flat.status != "" and not self.porch.floors()):
                 self.popup(title=f"{self.msg[199]}: {self.flatTitle}", message=self.msg[198],
@@ -5712,6 +6128,7 @@ class RMApp(App):
 
         elif self.popupForm == "updatePorch":
             if self.button["yes"] in instance.text.lower():
+                self.porch.floorview = self.porch.scrollview = None
                 self.displayed.form = "porchView"
                 self.porch.deleteHiddenFlats()
                 try:
@@ -5753,23 +6170,24 @@ class RMApp(App):
 
         elif self.popupForm == "confirmDeleteFlat":
             if self.button["yes"] in instance.text.lower():
+                self.porch.scrollview = None
                 if self.house.type == "virtual":
                     virtualHouse = self.resources[1].index(self.house)
                     del self.resources[1][virtualHouse]
                     if self.contactsEntryPoint: self.conPressed()
                     elif self.searchEntryPoint: self.find()
                 elif self.house.type == "condo":
-                    if self.contactsEntryPoint: # удаление из контактов
+                    if self.contactsEntryPoint: # удаление из контактов в доме - простое очищение
                         self.flat.wipe()
                         self.conPressed()
-                    elif self.searchEntryPoint: # удаление из поиска
+                    elif self.searchEntryPoint: # удаление из поиска в доме - простое очищение
                         self.flat.wipe()
                         self.find()
-                    elif self.deleteOnFloor: # полное удаление квартиры на табличном виде подъезда
+                    elif self.deleteOnFloor: # полное удаление квартиры на сетке подъезда, а также на списке из настроек
                         self.deleteOnFloor = False
                         self.flat.number = "%.1f" % (ut.numberize(self.flat.number) + .5)
                         self.flat.wipe()
-                        self.dismissTopPopup(all=True)
+                        self.FCP.dismiss()
                         self.porchView(instance=instance,
                                        update=True if self.displayed.form == "flatDetails" else False)
                     else:
@@ -5778,16 +6196,18 @@ class RMApp(App):
                                        checkboxText=self.msg[170], options=[self.button["yes"], self.button["no"]])
                             return
                         else:
-                            if not self.porch.floors(): # полное удаление квартиры в подъезде в виде списка
+                            if not self.porch.floors(): # полное удаление квартиры на списке подъезда (не из настроек)
                                 self.flat.number = "%.1f" % (ut.numberize(self.flat.number) + .5)
                                 self.flat.wipe()
-                                self.dismissTopPopup(all=True)
+                                self.FCP.dismiss()
                                 self.porchView(instance=instance)
-                            else: # удаление позиции на табличном виде
+                            else: # удаление позиции на сетке подъезда
                                 self.porch.deleteFlat(self.flat)
-                                self.porchView(instance=instance,
-                                               update=True if self.displayed.form == "flatDetails"\
-                                                                    or not self.porch.floors() else False)
+                                if self.displayed.form != "flatDetails": # не из настроек
+                                    self.porchView(instance=instance, update=False)
+                                else: # из настроек
+                                    self.porch.floorview = None
+                                    self.porchView(instance=instance)
                 else: # обычное удаление в сегменте
                     self.porch.deleteFlat(self.flat)
                     if self.contactsEntryPoint: self.conPressed()
@@ -5801,7 +6221,9 @@ class RMApp(App):
             if self.button["yes"] in instance.text.lower():
                 self.porch.deleteFlat(self.flat)
                 self.save()
-                self.porchView(instance=instance)
+                if self.displayed.form == "flatDetails": self.porch.floorview = None
+                self.porchView(instance=instance, update=True if self.displayed.form == "flatDetails" \
+                                                                 or not self.porch.floors() else False)
 
         elif self.popupForm == "confirmDeletePorch":
             if self.button["yes"] in instance.text.lower():
@@ -5869,7 +6291,7 @@ class RMApp(App):
 
         self.popupForm = ""
 
-    def popup(self, popupForm="", message="", options="Close", title=None, firstCall=False, checkboxText=None,
+    def popup(self, popupForm="", message="", options="Close", firstCall=False, title=None, checkboxText=None,
               dismiss=True, *args):
         """ Всплывающее окно """
 
@@ -5882,192 +6304,9 @@ class RMApp(App):
         size_hint = [.85, .6] if self.orientation == "v" else [.6, .85]
         auto_dismiss = dismiss
 
-        if firstCall:
-            self.popupForm = "firstCall"
-            self.callFromPopup = True
-            title = self.flatTitle
-            separator = False
-            size_hint = [.8, .6] if self.orientation == "v" else [.4, .7]
-            size_hint[0] *= self.fontScale(cap=1.2)
-            size_hint[1] *= self.fontScale(cap=1.2)
-            contentMain = BoxLayout(orientation="vertical")
-
-            content = GridLayout(rows=1, cols=2, padding=self.padding)
-            content2 = GridLayout(rows=1, cols=1, padding=[self.padding, 0, self.padding, self.padding])
-            self.buttonsGrid = GridLayout(rows=0, size_hint_y=None, spacing=self.spacing, pos_hint={"right": 1},
-                                     padding=(0, self.padding))
-
-            self.buttonsGrid.cols = 0
-            font_size = self.fontS * 1.1 * RM.fontScale(cap=1.2)  # общие параметры для маленьких кнопок
-            size = self.standardTextHeight, self.standardTextHeight
-
-            self.buttonsGrid.cols += 1 # кнопка телефона 1
-            self.quickPhoneCallButton = PopupButton(form=self.popupForm, font_size=font_size, size_hint_x=None,
-                                                    size_hint_y=None, size=size)
-            self.quickPhoneCallButton.bind(on_release=self.phoneCall)
-            self.buttonsGrid.add_widget(self.quickPhoneCallButton)
-
-            shrink = PopupButton( # кнопка удаления или урезания (универсальная)
-                text=self.button['shrink'] if self.porch.floors() else self.button['trash'],
-                form=self.popupForm, font_size=font_size, size_hint_x=None, size_hint_y=None, size=size)
-            def __shrink(instance):
-                self.dismissTopPopup()
-                self.blockFirstCall = 1
-                self.deletePressed(forced=True)
-
-            shrink.bind(on_release=__shrink)
-            self.buttonsGrid.cols += 1
-            self.buttonsGrid.add_widget(shrink)
-
-            if self.porch.floors():  # кнопка удаления на подъезде
-                floorDelete = PopupButton(text=self.button['trash'], form=self.popupForm, font_size=font_size,
-                                          size_hint_x=None, size_hint_y=None, size=size)
-                floorDelete.bind(on_release=self.deleteFlatInCondo)
-                self.buttonsGrid.cols += 1
-                self.buttonsGrid.add_widget(floorDelete)
-
-            details = PopupButton(text=self.button['contact'], size_hint_x=None,  # кнопка настроек
-                                  form=self.popupForm, font_size=font_size, size_hint_y=None, size=size)
-            def __details(instance):
-                if self.settings[0][20] == 1 or self.flat.phone != "":
-                    self.flat.editPhone(self.quickPhone.text)
-                self.dismissTopPopup()
-                self.popupEntryPoint = 1
-                self.blockFirstCall = 1
-                self.flatView(instance=instance)
-                self.detailsPressed()
-            details.bind(on_release=__details)
-            self.buttonsGrid.cols += 1
-            self.buttonsGrid.add_widget(details)
-            self.buttonsGrid.size_hint = self.buttonsGrid.cols * 0.167, None
-            self.buttonsGrid.height = details.height + self.padding * 2
-            contentMain.add_widget(self.buttonsGrid)
-
-            if self.settings[0][20] == 1 or self.flat.phone != "":  # поле ввода телефона
-                self.keyboardCloseTime = .1
-                size_hint[1] = size_hint[1] * 1.04
-                self.quickPhone = MyTextInput(size_hint_y=None, hint_text=self.msg[35],
-                                              height=self.standardTextHeight, size_hint_x=.88,
-                                              background_normal="", text=self.flat.phone, popup=True, multiline=False,
-                                              input_type="number" if not self.desktop else "text")
-                phoneBox = BoxLayout(orientation="horizontal", size_hint_y=None, height=self.quickPhone.height)
-                phoneBox.add_widget(self.quickPhone)
-                if self.quickPhone.text != "":
-                    self.quickPhoneCallButton.text = self.button['phone']
-                    self.quickPhoneCallButton.disabled = False
-                else:
-                    self.quickPhoneCallButton.text = ""
-                    self.quickPhoneCallButton.disabled = True
-
-                self.savePhoneBtn = PopupButtonGray(text="", size_hint_x=.12, size_hint_y=None, disabled=True,
-                                                    height=self.quickPhone.height)
-                phoneBox.add_widget(self.savePhoneBtn)
-                contentMain.add_widget(phoneBox)
-
-                def __savePhone(instance):
-                    self.flat.editPhone(self.quickPhone.text)
-                    self.save()
-                    self.quickPhone.keyboard_on_key_up()
-                    if self.porch.floors(): self.clickedInstance.update(self.flat)
-                    else: self.porchView()
-                    self.dismissTopPopup()
-                self.quickPhone.bind(on_text_validate=__savePhone)
-                self.savePhoneBtn.bind(on_release=__savePhone)
-
-            r = self.getRadius(150)[0] # first call radius – значения радиусов для всех кнопок первого посещения
-            self.FCRadius = [
-                [r, 0, 0, 0], # нет дома
-                [0, r, 0, 0], # нет дома и т. д.
-                [0, 0, r, r],  # отказ
-                [r, r, 0, 0]
-            ]
-
-            if self.settings[0][13] == 1:
-                firstCallBox = BoxLayout(orientation="vertical") # нет дома
-                if self.theme == "3D": firstCallBox.spacing = 0
-                elif self.desktop: firstCallBox.spacing = 1
-                else: firstCallBox.spacing = self.spacing
-                if self.theme != "3D":
-                    firstCallNotAtHome = FirstCallButton1()
-                else:
-                    firstCallNotAtHome = RetroButton(text=RM.button['lock'], color="lightgray")
-
-                def __notAtHome(instance=None):
-                    if self.settings[0][20] == 1 or self.flat.phone != "":
-                        self.flat.editPhone(self.quickPhone.text)
-                    date = time.strftime("%d", time.localtime())
-                    month = self.monthName()[5]
-                    timeCur = time.strftime("%H:%M", time.localtime())
-                    newNote = f"{date} {month} {timeCur} {self.msg[206].lower()}\n" + self.flat.note
-                    self.flat.editNote(newNote)
-                    self.save()
-                    self.dismissTopPopup()
-                    if self.porch.floors(): self.clickedInstance.update(self.flat)
-                    else: self.porchView()
-                firstCallNotAtHome.bind(on_release=__notAtHome)
-                firstCallBox.add_widget(firstCallNotAtHome)
-                content.add_widget(firstCallBox)
-
-            if self.theme != "3D": # кнопка запись
-                firstCallBtnCall = FirstCallButton2()
-            else:
-                firstCallBtnCall = RetroButton(text=RM.button['record'], color=self.titleColor)
-            def __firstCall(instance):
-                if self.settings[0][20] == 1 or self.flat.phone != "":
-                    self.flat.editPhone(self.quickPhone.text)
-                self.dismissTopPopup()
-                self.flatView(call=True, instance=instance)
-            firstCallBtnCall.bind(on_release=__firstCall)
-            content.add_widget(firstCallBtnCall)
-            if self.theme != "3D":
-                firstCallBtnReject = FirstCallButton3()
-            else:
-                firstCallBtnReject = RetroButton(text=RM.button['reject'],
-                                                 color=self.getColorForStatus(self.settings[0][18]))
-
-            def __quickReject(instance): # кнопка отказ
-                if self.settings[0][20] == 1 or self.flat.phone != "":
-                    self.flat.editPhone(self.quickPhone.text)
-                self.flat.addRecord(self.msg[207][0].lower() + self.msg[207][1:])
-                self.flat.status = self.settings[0][18]  # "0"
-                self.save()
-                self.dismissTopPopup()
-                if self.porch.floors(): self.clickedInstance.update(self.flat)
-                else: self.porchView()
-            firstCallBtnReject.bind(on_release=__quickReject)
-            content2.add_widget(firstCallBtnReject)
-            contentMain.add_widget(content)
-            contentMain.add_widget(content2)
-
-            side = self.standardTextHeight * 1.1 # кнопки вторичных цветов внизу
-            pos_hint = {"center_y": .5}
-            c2box = BoxLayout(size_hint_y=None, padding=(0, self.padding, 0, self.padding*2),
-                              spacing=self.spacing*4, height=side*1.5)
-            def __clickOnColor2(instance):
-                color2 = 0 if instance.color == [.2, .2, .2, 1] else self.color2List.index(instance.color)
-                self.flat.color2 = color2
-                if self.settings[0][20] == 1 or self.flat.phone != "":
-                    self.flat.editPhone(self.quickPhone.text)
-                self.save()
-                self.dismissTopPopup()
-                if self.porch.floors(): self.clickedInstance.update(self.flat)
-                else: self.porchView()
-            cb = []
-            for c in range(4):
-                cb.append(RoundColorButton(color=self.getColor2(c), side=side, pos_hint=pos_hint))
-                c2box.add_widget(cb[len(cb)-1])
-                cb[len(cb)-1].bind(on_release=__clickOnColor2)
-            contentMain.add_widget(c2box)
-
-            self.buttonClose = PopupButton(text=self.msg[190], height=self.standardTextHeight * 1.5) # кнопка отмена
-            self.buttonClose.bind(on_release=self.popupPressed)
-            contentMain.add_widget(self.buttonClose)
-
-            self.popupForm = ""
-
         # Выбор времени для отчета
 
-        elif self.popupForm == "showTimePicker":
+        if self.popupForm == "showTimePicker":
             self.popupForm = ""
             separator = False
             contentMain = BoxLayout(orientation="vertical", spacing=self.spacing*2)
@@ -6156,6 +6395,7 @@ class RMApp(App):
                                   valign="center", color=[.95, .95, .95])
             contentMain.add_widget(description)
             def __save(instance):
+                self.porch.floorview = None
                 flats = text.text.strip()
                 if flats != "":
                     newstr = ""
@@ -6189,6 +6429,7 @@ class RMApp(App):
                             self.porch.flatsLayout = "н"
                         else:
                             self.porch.adjustFloors()
+                        self.porch.scrollview = None
                         self.porchView()
                         self.exitToPorch = True
                         if not showWarning:
@@ -6214,7 +6455,7 @@ class RMApp(App):
             contentMain = BoxLayout(orientation="vertical", pos_hint={"top": 1})
             contentMain.add_widget(Label(text=self.msg[102], color=[.95, .95, .95], halign="left", valign="center",
                                          height=self.standardTextHeight*1.5,
-                                         text_size=(self.mainList.width*size_hint[0]/self.SR*.9, self.standardTextHeight*1.5),
+                                         text_size=(self.mainList.width*size_hint[0]*.9, self.standardTextHeight*1.5),
                                          size_hint=(1, None)))
 
             self.fileDates = [] # собираем файлы резервных копий
@@ -6265,38 +6506,6 @@ class RMApp(App):
             grid.add_widget(Widget())
             grid.add_widget(self.confirmButtonPositive)
             contentMain.add_widget(grid)
-
-        # Выбор смайлика для квартиры
-
-        elif self.popupForm == "emoji":
-            title = self.msg[220]
-            contentMain = BoxLayout(orientation="vertical")
-            grid = GridLayout(padding=(0, self.padding*2), spacing=self.spacing)
-            if self.orientation == "v":
-                size_hint[1] *= 1.3
-                grid.cols = 5
-                grid.rows = 10
-            else:
-                size_hint = .8, .7
-                grid.cols = 10
-                grid.rows = 5
-            def __emojiClick(instance):
-                self.flat.emoji = instance.text if instance.text != "-" else ""
-                self.save()
-                self.emojiSelector.text = self.flat.emoji if self.flat.emoji != "" else self.button["empty_image"]
-                self.dismissTopPopup()
-
-            button1 = PopupButton(text="-", size_hint_y=1, font_size=self.fontXXL, forceSize=True)
-            button1.bind(on_release=__emojiClick)
-            grid.add_widget(button1)
-            for emoji in self.emojis:
-                button = PopupButton(text=emoji, size_hint_y=1, font_size=self.fontXXL, forceSize=True)
-                button.bind(on_release=__emojiClick)
-                grid.add_widget(button)
-            self.buttonClose = PopupButton(text=self.msg[190])
-            self.buttonClose.bind(on_release=self.popupPressed)
-            contentMain.add_widget(grid)
-            contentMain.add_widget(self.buttonClose)
 
         # Стандартное информационное окно либо запрос да/нет
 
@@ -6855,7 +7064,7 @@ class RMApp(App):
     def save(self, backup=False, silent=True, export=False, verify=False):
         """ Saving database to JSON file """
         global SavedCount
-        self.dprint(f"backup: {backup}")
+        #self.dprint(f"backup: {backup}")
         output = self.getOutput()
 
         # Сначала резервируем
@@ -6903,7 +7112,7 @@ class RMApp(App):
                 if not verify:
                     message = f"База успешно сохранена ({SavedCount})."
                     SavedCount += 1 # глобальный подсчет кол-ва сохранений в течение одного сеанса работы
-                    self.dprint(message)
+                    #self.dprint(message)
                     break
                 else: # если сохранение с проверкой записи
                     verified = False

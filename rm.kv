@@ -44,12 +44,12 @@
             radius: app.radius
 
 <FloatButton@Button>:
-    color: (app.linkColor if app.theme != "3D" else app.blackTint) if self.state=='normal' else app.titleColor
+    color: (app.linkColor if app.button['phone-thin'] in self.text else (app.linkColor if app.button["add_emoji"] not in self.text else app.topButtonColor)) if self.state=='normal' else app.titleColor
     background_color: app.roundButtonBGColor if app.theme != "3D" else [0,0,0,.5]
     text_size: self.size
     canvas.before:
         Color:
-            rgba: ([.9,.9,.9,.85] if app.mode == "light" else [.3,.3,.3,.85]) if self.state=='normal' else app.roundButtonColorPressed
+            rgba: app.floatButtonBGColor if self.state=='normal' else app.roundButtonColorPressed
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -61,14 +61,14 @@
     side: self.side
     canvas.before:
         Color:
-            rgba: self.color if self.state=='normal' else ([1,1,1,.05] if app.callFromPopup else self.color)
+            rgba: self.color if self.state=='normal' else (app.popupBGColorPressed if app.firstCallPopup else self.color)
         Ellipse:
             pos: self.pos
             size: self.size
         Color:
-            rgba: ([.1,.1,.1,1] if app.theme == "3D" else app.sortButtonBackgroundColor) if not app.callFromPopup else [.4, .4, .4, 1]
+            rgba: app.floatButtonBGColor if not app.firstCallPopup else [.4, .4, .4, 1]
         Line:
-            width: 1 if app.callFromPopup else (2 if self.color == app.getColor2(0) else 1)
+            width: 1 if app.firstCallPopup else (2 if self.color == app.getColor2(0) else 1)
             circle: self.pos[0]+self.size[0]/2, self.pos[1]+self.size[1]/2, (self.size[0]*.5 if self.color == app.getColor2(0) else 0)
 
 <ProgressButton@Button>:
@@ -82,45 +82,37 @@
             size: self.size
             radius: app.radius
 
-<FirstCallButton1@FirstCallButton>:
-    color: [1,1,1,.95] if self.state=='normal' else app.titleColorOnBlack
+<FirstCallButton1@FirstCallButton>: # нет дома
+    color: [1,1,1,.95] if self.state == 'normal' else app.titleColorOnBlack
     background_color: [1,1,1,0]
     canvas.before:
         Color:
-            rgba: [.25,.25,.25,1] if self.state=='normal' else [1,1,1,.05]
+            rgba: app.popupButtonColor2 if self.state == 'normal' else app.popupBGColorPressed
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: app.FCRadius[0]
 
-<FirstCallButtonExtra@FirstCallButton>:
-    color: [1,1,1,.95] if self.state=='normal' else app.titleColorOnBlack
-    background_color: [1,1,1,0]
-    canvas.before:
-        Color:
-            rgba: [.25,.25,.25,1] if self.state=='normal' else [1,1,1,.05]
-        RoundedRectangle:
-            pos: self.pos
-            size: self.size
-            radius: [0,]
-
 <FirstCallButton2@FirstCallButton>: # запись
-    color: (app.linkColor if app.mode == "light" else app.getColorForStatus("?")) if self.state=='normal' else app.titleColorOnBlack
+    color: [1,1,1,.95] if self.state == 'normal' else app.titleColorOnBlack
     background_color: [1,1,1,0]
     canvas.before:
         Color:
-            rgba: [1,1,1,1] if self.state=='normal' else [1,1,1,.05]
+            #rgba: app.popupButtonColor if self.state=='normal' else app.popupBGColorPressed
+            rgba: app.popupButtonColor2 if self.state=='normal' else app.popupBGColorPressed
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: app.FCRadius[1] if app.settings[0][13] == 1 else app.FCRadius[3]
 
-<FirstCallButton3@FirstCallButton>:
-    color: [1,1,1,.95] if self.state=='normal' else app.titleColorOnBlack
+<FirstCallButton3@FirstCallButton>: # отказ
+    color: [1,1,1,.95] if self.state == 'normal' else app.titleColorOnBlack
+    #color: app.getColorForStatus(app.settings[0][18]) if self.state=='normal' else app.titleColorOnBlack
     background_color: [1,1,1,0]
     canvas.before:
         Color:
-            rgba: app.getColorForStatus(app.settings[0][18]) if self.state=='normal' else [1,1,1,.05]
+            rgba: app.getColorForReject() if self.state=='normal' else app.popupBGColorPressed
+            #rgba: app.popupButtonColor2 if self.state=='normal' else app.popupBGColorPressed
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -131,7 +123,7 @@
     background_color: [1,1,1,0]
     canvas.before:
         Color:
-            rgba: (app.getColorForStatus("1") if self.state=='normal' else [1,1,1,.05]) if self.height > 0 else [0,0,0,0]
+            rgba: (app.getColorForStatus("1") if self.state=='normal' else app.popupBGColorPressed) if self.height > 0 else [0,0,0,0]
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -139,12 +131,12 @@
 
 <PopupButton@Button>:
     color: "lightgray" if self.state=='normal' else app.titleColorOnBlack
-    background_color: [0,0,0,0] if self.state=='normal' else [1,1,1,.05]
+    background_color: [0,0,0,0] if self.state=='normal' else app.popupBGColorPressed
     text_size: self.size
 
 <PopupButtonGray@PopupButton>:
     color: "lightgray" if self.state=='normal' else app.titleColorOnBlack
-    background_color: [.3, .3, .3, 1] if self.state=='normal' else [1,1,1,.05]
+    background_color: [.2, .2, .2, 1] if self.state=='normal' else app.popupBGColorPressed
     text_size: self.size
 
 <RetroButton@Button>:
@@ -155,18 +147,18 @@
     background_color: app.mainMenuButtonBackgroundColor if app.theme != "3D" else [1,1,1,0]
     canvas.before:
         Color:
-            rgba: app.globalBGColor if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else (app.roundButtonColorPressed2 if app.theme != "3D" else [1,1,1,.05]))
+            rgba: app.globalBGColor if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else (app.roundButtonColorPressed2 if app.theme != "3D" else app.popupBGColorPressed))
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: app.radius
 
 <TableButton@Button>:
-    color: app.tableColor if self.state=='normal' else app.titleColor
+    color: (app.linkColor if not self.disabled and app.button['phone'] in self.text else app.tableColor) if self.state=='normal' else app.titleColor
     background_color: app.roundButtonBGColor
     canvas.before:
         Color:
-            rgba: app.globalBGColor if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)
+            rgba: (app.floatButtonBGColor if not self.disabled and app.button['phone'] in self.text else app.globalBGColor) if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -179,6 +171,7 @@
     color2: self.color2
     text: self.text
     number: self.number
+    flat: self.flat
     text_size: (None, None) if app.grid else self.size
     background_normal: ""
     background_down: ""
@@ -194,7 +187,7 @@
             size: self.size
             radius: app.radius
         Color:
-            rgba: app.getColor2(self.color2)
+            rgba: app.getColor2(self.color2, self.flat)
         RoundedRectangle:
             pos: self.pos[0]+2, self.pos[1]+2
             size: (self.size[0]*self.k, self.size[0]*self.k) if self.size[0] < self.size[1] else (self.size[1]*self.k, self.size[1]*self.k)
@@ -212,7 +205,7 @@
     background_color: [1,1,1,0]
     canvas.before:
         Color:
-            rgba: app.globalBGColor if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else (app.roundButtonColorPressed2 if app.theme != "3D" else [1,1,1,.05]))
+            rgba: app.globalBGColor if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else (app.roundButtonColorPressed2 if app.theme != "3D" else app.popupBGColorPressed))
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -224,7 +217,7 @@
     #text_size: self.size
     canvas.before:
         Color:
-            rgba: app.globalBGColor if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else (app.roundButtonColorPressed2 if app.theme != "3D" else [1,1,1,.05]))
+            rgba: app.globalBGColor if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else (app.roundButtonColorPressed2 if app.theme != "3D" else app.popupBGColorPressed))
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -234,7 +227,7 @@
     background_color: [1,1,1,0]
     canvas.before:
         Color:
-            rgba: app.globalBGColor if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else (app.roundButtonColorPressed2 if app.theme != "3D" else [1,1,1,.05]))
+            rgba: app.globalBGColor if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else (app.roundButtonColorPressed2 if app.theme != "3D" else app.popupBGColorPressed))
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -264,7 +257,7 @@
 <FooterButton@Button>:
     color: get_hex_from_color([app.linkColor[0],app.linkColor[1],app.linkColor[2],.9]) if app.mode == "light" else app.standardTextColor
     background_color: app.globalBGColor
-    text_size: None, self.size[1]
+    text_size: self.size[0], self.size[1]*3
     canvas.before:
         Color:
             rgba: (app.scrollButtonBackgroundColor if self.state == "normal" else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)) if app.theme != "3D" else [0,0,0,0]
@@ -273,7 +266,7 @@
             size: self.size
             radius: app.footerRadius
 
-<LastRecButton@Button>:
+<RecordButton@Button>:
     color: app.standardTextColor
     background_color: app.roundButtonBGColor if app.theme != "3D" else [0,0,0,0]
     text_size: self.size[0] * .92, self.size[1]
@@ -293,3 +286,6 @@
             pos: self.pos
             size: self.size
             radius: app.radius
+
+<FlatFooterLabel@Label>:
+    text_size: self.size
