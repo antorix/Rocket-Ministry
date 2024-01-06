@@ -1979,7 +1979,7 @@ class RMApp(App):
         self.checkCrashFlag()
         Clock.schedule_interval(self.checkDate, 60)
 
-        self.restart("soft") # баг у Андроника
+        if not self.desktop: self.restart("soft") # баг у Андроника
 
         self.terPressed()
         return self.interface
