@@ -83,23 +83,22 @@
             radius: app.radius
 
 <FirstCallButton1@FirstCallButton>: # нет дома
-    color: [1,1,1,.95] if self.state == 'normal' else app.titleColorOnBlack
+    color: app.linkColor if self.state == 'normal' else app.titleColorOnBlack
     background_color: [1,1,1,0]
     canvas.before:
         Color:
-            rgba: app.popupButtonColor2 if self.state == 'normal' else app.popupBGColorPressed
+            rgba: app.popupButtonColor if self.state == 'normal' else app.popupBGColorPressed
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: app.FCRadius[0]
 
 <FirstCallButton2@FirstCallButton>: # запись
-    color: [1,1,1,.95] if self.state == 'normal' else app.titleColorOnBlack
+    color: app.linkColor if self.state == 'normal' else app.titleColorOnBlack
     background_color: [1,1,1,0]
     canvas.before:
         Color:
-            #rgba: app.popupButtonColor if self.state=='normal' else app.popupBGColorPressed
-            rgba: app.popupButtonColor2 if self.state=='normal' else app.popupBGColorPressed
+            rgba: app.popupButtonColor if self.state=='normal' else app.popupBGColorPressed
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -107,12 +106,10 @@
 
 <FirstCallButton3@FirstCallButton>: # отказ
     color: [1,1,1,.95] if self.state == 'normal' else app.titleColorOnBlack
-    #color: app.getColorForStatus(app.settings[0][18]) if self.state=='normal' else app.titleColorOnBlack
     background_color: [1,1,1,0]
     canvas.before:
         Color:
             rgba: app.getColorForReject() if self.state=='normal' else app.popupBGColorPressed
-            #rgba: app.popupButtonColor2 if self.state=='normal' else app.popupBGColorPressed
         RoundedRectangle:
             pos: self.pos
             size: self.size

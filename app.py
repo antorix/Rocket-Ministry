@@ -1970,7 +1970,7 @@ class RMApp(App):
         self.setTheme()
         self.displayed = DisplayedList()
         self.createInterface()
-        self.terPressed()
+        #self.terPressed()
         self.updateTimer()
         self.backupRestore(delete=True, silent=True)
         self.update()
@@ -1978,6 +1978,10 @@ class RMApp(App):
         self.rep.optimizeReportLog()
         self.checkCrashFlag()
         Clock.schedule_interval(self.checkDate, 60)
+
+        self.restart("soft") # баг у Андроника
+
+        self.terPressed()
         return self.interface
 
     # Подготовка переменных
@@ -2165,8 +2169,6 @@ class RMApp(App):
 
         self.topButtonColor = [.73, .73, .73, 1] # "lightgray" # поиск, настройки и кнопки счетчиков
         ck = .9
-        self.popupButtonColor = [.97, .97, .97]
-        self.popupBackgroundColor = [.16, .16, .16, 1]
 
         if self.theme == "dark" or self.theme == "morning": # темная тема
             self.mode = "dark"
@@ -2355,18 +2357,22 @@ class RMApp(App):
         self.recordGray = get_hex_from_color(self.topButtonColor if self.mode == "light" else \
                                                  self.standardTextColor) # серый цвет для записей под кнопками
 
-        self.popupButtonColor2 = [.25, .25, .25, 1] # цвет больших кнопок на плашке первого посещения
-        self.popupBGColorPressed = [1,1,1,.05]
-
         self.color2List = [] # список цветов для вторичного цвета
         for i in range(4): self.color2List.append(self.getColor2(i))
+
+        self.popupBackgroundColor = [.16, .16, .16, 1]
+
+        self.popupButtonColor =[.25, .25, .25, 1] if self.theme == "morning" or self.theme == "dark" \
+            else self.buttonBackgroundColor # цвет больших кнопок на плашке первого посещения
+
+        self.popupBGColorPressed = [1,1,1,.05]
 
         Window.clearcolor = self.globalBGColor
         self.getRadius()
 
         # Иконки для кнопок
         self.listIconSize = self.fontL
-        self.FCPIconSize = self.fontL
+        self.FCPIconSize = self.fontM
         br = '\n' if self.settings[0][13] == 1 else "  "
         self.button = {
             # иконки элементов списка
@@ -2399,7 +2405,7 @@ class RMApp(App):
             "down-left": icon("icon-arrow-down-left2"),
 
             # плашка первого посещения
-            "lock": f"[size={self.FCPIconSize}]{icon('icon-lock')}[/size]\n{self.msg[206]}",  #  нет дома
+            "lock":   f"[size={self.FCPIconSize}]{icon('icon-lock')}[/size]\n{self.msg[206]}",  #  нет дома
             "record": f"[size={self.FCPIconSize}]{icon('icon-pencil')}[/size]{br}{self.msg[163]}",  # запись
             "reject": f"[size={self.FCPIconSize}]{icon('icon-ban')}[/size]{br}{self.msg[207]}",  # отказ
 
@@ -4489,8 +4495,7 @@ class RMApp(App):
                 for porch in house.porches:
                     porch.scrollview = porch.floorview = None
 
-
-            if clickOnSave: Clock.schedule_once(self.settingsPressed, 0)
+            if clickOnSave: Clock.schedule_once(self.settingsPressed, .01)
             self.log(self.msg[53])
 
         elif self.settingsPanel.current_tab.text == self.msg[54]: # Данные
@@ -5415,7 +5420,7 @@ class RMApp(App):
         self.FCP.separator_color = [0,0,0,0]
         self.firstCallPopup = True
         self.phoneInputOnPopup = True if self.settings[0][20] == 1 or self.flat.phone != "" else False
-        size_hint = [.85, .53] if self.orientation == "v" else [.42, .7]
+        size_hint = [.85, .55] if self.orientation == "v" else [.42, .7]
         size_hint[1] *= self.fontScale(cap=1.2)
         contentMain = BoxLayout(orientation="vertical", spacing = self.spacing * 2)
         self.FCP.content = contentMain
@@ -5504,7 +5509,7 @@ class RMApp(App):
             self.quickPhone.bind(on_text_validate=__savePhone)
             self.savePhoneBtn.bind(on_release=__savePhone)
 
-        r = self.getRadius(50)[0] # first call radius – значения радиусов для всех кнопок первого посещения
+        r = self.getRadius(100)[0] # first call radius – значения радиусов для всех кнопок первого посещения
         self.FCRadius = [
             [r, 0, 0, 0], # нет дома
             [0, r, 0, 0], # нет дома и т. д.
@@ -5735,7 +5740,10 @@ class RMApp(App):
     def getColorForReject(self):
         """ Цвет для кнопки отказа """
         color = self.getColorForStatus(self.settings[0][18])
-        return [color[0]*.9, color[1]*.9, color[2]*.9, .95]
+        if self.mode == "light":
+            return color
+        else:
+            return [color[0]*.95, color[1]*.95, color[2]*.95, .97]
 
 
     def getColor2(self, color2, flat=None):
@@ -5911,7 +5919,7 @@ class RMApp(App):
         # 45 - центральная кнопка
         # 100 - большинство кнопок (по умолчанию)
         # 250 - почти квадратные маленькие кнопки
-        if 0:#self.theme == "3D" or rad >= 1000 or (platform == "win" and rad >= 50) or (platform == "linux" and rad >= 150):
+        if self.theme == "3D" or rad >= 1000 or (platform == "win" and rad >= 50) or (platform == "linux" and rad >= 150):
             buttonRadius = 0
         else:
             buttonRadius = (Window.size[0] * Window.size[1]) / (Window.size[0] * rad)
