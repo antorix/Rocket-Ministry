@@ -1338,7 +1338,7 @@ class PopupButton(Button):
         self.size_hint_y = size_hint_y
         if size_hint_x is not None: self.size_hint_x = size_hint_x
         self.height = RM.standardTextHeight * 1.2 if height is None else height
-        self.text = text.upper() if RM.language != "ka" and "icomoon2.ttf" not in text else text
+        self.text = text.upper() if RM.language != "ka" and "icomoon.ttf" not in text else text
         self.background_down = ""
         self.background_normal = ""
         if pos_hint is not None: self.pos_hint = pos_hint
@@ -1970,7 +1970,6 @@ class RMApp(App):
         self.setTheme()
         self.displayed = DisplayedList()
         self.createInterface()
-        #self.terPressed()
         self.updateTimer()
         self.backupRestore(delete=True, silent=True)
         self.update()
@@ -1978,15 +1977,8 @@ class RMApp(App):
         self.rep.optimizeReportLog()
         self.checkCrashFlag()
         Clock.schedule_interval(self.checkDate, 60)
-
-        #if not self.desktop: self.restart("soft") # баг у Андроника - исправлено
-
-        if not self.desktop: # вариант 2 - проверяем
+        if not self.desktop: # перезагрузка параметров для решения бага у Andranik K на Android 14
             self.setParameters(reload=True)
-            self.interface.clear_widgets()
-            #self.setTheme()
-            self.createInterface()
-
         self.terPressed()
         return self.interface
 
@@ -2134,7 +2126,7 @@ class RMApp(App):
                 except: pass
 
         self.rep = Report()  # инициализация отчета
-        register('default_font', 'icomoon2.ttf', 'icomoon2.fontd')  # шрифты с иконками
+        register('default_font', 'icomoon.ttf', 'icomoon2.fontd')  # шрифты с иконками
 
     # Первичное создание интерфейса
 
@@ -2903,6 +2895,15 @@ class RMApp(App):
                             footerGrid = GridLayout(rows=1, cols=len(self.displayed.footer[i]), size_hint_y=None,
                                                     pos_hint={"center_x": .5}, size_hint_x=.96, height=height*.36)
                             if form == "con": footerGrid.cols_minimum = {1: button.size[0] * .7}
+                            elif form == "ter":
+                                footerGrid.cols_minimum = { # поджимаем футеры справа и слева
+                                    #0: button.size[0] * .1,
+                                    1: button.size[0] * .22,
+                                    2: button.size[0] * .22,
+                                    3: button.size[0] * .22,
+                                    4: button.size[0] * .22,
+                                    #5: button.size[0] * .1
+                                }
 
                             count = 0
                             for b in range(len(self.displayed.footer[i])):
@@ -2940,7 +2941,7 @@ class RMApp(App):
                             box.height = button.height + bh
                             box.spacing = self.spacing
 
-                    self.scrollWidget.add_widget(box)
+                    if form != "repLog": self.scrollWidget.add_widget(box)
 
                 self.floaterBox.clear_widgets()
 
