@@ -1338,7 +1338,7 @@ class PopupButton(Button):
         self.size_hint_y = size_hint_y
         if size_hint_x is not None: self.size_hint_x = size_hint_x
         self.height = RM.standardTextHeight * 1.2 if height is None else height
-        self.text = text.upper() if RM.language != "ka" and "icomoon.ttf" not in text else text
+        self.text = text.upper() if RM.language != "ka" and "icomoon2.ttf" not in text else text
         self.background_down = ""
         self.background_normal = ""
         if pos_hint is not None: self.pos_hint = pos_hint
@@ -1979,7 +1979,13 @@ class RMApp(App):
         self.checkCrashFlag()
         Clock.schedule_interval(self.checkDate, 60)
 
-        if not self.desktop: self.restart("soft") # баг у Андроника
+        #if not self.desktop: self.restart("soft") # баг у Андроника - исправлено
+
+        if not self.desktop: # вариант 2 - проверяем
+            self.setParameters(reload=True)
+            self.interface.clear_widgets()
+            #self.setTheme()
+            self.createInterface()
 
         self.terPressed()
         return self.interface
@@ -2128,7 +2134,7 @@ class RMApp(App):
                 except: pass
 
         self.rep = Report()  # инициализация отчета
-        register('default_font', 'icomoon.ttf', 'icomoon.fontd')  # шрифты с иконками
+        register('default_font', 'icomoon2.ttf', 'icomoon2.fontd')  # шрифты с иконками
 
     # Первичное создание интерфейса
 
