@@ -3,11 +3,10 @@
 
 from sys import argv
 Devmode = 1 if "dev" in argv else 0
-Version = "2.13.002"
+Version = "2.13.003"
 """
-* 17 новых иконок.
-* Повышение быстродействия при работе в подъезде.
-* Сортировка подъездов по номеру или количеству квартир.
+* Режим свободного перемещения схемы подъезда по экрану.
+* Исправлен баг, из-за которого могли не появляться новые созданные дома в универсальном участке.
 * Исправления и оптимизации. 
 """
 
@@ -24,6 +23,9 @@ from copy import copy
 from iconfonts import icon
 from iconfonts import register
 from kivy.app import App
+from kivy.uix.behaviors import DragBehavior
+from kivy.uix.relativelayout import RelativeLayout
+from kivy.uix.behaviors.touchripple import TouchRippleBehavior
 from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 from kivy.uix.gridlayout import GridLayout
@@ -42,7 +44,6 @@ from kivy.core.clipboard import Clipboard
 from kivy.uix.tabbedpanel import TabbedPanel, TabbedPanelHeader
 from kivy.clock import Clock
 from kivy.clock import mainthread
-from kivy.uix.slider import Slider
 from kivy.animation import Animation
 from kivy.graphics import Color, RoundedRectangle
 from kivy.utils import get_hex_from_color
@@ -152,9 +153,9 @@ class House(object):
 
 class Porch(object):
     """ Класс подъезда """
-    def __init__(self, title="", status="", flatsLayout="н", floor1=1, note="", type=""):
+    def __init__(self, title="", pos=[True, [0, 0]], flatsLayout="н", floor1=1, note="", type=""):
         self.title = title
-        self.status = status # пока не используется
+        self.pos = pos
         self.flatsLayout = flatsLayout
         self.floor1 = floor1 # number of first floor
         self.note = note
@@ -164,6 +165,21 @@ class Porch(object):
         self.highestNumber = 0 # максимальный номер квартиры в подъезде (несохр.)
         self.floorview = None # кешированная сетка подъезда (несохр.)
         self.scrollview = None # кешированный список подъезда (несохр.)
+
+        if len(self.pos) != 2 or len(self.pos[1]) != 2: self.posReset() # дописывание начиная с версии 2.13.003
+
+    def posReset(self, correction_y=0):
+        """ Сброс позиции в умолчание, как при создании нового подъезда """
+        self.pos = [True, [0, 0+correction_y]] # корректировка нижней границы, пока не реализована
+
+    def switch(self, mode=""):
+        """ Переключение вида подъезда в один из двух вариантов сетки (без перерисовки, ее вызывать отдельно) """
+        if mode == "fill":
+            self.pos[0] = False
+            if self.floorview is not None: self.pos[1] = copy(self.floorview.pos)
+        elif mode == "free":
+            self.pos[0] = True
+            if self.floorview is not None: self.floorview.pos = self.pos[1]
 
     def restoreFlat(self, instance):
         """ Восстанавление квартир (нажатие на плюсик) """
@@ -361,7 +377,6 @@ class Porch(object):
         self.sortFlats()
         options = []
         self.invisibleFlatsCount = 0
-        self.grayFlats = 0
         if str(self.flatsLayout).isnumeric(): # вывод подъезда в этажной раскладке
             self.rows = int(self.flatsLayout)
             self.columns = int(len(self.flats) / self.rows)
@@ -371,7 +386,6 @@ class Porch(object):
                 for c in range(self.columns):
                     options.append(self.flats[i])
                     if "." in self.flats[i].number: self.invisibleFlatsCount += 1
-                    if self.flats[i].status == "?": self.grayFlats += 1
                     highest = int(ut.numberize(self.flats[i].number))
                     self.flats[i].porchRef = self
                     if highest > self.highestNumber:
@@ -388,11 +402,6 @@ class Porch(object):
         if len(options) == 0 and self.type == "сегмент":
             RM.createFirstHouse = True
         return options
-
-    def countGrayFlats(self):
-        self.grayFlats = 0
-        for flat in self.flats:
-            if flat.status == "?": self.grayFlats += 1
 
     def addFlat(self, input, virtual=False):
         """ Создает одну квартиру """
@@ -422,7 +431,7 @@ class Porch(object):
     def export(self):
         return [
             self.title,
-            self.status,
+            self.pos,
             self.flatsLayout,
             self.floor1,
             self.note,
@@ -844,7 +853,7 @@ class DisplayedList(object):
     def __init__(self):
         self.update()
 
-    def update(self, message="", title="", form="", options=[], sort=None, details=None, resize=None,
+    def update(self, message="", title="", form="", options=[], sort=None, details=None,
                footer=[], positive="", neutral="", jump=None, tip=None, embed=None, back=True):
         self.message = message
         self.title = title
@@ -854,7 +863,6 @@ class DisplayedList(object):
         self.neutral = neutral
         self.sort = sort
         self.details = details
-        self.resize = resize
         self.footer = footer
         self.back = back
         self.jump = jump
@@ -970,7 +978,7 @@ class MyTextInput(TextInput):
         elif popup == False:
             self.background_color = RM.textInputBGColor
         else:
-            self.background_color = [.2, .2, .2, 1]
+            self.background_color = [.22, .22, .22, 1]
 
     def insert_text(self, char, from_undo=False):
         """ Делаем буквы заглавными """
@@ -1069,6 +1077,46 @@ class MyTextInput(TextInput):
     def on_touch_down(self, touch):
         super().on_touch_down(touch)
 
+class MainScroll(GridLayout):
+    """ Главный список прокрутки """
+    def __init__(self, *args, **kwargs):
+        super(MainScroll, self).__init__()
+        self.cols = 1
+        self.spacing = RM.spacing * 1.5
+        self.padding = RM.padding * 2
+        self.size_hint_y = None
+
+class FloorView(DragBehavior, GridLayout):
+    """ Сетка подъезда """
+    def __init__(self, *args, **kwargs):
+        super(FloorView, self).__init__()
+        size = RM.flatButtonSize
+        self.row_default_height = size
+        self.col_default_width = size
+        self.cols_minimum = {0: size / 3}
+        self.cols = RM.porch.columns + 1
+        self.rows = RM.porch.rows
+        self.row_force_default = True
+        self.col_force_default = True
+        self.spacing = RM.spacing * (2 if RM.desktop else 1.5)
+        self.GS = [ # Grid Size - реальный размер сетки подъезда
+            (size + self.spacing[0]) * self.cols - size/2, (size + self.spacing[0]) * self.rows]
+        x = self.GS[0] - 20
+        y = self.GS[1]
+        defaultPos = [Window.size[0] / 2 - self.GS[0] / 2, 0 - RM.mainList.size[1] / 2 + self.GS[1] / 2]
+        if RM.orientation == "h": defaultPos[0] -= RM.horizontalOffset/2
+        if RM.porch.floorview is None and RM.porch.pos[1] == [0, 0]: # первичное создание или обновление подъезда
+            if x > RM.mainList.size[0] or y > RM.mainList.size[1]:
+                self.pos = [0, 0] # 0,0 - верхний левый угол mainList - для RelativeLayout
+                RM.porch.pos[0] = False # форсируем заполняющий режим, если слишком большой подъезд
+            else:
+                self.pos = defaultPos
+        elif not RM.porch.pos[0]: # заполнение
+            self.pos = [0, 0]
+        else: # свободный режим
+            self.pos = defaultPos if RM.porch.pos[1] == [0, 0] else RM.porch.pos[1]
+        self.drag_timeout = 0 if not RM.porch.pos[0] else 10000
+
 class MyCheckBox(CheckBox):
     """ Галочки """
     def __init__(self, active=False, size_hint=(1, 1), pos_hint=None, *args, **kwargs):
@@ -1084,7 +1132,7 @@ class TTab(TabbedPanelHeader):
     def __init__(self, text=""):
         super(TTab, self).__init__()
         if not RM.desktop: self.font_size = RM.fontXS * RM.fontScale(cap=1.2)
-        if RM.bigLanguage: self.font_size = self.font_size * .9
+        #if RM.bigLanguage: self.font_size = self.font_size * .9
         if RM.specialFont is not None: self.font_name = RM.specialFont
         self.text = text
         self.background_normal = "void.png"
@@ -1223,13 +1271,10 @@ class FloatButton(Button):
         self.size_hint = None, None
         if pos is not None: self.pos = pos
         if font_size is not None: self.font_size = font_size
-        #self.background_color = background_color if background_color is not None else [.3,.3,.3,.85]
-        #self.background_normal = ""
-        #self.background_down = ""
         self.halign = "center"
         self.valign = "center"
 
-class RoundColorButton(Button):
+class RoundColorButton(DragBehavior, Button):
     def __init__(self, color, side=None, pos=None, size_hint=(None, None), text="", pos_hint=None):
         super(RoundColorButton, self).__init__()
         if pos is not None: self.pos = pos
@@ -1396,24 +1441,16 @@ class FirstCallButtonPhone(FirstCallButton):
 
 class FloorLabel(Label):
     """ Кнопка квартиры (обычная или скрытая) – базовый класс """
-    def __init__(self, flat, width, height, font_size):
+    def __init__(self, flat, width, font_size):
         super(FloorLabel, self).__init__()
         self.text = flat
         self.width = width
-        self.height = height
+        self.height = RM.standardTextHeight * RM.settings[0][8]
         self.font_size = font_size
         self.halign = "center"
         self.valign = "center"
         self.color = RM.standardTextColor
         self.text_size = self.height, None
-
-    def scale(self):
-        """ Изменение размера шрифта этажей на масштабируемом подъезде"""
-        self.size_hint_x = None
-        sk = RM.slider.value * .7
-        if sk < 1: sk = 1
-        self.font_size = RM.fontS * (1 if RM.desktop else .8) * 1.2 * RM.fontScale() * sk
-        #self.width = self.text_size[0] = RM.standardTextWidth # эта строка делает столбец этажей фиксированным по ширине
 
 class FlatButton(Button):
     """ Кнопка квартиры (обычная или скрытая) – базовый класс """
@@ -1424,10 +1461,10 @@ class FlatButton(Button):
         self.text = f"{text}{emo}"
         self.status = status
         self.color2 = color2
-        self.height = height
         self.flat = flat
         self.recBox = recBox
         self.size_hint_y = size_hint_y
+        self.height = height
         self.id = id
         if self.height > 0 and not RM.desktop:
             self.font_size = RM.flatSizeInList
@@ -1492,6 +1529,46 @@ class FlatButtonSquare(FlatButton):
     def __init__(self, flat):
         super(FlatButtonSquare, self).__init__()
         self.update(flat)
+        self.pos1 = None
+        self.pos2 = None
+        self.step = .4 if not RM.desktop else .5
+
+    def on_touch_move(self, touch):
+        touch.ungrab(self)
+
+        #f = RM.porch.floorview
+        #f.pos = touch.pos[0], touch.pos[1] - f.GS[1]
+        #x_delta = touch.pos[0] - f.pos[0]
+        #y_delta = touch.pos[1] - f.pos[1]
+        #print(x_delta, y_delta)
+        #print(self.to_window(f.pos[0], f.pos[1]))
+        #f.pos = self.to_window(touch.pos[0] - f.pos[0], touch.pos[1] - f.pos[1])
+
+        self.state = "normal"
+        if not RM.porch.pos[0]: return
+        self.pos1 = self.pos2
+        self.pos2 = touch.pos
+        if self.pos1 is not None and self.pos2 is not None:
+            x_dif = self.pos2[0] - self.pos1[0]
+            y_dif = self.pos2[1] - self.pos1[1]
+            if x_dif > 0: RM.porch.floorview.pos[0] += self.step
+            elif x_dif < 0: RM.porch.floorview.pos[0] -= self.step
+            if y_dif > 0: RM.porch.floorview.pos[1] += self.step
+            elif y_dif < 0: RM.porch.floorview.pos[1] -= self.step
+            self.pos1 = None
+            self.pos2 = None
+
+    def on_touch_down_(self, touch):
+        #if self.collide_point(*touch.pos):
+        if touch.grab_current is self:
+            touch.grab(self)
+            return True
+
+    def on_touch_up_(self, touch):
+        if self.collide_point(*touch.pos):# and touch.grab_current is self:
+            touch.ungrab(self)
+            self.on_release()
+            return True
 
 class FlatFooterLabel(Label):
     """ Записи под квартирой в режиме списка """
@@ -1546,7 +1623,7 @@ class SortListButton(Button):
         self.size_hint_y = size_hint_y
         self.height = Window.size[1] * .038 * 1.6 if not RM.desktop else 45
         if not RM.desktop: self.font_size = RM.fontXS * RM.fontScale(cap=1.2)
-        if RM.bigLanguage: self.font_size = self.font_size * .85
+        #if RM.bigLanguage: self.font_size = self.font_size * .85
         if font_name is not None: self.font_name = font_name
         elif RM.specialFont is not None: self.font_name = RM.specialFont
         self.halign = "center"
@@ -1757,7 +1834,7 @@ class ColorStatusButton(Button):
         else:
             RM.porchView()
 
-class MainMenuButton(Button):
+class MainMenuButton(TouchRippleBehavior, Button):
     """ Три главные кнопки внизу экрана """
     def __init__(self, text, **kwargs):
         super(MainMenuButton, self).__init__()
@@ -1788,6 +1865,9 @@ class MainMenuButton(Button):
         self.markup = True
         self.background_normal = ""
         self.background_down = ""
+        self.ripple_duration_out = .2 if RM.mode == "light" else .3
+        self.ripple_fade_from_alpha = 1 if RM.mode == "light" else .4
+        self.ripple_fade_to_alpha = 0
 
     def activate(self):
         col = get_hex_from_color(RM.mainMenuActivated)
@@ -1807,6 +1887,92 @@ class MainMenuButton(Button):
 
     def on_release(self):
         RM.updateMainMenuButtons()
+
+    def on_touch_down(self, touch):
+        collide_point = self.collide_point(touch.x, touch.y)
+        if collide_point:
+            self.ripple_show(touch)
+            #return True
+
+    def on_touch_up(self, touch):
+        if self.collide_point(*touch.pos):
+            if RM.msg[2] in self.text: RM.terPressed()
+            elif RM.msg[3] in self.text: RM.conPressed()
+            elif RM.msg[4] in self.text: RM.repPressed()
+            self.ripple_fade()
+            RM.updateMainMenuButtons()
+            return True
+
+class PorchSelector(GridLayout):
+    """ Переключатель подъездов """
+    def __init__(self):
+        super(PorchSelector, self).__init__()
+        self.size_hint = None, None
+        self.padding = RM.padding
+        if RM.porch is not None: self.updateButtons()
+
+    def updateButtons(self):
+        self.size = Window.size[0] / 2.5, Window.size[1] / 3.5
+        self.buttons = []
+        porches = len(RM.house.porches)
+        self.cols = 3 if porches <= 9 else 4
+        if porches == 4: self.cols = self.rows = 2
+        elif porches > 16:
+            self.cols = int(porches ** (0.5))+1
+            self.rows = int(porches ** (0.5))+1
+            side = (int(porches ** (0.5))+1) * RM.standardTextHeight
+            self.size = side*1.2, side*1.6
+        elif porches > 12: self.rows = 4
+        elif porches > 6: self.rows = 3
+        elif porches > 3: self.rows = 2
+        else:
+            self.cols = 1
+            self.rows = porches
+        for porch in RM.house.porches:
+            self.buttons.append(
+                SortListButton(text=f"[b]{porch.title}[/b]", size_hint_y=1) if RM.theme != "3D" \
+                    else RetroButton(text=f"[b]{porch.title}[/b]")
+            )
+            button = self.buttons[len(self.buttons)-1]
+            self.add_widget(button)
+            button.bind(on_release=self.switch)
+        while 1:
+            try: self.add_widget(SortListButton(size_hint_y=1) if RM.theme != "3D" else RetroButton())
+            except: break
+        if porches > 9: self.size[0] *= 1.25
+        if porches > 12 and porches <= 16: self.size[1] *= 1.33
+        self.pos = [Window.size[0] - self.size[0],
+                    RM.boxFooter.size[1] + RM.bottomButtons.size[1] + RM.mainList.size[1] - self.size[1] + RM.padding]
+        self.updateColor(RM.house.porches.index(RM.porch))
+    
+    def switch(self, instance):
+        porchIndex = self.buttons.index(instance)
+        RM.porch = RM.house.porches[porchIndex]
+        RM.porch.floorview = None
+        RM.porchView()
+        self.updateColor(porchIndex)
+
+    def updateColor(self, porchIndex):
+        for button in self.buttons:
+            if self.buttons.index(button) == porchIndex:
+                button.background_color = RM.titleColor
+                button.color = RM.linkColor if RM.theme == "3D" else RM.sortButtonBackgroundColor
+            else:
+                button.background_color = RM.sortButtonBackgroundColor if RM.theme != "3D" else RM.blackTint
+                button.color = RM.linkColor
+
+    def hide(self):
+        self.clear_widgets()
+        RM.floaterBox.remove_widget(self)
+
+    def show(self):
+        self.clear_widgets()
+        self.updateButtons()
+        RM.floaterBox.add_widget(self)
+
+    def displayed(self):
+        if self in RM.floaterBox.children: return True
+        else: return False
 
 class RejectColorSelectButton(AnchorLayout):
     """ Виджет из трех кнопок в настройках для выбора цвета отказа """
@@ -1976,11 +2142,15 @@ class RMApp(App):
         self.rep.checkNewMonth()
         self.rep.optimizeReportLog()
         self.checkCrashFlag()
+        #Window.bind(on_touch_move=self.window_touch_move)
         Clock.schedule_interval(self.checkDate, 60)
-        if not self.desktop: # перезагрузка параметров для решения бага у Andranik K на Android 14
-            self.setParameters(reload=True)
+        if not self.desktop: self.setParameters(reload=True) # перезагрузка параметров для решения бага у Andranik K на Android 14
         self.terPressed()
         return self.interface
+
+    def window_touch_move(self, *args):
+        for i in range(len(args)):
+            print(f"\n{i}: {args[i]}")
 
     # Подготовка переменных
 
@@ -2037,7 +2207,6 @@ class RMApp(App):
         self.deleteOnFloor = False
         self.void = Widget(size_hint_x = .15)
         self.standardTextHeight = (Window.size[1] * .038 * self.fontScale()) if not self.desktop else 35
-        self.standardTextHeightUncorrected = Window.size[1] * .038 # то же, что выше, но без коррекции на размер шрифта
         self.standardTextWidth = self.standardTextHeight * 1.3
         self.standardBarWidth = self.standardTextWidth * .8
         self.enlargedTextCo = 1.2 if not self.desktop else 1  # увеличенная текстовая строка на некоторых окнах
@@ -2065,7 +2234,6 @@ class RMApp(App):
         if not reload:  # при мягкой перезагрузке все, что ниже, не перезагружается (сохраняется)
             self.contactsEntryPoint = self.searchEntryPoint = self.popupEntryPoint = 0 # вход в разные списки
             self.stack = []
-            self.showSlider = False
             self.restore = 0
             self.blockFirstCall = 0
             self.importHelp = 0
@@ -2125,8 +2293,9 @@ class RMApp(App):
                 try: plyer.orientation.set_portrait()
                 except: pass
 
+        self.standardTextHeightUncorrected = Window.size[1] * .038  # то же, что выше, но без коррекции на размер шрифта
         self.rep = Report()  # инициализация отчета
-        register('default_font', 'icomoon.ttf', 'icomoon2.fontd')  # шрифты с иконками
+        register('default_font', 'icomoon.ttf', 'icomoon.fontd')  # шрифты с иконками
 
     # Первичное создание интерфейса
 
@@ -2170,7 +2339,8 @@ class RMApp(App):
 
         if self.theme == "dark" or self.theme == "morning": # темная тема
             self.mode = "dark"
-            self.globalBGColor = self.roundButtonBGColor = self.mainMenuButtonBackgroundColor = [0, 0, 0, 0] # фон программы
+            self.globalBGColor = self.roundButtonBGColor = [0, 0, 0, 0] # фон программы
+            self.mainMenuButtonBackgroundColor = [0, 0, 0, .25]
             self.scrollButtonBackgroundColor = [0,0,0,0]#[.14, .14, .15]  # фон пунктов списка
             self.buttonBackgroundColor = [.15, .15, .16, 1]  # цвет фона кнопок таблицы
             self.roundButtonColorPressed = self.sortButtonBackgroundColorPressed = [.2,.2,.22,1] # фон нажатой кнопки
@@ -2182,18 +2352,17 @@ class RMApp(App):
             self.standardTextColor = [.9, .9, .9, 1] # основной текст всех шрифтов
             self.titleColor = self.mainMenuActivated = [.3, .82, 1, 1] # неон - цвет нажатой кнопки и заголовка
             self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .6] # иконка списка
-            self.linkColor = self.tableColor = [.95, .95, .96, 1] # цвет текста на плашках таблицы и кнопках главного меню
+            self.linkColor = [.95, .95, .96, 1] # цвет текста на плашках таблицы и кнопках главного меню
             self.createNewPorchButton = [.2, .2, .2, 1] # пункт списка создания нового подъезда
             self.interestColor = get_hex_from_color(self.getColorForStatus("1")) # "00BC7F" # "00CA94" # должен соответствовать зеленому статусу или чуть светлее
             self.timerOffColor = self.linkColor
             self.saveColor = "00E7C8"
             self.disabledColor = "4C4C4C"
             self.tabColors = [self.linkColor, "tab_background_teal.png"] # основной цвет вкладки и фон
-            self.sliderImage = "slider_cursor.png"
 
             if self.theme == "morning": # Утро
                 self.mainMenuButtonColor = self.timerOffColor = self.topButtonColor
-                self.linkColor = self.tableColor = [.96, .96, .96, 1]
+                self.linkColor = [.96, .96, .96, 1]
                 self.buttonBackgroundColor = self.scrollButtonBackgroundColor = [.13, .13, .13, 1]
                 self.textInputBGColor = [.3, .3, .3, .9]
                 self.mainMenuButtonBackgroundColor = [.27, .27, .27, .6]
@@ -2204,16 +2373,15 @@ class RMApp(App):
                 self.titleColor = self.mainMenuActivated = [.76, .65, .89, 1]
                 self.scrollIconColor = [.62, .73, .89]
                 self.tabColors = [self.linkColor, "tab_background_purple_light.png"]
-                self.sliderImage = "slider_cursor_purple_light.png"
 
         else: # "sepia"
             self.mode = "light"
             self.globalBGColor = [1,1,1,0]
-            self.linkColor = self.tableColor = self.themeDefault[1]
+            self.linkColor = self.themeDefault[1]
             self.mainMenuButtonColor = [.28, .25, .3, .8]
             self.standardTextColor = [.22, .21, .2]
             self.mainMenuActivated = self.titleColor = [0,.47,.75,1]
-            self.mainMenuButtonBackgroundColor = self.globalBGColor
+            self.mainMenuButtonBackgroundColor = [1,1,1,.25]#self.globalBGColor
             self.activatedColor = [0, .15, .35, .9]
             self.buttonBackgroundColor = [.94, .93, .92, .9]
             self.textInputColor = [.1, .1, .1]
@@ -2238,7 +2406,6 @@ class RMApp(App):
             self.timerOffColor = self.themeDefault[1]
             self.disabledColor = get_hex_from_color(self.topButtonColor)
             self.tabColors = [self.linkColor, "tab_background_blue.png"]
-            self.sliderImage = "slider_cursor_blue.png"
 
             if self.theme == "purple":  # Пурпур
                 self.globalBGColor = [.95,.95,.95,0]
@@ -2290,6 +2457,7 @@ class RMApp(App):
                 self.roundButtonColorPressed = [.11, .37, .54, 1]
                 self.roundButtonColorPressed2 = [.7, .8, .9, .23]
                 self.sortButtonBackgroundColorPressed = [.25,.26,.27, 1]
+                self.mainMenuButtonBackgroundColor = [.1, .1, .1, .25]
                 self.titleColor = self.mainMenuActivated = [.76, .86, .99, 1]
                 self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .6]
                 self.mainMenuButtonColor = self.timerOffColor = self.topButtonColor
@@ -2297,9 +2465,8 @@ class RMApp(App):
                 self.textInputColor = [1, 1, 1]
                 self.saveColor = "00E79E"
                 self.disabledColor = get_hex_from_color(self.darkGrayFlat)
-                self.linkColor = self.tableColor = [.97, .97, .97]
+                self.linkColor = [.97, .97, .97, 1]
                 self.tabColors = [self.linkColor, "tab_background_gray.png"]
-                self.sliderImage = "slider_cursor_gray.png"
 
             elif self.theme == "3D": # 3D
                 self.mode = "dark"
@@ -2307,7 +2474,7 @@ class RMApp(App):
                 self.globalBGColor = [.15, .15, .15, 1]
                 self.titleColor = self.mainMenuActivated = [0, 1, .9, 1]
                 self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .6]
-                self.linkColor = self.mainMenuButtonColor = self.tableColor = self.timerOffColor = [.97, 1, .97, 1]
+                self.linkColor = self.mainMenuButtonColor = self.timerOffColor = [.97, 1, .97, 1]
                 self.mainMenuBGColor = [.5, .5, .5, 1]  # [0.83, 0.83, 0.83, 0]
                 self.textInputBGColor = [.3, .3, .3, .95]
                 self.textInputColor = [1, 1, 1]
@@ -2321,9 +2488,9 @@ class RMApp(App):
                 self.interestColor = get_hex_from_color(self.titleColor)
                 self.saveColor = get_hex_from_color(self.titleColor)
                 self.disabledColor = get_hex_from_color(self.darkGrayFlat)
-                self.sliderImage = "slider_cursor_3d.png"
                 self.tabColors = [self.linkColor, "tab_background_3d.png"]
 
+        self.tableColor = [self.linkColor[0], self.linkColor[1], self.linkColor[2], .85]
         self.mainMenuButtonColor2 = get_hex_from_color(self.mainMenuButtonColor)
         self.titleColor2 = get_hex_from_color(self.titleColor)
         self.timerOffColor[3] = .9
@@ -2407,6 +2574,7 @@ class RMApp(App):
             "record": f"[size={self.FCPIconSize}]{icon('icon-pencil')}[/size]{br}{self.msg[163]}",  # запись
             "reject": f"[size={self.FCPIconSize}]{icon('icon-ban')}[/size]{br}{self.msg[207]}",  # отказ
 
+            "building0":icon('icon-building'),
             "check":    icon("icon-check"),
             "details":  icon("icon-pencil"),
             "search":   icon("icon-search"),
@@ -2419,7 +2587,7 @@ class RMApp(App):
             "contact":  icon("icon-user"),
             "phone-thin": icon("icon-phone"),
             "resize":   icon("icon-enlarge"), # IcoMoon
-            "sort":     icon("icon-sort-amount-asc"),
+            "sort":    f"{icon('icon-sort-amount-asc')} {self.msg[324]}",
             "shrink":   icon('icon-scissors'),
             "list":     icon("icon-file-text"),
             "bin":   f"{icon('icon-trash')}\n{self.msg[173]}",
@@ -2445,7 +2613,7 @@ class RMApp(App):
             "angle-down": icon("icon-angle-down"),
             "nav":      icon("icon-location"), # Entypo
             "flist":    icon("icon-align-justify"),
-            "fgrid":    icon("icon-th-large"),
+            "fgrid":    icon("icon-hand-o-up"),#"icon-th-large"),
             "phone":    icon("icon-phone-square"),
             "phone0":   icon("icon-phone-square", color=self.disabledColor),
             "warn":     icon("icon-warning"),
@@ -2458,7 +2626,8 @@ class RMApp(App):
             "cancel":   self.msg[190].lower(),
             "wait":     icon("icon-spinner3"), # IcoMoon
             "link":    f"[color={self.titleColor2}]{icon('icon-external-link-square')}[/color]",
-            "add_emoji": icon("icon-add_photo_alternate"),
+            "add_emoji":icon("icon-add_photo_alternate"),
+            "exchange": icon("icon-exchange"),
             "":         ""
         }
 
@@ -2597,7 +2766,7 @@ class RMApp(App):
         self.titleBox = BoxLayout(size_hint_y=self.tableSizeHintY, padding=(self.padding, self.padding*2),
                                   spacing=self.spacing)
         self.listarea.add_widget(self.titleBox)
-        self.tbWidth = [.25, .35, .14, .26] # значения ширины кнопок таблицы
+        self.tbWidth = [.25, .48, .27] # значения ширины кнопок таблицы
         if self.theme != "3D": self.backButton = TableButton(text=self.button["back"], disabled=True,
                                                              background_color=self.globalBGColor)
         else: self.backButton = RetroButton(text=self.button["back"], disabled=True)
@@ -2610,22 +2779,16 @@ class RMApp(App):
         self.titleBox.add_widget(self.sortButton)
         self.sortButton.bind(on_press=self.sortPressed)
 
-        if self.theme != "3D": self.resizeButton = TableButton(disabled=True,
-                                                               background_color=self.globalBGColor)
-        else: self.resizeButton = RetroButton(disabled=True)
-        self.titleBox.add_widget(self.resizeButton)
-        self.resizeButton.bind(on_release=self.resizePressed)
-
         if self.theme != "3D": self.detailsButton = TableButton(disabled=True)
         else: self.detailsButton = RetroButton(disabled=True)
 
         self.detailsButton.bind(on_release=self.detailsPressed)
         self.titleBox.add_widget(self.detailsButton)
+        #self.porchSelector = PorchSelector()
 
         self.backButton.size_hint_x = self.tbWidth[0]
         self.sortButton.size_hint_x = self.tbWidth[1]
-        self.resizeButton.size_hint_x = self.tbWidth[2]
-        self.detailsButton.size_hint_x = self.tbWidth[3]
+        self.detailsButton.size_hint_x = self.tbWidth[2]
 
         # Главный список
 
@@ -2634,43 +2797,7 @@ class RMApp(App):
         AL.add_widget(self.mainList)
         self.listarea.add_widget(AL)
 
-        # Слайдер и джойстик выбора позиции
-
-        self.sliderBox = BoxLayout()
-        value = self.settings[0][8]
-        image = self.sliderImage
-        self.slider = Slider(pos=(0, Window.size[1] * .75), orientation='horizontal', min=0.4, max=2,
-                             padding=0, value=value, cursor_image=image)
-        self.sliderBox.add_widget(self.slider)
-        self.posSelector = GridLayout(rows=3, cols=3, size_hint=(None, None), padding=self.padding,
-                                      size=(Window.size[0]/2.5, Window.size[1]/3.5))
-        self.scaleButtons = []
-        for i, btn in zip([1,2,3,4,5,6,7,8,9], ["up-left", "up", "up-right", "back", "dot", "right", "down-left", "down", "down-right"]):
-            self.scaleButtons.append(
-                SortListButton(text=self.button[btn], size_hint_y=1) if self.theme != "3D" else \
-                    RetroButton(text=self.button[btn])
-            )
-            self.posSelector.add_widget(self.scaleButtons[len(self.scaleButtons)-1])
-            def __click1(instance): self.changePorchPos(1)
-            def __click2(instance): self.changePorchPos(2)
-            def __click3(instance): self.changePorchPos(3)
-            def __click4(instance): self.changePorchPos(4)
-            def __click5(instance): self.changePorchPos(5)
-            def __click6(instance): self.changePorchPos(6)
-            def __click7(instance): self.changePorchPos(7)
-            def __click8(instance): self.changePorchPos(8)
-            def __click9(instance): self.changePorchPos(9)
-            if   i == 1: self.scaleButtons[len(self.scaleButtons)-1].bind  (on_release=__click1)
-            elif i == 2: self.scaleButtons[len(self.scaleButtons) - 1].bind(on_release=__click2)
-            elif i == 3: self.scaleButtons[len(self.scaleButtons) - 1].bind(on_release=__click3)
-            elif i == 4: self.scaleButtons[len(self.scaleButtons) - 1].bind(on_release=__click4)
-            elif i == 5: self.scaleButtons[len(self.scaleButtons) - 1].bind(on_release=__click5)
-            elif i == 6: self.scaleButtons[len(self.scaleButtons) - 1].bind(on_release=__click6)
-            elif i == 7: self.scaleButtons[len(self.scaleButtons) - 1].bind(on_release=__click7)
-            elif i == 8: self.scaleButtons[len(self.scaleButtons) - 1].bind(on_release=__click8)
-            elif i == 9: self.scaleButtons[len(self.scaleButtons) - 1].bind(on_release=__click9)
-        self.slider.bind(on_touch_move=self.sliderGet)
-        self.slider.bind(on_touch_up=self.sliderGet)
+        self.floatView = RelativeLayout() # дополнительный контейнер для сетки подъезда
 
         # Нижние кнопки таблицы
 
@@ -2711,22 +2838,23 @@ class RMApp(App):
             self.interface.add_widget(self.horizontalGrid)
 
         self.checkOrientation()
+
         self.originalMainListSizeHintY = self.mainList.size_hint_y
 
     # Основные действия с центральным списком
 
-    def updateList(self, instance=None, remount=True, progress=False):
+    def updateList(self, instance=None, progress=False):
         """ Заполнение главного списка элементами """
         form = self.displayed.form
 
         def __continue(*args):
             instance = args[0] if len(args) > 0 else None
             self.stack = list(dict.fromkeys(self.stack))
-            if remount: self.mainList.clear_widgets()
+            self.mainList.clear_widgets()
             self.mainList.padding = 0
             self.popupEntryPoint = 0
             self.firstCallPopup = False
-            if not self.showSlider: self.sortButton.disabled = True
+            self.sortButton.disabled = True
 
             # Считываем содержимое Feed/displayed
 
@@ -2762,13 +2890,6 @@ class RMApp(App):
                 self.sortButton.text = ""
                 self.sortButton.disabled = True
 
-            if self.displayed.resize is not None:
-                self.resizeButton.disabled = False
-                self.resizeButton.text = self.displayed.resize
-            else:
-                self.resizeButton.text = ""
-                self.resizeButton.disabled = True
-
             if self.displayed.details is not None:
                 self.detailsButton.disabled = False
                 self.detailsButton.text = self.displayed.details
@@ -2776,7 +2897,7 @@ class RMApp(App):
                 self.detailsButton.text = ""
                 self.detailsButton.disabled = True
 
-            if "View" in form:
+            if form == "houseView" or form == "flatView":
                 self.navButton.disabled = False
                 self.navButton.text = self.button['nav']
             else:
@@ -2797,24 +2918,27 @@ class RMApp(App):
             #if self.displayed.embed is not None:
             #    self.mainList.add_widget(self.displayed.embed)
 
-        # Обычный список (этажей нет)
+            # Настройки списка (кроме подъезда в сетке)
 
+            self.btn = []  # массив кнопок для списка
             self.height1 = RM.standardTextHeight * 2 / RM.fontScale()  # высота кнопки списка
+            self.scrollWidget = MainScroll()
+            self.scrollWidget.bind(minimum_height=self.scrollWidget.setter('height'))
+            self.scroll = ScrollView(size=self.mainList.size, scroll_type=['content'])
+            if form == "search" or form == "porchView" or form == "repLog" or form == "flatView":
+                self.scroll.scroll_type = ['bars', 'content']
+                self.scroll.bar_width = self.standardBarWidth
             if self.desktop:
                 self.height1 = self.height1 * (.8 if form == "ter" or form == "con" else .6)
             rad = self.getRadius(90)[0]  # радиус закругления подсветки списка
             if form == "ter": self.scrollRadius = [rad, ] if len(self.houses) == 0 else [rad, rad, 0, 0]
             elif form == "con": self.scrollRadius = [rad, rad, 0, 0]
+            elif form == "porchView":
+                self.getRadius(150)
+                self.grid = False
+                self.height1 *= .9
             else: self.scrollRadius = [rad, ]
-            self.scrollWidget = GridLayout(cols=1, spacing=self.spacing * 1.5, padding=self.padding * 2,
-                                           size_hint_y=None)
-            self.scrollWidget.bind(minimum_height=self.scrollWidget.setter('height'))
-            self.scroll = ScrollView(size=self.mainList.size, scroll_type=['content'])
-
-            if form == "search" or form == "porchView" or form == "repLog" \
-                    or form == "flatView":
-                self.scroll.scroll_type = ['bars', 'content']
-                self.scroll.bar_width = self.standardBarWidth
+            height = self.height1
 
             if self.createFirstHouse: # запись "создайте один или несколько домов" для пустого сегмента
                 self.createFirstHouse = False
@@ -2826,126 +2950,185 @@ class RMApp(App):
                 self.scrollWidget.add_widget(box1)
                 self.mainList.add_widget(self.scroll)
 
-            elif form != "porchView" or \
-                    (form == "porchView" and not self.porch.floors()): # все прочие списки
+                # Вид подъезда с этажами (сеткой)
 
-                if form == "porchView":
-                    self.getRadius(150)
-                    self.grid = False
-                    self.scaling = False
-                    self.height1 *= .9
-                    self.scrollWidget.spacing = self.spacing * 2
+            elif form == "porchView" and self.porch.floors():
+                self.grid = True
+                self.floatView.clear_widgets()
+                self.flatSizeInGrid = self.fontS * self.fontScale(cap=1.2)
+                if self.porch.columns >= 15 or self.porch.rows >= 30: self.getRadius(9999)
+                elif self.porch.columns >= 10 or self.porch.rows >= 20: self.getRadius(250)
+                else: self.getRadius(150)
+                self.emojiGap = "\n" if not self.porch.pos[0] and self.porch.columns > 7 else " "
+                self.flatButtonSize = self.standardTextHeightUncorrected * .45 * RM.settings[0][8] # размер кнопки квартиры на сетке
+                floorLabelWidth = self.standardTextHeightUncorrected / 2
+                floorFontSize = self.fontS * (1 if self.desktop else .8) * self.fontScale()
 
-                height = self.height1
-                self.btn = []  # список кнопок
+                if self.porch.floorview is None: # первичная генерация сетки
+                    self.porch.floorview = FloorView()
+                    for flat in self.displayed.options:
+                        if "object" in str(flat): # показ квартиры
+                            self.porch.floorview.add_widget(FlatButtonSquare(flat))
+                        else: # показ цифры этажа
+                            self.porch.floorview.add_widget(FloorLabel(flat=flat, width=floorLabelWidth,
+                                                                       font_size=floorFontSize))
+                else: # только обновление
+                    self.porch.floorview.__init__()
+                    switchedFromList = True if "TableButton" in str(instance) \
+                                               and instance.text == self.button["fgrid"] else False
+                    if not switchedFromList and self.flat is not None:
+                        self.flat.buttonID.update(self.flat) # перерисовка одной квартиры
+                    else:
+                        for b in self.porch.floorview.children:
+                            if "FlatButtonSquare" in str(b): b.update(flat=b.flat) # ... или всего подъезда
+                            else:
+                                b.size_hint_x = 1
+                                b.font_size = floorFontSize
 
-                for i in range(len(self.displayed.options)):
-                    label = self.displayed.options[i]
-                    if form == "porchView": flat = label
+                if self.porch.pos[0]: # монтаж - свободный режим
+                    self.mainList.add_widget(self.floatView)
+                    self.floatView.add_widget(self.porch.floorview)
 
-                    # Добавление пункта списка
+                else: # ... заполняющий режим
+                    self.mainList.add_widget(self.porch.floorview)
+                    if self.porch.columns >= 15 or self.porch.rows >= 30:
+                        self.porch.floorview.spacing = 1
+                        self.flatSizeInGrid = self.fontXXS * self.fontScale(cap=1.2)
+                    elif self.porch.columns >= 10 or self.porch.rows >= 20:
+                        self.flatSizeInGrid = self.fontXS * self.fontScale(cap=1.2)
+                        self.porch.floorview.spacing = self.spacing * (2 if self.desktop else 1)
+                    else:
+                        self.flatSizeInGrid = self.fontS * self.fontScale(cap=1.2)
+                        self.porch.floorview.spacing = self.spacing * (2 if self.desktop else 1.5)
+                    self.porch.floorview.row_force_default = False
+                    self.porch.floorview.col_force_default = False
+                    self.porch.floorview.col_default_width = 0
+                    self.porch.floorview.cols_minimum = {0: floorLabelWidth * 1.1}
+                    self.porch.floorview.row_default_height = 0
+                    self.porch.floorview.padding = self.padding * 2, 0
+                    for widget in self.porch.floorview.children:
+                        if "app.FloorLabel" in str(widget):
+                            widget.size_hint_x = None
+                            widget.font_size = floorFontSize * 1.1
+                            widget.width = floorLabelWidth * 1.1
+                    self.neutral.text = self.button["resize"]
+                #if self.porchSelector in self.floaterBox.children: selector = True
+                #else: selector = False
+                self.floaterBox.clear_widgets()
+                #if selector: self.porchSelector.show()
 
-                    if form == "repLog":
-                        # отдельный механизм добавления записей журнала отчета + ничего не найдено в поиске
-                        self.btn.append(MyLabel(text=label.strip(), color=self.standardTextColor, halign="left",
-                                                valign="top", size_hint_y=None, height=self.height1, markup=True,
-                                                text_size=(Window.size[0]-self.standardTextHeight, self.height1)))
-                        self.scrollWidget.add_widget(self.btn[i])
+                # Все списки
 
-                    else: # стандартное добавление
-                        if (form == "ter" and len(self.houses)>0) or form == "con" or form == "houseView" \
-                                and not self.button['plus-1'] in label:
-                            addEllipsis = True # флаг, что нужно добавить три точки настроек
-                            box = GridLayout(rows=2, cols=3, height=height, size_hint_y=None)
-                            box.add_widget(Widget(size_hint=(.03, 0)))
-                        else:
-                            addEllipsis = False
-                            box = BoxLayout(orientation="vertical", height=height, size_hint_y=None)
+            else:
+                if form != "porchView" or self.porch.scrollview is None:
+                    for i in range(len(self.displayed.options)):
+                        label = self.displayed.options[i]
+                        if form == "porchView": flat = label
 
-                        if form != "porchView":
-                            # вид для всех списков, кроме подъезда - без фона (а также кнопки "Создайте дом")
-                            self.getRadius()
-                            self.btn.append(ScrollButton(id=i, text=label.strip(), height=height*2))
+                        # Добавление пункта списка
 
-                        elif self.porch.scrollview is None: # вид для списка подъезда - с фоном и закругленными квадратиками
-                            if not "." in flat.number or self.house.type == "private":
-                                self.btn.append(FlatButton(text=f"[b]{flat.number}[/b] {flat.getName()}",
-                                                           height=height, status=flat.status, recBox=box,
-                                                           color2=flat.color2, emoji=flat.emoji,
-                                                           id=i, flat=flat, size_hint_y=None))
+                        if form == "repLog":
+                            # отдельный механизм добавления записей журнала отчета + ничего не найдено в поиске
+                            self.btn.append(MyLabel(text=label.strip(), color=self.standardTextColor, halign="left",
+                                                    valign="top", size_hint_y=None, height=self.height1, markup=True,
+                                                    text_size=(Window.size[0]-self.standardTextHeight, self.height1)))
+                            self.scrollWidget.add_widget(self.btn[i])
 
-                            else: continue
+                        else: # стандартное добавление
+                            if (form == "ter" and len(self.houses)>0) or form == "con" or form == "houseView" \
+                                    and not self.button['plus-1'] in label:
+                                addEllipsis = True # флаг, что нужно добавить три точки настроек
+                                box = GridLayout(rows=2, cols=3, height=height, size_hint_y=None)
+                                box.add_widget(Widget(size_hint=(.03, 0)))
+                            else:
+                                addEllipsis = False
+                                box = BoxLayout(orientation="vertical", height=height, size_hint_y=None)
 
-                        if form != "porchView" or self.porch.scrollview is None:
+                            if form != "porchView":
+                                # вид для всех списков, кроме подъезда - без фона (а также кнопки "Создайте дом")
+                                self.getRadius()
+                                self.btn.append(ScrollButton(id=i, text=label.strip(), height=height*2))
+
+                            else: # вид для списка подъезда - с фоном и закругленными квадратиками
+                                if not "." in flat.number or self.house.type == "private":
+                                    self.btn.append(FlatButton(text=f"[b]{flat.number}[/b] {flat.getName()}",
+                                                               height=height, status=flat.status, recBox=box,
+                                                               color2=flat.color2, emoji=flat.emoji,
+                                                               id=i, flat=flat, size_hint_y=None))
+
+                                else: continue
+
                             last = len(self.btn) - 1  # адресация кнопки, которая обрабатывается в данный момент
                             button = self.btn[last]
                             box.add_widget(button)
 
-                        if addEllipsis: # добавляем три точки
-                            if form != "con":
-                                box.add_widget(SettingsButton(id=i if not self.button['porch_inv'] in label else None))
-                            else:
-                                box.add_widget(Widget(size_hint_x=.03))
-                            box.add_widget(Widget(size_hint=(0, 0)))
+                            if addEllipsis: # добавляем три точки
+                                if form != "con":
+                                    box.add_widget(SettingsButton(id=i if not self.button['porch_inv'] in label else None))
+                                else:
+                                    box.add_widget(Widget(size_hint_x=.03))
+                                box.add_widget(Widget(size_hint=(0, 0)))
 
-                        if self.displayed.footer != []: # индикаторы-футеры, если они есть
-                            self.getRadius(90)
-                            self.scrollWidget.spacing = self.spacing * 8
-                            box.height = height * 1.32
-                            footerGrid = GridLayout(rows=1, cols=len(self.displayed.footer[i]), size_hint_y=None,
-                                                    pos_hint={"center_x": .5}, size_hint_x=.96, height=height*.36)
-                            if form == "con": footerGrid.cols_minimum = {1: button.size[0] * .7}
-                            elif form == "ter":
-                                footerGrid.cols_minimum = { # поджимаем футеры справа и слева
-                                    #0: button.size[0] * .1,
-                                    1: button.size[0] * .22,
-                                    2: button.size[0] * .22,
-                                    3: button.size[0] * .22,
-                                    4: button.size[0] * .22,
-                                    #5: button.size[0] * .1
-                                }
+                            if self.displayed.footer != []: # индикаторы-футеры, если они есть
+                                self.getRadius(90)
+                                self.scrollWidget.spacing = self.spacing * 8
+                                box.height = height * 1.32
+                                footerGrid = GridLayout(rows=1, cols=len(self.displayed.footer[i]), size_hint_y=None,
+                                                        pos_hint={"center_x": .5}, size_hint_x=.96, height=height*.36)
+                                if form == "con": footerGrid.cols_minimum = {1: button.size[0] * .7}
+                                elif form == "ter":
+                                    footerGrid.cols_minimum = { # поджимаем футеры справа и слева
+                                        #0: button.size[0] * .1,
+                                        1: button.size[0] * .22,
+                                        2: button.size[0] * .22,
+                                        3: button.size[0] * .22,
+                                        4: button.size[0] * .22,
+                                        #5: button.size[0] * .1
+                                    }
+                                count = 0
+                                for b in range(len(self.displayed.footer[i])):
+                                    if form == "ter" and self.fontScale() <= 1: limit = 5
+                                    elif form == "ter": limit = 3
+                                    else: limit = len(self.displayed.footer[i])-1
+                                    if count == 0: self.footerRadius = [0, 0, 0, rad * 1.1]
+                                    elif count < limit: self.footerRadius = [0, ]
+                                    else: self.footerRadius = [0, 0, rad * 1.1, 0]
+                                    button.footers.append(FooterButton(text=str(self.displayed.footer[i][b]),
+                                                                       parentIndex=i))
+                                    count += 1
+                                    footerGrid.add_widget(button.footers[len(button.footers)-1])
+                                box.add_widget(footerGrid)
 
-                            count = 0
-                            for b in range(len(self.displayed.footer[i])):
-                                if form == "ter" and self.fontScale() <= 1: limit = 5
-                                elif form == "ter": limit = 3
-                                else: limit = len(self.displayed.footer[i])-1
-                                if count == 0: self.footerRadius = [0, 0, 0, rad * 1.1]
-                                elif count < limit: self.footerRadius = [0, ]
-                                else: self.footerRadius = [0, 0, rad * 1.1, 0]
-                                button.footers.append(FooterButton(text=str(self.displayed.footer[i][b]),
-                                                                   parentIndex=i))
-                                count += 1
-                                footerGrid.add_widget(button.footers[len(button.footers)-1])
-                            box.add_widget(footerGrid)
+                            elif form == "flatView" and len(self.flat.records) > 0: # запись посещения
+                                record = label[label.index("[i]"):]
+                                string = ""
+                                for char in record:
+                                    if char == "\n": string += " "
+                                    else: string += char
+                                lastRec = RecordButton(text=string, id=i)
+                                box.add_widget(lastRec)
+                                button.text = button.text[: button.text.index("[i]")]
+                                button.valign = "center"
+                                button.size_hint_y = None
+                                button.height = height * 1.05
+                                if len(string) < 30: bh = self.standardTextHeight * 1.8
+                                elif len(string) < 60: bh = self.standardTextHeight * 3.6
+                                elif len(string) < 90: bh = self.standardTextHeight * 5.4
+                                elif i == 0:
+                                    bh = self.mainList.size[1] * (.6 if self.orientation == "v" else .4)
+                                else:
+                                    bh = self.standardTextHeight * 3.6
+                                box.height = button.height + bh
+                                box.spacing = self.spacing
 
-                        elif form == "flatView" and len(self.flat.records) > 0: # запись посещения
-                            record = label[label.index("[i]"):]
-                            string = ""
-                            for char in record:
-                                if char == "\n": string += " "
-                                else: string += char
-                            lastRec = RecordButton(text=string, id=i)
-                            box.add_widget(lastRec)
-                            button.text = button.text[: button.text.index("[i]")]
-                            button.valign = "center"
-                            button.size_hint_y = None
-                            button.height = height * 1.05
-                            if len(string) < 30: bh = self.standardTextHeight * 1.8
-                            elif len(string) < 60: bh = self.standardTextHeight * 3.6
-                            elif len(string) < 90: bh = self.standardTextHeight * 5.4
-                            elif i == 0:
-                                bh = self.mainList.size[1] * (.6 if self.orientation == "v" else .4)
-                            else:
-                                bh = self.standardTextHeight * 3.6
-                            box.height = button.height + bh
-                            box.spacing = self.spacing
+                        if form != "repLog": self.scrollWidget.add_widget(box)
 
-                    if form != "repLog": self.scrollWidget.add_widget(box)
-
+                #if self.porchSelector in self.floaterBox.children: selector = True
+                #else: selector = False
                 self.floaterBox.clear_widgets()
+                #if selector: self.porchSelector.show()
 
-                self.btn.append(Widget(size_hint_y=None, height=height))  # пустой виджет для бага некликабельного последнего элемента
+                self.btn.append(Widget(size_hint_y=None, height=height)) # пустой виджет для бага некликабельного последнего элемента
                 self.scrollWidget.add_widget(self.btn[len(self.btn) - 1])
 
                 if form != "porchView":
@@ -3015,98 +3198,6 @@ class RMApp(App):
                         self.scroll.scroll_to(widget=self.btn[self.displayed.jump],
                                               padding=self.mainList.size[1] * .3, animate=False)
 
-            # Вид подъезда с этажами (сеткой)
-
-            else:
-                self.grid = True
-                self.flatSizeInGrid = self.fontS * self.fontScale(cap=1.2)
-                self.scaling = False
-                if self.porch.columns >= 15 or self.porch.rows >= 30: self.getRadius(9999)
-                elif self.porch.columns >= 10 or self.porch.rows >= 20: self.getRadius(250)
-                else: self.getRadius(150)
-                self.emojiGap = "\n" if self.porch.columns > 7 else " "
-                if self.settings[0][8] != 0: size = self.standardTextHeight * self.settings[0][8] * 1.5
-                else: size = self.standardTextHeight
-                noScaleSpacing = self.spacing * (2 if self.desktop else 1.5)
-                floorLabelWidth = size / 3
-                floorSize = self.fontS * (1 if self.desktop else .8) # коэффициент размера цифры этажа
-                diffX = self.mainList.size[0] - self.padding - (size * self.porch.columns + floorLabelWidth) - (noScaleSpacing * self.porch.columns)
-                diffY = self.mainListsize1 - (size * self.porch.rows) - (noScaleSpacing * self.porch.rows)
-
-                # Определение центровки
-
-                if self.settings[0][1] == 1:    self.noScalePadding = [0, 0, diffX, diffY / 2]  # влево вверху
-                elif self.settings[0][1] == 2:  self.noScalePadding = [diffX / 2, 0, diffX / 2, diffY]  # по центру вверху
-                elif self.settings[0][1] == 3:  self.noScalePadding = [diffX, 0, diffY, 0]  # справа вверху
-                elif self.settings[0][1] == 4:  self.noScalePadding = [0, diffY / 2, diffX, diffY / 2] # влево по центру
-                elif self.settings[0][1] == 6:  self.noScalePadding = [diffX, diffY / 2, 0, diffY / 2]  # справа по центру
-                elif self.settings[0][1] == 7:  self.noScalePadding = [0, diffY, diffX, 0 / 2]  # влево внизу
-                elif self.settings[0][1] == 8:  self.noScalePadding = [diffX/2, diffY, 0, diffX/2]  # снизу по центру
-                elif self.settings[0][1] == 9:  self.noScalePadding = [diffX, diffY, 0, 0]  # справа снизу
-                else:                           self.noScalePadding = [diffX / 2, diffY / 2, diffX / 2, diffY / 2]  # по центру
-
-                if remount:
-                    if self.porch.floorview is None:
-                        self.porch.floorview = GridLayout(row_force_default=True, row_default_height=size,
-                                            col_force_default=True, col_default_width=size,
-                                            cols_minimum={0: floorLabelWidth}, cols=self.porch.columns + 1,
-                                            rows=self.porch.rows, spacing=noScaleSpacing, padding=self.noScalePadding)
-                        for flat in self.displayed.options:
-                            if "object" in str(flat): # показ квартиры
-                                self.porch.floorview.add_widget(FlatButtonSquare(flat))
-                            else: # показ цифры этажа
-                                self.porch.floorview.add_widget(FloorLabel(flat=flat, width=floorLabelWidth, height=size,
-                                                                     font_size=floorSize))
-                    else:
-                        switchedFromList = True if "TableButton" in str(instance) \
-                                                   and instance.text == self.button["fgrid"] else False
-                        if not switchedFromList and self.flat is not None:
-                            self.flat.buttonID.update(self.flat) # перерисовка одной квартиры
-                        else:
-                            for b in self.porch.floorview.children:
-                                if "FlatButtonSquare" in str(b): b.update(flat=b.flat) # или всего подъезда
-                    self.mainList.add_widget(self.porch.floorview)
-
-                else: # без remount - только масштабирование через слайдер, виджеты не перемонтируются
-                    self.porch.floorview.spacing = noScaleSpacing
-                    self.porch.floorview.padding = self.noScalePadding
-                    self.porch.floorview.col_force_default = True
-                    self.porch.floorview.row_default_height = size
-                    self.porch.floorview.col_default_width = size
-                    self.porch.floorview.cols_minimum = {0: floorLabelWidth}
-                    self.porch.floorview.cols = self.porch.columns + 1
-                    self.porch.floorview.rows = self.porch.rows
-                    self.porch.grayFlats = 0
-                    for widget in self.porch.floorview.children:
-                        if "app.FloorLabel" in str(widget):
-                            widget.width = floorLabelWidth
-                            widget.text_size[0] = size
-                            widget.font_size = floorSize
-
-                if self.noScalePadding[0] < 0 or self.noScalePadding[1] < 0 or self.noScalePadding[2] < 0 or \
-                        self.noScalePadding[3] < 0:  # если дошло до границ экрана, масштабируем под экран
-                    self.scaling = True
-                    if self.porch.columns >= 15 or self.porch.rows >= 30:
-                        self.porch.floorview.spacing = 1
-                        self.flatSizeInGrid = self.fontXXS * self.fontScale(cap=1.2)
-                    elif self.porch.columns >= 10 or self.porch.rows >= 20:
-                        self.flatSizeInGrid = self.fontXS * self.fontScale(cap=1.2)
-                        self.porch.floorview.spacing = self.spacing * (2 if self.desktop else 1)
-                    else:
-                        self.flatSizeInGrid = self.fontS * self.fontScale(cap=1.2)
-                        self.porch.floorview.spacing = self.spacing * (2 if self.desktop else 1.5)
-                    self.porch.floorview.row_force_default = False
-                    self.porch.floorview.col_force_default = False
-                    self.porch.floorview.col_default_width = 0
-                    self.porch.floorview.row_default_height = 0
-                    self.porch.floorview.padding = self.padding * 2, 0
-                    for widget in self.porch.floorview.children:
-                        if "app.FloorLabel" in str(widget): widget.scale()
-                        else: widget.font_size = self.flatSizeInGrid
-
-                self.floaterBox.clear_widgets()
-                if self.showSlider: self.sliderToggle()
-
         if progress:
             self.showProgress()
             Clock.schedule_once(lambda x: __continue(instance), 0)
@@ -3125,6 +3216,7 @@ class RMApp(App):
         """ Действия, которые совершаются на указанных списках по нажатию на пункт списка """
         self.clickedBtn = instance
         self.clickedBtnIndex = instance.id
+        #self.porchSelector.hide()
 
         def __click(*args): # действие всегда выполняется с запаздыванием, чтобы отобразилась анимация на кнопке
             if self.msg[6] in instance.text: # "создать подъезд"
@@ -3140,9 +3232,6 @@ class RMApp(App):
                 return
 
             if self.displayed.form == "porchView" or self.displayed.form == "con":
-                if self.showSlider:
-                    self.showSlider = False
-                    self.sliderToggle()
                 self.contactsEntryPoint = 0
                 self.searchEntryPoint = 0
 
@@ -3229,10 +3318,15 @@ class RMApp(App):
                 options=options,
                 defaults=defaults,
                 sort="",
-                resize="",
                 multilines=[False, True],
-                disabled = [False, False]
+                disabled=[False, False]
             )
+
+        elif (self.displayed.form == "porchView" or self.displayed.form == "createNewFlat") \
+                and self.house.type == "condo": # кнопка переключения подъездов
+            self.cacheFreeModeGridPosition()
+            #if not self.porchSelector.displayed(): self.porchSelector.show()
+            #else: self.porchSelector.hide()
 
         elif self.displayed.form == "flatView" or self.displayed.form == "noteForFlat" or\
             self.displayed.form == "createNewRecord" or self.displayed.form == "recordView": # детали квартиры
@@ -3276,7 +3370,8 @@ class RMApp(App):
     def backPressed(self, instance=None):
         """ Нажата кнопка «назад» """
         form = self.displayed.form
-        if len(self.stack) > 0 and not self.showSlider: del self.stack[0]
+        if len(self.stack) > 0:# and not self.porchSelector in self.floaterBox.children:
+            del self.stack[0]
         if len(self.stack) > 0:
             stack = self.stack[0]
             if form == "rep":  # при этих действиях кнопка "назад" сохраняет данные
@@ -3294,9 +3389,8 @@ class RMApp(App):
                 self.positivePressed()
                 return
             if form == "repLog": self.repPressed()
-            elif self.showSlider:
-                self.sliderToggle("off")
-                self.porchView(instance=instance)
+            elif 0:#self.porchSelector in self.floaterBox.children:
+                pass#self.porchSelector.hide()
             elif stack == "ter":
                 self.terPressed(instance=instance)
             elif stack == "con":
@@ -3304,6 +3398,7 @@ class RMApp(App):
             elif stack == "search":
                 self.find(instance=instance)
             elif stack == "houseView":
+                self.cacheFreeModeGridPosition()
                 self.houseView(instance=instance)
             elif stack == "porchView" or self.blockFirstCall == 1 or self.msg[162] in self.pageTitle.text:
                 self.porchView(instance=instance)
@@ -3316,17 +3411,8 @@ class RMApp(App):
         elif len(self.stack) == 0:
             self.terPressed()
 
-    def resizePressed(self, instance=None):
-        """ Нажата кнопка слайдера """
-        if self.resources[0][1][1] == 0:
-            self.resources[0][1][1] = 1
-            self.popup(title=self.msg[26], message=self.msg[27] % self.button['resize'])
-        self.showSlider = False if self.showSlider else True
-        self.porchView(remount=False)
-        self.changePorchPos(self.settings[0][1])
-        self.sliderToggle("on")
-
     def sortPressed(self, instance=None):
+        #self.porchSelector.hide()
         self.dropSortMenu.clear_widgets()
         self.dropSortMenu.bind(on_select=lambda instance, x: setattr(self.sortButton, 'text', x))
         self.sortButton.bind(on_release=self.dropSortMenu.open)
@@ -3413,7 +3499,7 @@ class RMApp(App):
             sortTypes = [
                 "[u][b]"+self.msg[21]+"[/u][/b]" if self.settings[0][4] == "и" else self.msg[21], # имя
                 "[u][b]"+self.msg[33]+"[/u][/b]" if self.settings[0][4] == "а" else self.msg[33], # адрес
-                "[u][b]"+self.msg[30]+"[/u][/b]" if self.settings[0][4] == "д" else self.msg[30] # дата последней встречи
+                "[u][b]"+self.msg[325]+"[/u][/b]" if self.settings[0][4] == "д" else self.msg[325] # дата последней встречи
             ]
             for i in range(len(sortTypes)):
                 btn = SortListButton(text=sortTypes[i])
@@ -3491,69 +3577,6 @@ class RMApp(App):
                 self.popup("timerType", title=self.msg[40], message=self.msg[41],
                            options=[self.msg[42], self.msg[43]])
 
-    # Слайдер масштаба
-
-    def sliderToggle(self, mode=""):
-        """ Переключение/обновление слайдера """
-        if mode == "off": self.showSlider = False
-        if self.showSlider:
-            if not self.sliderBox in self.boxHeader.children:
-                self.boxHeader.clear_widgets()
-                self.boxHeader.add_widget(self.sliderBox)
-                if self.orientation == "v": pos2 = self.bottomButtons.size[1] + self.boxFooter.size[1] + RM.padding
-                else: pos2 = self.bottomButtons.size[1] + self.padding
-                pos = Window.size[0] - self.posSelector.size[0] - self.padding * 3, pos2
-                self.posSelector.pos = pos
-            if not self.posSelector in self.floaterBox.children:
-                self.floaterBox.add_widget(self.posSelector)
-        if not self.showSlider and self.sliderBox in self.boxHeader.children:
-            self.boxHeader.remove_widget(self.sliderBox)
-            self.floaterBox.remove_widget(self.posSelector)
-            if self.settings[0][22]: # если есть таймер
-                self.boxHeader.add_widget(self.timerBox)
-                self.boxHeader.add_widget(self.headBox)
-                self.boxHeader.add_widget(self.setBox)
-            else: # если нет таймера
-                self.boxHeader.add_widget(self.settingsButton)
-                self.boxHeader.add_widget(self.headBox)
-                self.boxHeader.add_widget(self.searchButton)
-
-    def sliderGet(self, x, y):
-        """ Считывание показателя слайдера """
-        self.settings[0][8] = self.slider.value
-        if self.scaling != self.scalingPrev: # масштабирование переключилось
-            self.porch.floorview = None
-            self.updateList()
-            self.scalingPrev = self.scaling
-            for button in self.scaleButtons:
-                button.disabled = True if self.scaling else False
-                button.background_color = self.sortButtonBackgroundColor if self.theme != "3D" else self.blackTint
-                button.color = self.linkColor
-            pos = int(self.settings[0][1])
-            for i in range(len(self.scaleButtons)):
-                if i == pos-1 and not self.scaling:
-                    self.scaleButtons[i].background_color = self.titleColor
-                    if self.theme != "3D":
-                        self.scaleButtons[i].color = self.sortButtonBackgroundColor if self.mode == "light" else self.sortButtonBackgroundColor
-                    break
-        else:
-            self.updateList(remount=False)
-
-    def changePorchPos(self, pos):
-        """ Центровка подъезда по кнопке на джойстике """
-        for button in self.scaleButtons:
-            button.disabled = True if self.scaling else False
-            button.background_color = self.sortButtonBackgroundColor if self.theme != "3D" else self.blackTint
-            button.color = self.linkColor
-        self.settings[0][1] = pos
-        self.updateList(remount=False)
-        for i in range(len(self.scaleButtons)):
-            if i == int(pos)-1 and not self.scaling:
-                self.scaleButtons[i].background_color = self.titleColor
-                if self.theme != "3D":
-                    self.scaleButtons[i].color = self.sortButtonBackgroundColor if self.mode == "light" else self.sortButtonBackgroundColor
-                break
-
     # Действия главных кнопок
 
     def navPressed(self, instance=None):
@@ -3584,8 +3607,6 @@ class RMApp(App):
     def positivePressed(self, instance=None, value=None, default=""):
         """ Что выполняет центральная кнопка в зависимости от экрана """
         global Rounded
-        self.showSlider = False
-        self.sliderToggle()
 
         # Поиск
 
@@ -3626,7 +3647,7 @@ class RMApp(App):
             # Форма создания квартир/домов
 
             elif self.displayed.form == "porchView":
-                self.clearTable()
+                self.clearTable()#removePorchSelector=False)
                 self.displayed.form = "createNewFlat"
                 self.positive.text = self.button["save"]
                 def __linkPressed(instance, *args):
@@ -3820,6 +3841,7 @@ class RMApp(App):
                     else:
                         self.popupPressed(instance=Button(text=self.button["yes"]))
                 else: # сохранение домов в сегменте универсального участка
+                    self.porch.scrollview = None
                     start = self.decommify(self.inputBoxEntry.text)
                     if not self.checkbox.active:
                         self.porch.addFlat(start)
@@ -3921,23 +3943,33 @@ class RMApp(App):
         Clock.schedule_once(__press, 0)
 
     def neutralPressed(self, instance=None):
-        self.showSlider = False
-        self.sliderToggle()
         if self.displayed.form == "porchView":
             def __continue(*args):
-                #self.flat = None
-                if self.resources[0][1][3] == 0:
-                    self.popup(title=self.msg[247], message=self.msg[171])
+                if self.resources[0][1][3] == 0: # три режима подъезда
+                    string = ""
+                    for char in self.msg[171] % (self.button["fgrid"], self.button["resize"], self.button["flist"]):
+                        if char == "#": string += "\n\n   "
+                        else: string += char
+                    self.popup(title=self.msg[247], message=string)
                     self.resources[0][1][3] = 1
-                if self.porch.floors():
-                    if self.porch.flatsNonFloorLayoutTemp is not None:
-                        self.porch.flatsLayout = self.porch.flatsNonFloorLayoutTemp
-                    else: self.porch.flatsLayout = "н"
-                else:
+
+                if self.porch.floors(): # этажи активированы в настройках подъезда
+
+                    if self.porch.pos[0] is True: # если свободный режим - включаем заполняющий
+                        self.porch.switch("fill")
+                        self.porchView(instance=instance)
+                    elif self.porch.pos[0] is False: # если заполняющий режим - включаем список
+                        if self.porch.flatsNonFloorLayoutTemp is not None:
+                            self.porch.flatsLayout = self.porch.flatsNonFloorLayoutTemp
+                        else: self.porch.flatsLayout = "н"
+                        self.porchView(instance=instance)
+                else: # если список - включаем свободный режим
+                    self.porch.switch("free")
                     self.porch.flatsLayout = self.porch.type[7:] # определение этажей по цифре в типе подъезда
                     if self.porch.flatsLayout == "":
                         self.popup(message=self.msg[94] % self.msg[155])
-                self.porchView(instance=instance)
+                    self.porchView(instance=instance)
+
                 self.save()
             Clock.schedule_once(__continue, 0)
 
@@ -3952,8 +3984,6 @@ class RMApp(App):
         self.buttonTer.activate()
         self.contactsEntryPoint = 0
         self.searchEntryPoint = 0
-        self.showSlider = False
-        self.sliderToggle()
 
         if self.settings[0][19] == "д":  # first sort - by date
             self.houses.sort(key=lambda x: x.date, reverse=False)
@@ -4014,7 +4044,7 @@ class RMApp(App):
             jump=self.houses.index(self.house) if self.house is not None and self.house in self.houses else None
         )
         self.stack = ["ter"]
-        self.updateList()
+        self.updateList(progress=True if len(self.houses) > 0 else False)
 
         if len(self.houses) == 0: # слегка анимируем запись "Создайте первый участок"
             self.mainList.padding = (0, self.padding * 5, 0, Window.size[1] * .3)
@@ -4029,8 +4059,8 @@ class RMApp(App):
         self.buttonCon.activate()
         self.contactsEntryPoint = 1
         self.searchEntryPoint = 0
-        self.showSlider = False
-        self.sliderToggle()
+        #self.porchSelector.hide()
+        self.cacheFreeModeGridPosition()
         self.allcontacts = self.getContacts()
         options = []
         footer = []
@@ -4068,7 +4098,7 @@ class RMApp(App):
             tip=self.msg[99] % self.msg[100] if len(options) == 0 else None
         )
         self.stack = ['con', 'ter']
-        self.updateList()
+        self.updateList(progress=True if len(options) > 0 else False)
         self.updateMainMenuButtons()
 
     def repPressed(self, instance=None, jumpToPrevMonth=False):
@@ -4082,8 +4112,6 @@ class RMApp(App):
         self.neutral.text = ""
         self.sortButton.disabled = True
         self.sortButton.text = ""
-        self.resizeButton.disabled = True
-        self.resizeButton.text = ""
         self.detailsButton.text = f"{self.button['log']} {self.msg[101]}"
         self.detailsButton.disabled = False
         self.displayed.form = "rep"
@@ -4094,7 +4122,6 @@ class RMApp(App):
         hours = self.rep.getCurrentHours()[2]
         info = " "+self.button['info'] if hours != "" else ""
         self.pageTitle.text = f"[b][ref=report]{self.msg[4]}{hours}{info}[/ref][/b]"
-
         self.reportPanel = TabbedPanel(background_color=self.globalBGColor, background_image="")
         self.mainList.clear_widgets()
 
@@ -4247,6 +4274,7 @@ class RMApp(App):
 
     def settingsPressed(self, instance=None):
         """ Настройки """
+
         self.func = self.settingsPressed
         if self.confirmNonSave(): return
         self.displayed.form = "set"
@@ -4268,9 +4296,10 @@ class RMApp(App):
                 "<>" + self.msg[127], # цвет отказа
                 "{}" + self.msg[128], # кредит часов
                 "{}" + (self.msg[87] if not self.desktop else self.msg[164]), # новое предложение с заглавной / запоминать положение окна
-               f"[]{icon('icon-language')} {self.msg[131]}", # язык () = togglebutton
-                "[]" + self.msg[315], # карты ()
-                "[]" + self.msg[168]  # тема ()
+               f"[]{icon('icon-language')} {self.msg[131]}", # язык  = togglebutton
+                "[]" + self.msg[323], # размер кнопки
+                "[]" + self.msg[315], # карты
+                "[]" + self.msg[168]  # тема
             ],
             defaults=[
                 self.settings[0][3],   # норма часов
@@ -4283,9 +4312,10 @@ class RMApp(App):
                 self.settings[0][11] if not self.desktop else self.settings[0][12], # новое предложение с заглавной / запоминать положение окна
                 self.settings[0][6],   # язык
                 self.settings[0][21],  # карты
+                self.settings[0][8],   # размер кнопки
                 self.settings[0][5],   # тема
             ],
-            multilines=[False, False, False, False, False, False, False, False, False, False, False]
+            multilines=[False, False, False, False, False, False, False, False, False, False, False, False]
         )
 
         """ Также заняты настройки:
@@ -4293,7 +4323,6 @@ class RMApp(App):
         self.settings[0][4] - сортировка контактов
         self.settings[0][5] - тема интерфейса
         self.settings[0][7] - масштабирование подъезда - больше не используется
-        self.settings[0][8] - значение слайдера
         self.settings[0][9] - значения первой и последней квартиры и количества этажей в новом подъезде
         self.settings[0][21] - карты
         self.settings[0][22] - таймер                
@@ -4403,10 +4432,8 @@ class RMApp(App):
         a4 = AnchorLayout(anchor_x="center", anchor_y="center")
 
         self.backButton.disabled = False
-        self.showSlider = False
         self.detailsButton.text = ""
         self.detailsButton.disabled = True
-        self.sliderToggle()
         self.createInputBox(
             form=a4,
             default=self.resources[0][0],
@@ -4490,6 +4517,7 @@ class RMApp(App):
                 if list(self.languages.values())[i][0] in self.languageButton.text:
                     self.settings[0][6] = list(self.languages.keys())[i]
                     break
+            self.settings[0][8] = int(self.BSButton.text) # размер кнопки
             self.settings[0][21] = self.mapsButton.text # карты
             self.settings[0][5] = self.themes[self.themeButton.text]  # тема
             if self.settings[0][22] == 0:
@@ -4497,11 +4525,10 @@ class RMApp(App):
                 self.updateTimer()
             self.save()
             self.restart("soft")
-
             for house in self.houses:
                 for porch in house.porches:
                     porch.scrollview = porch.floorview = None
-
+                    porch.posReset()
             if clickOnSave: Clock.schedule_once(self.settingsPressed, .01)
             self.log(self.msg[53])
 
@@ -4670,10 +4697,10 @@ class RMApp(App):
             tip=[note, "note"]
         )
         self.stack = ['houseView', 'ter']
-        self.updateList()
+        self.updateList(progress=True if len(self.house.porches) > 0 else False)
         if self.house.due(): self.mainList.add_widget(self.tip(text=self.msg[152], icon="warn"))
 
-    def porchView(self, instance=None, update=True, remount=True):
+    def porchView(self, instance=None, update=True, progress=False):
         """ Вид подъезда - список квартир или этажей """
         self.updateMainMenuButtons()
         self.blockFirstCall = 0
@@ -4689,28 +4716,29 @@ class RMApp(App):
 
         if floors:
             tip = None
-            noteButton = self.button["resize"]
             sort = None
+            neutral == self.button["fgrid"]
         else:
             tip = [self.porch.note if self.porch.note != "" else None, "note"]
-            noteButton = None
             sort = self.button["sort"]
+            neutral == self.button["flist"]
 
         self.displayed.update(
             title=self.house.title + segment,
             options=self.porch.showFlats(),
             form="porchView",
             sort=sort,
-            resize=noteButton,
             positive=(self.button["edit"] if self.house.type == "condo" else self.button["plus"]) + positive,
             neutral=neutral,
-            jump=self.porch.flats.index(self.flat)-self.porch.invisibleFlatsCount if self.flat is not None \
+            #details=self.button["building0"] if self.house.type == "condo" and len(self.house.porches) > 1 else None,
+            jump=self.porch.flats.index(self.flat) - self.porch.invisibleFlatsCount if self.flat is not None \
                                                                 and self.flat in self.porch.flats else None,
             tip=tip
         )
         self.stack = ['porchView', 'houseView', 'ter']
+
         if update:
-            self.updateList(instance=instance, remount=remount,
+            self.updateList(instance=instance,
                             progress=True if len(self.porch.flats) > 0 else False)
         # после удаления или восстановления квартиры не перемонтируем всю таблицу, а только обновляем кнопки
         else:
@@ -4728,6 +4756,7 @@ class RMApp(App):
         """ Вид квартиры - список записей посещения """
         self.updateMainMenuButtons()
         self.clickedInstance = instance
+        self.cacheFreeModeGridPosition()
         number = " " if self.flat.number == "virtual" else self.flat.number + " " # прячем номера отдельных контактов
         flatPrefix = f"{self.msg[214]} " if "подъезд" in self.porch.type else ""
         self.flatTitle = f"{flatPrefix}{number}{self.flat.getName()}".strip()
@@ -4771,11 +4800,11 @@ class RMApp(App):
                     disabled=[False, False],
                     details=f"{self.button['contact']} {self.msg[204]}",
                     neutral=self.button["phone"],
-                    resize="",
                     sort="",
                     note=note
                 )
-            else: self.updateList(instance=instance)
+            else:
+                self.updateList(instance=instance)
 
             # Кнопки первичного цвета (статуса)
 
@@ -4877,7 +4906,7 @@ class RMApp(App):
     # Диалоговые окна
 
     def createInputBox(self, title="", form=None, message="", default="", hint="", checkbox=None, active=True, input=True,
-                       positive=None, sort=None, resize=None, details=None, neutral=None, multiline=False, tip=None,
+                       positive=None, sort=None, details=None, neutral=None, multiline=False, tip=None,
                        link=None, limit=99999, focus=False):
         """ Форма ввода данных с одним полем """
         if len(self.stack) > 0: self.stack.insert(0, self.stack[0])
@@ -4902,9 +4931,6 @@ class RMApp(App):
         elif sort is not None:
             self.sortButton.text = sort
             self.sortButton.disabled = False
-        if resize is not None:
-            self.resizeButton.text = resize
-            self.resizeButton.disabled = False
         if details == "":
             self.detailsButton.text = details
             self.detailsButton.disabled = True
@@ -5015,7 +5041,7 @@ class RMApp(App):
                 break
 
     def createMultipleInputBox(self, form=None, title=None, options=[], defaults=[], multilines=[], disabled=[],
-                               sort=None, resize=None, details=None, note=None, neutral=None):
+                               sort=None, details=None, note=None, neutral=None):
         """ Форма ввода данных с несколькими полями """
         if form is None: form = self.mainList
         form.clear_widgets()
@@ -5023,8 +5049,6 @@ class RMApp(App):
         self.positive.text = self.button["save"]
         self.positive.disabled = False
         self.detailsButton.disabled = True
-        self.showSlider = False
-        self.sliderToggle()
         self.firstCallPopup = False
         self.restorePositiveButton()
         self.removeScrollButtons()
@@ -5047,12 +5071,6 @@ class RMApp(App):
         elif sort is not None:
             self.sortButton.text = sort
             self.sortButton.disabled = False
-        if resize == "":
-            self.resizeButton.text = resize
-            self.resizeButton.disabled = True
-        elif resize is not None:
-            self.resizeButton.text = resize
-            self.resizeButton.disabled = False
         if details is not None:
             self.detailsButton.text = details
             self.detailsButton.disabled = False
@@ -5120,6 +5138,7 @@ class RMApp(App):
 
             if self.msg[127] in str(options[row]): self.multipleBoxEntries.append(RejectColorSelectButton())
             elif self.msg[131] in str(options[row]): self.multipleBoxEntries.append(self.languageSelector())
+            elif self.msg[323] in str(options[row]): self.multipleBoxEntries.append(self.buttonSizeSelector())
             elif self.msg[315] in str(options[row]): self.multipleBoxEntries.append(self.mapSelector())
             elif self.msg[168] in str(options[row]): self.multipleBoxEntries.append(self.themeSelector())
             elif checkbox == False:
@@ -5247,6 +5266,23 @@ class RMApp(App):
         self.dropLangMenu.bind(on_select=lambda instance, x: setattr(self.languageButton, 'text', x))
         self.languageButton.bind(on_release=self.dropLangMenu.open)
         a.add_widget(self.languageButton)
+        return a
+
+    def buttonSizeSelector(self):
+        """ Выбор размера кнопок квартир """
+        a = AnchorLayout()
+        self.dropBSMenu = DropDown()
+        for size in range(1, 11):
+            btn = SortListButton(text=str(size))
+            btn.bind(on_release=lambda btn: self.dropBSMenu.select(btn.text))
+            self.dropBSMenu.add_widget(btn)
+        if self.theme != "3D":
+            self.BSButton = RoundButton(text=str(self.settings[0][8]), size_hint_x=1, size_hint_y=self.settingButtonHintY)
+        else:
+            self.BSButton = RetroButton(text=str(self.settings[0][8]), size_hint_x=1, size_hint_y=self.settingButtonHintY)
+        self.dropBSMenu.bind(on_select=lambda instance, x: setattr(self.BSButton, 'text', x))
+        self.BSButton.bind(on_release=self.dropBSMenu.open)
+        a.add_widget(self.BSButton)
         return a
 
     def mapSelector(self):
@@ -5792,22 +5828,28 @@ class RMApp(App):
         else:
             return self.defaultKeyboardHeight
 
-    def clearTable(self):
+    def cacheFreeModeGridPosition(self):
+        """ Сохранение позиции сетки подъезда в свободном режиме при уходе с экрана """
+        if self.porch is not None and self.porch.floorview is not None and self.porch.pos[0]:
+            self.porch.pos[1] = copy(self.porch.floorview.pos)
+
+    def clearTable(self):#, removePorchSelector=True):
         """ Очистка верхних кнопок таблицы для некоторых форм """
         self.backButton.disabled = False
         self.sortButton.disabled = True
         self.sortButton.text = ""
-        self.resizeButton.disabled = True
-        self.resizeButton.text = ""
         self.neutral.disabled = True
         self.neutral.text = ""
         self.navButton.disabled = True
         self.navButton.text = ""
-        self.showSlider = False
-        self.sliderToggle()
         self.mainList.padding = 0
-        self.floaterBox.clear_widgets()
         self.restorePositiveButton()
+        self.cacheFreeModeGridPosition()
+
+        """if removePorchSelector: self.floaterBox.clear_widgets()
+        else:
+            for widget in self.floaterBox.children:
+                if widget is not self.porchSelector: self.floaterBox.remove_widget(widget)"""
 
     def showProgress(self):
         """ Показывает кнопку с символом ожидания """
@@ -5826,7 +5868,7 @@ class RMApp(App):
             self.boxHeader.size_hint_y = self.titleSizeHintY
             self.titleBox.size_hint_y = self.tableSizeHintY
             self.boxFooter.size_hint_y = self.mainButtonsSizeHintY
-            self.positive.size_hint_x=.6
+            self.positive.size_hint_x=.5
             self.bottomButtons.size_hint_y = self.bottomButtonsSizeHintY
         else:
             self.orientation = "h"
@@ -5857,11 +5899,11 @@ class RMApp(App):
                 self.boxFooter = BoxLayout()
                 self.getRadius(80)
                 self.buttonTer = MainMenuButton(text=self.msg[2]) # Участки
-                self.buttonTer.bind(on_release=self.terPressed)
+                #self.buttonTer.bind(on_release=self.terPressed)
                 self.buttonCon = MainMenuButton(text=self.msg[3]) # Контакты
-                self.buttonCon.bind(on_release=self.conPressed)
+                #self.buttonCon.bind(on_release=self.conPressed)
                 self.buttonRep = MainMenuButton(text=self.msg[4]) # Отчет
-                self.buttonRep.bind(on_release=self.repPressed)
+                #self.buttonRep.bind(on_release=self.repPressed)
                 if self.orientation == "v": # вертикальная ориентация
                     self.boxFooter.orientation = "horizontal"
                     self.boxFooter.padding = 0
@@ -5888,8 +5930,6 @@ class RMApp(App):
 
         self.updateMainMenuButtons()
         self.floaterBox.clear_widgets()
-        self.showSlider = False
-        self.sliderToggle()
 
     def updateMainMenuButtons(self, deactivateAll=False):
         """ Обновляет статус трех главных кнопок """
@@ -6133,7 +6173,6 @@ class RMApp(App):
 
         elif self.popupForm == "newMonth":
             self.repPressed()
-            self.resizePressed()
 
         elif self.popupForm == "nonSave":
             if self.button["yes"] in instance.text.lower():
@@ -6172,7 +6211,9 @@ class RMApp(App):
                         self.settings[0][9] = start, finish, floors
                     self.save()
                 self.porch.flatsLayout = str(self.porch.rows)
-                self.porchView()
+                self.porch.posReset()
+                self.porchView(instance=instance)
+
             elif self.exitToPorch:
                 self.porchView()
                 self.dismissTopPopup(all=True)
@@ -6444,13 +6485,13 @@ class RMApp(App):
                             self.porch.flatsLayout = "н"
                         else:
                             self.porch.adjustFloors()
-                        self.porch.scrollview = None
                         self.porchView()
                         self.exitToPorch = True
                         if not showWarning:
                             self.positivePressed()
                             self.positivePressed()
                     else:
+                        self.porch.scrollview = None
                         self.porchView()
                     self.save()
             btnSave.bind(on_release=__save)
@@ -6881,7 +6922,7 @@ class RMApp(App):
         """ Возвращает исходные значения houses, settings, resources """
         return [], \
                [
-                   [1, 5, 0, 0, "и", "", "", 0, 1.5, 0, 0, 1, 1, 0, "", 1, 0, "", "5", "д", 1, "sepia", 1],
+                   [1, 5, 0, 0, "и", "", "", 0, 5, 0, 0, 1, 1, 0, "", 1, 0, "", "5", "д", 1, "sepia", 1],
                    # program settings
                    "",  # дата последнего обновления    settings[1]
                    # report:                            settings[2]
@@ -7182,7 +7223,7 @@ class RMApp(App):
             porches = h[a][5]
             for b in range(len(porches)):
                 cont.porches.append(
-                    Porch(title=porches[b][0], status=porches[b][1], flatsLayout=porches[b][2],
+                    Porch(title=porches[b][0], pos=porches[b][1], flatsLayout=porches[b][2],
                           floor1=porches[b][3], note=porches[b][4], type=porches[b][5]))
                 flats = porches[b][6]
                 for c in range(len(flats)):
@@ -7213,8 +7254,8 @@ class RMApp(App):
                 porches = buffer[2][5]
                 for b in range(len(porches)):
                     house.porches.append(
-                        Porch(status=porches[b][1], flatsLayout=porches[b][2], floor1=porches[b][3],
-                              note=porches[b][4], type=porches[b][5]))
+                        Porch(title=porches[b][0], pos=porches[b][1], flatsLayout=porches[b][2],
+                              floor1=porches[b][3], note=porches[b][4], type=porches[b][5]))
                     flats = porches[b][6]
                     for c in range(len(flats)):
 
@@ -7259,6 +7300,8 @@ class RMApp(App):
                     h.append(buffer[s])
                 self.houseRetrieve(self.houses, housesNumber, h)
 
+                # Конвертации данных до новой версии
+
                 if len(self.resources[0]) == 0: # конвертация заметок блокнота версии 1.x
                     self.resources[0].append("")
                 elif len(self.resources[0]) > 1 and isinstance(self.resources[0][1], str):
@@ -7273,6 +7316,8 @@ class RMApp(App):
 
                 if self.settings[0][5] == "default": # конвертация темы "сепия" старой версии в новую
                     self.settings[0][5] = "sepia"
+
+                if "." in str(self.settings[0][8]): self.settings[0][8] = 5
 
         except: return False
         else: return True

@@ -14,7 +14,7 @@ Junto a un territorio, puede ver su porcentaje de progreso de trabajo.
 Territorio:
 Dirección:
 detalles
-Fecha de la visita:
+Fecha que se tendrá:
 Nota:
 Nombre de entrada:
 Nombre de la sección:
@@ -27,7 +27,7 @@ Modo de ajuste
 Haga clic en %s para ajustar el tamaño y la posición de la cuadrícula de entrada.
 Número de teléfono %s copiado en el portapapeles.
 Nombre
-Fecha
+Fecha que se tendrá
 Interesados
 Trabajados
 Dirección
@@ -168,7 +168,7 @@ Introduzca el primer y el último número del rango a añadir:
 Tema de la interface
 
 No preguntar de nuevo
-Este es un cambio entre la vista de "rejilla" por piso y una simple lista de apartamentos. Sólo funciona en territorios de tipo condominio.
+Tres modos de entrada:#%s – movimiento libre#%s – llenar la pantalla#%s – lista
 ¿Incluir en la exportación los apartamentos sin números de teléfono?
 Borrar
 Antes de lo requerido
@@ -320,3 +320,6 @@ Recuperar una copia de seguridad si algo salió mal
 Restablecimiento de todos los datos y configuraciones, incluidas las copias de seguridad
 Exportar
 Exportar a Google Drive
+Tamaño del botón del apartamento
+Ordenar
+Fecha de la última visita

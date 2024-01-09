@@ -27,7 +27,7 @@ Režim podešavanja
 Kliknite na %s da biste prilagodili veličinu i položaj ulazne mreže.
 Broj telefona %s je kopiran u međuspremnik.
 Naziv
-Datum
+Datum uzima
 Zainteres.
 Obrada
 Adresa
@@ -168,7 +168,7 @@ Unesite prvi i zadnji broj u nizu za dodavanje:
 Tema interfejsa
 
 Ne pitaj ovo više
-Ovo je prekidač izmedđu pregledu po spratu i jednostavne liste stanova. Ovo važi samo za poručja sa stambenim zgradam.
+Tri načina prijave:#%s – slobodno kretanje#%s – popunjavanje ekrana#%s – lista
 Uključiti stanove bez broja telefona u izvoz?
 izbriši
 Višak
@@ -320,3 +320,6 @@ Vratite rezervnu kopiju ako nešto pođe po zlu
 Potpuno resetovanje svih podataka programa i postavki, uključujući rezervne kopije
 Izvezi
 Izvoz na Google Disk
+Bir dairenin düğmesinin büyüklüğü
+Sortiranje
+Datum poslednje posete

@@ -43,6 +43,9 @@
             size: self.size
             radius: app.radius
 
+<FloorView@GridLayout>:
+    drag_rectangle: self.x, self.y, self.width, self.height
+
 <FloatButton@Button>:
     color: (app.linkColor if app.button['phone-thin'] in self.text else (app.linkColor if app.button["add_emoji"] not in self.text else app.topButtonColor)) if self.state=='normal' else app.titleColor
     background_color: app.roundButtonBGColor if app.theme != "3D" else [0,0,0,.5]
@@ -59,6 +62,9 @@
     background_color: app.roundButtonBGColor if app.theme != "3D" else [0,0,0,0]
     color: [1,1,1,1]
     side: self.side
+    drag_rectangle: self.x, self.y, self.width, self.height
+    drag_timeout: 10000 if app.displayed.form == "flatView" else 0
+    drag_distance: 0
     canvas.before:
         Color:
             rgba: self.color if self.state=='normal' else (app.popupBGColorPressed if app.firstCallPopup else self.color)
@@ -133,7 +139,7 @@
 
 <PopupButtonGray@PopupButton>:
     color: "lightgray" if self.state=='normal' else app.titleColorOnBlack
-    background_color: [.2, .2, .2, 1] if self.state=='normal' else app.popupBGColorPressed
+    background_color: [.22, .22, .22, 1] if self.state=='normal' else app.popupBGColorPressed
     text_size: self.size
 
 <RetroButton@Button>:
@@ -191,8 +197,6 @@
             radius: [50,] if app.platform != "win" else [0,]
         Color:
             rgba: [1,1,1,.5]
-        Line:
-            #circle: self.pos[0]+self.size[0]/2, self.pos[1]+self.size[1]/2, self.size[0]*.25
 
 <TipButton@Button>:
     text_size: self.size[0] * .95, self.size[1]
@@ -211,7 +215,6 @@
 <SettingsButton@Button>:
     color: app.topButtonColor if self.state=='normal' else (app.titleColor if app.theme != "3D" else app.topButtonColor)
     background_color: [1,1,1,0]
-    #text_size: self.size
     canvas.before:
         Color:
             rgba: app.globalBGColor if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else (app.roundButtonColorPressed2 if app.theme != "3D" else app.popupBGColorPressed))

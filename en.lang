@@ -27,9 +27,9 @@ Adjustment mode
 Click %s to adjust the size and position of the entrance grid.
 Phone number %s copied into clipboard.
 Name
-Date
-Interested
-Worked
+Date taken
+Interested persons
+Worked level
 Address
 Number
 Phone
@@ -168,7 +168,7 @@ Enter the first and the last number of the range to add:
 Interface theme
 
 Don't ask this anymore
-This is a switch between the per-floor "grid" view and a simple list of apartments. It works only in condominium-type territories.
+Three entrance modes:#%s – free movement#%s – fill the screen#%s – list
 Include into export apartments without phone numbers?
 Delete
 Ahead of requirement
@@ -320,3 +320,6 @@ Recover a backup copy if something went wrong
 Full reset of all program data and settings, including backups
 Export
 Export to Google Drive
+Apartment button size
+Sort
+Last visit date

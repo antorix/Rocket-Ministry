@@ -27,7 +27,7 @@ Ayar modu
 Giriş ızgarasının boyutunu ve konumunu ayarlamak için %s öğesine tıklayın.
 %s Telefon numarası panoya kopyalandı.
 Başlık
-Tarih
+Alınan tarihi
 İlgililer
 İşlenme
 Adres
@@ -168,7 +168,7 @@ Eklenecek aralığın ilk ve son numaralarını girin:
 Arayüz teması
 
 Artık sorma
-Bu, her bir kat için "ızgara" görünümü ile daire listesi arasında geçiş sağlayan bir butondur. Çok daireli alanlarda kullanılabilir.
+Üç blok modu:#%s – serbest hareket#%s – ekranı doldurma#%s – liste
 Telefon numaraları olmadan ihracat dairelerine dahil edilsin mi?
 Sil
 Stok
@@ -320,3 +320,6 @@ Bir şeyler ters giderse yedek kopyayı kurtarın
 Yedeklemeler dahil tüm program verilerinin ve ayarlarının tamamen sıfırlanması
 Dışa aktar
 Google Drive'a aktar
+Bir dairenin düğmesi büyüklüğünde
+Sırala
+Son ziyaret tarihi
