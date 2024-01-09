@@ -3214,11 +3214,11 @@ class RMApp(App):
 
     def scrollClick(self, instance):
         """ Действия, которые совершаются на указанных списках по нажатию на пункт списка """
-        self.clickedBtn = instance
-        self.clickedBtnIndex = instance.id
-        #self.porchSelector.hide()
 
         def __click(*args): # действие всегда выполняется с запаздыванием, чтобы отобразилась анимация на кнопке
+            self.clickedBtn = instance
+            self.clickedBtnIndex = instance.id
+            # self.porchSelector.hide()
             if self.msg[6] in instance.text: # "создать подъезд"
                 text = instance.text[len(self.msg[6])+73 : ] # число символов во фразе msg[6] + 4 на форматирование
                 #print(text) # должно выглядеть: 1[/i]
@@ -3253,17 +3253,18 @@ class RMApp(App):
                 self.recordView(instance=instance) # вход в запись посещения
 
             elif self.displayed.form == "con": # контакты
-                selection = instance.id
-                h = self.allcontacts[selection][7][0]  # получаем дом, подъезд и квартиру выбранного контакта
-                p = self.allcontacts[selection][7][1]
-                f = self.allcontacts[selection][7][2]
-                if self.allcontacts[selection][8] != "virtual": self.house = self.houses[h]
-                else: self.house = self.resources[1][h] # заменяем дом на ресурсы для отдельных контактов
-                self.porch = self.house.porches[p]
-                self.flat = self.porch.flats[f]
-                self.contactsEntryPoint = 1
-                self.searchEntryPoint = 0
-                self.flatView(instance=instance)
+                if len(self.allcontacts) != 0:
+                    selection = instance.id
+                    h = self.allcontacts[selection][7][0]  # получаем дом, подъезд и квартиру выбранного контакта
+                    p = self.allcontacts[selection][7][1]
+                    f = self.allcontacts[selection][7][2]
+                    if self.allcontacts[selection][8] != "virtual": self.house = self.houses[h]
+                    else: self.house = self.resources[1][h] # заменяем дом на ресурсы для отдельных контактов
+                    self.porch = self.house.porches[p]
+                    self.flat = self.porch.flats[f]
+                    self.contactsEntryPoint = 1
+                    self.searchEntryPoint = 0
+                    self.flatView(instance=instance)
 
             elif self.displayed.form == "search": # поиск
                 if not self.msg[8] in instance.text:
