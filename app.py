@@ -1531,44 +1531,23 @@ class FlatButtonSquare(FlatButton):
         self.update(flat)
         self.pos1 = None
         self.pos2 = None
-        self.step = .4 if not RM.desktop else .5
+        self.step = .3 if not RM.desktop else .5
 
-    def on_touch_move(self, touch):
+    def on_touch_move(self, touch): # альтернативное перетаскивание, когда drag behavior глючит
         touch.ungrab(self)
-
-        #f = RM.porch.floorview
-        #f.pos = touch.pos[0], touch.pos[1] - f.GS[1]
-        #x_delta = touch.pos[0] - f.pos[0]
-        #y_delta = touch.pos[1] - f.pos[1]
-        #print(x_delta, y_delta)
-        #print(self.to_window(f.pos[0], f.pos[1]))
-        #f.pos = self.to_window(touch.pos[0] - f.pos[0], touch.pos[1] - f.pos[1])
-
         self.state = "normal"
-        if not RM.porch.pos[0]: return
-        self.pos1 = self.pos2
-        self.pos2 = touch.pos
-        if self.pos1 is not None and self.pos2 is not None:
-            x_dif = self.pos2[0] - self.pos1[0]
-            y_dif = self.pos2[1] - self.pos1[1]
-            if x_dif > 0: RM.porch.floorview.pos[0] += self.step
-            elif x_dif < 0: RM.porch.floorview.pos[0] -= self.step
-            if y_dif > 0: RM.porch.floorview.pos[1] += self.step
-            elif y_dif < 0: RM.porch.floorview.pos[1] -= self.step
-            self.pos1 = None
-            self.pos2 = None
-
-    def on_touch_down_(self, touch):
-        #if self.collide_point(*touch.pos):
-        if touch.grab_current is self:
-            touch.grab(self)
-            return True
-
-    def on_touch_up_(self, touch):
-        if self.collide_point(*touch.pos):# and touch.grab_current is self:
-            touch.ungrab(self)
-            self.on_release()
-            return True
+        if RM.porch.pos[0]:
+            self.pos1 = self.pos2
+            self.pos2 = touch.pos
+            if self.pos1 is not None and self.pos2 is not None:
+                x_dif = self.pos2[0] - self.pos1[0]
+                y_dif = self.pos2[1] - self.pos1[1]
+                if x_dif > 0: RM.porch.floorview.pos[0] += self.step
+                elif x_dif < 0: RM.porch.floorview.pos[0] -= self.step
+                if y_dif > 0: RM.porch.floorview.pos[1] += self.step
+                elif y_dif < 0: RM.porch.floorview.pos[1] -= self.step
+                self.pos1 = None
+                self.pos2 = None
 
 class FlatFooterLabel(Label):
     """ Записи под квартирой в режиме списка """
@@ -1892,7 +1871,7 @@ class MainMenuButton(TouchRippleBehavior, Button):
         collide_point = self.collide_point(touch.x, touch.y)
         if collide_point:
             self.ripple_show(touch)
-            #return True
+            return True
 
     def on_touch_up(self, touch):
         if self.collide_point(*touch.pos):
@@ -3253,7 +3232,7 @@ class RMApp(App):
                 self.recordView(instance=instance) # вход в запись посещения
 
             elif self.displayed.form == "con": # контакты
-                if len(self.allcontacts) != 0:
+                if len(self.allcontacts) > 0:
                     selection = instance.id
                     h = self.allcontacts[selection][7][0]  # получаем дом, подъезд и квартиру выбранного контакта
                     p = self.allcontacts[selection][7][1]
@@ -5789,7 +5768,6 @@ class RMApp(App):
         else:
             return [color[0]*.95, color[1]*.95, color[2]*.95, .97]
 
-
     def getColor2(self, color2, flat=None):
         """ Возвращает значение вторичного цвета (кружочка) """
         alpha = .9
@@ -5816,6 +5794,10 @@ class RMApp(App):
             else:
                 return redDefault # красный на остальных
         else:             return [0, 0, 0, 0]
+
+    def track(self, instance, touch):
+        print(touch.pos)
+        instance.state = "normal"
 
     def keyboardHeight(self, *args):
         """ Возвращает высоту клавиатуры в str """
