@@ -3,7 +3,7 @@
 
 from sys import argv
 Devmode = 1 if "dev" in argv else 0
-Version = "2.13.003"
+Version = "2.13.004"
 """
 * Режим свободного перемещения схемы подъезда по экрану.
 * Исправлен баг, из-за которого могли не появляться новые созданные дома в универсальном участке.
@@ -1091,6 +1091,7 @@ class FloorView(DragBehavior, GridLayout):
     def __init__(self, *args, **kwargs):
         super(FloorView, self).__init__()
         size = RM.flatButtonSize
+        self.drag_timeout = 10000
         self.row_default_height = size
         self.col_default_width = size
         self.cols_minimum = {0: size / 3}
@@ -1115,7 +1116,7 @@ class FloorView(DragBehavior, GridLayout):
             self.pos = [0, 0]
         else: # свободный режим
             self.pos = defaultPos if RM.porch.pos[1] == [0, 0] else RM.porch.pos[1]
-        self.drag_timeout = 0 if not RM.porch.pos[0] else 10000
+        self.drag_distance = 99999 if not RM.porch.pos[0] else 0
 
 class MyCheckBox(CheckBox):
     """ Галочки """
@@ -1515,6 +1516,9 @@ class FlatButton(Button):
         if label.text != text: label.text = text
         self.recBox.height = RM.height1 * (1 if label.text == "" else 1.85)
 
+    def on_touch_move(self, touch):
+        touch.ungrab(self)
+
     def on_release(self):
         self.flat.buttonID = self
         if icon('icon-plus-circle') in self.text:
@@ -1531,8 +1535,8 @@ class FlatButtonSquare(FlatButton):
         self.update(flat)
         self.pos1 = None
         self.pos2 = None
-        self.step = .4
-        self.dif = 3 if not RM.desktop else 1
+        self.step = .2 if not RM.desktop else .2
+        self.dif = 1 if not RM.desktop else 1
 
     def on_touch_move(self, touch): # альтернативное перетаскивание, когда drag behavior глючит на больших подъездах
         touch.ungrab(self)
@@ -1541,14 +1545,27 @@ class FlatButtonSquare(FlatButton):
             self.pos1 = self.pos2
             self.pos2 = touch.pos
             if self.pos1 is not None and self.pos2 is not None:
+
                 x_dif = self.pos2[0] - self.pos1[0]
                 y_dif = self.pos2[1] - self.pos1[1]
-                if x_dif > self.dif: RM.porch.floorview.pos[0] += self.step
+
+                if x_dif > self.dif*2: RM.porch.floorview.pos[0] += self.step*2
+                elif x_dif > self.dif: RM.porch.floorview.pos[0] += self.step
+
+                if x_dif < -self.dif*2: RM.porch.floorview.pos[0] -= self.step*2
                 elif x_dif < -self.dif: RM.porch.floorview.pos[0] -= self.step
-                if y_dif > self.dif: RM.porch.floorview.pos[1] += self.step
-                elif y_dif < -self.dif: RM.porch.floorview.pos[1] -= self.step
+
+                if y_dif > self.dif*2: RM.porch.floorview.pos[1] += self.step*2
+                elif y_dif > self.dif: RM.porch.floorview.pos[1] += self.step
+
+                if y_dif < -self.dif*2: RM.porch.floorview.pos[1] -= self.step*2
+                elif y_dif < -self.dif*2: RM.porch.floorview.pos[1] -= self.step*2
+
                 self.pos1 = None
                 self.pos2 = None
+
+                #return True
+
 
 class FlatFooterLabel(Label):
     """ Записи под квартирой в режиме списка """
@@ -2971,6 +2988,8 @@ class RMApp(App):
 
                 else: # ... заполняющий режим
                     self.mainList.add_widget(self.porch.floorview)
+                    #self.mainList.add_widget(self.floatView)
+                    #self.floatView.add_widget(self.porch.floorview)
                     if self.porch.columns >= 15 or self.porch.rows >= 30:
                         self.porch.floorview.spacing = 1
                         self.flatSizeInGrid = self.fontXXS * self.fontScale(cap=1.2)
@@ -3429,7 +3448,8 @@ class RMApp(App):
 
         if self.displayed.form == "houseView": # меню сортировки подъездов
             sortTypes = [
-                "[u][b]"+self.msg[29]+"[/u][/b]" if self.house.porchesLayout == "н" else self.msg[29], # название
+                "[u][b]"+self.msg[29]+"[/u][/b]" if self.house.porchesLayout == "н" \
+                or self.house.porchesLayout == "а" else self.msg[29], # название
                f"[u][b]{self.msg[38]}[/u][/b] {self.button['angle-down']}" if self.house.porchesLayout == "р" else\
                f"{self.msg[38]} {self.button['angle-down']}",     # размер вниз
                f"[u][b]{self.msg[38]}[/u][/b] {self.button['angle-up']}" if self.house.porchesLayout == "о" else\
