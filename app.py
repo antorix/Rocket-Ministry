@@ -119,7 +119,7 @@ class House(object):
             list.append(f"{listIcon} [b]{porch.title}[/b] {porch.getFlatsRange()}")
         if self.type != "condo" and len(list) == 0:
             list.append(f"{RM.button['plus-1']}{RM.button['pin']} {RM.msg[213] % self.getPorchType()[1]}")
-        if self.type == "condo":
+        if self.type == "condo" and self.porchesLayout == "н" or self.porchesLayout == "а":
             list.append(f"{RM.button['porch_inv']} [i]{RM.msg[6]} {self.getLastPorchNumber()}[/i]")
         return list
 
@@ -1242,7 +1242,7 @@ class TableButton(Button):
                  pos_hint=None, size=None, disabled=False, font_name=None, **kwargs):
         super(TableButton, self).__init__()
         if not RM.desktop:
-            self.font_size = font_size if font_size is not None else RM.fontS * RM.fontScale(cap=1)
+            self.font_size = font_size if font_size is not None else RM.fontXS * RM.fontScale(cap=1.2)
         if RM.specialFont is not None: self.font_name = RM.specialFont
         if font_name is not None: self.font_name = font_name
         self.text = text.strip()
@@ -1531,9 +1531,10 @@ class FlatButtonSquare(FlatButton):
         self.update(flat)
         self.pos1 = None
         self.pos2 = None
-        self.step = .3 if not RM.desktop else .5
+        self.step = .4
+        self.dif = 3 if not RM.desktop else 1
 
-    def on_touch_move(self, touch): # альтернативное перетаскивание, когда drag behavior глючит
+    def on_touch_move(self, touch): # альтернативное перетаскивание, когда drag behavior глючит на больших подъездах
         touch.ungrab(self)
         self.state = "normal"
         if RM.porch.pos[0]:
@@ -1542,10 +1543,10 @@ class FlatButtonSquare(FlatButton):
             if self.pos1 is not None and self.pos2 is not None:
                 x_dif = self.pos2[0] - self.pos1[0]
                 y_dif = self.pos2[1] - self.pos1[1]
-                if x_dif > 0: RM.porch.floorview.pos[0] += self.step
-                elif x_dif < 0: RM.porch.floorview.pos[0] -= self.step
-                if y_dif > 0: RM.porch.floorview.pos[1] += self.step
-                elif y_dif < 0: RM.porch.floorview.pos[1] -= self.step
+                if x_dif > self.dif: RM.porch.floorview.pos[0] += self.step
+                elif x_dif < -self.dif: RM.porch.floorview.pos[0] -= self.step
+                if y_dif > self.dif: RM.porch.floorview.pos[1] += self.step
+                elif y_dif < -self.dif: RM.porch.floorview.pos[1] -= self.step
                 self.pos1 = None
                 self.pos2 = None
 
@@ -3057,12 +3058,12 @@ class RMApp(App):
                                 if form == "con": footerGrid.cols_minimum = {1: button.size[0] * .7}
                                 elif form == "ter":
                                     footerGrid.cols_minimum = { # поджимаем футеры справа и слева
-                                        #0: button.size[0] * .1,
+                                        0: button.size[0] * .01,
                                         1: button.size[0] * .22,
                                         2: button.size[0] * .22,
                                         3: button.size[0] * .22,
                                         4: button.size[0] * .22,
-                                        #5: button.size[0] * .1
+                                        5: button.size[0] * .01
                                     }
                                 count = 0
                                 for b in range(len(self.displayed.footer[i])):
@@ -3101,11 +3102,6 @@ class RMApp(App):
                                 box.spacing = self.spacing
 
                         if form != "repLog": self.scrollWidget.add_widget(box)
-
-                #if self.porchSelector in self.floaterBox.children: selector = True
-                #else: selector = False
-                self.floaterBox.clear_widgets()
-                #if selector: self.porchSelector.show()
 
                 self.btn.append(Widget(size_hint_y=None, height=height)) # пустой виджет для бага некликабельного последнего элемента
                 self.scrollWidget.add_widget(self.btn[len(self.btn) - 1])
@@ -3176,6 +3172,11 @@ class RMApp(App):
                     if self.displayed.jump >= self.listLimit or form == "porchView":
                         self.scroll.scroll_to(widget=self.btn[self.displayed.jump],
                                               padding=self.mainList.size[1] * .3, animate=False)
+
+                # if self.porchSelector in self.floaterBox.children: selector = True
+                # else: selector = False
+                self.floaterBox.clear_widgets()
+                # if selector: self.porchSelector.show()
 
         if progress:
             self.showProgress()
@@ -3994,7 +3995,7 @@ class RMApp(App):
             listIcon = self.button['building'] if self.houses[i].type == "condo" else self.button['map']
             housesList.append(f"{listIcon}[b] {self.houses[i].title}[/b]")
             shortenedDate = ut.shortenDate(self.houses[i].date)
-            dateDue = "" if not due else f"[color=F4CA16] {self.button['warn']}[/color]"
+            dateDue = "" if not due else f"[color=F4CA16]{self.button['warn']}[/color]"
             interested = f"[b]{(stats[1])}[/b]" if int(stats[1]) > 0 else str((int(stats[1])))
             intIcon = self.button['user'] if int(stats[1]) != 0 else icon("icon-user-o")
             footer.append([
@@ -4024,7 +4025,7 @@ class RMApp(App):
             jump=self.houses.index(self.house) if self.house is not None and self.house in self.houses else None
         )
         self.stack = ["ter"]
-        self.updateList(progress=True if len(self.houses) > 0 else False)
+        self.updateList()#progress=True if len(self.houses) > 0 else False)
 
         if len(self.houses) == 0: # слегка анимируем запись "Создайте первый участок"
             self.mainList.padding = (0, self.padding * 5, 0, Window.size[1] * .3)
@@ -4665,6 +4666,7 @@ class RMApp(App):
             return
         self.updateMainMenuButtons()
         note = self.house.note if self.house.note != "" else None
+        due = self.house.due()
         self.mainListsize1 = self.mainList.size[1]
         self.displayed.update(
             form="houseView",
@@ -4677,8 +4679,8 @@ class RMApp(App):
             tip=[note, "note"]
         )
         self.stack = ['houseView', 'ter']
-        self.updateList(progress=True if len(self.house.porches) > 0 else False)
-        if self.house.due(): self.mainList.add_widget(self.tip(text=self.msg[152], icon="warn"))
+        self.updateList(progress=True if len(self.house.porches) > 0 and not due else False)
+        if due: self.mainList.add_widget(self.tip(text=self.msg[152], icon="warn"))
 
     def porchView(self, instance=None, update=True, progress=False):
         """ Вид подъезда - список квартир или этажей """
