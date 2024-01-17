@@ -10,7 +10,7 @@ Greška baze podataka
 Dnevnik izveštaja
 Dodajte
 Dodajte jedan ili više kuća
-Pored područja možete videti njegov procenat obrađenosti.
+Pritisnite %s da biste vratili ulaznu mrežu u prvobitni položaj.
 Područje:
 Adresa:
 detalji
@@ -65,7 +65,7 @@ Unesite kućni broj, adresu ili drugi opis:
 Masovno dodavanje
 Primeri: 1 / 1a / crvena kuća
 Novo područje
-Stambena zgrada
+Zapamtite moj izbor
 Svi podaci
 Primer: Vuka Karadžića 30
 Označite ovo polje ako je ovo područje stambena zgrada.
@@ -242,12 +242,12 @@ Izveštaj dodaje 1 proučavanje Biblije
 Baza podataka je izbrisana!
 Ne mogu da pristupim datoteci. Veza verovatno nije dobila prava javnog pristupa.
 Preuzimanje datoteke podataka nije uspelo. Najverovatnije je oštećen ili ima pogrešan format.
-To može biti lista slučajnih reči, čak i adresa na različitim lokacijama.
+Dodajte listu domaćinstava odvojenih zarezima ili prelomima linija. To mogu biti brojevi zgrada, pune adrese itd
 Učitavanje baze podataka
 Savet
 Nije moguće napraviti rezervnu kopiju!
 Dodajte brojeve ručno
-Brojevi stanova moraju početi sa cifrom ne manjom od 1!
+Brojevi stanova moraju početi sa cifrom od najmanje 1! Počevši od drugog znaka, mogu se koristiti slova.
 Podaci Rocket Ministry
 Podaci se uspešno izvoze u datoteku %s.
 Podaci se uspešno izvoze u fasciklu Documents (Dokumenti) na vašem uređaju.
@@ -320,6 +320,13 @@ Vratite rezervnu kopiju ako nešto pođe po zlu
 Potpuno resetovanje svih podataka programa i postavki, uključujući rezervne kopije
 Izvezi
 Izvoz na Google Disk
-Bir dairenin düğmesinin büyüklüğü
+Površina stana u podovima
 Sortiranje
 Datum poslednje posete
+Tip teritorije:
+Stambena#zgrada
+Privatne#kuće
+Spisak#adresa
+Izaberite vrstu teritorije!
+Nisu potrebne particije
+Tip

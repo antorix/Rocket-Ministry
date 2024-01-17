@@ -10,7 +10,7 @@ except:
         print("Что-то из модулей не найдено. Устанавливаю, подождите...\nPlease wait, downloading missing modules...")
         from subprocess import check_call
         from sys import executable
-        check_call([executable, '-m', 'pip', 'install', 'kivy==2.1.0'])
+        check_call([executable, '-m', 'pip', 'install', 'kivy']) #kivy==2.1.0
         check_call([executable, '-m', 'pip', 'install', 'plyer'])
         check_call([executable, '-m', 'pip', 'install', 'requests'])
 

@@ -10,7 +10,7 @@ Database error
 Report log
 Add
 Add house(s)
-Next to a territory, you can see its work progress percentage.
+Press %s to return the entrance grid to its original position.
 Territory:
 Address:
 details
@@ -65,7 +65,7 @@ Enter house number, address, or custom description:
 Mass adding
 Examples: 1 / 1a / red building
 Add territory
-Condominium
+Remember my choice
 All data
 Example: Park Way, 30
 Check the box if this territory is an apartment complex or a part of it.
@@ -162,7 +162,7 @@ Add visit
 initial call
 Record
 Remember window position and size
-Enter territory name:
+Select territory name and type:
 Example: River st.
 Enter the first and the last number of the range to add:
 Interface theme
@@ -242,12 +242,12 @@ Here you will find the history of all report updates (max. %s entries).
 Database wiped!
 Unable to access file. Most likely, the link is not assigned public access rights.
 Failed to load data file. Most likely, it is damaged or of wrong format.
-It can be a list of random words, even addresses in different places.
+Add the list of households separated by commas or line breaks. These can be building numbers, full addresses etc.
 Loading database
 Tip
 Backup copy creation failed!
 Add numbers manually
-Apartment numbers must begin with a number not lower than 1!
+Apartment numbers must begin with a number not less than 1! Starting from the second character, letters can be used.
 Rocket Ministry Data
 Data successfully exported to file %s.
 Data successfully exported to the Documents folder on your device.
@@ -320,6 +320,13 @@ Recover a backup copy if something went wrong
 Full reset of all program data and settings, including backups
 Export
 Export to Google Drive
-Apartment button size
+Apartment size in per-floor view
 Sort
 Last visit date
+Territory type:
+Condo#
+Private#homes
+Address#list
+Choose the territory type!
+Sections are not required
+Type

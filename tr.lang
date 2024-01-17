@@ -10,7 +10,7 @@ Sistem hatası
 Rapor notları
 İlk
 Ev(ler) ekle
-Bir bölgenin yanında, iş ilerleme yüzdesini görebilirsiniz.
+Blok görüntüsünü orijinal konumuna döndürmek için %s tuşuna basın.
 Saha:
 Adres:
 ayarlar
@@ -65,7 +65,7 @@ Evin numarasını, adresini veya herhangi bir adını girin:
 Toplu ekleme
 Örnek: 1 / 1a / kırmızı ev
 Yeni saha
-Apartman
+Seçimimi hatırla
 Tüm veriler
 Örnek: Kurtuluş, 20
 Site bir apartman ise kutuyu işaretleyin.
@@ -242,12 +242,12 @@ Rapora 1 tetkik eklendi
 Veritabanı temizlendi!
 Dosyaya erişilemiyor. Büyük olasılıkla, kendisine genel erişim hakları verilmemiştir.
 Veri dosyası yüklenemedi. Büyük olasılıkla hasar görmüş veya formata uymuyor.
-Tamamen keyfi kelimelerden, hatta farklı yerlerdeki adreslerden oluşan bir liste olabilir.
+Hanelerin listesini virgülle veya satır sonlarıyla ayırarak ekleyin. Bunlar bina numaraları, tam adresler vb. olabilir.
 Veritabanının indirilmesi
 İpucu
 Yedekleme başarısız oldu!
 Numaraları manuel olarak ekleyin
-Daire numaraları 1'den küçük olmayan bir rakamla başlamalıdır!
+Daire numaraları 1'den az olmayan bir rakamla başlamalıdır! İkinci karakterden başlayarak harfler kullanılabilir.
 Rocket Ministry verileri
 Veriler, %s dosyasına başarıyla aktarıldı.
 Veriler cihazınızdaki Documents (Belgeler) klasörüne başarıyla aktarıldı.
@@ -320,6 +320,13 @@ Bir şeyler ters giderse yedek kopyayı kurtarın
 Yedeklemeler dahil tüm program verilerinin ve ayarlarının tamamen sıfırlanması
 Dışa aktar
 Google Drive'a aktar
-Bir dairenin düğmesi büyüklüğünde
+Kat bazında görünümde daire büyüklüğü
 Sırala
 Son ziyaret tarihi
+Bölge türü:
+Apartman#
+Özel#evler
+Adres#listesi
+Bölge türünü seçin!
+Bölümler gerekli değildir
+Tip

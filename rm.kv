@@ -35,16 +35,21 @@
     color: app.tableColor if self.state=='normal' else app.titleColor
     background_color: app.roundButtonBGColor
     text_size: self.size
+    text: self.text
+    rounded: self.rounded
+    r: 40 # закругление центральной кнопки
     canvas.before:
         Color:
-            rgba: (app.buttonBackgroundColor if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)) if self.text != "" else [0,0,0,0]
+            rgba: ((app.globalBGColor if self.text == app.positive.text else app.buttonBackgroundColor) if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)) if self.text != "" else [0,0,0,0]
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: app.radius
-
-<FloorView@GridLayout>:
-    drag_rectangle: self.x, self.y, self.width, self.height
+            radius: app.getRadius(rad=100 if not self.rounded else self.r, instance=self)[1]
+        Color:
+            rgba: (app.wiredButtonColor if self.state == "normal" else app.titleColor) if self.text == app.positive.text and self.text != "" else [0,0,0,0]
+        Line:
+            width: app.thickness()[1]
+            rounded_rectangle: self.x, self.y, self.width, self.height, app.getRadius(rad=100 if not self.rounded else self.r, instance=self)[0], 500
 
 <FloatButton@Button>:
     color: (app.linkColor if app.button['phone-thin'] in self.text else (app.linkColor if app.button["add_emoji"] not in self.text else app.topButtonColor)) if self.state=='normal' else app.titleColor
@@ -56,7 +61,7 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: app.radius
+            radius: app.getRadius(1, instance=self)[1]
 
 <RoundColorButton@Button>:
     background_color: app.roundButtonBGColor if app.theme != "3D" else [0,0,0,0]
@@ -74,8 +79,8 @@
         Color:
             rgba: app.floatButtonBGColor if not app.firstCallPopup else [.4, .4, .4, 1]
         Line:
-            width: 1 if app.firstCallPopup else (2 if self.color == app.getColor2(0) else 1)
-            circle: self.pos[0]+self.size[0]/2, self.pos[1]+self.size[1]/2, (self.size[0]*.5 if self.color == app.getColor2(0) else 0)
+            width: (app.thickness()[0] if not app.firstCallPopup else app.thickness()[1]) if self.color == app.getColor2(0) else 1
+            circle: self.center_x, self.center_y, self.size[0]*.5 if self.color == app.getColor2(0) else 0
 
 <ProgressButton@Button>:
     color: [app.titleColor[0], app.titleColor[1], app.titleColor[2], .7]
@@ -86,7 +91,7 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: app.radius
+            radius: app.getRadius(1)[1]
 
 <FirstCallButton1@FirstCallButton>: # нет дома
     color: app.linkColor if self.state == 'normal' else app.titleColorOnBlack
@@ -108,7 +113,7 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: app.FCRadius[1] if app.settings[0][13] == 1 else app.FCRadius[3]
+            radius: app.FCRadius[1] if app.settings[0][13] == 1 else app.FCRadius[2]
 
 <FirstCallButton3@FirstCallButton>: # отказ
     color: [1,1,1,.95] if self.state == 'normal' else app.titleColorOnBlack
@@ -119,18 +124,7 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: app.FCRadius[2]
-
-<FirstCallButtonPhone@FirstCallButton>:
-    color: ([1,1,1,.95] if self.state=='normal' else app.titleColorOnBlack) if self.height > 0 else [0,0,0,0]
-    background_color: [1,1,1,0]
-    canvas.before:
-        Color:
-            rgba: (app.getColorForStatus("1") if self.state=='normal' else app.popupBGColorPressed) if self.height > 0 else [0,0,0,0]
-        RoundedRectangle:
-            pos: self.pos
-            size: self.size
-            radius: app.FCRadius[2]
+            radius: app.FCRadius[3]
 
 <PopupButton@Button>:
     color: "lightgray" if self.state=='normal' else app.titleColorOnBlack
@@ -154,7 +148,7 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: app.radius
+            radius: app.getRadius(80, instance=self)[1]
 
 <TableButton@Button>:
     color: (app.linkColor if not self.disabled and app.button['phone'] in self.text else app.tableColor) if self.state=='normal' else app.titleColor
@@ -165,7 +159,20 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: app.radius
+            radius: app.getRadius(instance=self)[1]
+
+<TerTypeButton@Button>:
+    text_size: self.size
+    on: self.on
+    color: (app.linkColor if app.mode == "light" else app.titleColor) if self.on else (app.standardTextColor if self.state=='normal' else app.titleColor)
+    background_color: app.roundButtonBGColor if app.theme != "3D" else app.blackTint
+    canvas.before:
+        Color:
+            rgba: (app.sortButtonBackgroundColor if self.on else app.globalBGColor) if app.theme != "3D" else [0,0,0,0]
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: app.getRadius(instance=self)[1]
 
 <FlatButton@Button>:
     color: ([1,1,1,.95] if self.state == "normal" else "white") if (self.number is not None and not "." in self.number) or not app.porch.floors() else ((app.getColorForStatus("") if app.mode == "light" else app.getColorForStatus("")) if self.state=='normal' else "white")
@@ -175,12 +182,7 @@
     text: self.text
     number: self.number
     flat: self.flat
-    text_size: (None, None) if app.grid else self.size
-    background_normal: ""
-    background_down: ""
-    markup: True
-    halign: "center"
-    valign: "center"
+    text_size: (None, None) if app.porch.floors() else self.size
     k: .15
     canvas.before:
         Color:
@@ -188,15 +190,15 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: app.radius
+            radius: app.flatButtonRadius if not app.desktop else [0,]
         Color:
             rgba: app.getColor2(self.color2, self.flat)
         RoundedRectangle:
             pos: self.pos[0]+2, self.pos[1]+2
             size: (self.size[0]*self.k, self.size[0]*self.k) if self.size[0] < self.size[1] else (self.size[1]*self.k, self.size[1]*self.k)
             radius: [50,] if app.platform != "win" else [0,]
-        Color:
-            rgba: [1,1,1,.5]
+        #Color:
+        #    rgba: [1,1,1,.5]
 
 <TipButton@Button>:
     text_size: self.size[0] * .95, self.size[1]
@@ -210,7 +212,7 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: app.radius
+            radius: app.getRadius(instance=self)[1]
 
 <SettingsButton@Button>:
     color: app.topButtonColor if self.state=='normal' else (app.titleColor if app.theme != "3D" else app.topButtonColor)
@@ -221,7 +223,7 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: app.radius
+            radius: app.getRadius(instance=self)[1]
 
 <Timer@Button>:
     background_color: [1,1,1,0]
@@ -231,7 +233,7 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: app.radius
+            radius: app.getRadius(instance=self)[1]
 
 <TTab@TabbedPanelHeader>:
     color: app.tabColors[0] if self.state=='normal' else app.titleColor
@@ -276,7 +278,7 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: [app.scrollRadius[0], app.scrollRadius[0], app.scrollRadius[0], app.scrollRadius[0]]
+            radius: app.getRadius(instance=self)[1]
 
 <ColorStatusButton@Button>:
     canvas.before:
@@ -285,7 +287,13 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: app.radius
+            radius: app.getRadius(instance=self)[1]
 
 <FlatFooterLabel@Label>:
+    text_size: self.size
+
+<FloorView@GridLayout>:
+    drag_rectangle: self.x, self.y, self.width, self.height
+
+<FontCheckBox@Button>:
     text_size: self.size

@@ -10,7 +10,7 @@ Error en la base de datos
 Informe de registro
 Agregar
 Agregar casa(s)
-Junto a un territorio, puede ver su porcentaje de progreso de trabajo.
+Presione %s para devolver la imagen de entrada a su posición original.
 Territorio:
 Dirección:
 detalles
@@ -65,7 +65,7 @@ Introduzca el número de casa, la dirección o una descripción personalizada:
 Adición masiva
 Ejemplos: 1 / 1a / edificio rojo
 Añadir territorio
-Condominio
+Recuerda mi elección
 Todos los datos
 Ejemplo: Avenida del Parque, 30
 Marque la casilla si este territorio es un complejo de apartamentos.
@@ -162,7 +162,7 @@ Agregar visita
 primera conversación
 Registro
 Recuerde la posición y el tamaño de la ventana
-Introduzca el nombre del territorio:
+Seleccione el nombre y tipo del territorio:
 Ejemplo: Calle del Río
 Introduzca el primer y el último número del rango a añadir:
 Tema de la interface
@@ -242,12 +242,12 @@ Aquí encontrará el historial de todas las actualizaciones de informes (máx. %
 ¡Base de datos borrada!
 No se puede acceder al archivo. Lo más probable es que el enlace no tenga asignados derechos de acceso público.
 No se ha podido cargar el archivo de datos. Lo más probable es que esté dañado o tenga un formato incorrecto.
-Puede ser una lista de palabras aleatorias, incluso direcciones de distintos lugares.
+Agregue la lista de hogares separados por comas o saltos de línea. Pueden ser números de edificio, direcciones completas, etc.
 Cargando base de datos
 Consejo
 ¡Fallo en la creación de la copia de seguridad!
 Agregar números manualmente
-¡Los números de los apartamentos deben comenzar con un número no inferior a 1!
+¡Los números de los apartamentos deben comenzar con un número no inferior a 1! A partir del segundo carácter, se pueden utilizar letras.
 Datos de Rocket Ministry
 Datos exportados correctamente al archivo %s.
 Datos exportados correctamente a la carpeta Documents (Documentos) de su dispositivo.
@@ -320,6 +320,13 @@ Recuperar una copia de seguridad si algo salió mal
 Restablecimiento de todos los datos y configuraciones, incluidas las copias de seguridad
 Exportar
 Exportar a Google Drive
-Tamaño del botón del apartamento
+Tamaño del apartamento en vista por piso
 Ordenar
 Fecha de la última visita
+Tipo de territorio:
+Condominio#
+Casas#particulares
+Lista de#direcciones
+¡Elige el tipo de territorio!
+No se requieren secciones
+Tipo
