@@ -223,7 +223,7 @@ class Porch(object):
         if self.floors() and not regularDelete: # если подъезд c сеткой
             for f in self.flats:
                 if f.number == str(self.highestNumber):
-                    if f.status != "": # проверка, чтобы последняя квартира была пустой
+                    if f.status != "" or f.color2 != 0: # проверка, чтобы последняя квартира была пустой
                         RM.popup(message=RM.msg[215])
                         return
                     break
@@ -1178,7 +1178,7 @@ class TopButton(Button):
         self.valign = "center"
         self.font_size = RM.fontXL * (.85 if RM.desktop else .79)
         self.markup=True
-        self.size_hint_x = 1 if size_hint_x==None else size_hint_x
+        self.size_hint_x = 1 if size_hint_x == None else size_hint_x
         self.size_hint_y = 1
         self.pos_hint = {"center_y": .5}
         self.background_normal = ""
@@ -1192,7 +1192,7 @@ class SettingsButton(Button):
         self.text = RM.button['ellipsis'] if id is not None else ""
         self.size_hint_x = RM.ellipsisWidth
         self.valign = "bottom" if not RM.displayed.form == "houseView" else "center"
-        self.font_size = RM.fontXL*1.1 * RM.fontScale()
+        self.font_size = RM.fontXL * 1.1 * RM.fontScale()
         self.markup = True
         self.background_normal = ""
         self.background_down = ""
@@ -1629,7 +1629,7 @@ class FlatButton(Button):
         if self.number != flat.number: self.number = flat.number
         if self.status != flat.status: self.status = flat.status
         if self.color2 != flat.color2: self.color2 = flat.color2
-        if "." in flat.number: self.text = icon('icon-plus-circle')
+        if "." in flat.number and RM.porch.floors(): self.text = icon('icon-plus-circle')
 
     def updateRecord(self):
         """ Обновление записей под кнопкой в режиме списка """
