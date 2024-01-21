@@ -17,7 +17,7 @@ ayarlar
 Alınan tarihi:
 Not:
 Blok numarası:
-Bölüm ismi:
+Sokak adı:
 Isim
 Kişi (isim, açıklama):
 İletişim:
@@ -68,14 +68,14 @@ Yeni saha
 Seçimimi hatırla
 Tüm veriler
 Örnek: Kurtuluş, 20
-Site bir apartman ise kutuyu işaretleyin.
+
 Yeni block kapısını adlandırın:
 Numarası veya açıklaması
 Apartman'da bir veya birçok giriş kapısı olabilir.
-Yeni segment'in adını girin:
-Örnek: 1 / güney kısım
-Kolaylık için saha bölümlere veya segmentlere ayrılabilir. Bir segment sokak, caddenin kenarı veya başka bir şey olabilir.
-Yeni
+Yeni sokak adını girin:
+
+Yeni blok
+Yeni sokak
 Yeni kişi numarası
 Kişinin adını ve/veya açıklamasını girin
 Sahaya bağlı olmayan bir kişi oluşturuyorsunuz. Tüm sahalardaki sakinler açık yeşil statüsünde olmaları koşuluyla, kişiler bölümünde otomatik olarak görüntülenir.
@@ -162,7 +162,7 @@ Yeni görüşme
 İlk görüşme
 Kayıt
 Pencere konumunu ve boyutunu hatırla
-Saha'yı adlandırın
+Saha'yı adlandırın:
 Örneğin: Kurtuluş şok.
 Eklenecek aralığın ilk ve son numaralarını girin:
 Arayüz teması
@@ -194,7 +194,7 @@ Bir daireyi griye sıfırlamak içindeki tüm bilgileri silecektir! Devam edelim
 Saha'yı sil
 Bir sahayı kaldırmadan önce, kaydetmek istediğiniz tüm kişilerin durumunun açık yeşil olduğundan emin olun. Aksi takdirde saha ile birlikte silineceklerdir! Silinsin mi?
 Bloğu sil
-Bölümü sil
+Sokağı sil
 Bundan emin misiniz?
 Siliniyor
 Ziyaret kaydının silinmesi
@@ -208,9 +208,9 @@ Ret
 Dosya yüklenemedi. Büyük olasılıkla hatalı biçimlendirilmiş veya gerekli verileri içermiyor.
 Veriler başarıyla yüklendi!
 Lütfen bekleyin
-bölüm
+sokak
 blok
-İlk %s'yi oluştur
+İlk caddeyi ekleyin
 No
 Bu girişte katları küçültmek artık mümkün değil çünkü girişi olan son daire kaybolacak!
 Bu konumdaki bir daire silinsin mi? Daire numarasının kendisi bozulmadan kalacaktır (sonuncusu hariç).
@@ -242,7 +242,7 @@ Rapora 1 tetkik eklendi
 Veritabanı temizlendi!
 Dosyaya erişilemiyor. Büyük olasılıkla, kendisine genel erişim hakları verilmemiştir.
 Veri dosyası yüklenemedi. Büyük olasılıkla hasar görmüş veya formata uymuyor.
-Hanelerin listesini virgülle veya satır sonlarıyla ayırarak ekleyin. Bunlar bina numaraları, tam adresler vb. olabilir.
+Hanelerin listesini virgülle veya satır sonlarıyla ayırarak ekleyin.
 Veritabanının indirilmesi
 İpucu
 Yedekleme başarısız oldu!
@@ -328,5 +328,5 @@ Apartman#
 Özel#evler
 Adres#listesi
 Bölge türünü seçin!
-Bölümler gerekli değildir
+Sokaklara bölünmeyin
 Tip

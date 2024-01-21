@@ -17,7 +17,7 @@ details
 Date taken:
 Note:
 Entrance number:
-Section name:
+Street name:
 Name
 Person (name, description):
 Phone:
@@ -68,14 +68,14 @@ Add territory
 Remember my choice
 All data
 Example: Park Way, 30
-Check the box if this territory is an apartment complex or a part of it.
+
 Enter new entrance name:
 Number or description
 A condominium may have one or more entrances or blocks with separate sets of apartments.
-Enter new section name:
-Example: 1 / north
-A territory may be divided into sections or zones for convenience. One section may be a street, side of a street, block, or anything else.
-Add
+Enter new street name:
+
+Add entrance
+Add street
 Add contact
 Enter contact name and/or description:
 You are creating a standalone contact not associated with any territory. People from all your territories are listed in the contacts automatically if they are assigned the light-green status.
@@ -194,7 +194,7 @@ Setting an apartment to the light gray color will delete all its information! Pr
 Delete territory
 Before deleting the territory, make sure that all householders you want to keep have the green-light color. Otherwise they will be deleted along with the territory! Proceed with deletion?
 Delete entrance
-Delete section
+Delete street
 Are you sure?
 Delete
 Delete visit record
@@ -208,9 +208,9 @@ Not interested
 In brackets, you may see how much time you are ahead (+) or behind (-) your monthly requirement for the current day of the month. For example, with the requirement of 50 hours, if you have had no service for today, this value will decrease approximately by 1:40 tomorrow.
 Data successfully loaded!
 Please wait
-section
+street
 entrance
-Add the first %s
+Add the first street
 #
 You cannot reduce floors in this block anymore, because the last apartment with content will disappear!
 Delete a flat in this position? The flat number itself will stay intact (except the last one).
@@ -242,7 +242,7 @@ Here you will find the history of all report updates (max. %s entries).
 Database wiped!
 Unable to access file. Most likely, the link is not assigned public access rights.
 Failed to load data file. Most likely, it is damaged or of wrong format.
-Add the list of households separated by commas or line breaks. These can be building numbers, full addresses etc.
+Add the list of households separated by commas or line breaks.
 Loading database
 Tip
 Backup copy creation failed!
@@ -328,5 +328,5 @@ Condo#
 Private#homes
 Address#list
 Choose the territory type!
-Sections are not required
+Don't divide into streets
 Type

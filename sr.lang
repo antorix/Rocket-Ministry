@@ -17,7 +17,7 @@ detalji
 Datum uzima:
 Primedba:
 Broj ulaza:
-Naziv dela:
+Naziv ulice:
 Ime
 Osoba (ime, opis):
 Telefon:
@@ -68,14 +68,14 @@ Novo područje
 Zapamtite moj izbor
 Svi podaci
 Primer: Vuka Karadžića 30
-Označite ovo polje ako je ovo područje stambena zgrada.
+
 Upišite naziv novog ulaza:
 Broj ili opis
 Stambena zgrada može imati jedan ili više ulaza ili blokova sa zasebnim stanovima.
-Upišite naziv novog dela:
-Primer: 1 / južni deo
-Područje se može podeliti na delove ili zone radi pogodnosti. Jedan deo može biti ulica, strana ulice, blok ili bilo šta drugo.
-Dodaj
+Unesite novo ime ulice:
+
+Novi ulaz
+Nova ulica
 Novi kontakt
 Upišite ime i/ili opis osobe:
 Kreirate samostalni kontakt koji nije povezan ni sa jednom teritorijom. Ljudi sa svih vaših teritorija se automatski navode u kontaktima ako im se dodeli svetlozeleni status.
@@ -194,23 +194,23 @@ Označavanje stana sivom bojom će obrisati sve njegove informacije. Nastaviti?
 Obrisati područje
 Pre brisanja područja, proverite da li su svi stanari koji želite da sačuvate označeni svetlo-zelenom bojom. U suprotnom biće obrisani zajedno sa područjem! Nastaviti sa brisanjem?
 Izbriši ulaz
-Izbriši deo područja
+Uklonite ulicu
 Da li ste sigurni?
 Izbriši
 Izbriši beleške o posetama
 Izbriši beleške od
 U zagradama možete videti koliko vremena ste ispred (+) ili zaostajete (-) za mesečnom potrebom za tekućim danom u mesecu. Na primer, sa zahtevom od 50 sati, ako danas niste imali propoved, ta vrednost će se sutra smanjiti za oko 1:40.
 Pažnja
-Детаљи
+Info
 "%s" jednim klikom
 Nema kući
 Nezainteresovan
 Nije moguće učitati datoteku. Najverovatnije je u pogrešnom formatu ili ne sadrži potrebne podatke.
 Data successfully loaded!
 Molimo sačekajte
-deo
+ulica
 ulaz
-Dodajte prvi %s
+Dodajte prvu ulicu
 br.
 Više nećete moći da smanjite broj spratova u ovom bloku, jer će poslednji stan sa sadržajem nestati!
 Uklonite broj stana u ovom položaju? Sam broj stana će ostati nepromenjen (осим последњег).
@@ -242,7 +242,7 @@ Izveštaj dodaje 1 proučavanje Biblije
 Baza podataka je izbrisana!
 Ne mogu da pristupim datoteci. Veza verovatno nije dobila prava javnog pristupa.
 Preuzimanje datoteke podataka nije uspelo. Najverovatnije je oštećen ili ima pogrešan format.
-Dodajte listu domaćinstava odvojenih zarezima ili prelomima linija. To mogu biti brojevi zgrada, pune adrese itd
+Dodajte listu domaćinstava odvojenih zarezima ili prelomima linija.
 Učitavanje baze podataka
 Savet
 Nije moguće napraviti rezervnu kopiju!
@@ -314,7 +314,7 @@ Na ovoj teritoriji nema telefonskih brojeva za izvoz!
 Telefonski brojevi na %s
 Karte
 Podrazum.
-Учитајте податке у апликацију
+Učitajte podatke u aplikaciju
 Sačuvajte sve podatke aplikacije u datoteku
 Vratite rezervnu kopiju ako nešto pođe po zlu
 Potpuno resetovanje svih podataka programa i postavki, uključujući rezervne kopije
@@ -328,5 +328,5 @@ Stambena#zgrada
 Privatne#kuće
 Spisak#adresa
 Izaberite vrstu teritorije!
-Nisu potrebne particije
+Nije potrebna podela na ulice
 Tip

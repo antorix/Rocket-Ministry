@@ -17,7 +17,7 @@ detalles
 Fecha que se tendrá:
 Nota:
 Nombre de entrada:
-Nombre de la sección:
+Nombre de la calle:
 Nombre
 Persona (nombre, descripción):
 Teléfono:
@@ -68,14 +68,14 @@ Añadir territorio
 Recuerda mi elección
 Todos los datos
 Ejemplo: Avenida del Parque, 30
-Marque la casilla si este territorio es un complejo de apartamentos.
+
 Introduzca el nombre de la nueva entrada:
 Número o descripción
 Un condominio puede tener una o más entradas o bloques con conjuntos separados de apartamentos.
-Introduzca el nuevo nombre de la sección:
-Ejemplo: 1 / parte sur
-Un territorio puede dividirse en secciones o zonas por conveniencia. Una sección puede ser una calle, un lado de una calle, una manzana o cualquier otra cosa.
-Agregar
+Ingrese el nuevo nombre de la calle:
+
+Agregar entrada
+Agregar calle
 Agregar contacto
 Introduzca nombre de contacto y/o descripción:
 Está creando un contacto independiente no asociado a ningún territorio. Las personas de todos sus territorios aparecen automáticamente en los contactos si se les asigna el estado verde claro.
@@ -194,7 +194,7 @@ Al poner un apartamento en color gris, se borrará toda su información. ¿Conti
 Borrar territorio
 Antes de borrar el territorio, asegúrese de que todos los propietarios que quieres conservar tienen el color verde. De lo contrario, se eliminarán junto con el territorio. ¿Proceder a la eliminación?
 Borrar entrada
-Borrar sección
+Borrar calle
 ¿Esta seguro?
 Borrar
 Borrar registro de visita
@@ -208,9 +208,9 @@ No interesado
 No se puede cargar el archivo. Es probable que tenga un formato incorrecto o que no contenga los datos necesarios.
 ¡Datos cargados con éxito!
 Espere
-sección
+calle
 entrada
-Agregar el primer %s
+Agrega la primera calle
 #
 Ya no puede reducir pisos en este bloque, ¡porque el último apartamento con contenido desaparecerá!
 ¿Eliminar un piso en esta posición? El número del apartamento permanecerá intacto (excepto el último).
@@ -242,7 +242,7 @@ Aquí encontrará el historial de todas las actualizaciones de informes (máx. %
 ¡Base de datos borrada!
 No se puede acceder al archivo. Lo más probable es que el enlace no tenga asignados derechos de acceso público.
 No se ha podido cargar el archivo de datos. Lo más probable es que esté dañado o tenga un formato incorrecto.
-Agregue la lista de hogares separados por comas o saltos de línea. Pueden ser números de edificio, direcciones completas, etc.
+Agregue la lista de hogares separados por comas o saltos de línea.
 Cargando base de datos
 Consejo
 ¡Fallo en la creación de la copia de seguridad!
@@ -328,5 +328,5 @@ Condominio#
 Casas#particulares
 Lista de#direcciones
 ¡Elige el tipo de territorio!
-No se requieren secciones
+No dividir en calles
 Tipo
