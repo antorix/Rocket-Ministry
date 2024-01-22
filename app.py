@@ -1117,7 +1117,7 @@ class FloorView(DragBehavior, GridLayout):
         self.GS = [ # Grid Size - реальный размер сетки подъезда
             (size+self.spacing[0]*1.8) * (self.cols-1) + RM.floorLabelWidth, (size + self.spacing[0]*1.4) * self.rows]
         self.oversized = True if self.GS[0] > RM.mainList.size[0] or self.GS[1] > RM.mainList.size[1] else False
-        self.centerPos = [Window.size[0] / 2 - self.GS[0] / 2, 0 - RM.mainList.size[1] / 2 + self.GS[1] / 2]
+        self.centerPos = [Window.size[0] / 2 - self.GS[0] / 2, 0 - Window.size[1] / 2.8 + self.GS[1] / 2]
         if RM.orientation == "h": self.centerPos[0] -= RM.horizontalOffset/2
 
         if self.porch.floorview is None and updated: # первичное создание подъезда или обновление параметров существующего
@@ -1145,18 +1145,7 @@ class FloorView(DragBehavior, GridLayout):
             self.drag_timeout = 0
             self.drag_distance = 9999
 
-        if 0:
-            with self.canvas.before:
-                self.shape_color = Color(rgba=[0,1,0,.3])
-                self.shape = RoundedRectangle(
-                    pos=self.pos,#(self.GS[0], self.GS[1]),
-                    size=self.GS,
-                    radius=[0,])
-                #self.bind(pos=self.update_shape, size=self.update_shape)
 
-    def update_shape(self, *args):
-        self.shape.pos = self.pos
-        self.shape.size = self.size
 
 class TTab(TabbedPanelHeader):
     """ Вкладки панелей """
@@ -2405,13 +2394,12 @@ class RMApp(App):
         self.floorLabelWidth = self.standardTextHeightUncorrected / 2
         self.rep = Report()  # инициализация отчета
 
-        if not os.path.exists("icomoon_updated.ttf"):
-            register('default_font', 'icomoon.ttf', 'icomoon.fontd')  # шрифты с иконками
-        else:
+        if os.path.exists("icomoon_updated.ttf"): # шрифты с иконками
             if os.path.exists("icomoon.ttf"): os.remove("icomoon.ttf")
             os.rename("icomoon_updated.ttf", "icomoon.ttf") # если было обновление, сначала заменяем файл
-            register('default_font', 'icomoon.ttf', 'icomoon.fontd')
             self.dprint("Найден и переименован загруженный файл icomoon.ttf.")
+
+        register('default_font', 'icomoon.ttf', 'icomoon.fontd')
 
     # Первичное создание интерфейса
 
@@ -2502,10 +2490,10 @@ class RMApp(App):
             self.mainMenuActivated = self.titleColor = [0,.47,.75,1]
             self.mainMenuButtonBackgroundColor = [1,1,1,.25]#self.globalBGColor
             self.activatedColor = [0, .15, .35, .9]
-            self.buttonBackgroundColor = [.94, .93, .92, .9]
+            self.buttonBackgroundColor = [.94, .93, .93, .9]
             self.textInputColor = [.1, .1, .1]
             self.textInputBGColor = [.97, .97, .97, .95]
-            self.scrollButtonBackgroundColor = [.97, .96, .95, .95]
+            self.scrollButtonBackgroundColor = [.97, .96, .96, .95]
             self.sortButtonBackgroundColor = [.94, .94, .94, .95]
             self.roundButtonBGColor = [.94, .93, .92, 0]
             k = .85
@@ -2687,7 +2675,7 @@ class RMApp(App):
             "record": f"[size={self.FCPIconSize}]{icon('icon-pencil')}[/size]{br}{self.msg[163]}",  # запись
             "reject": f"[size={self.FCPIconSize}]{icon('icon-ban')}[/size]{br}{self.msg[207]}",  # отказ
 
-            # иконки для TableButton - все Material Icons, кроме 1
+            # иконки для TableButton - все Material Icons
             "back":     icon("icon-arrow_back", size=self.tableIconSizeS), # верхние
             "sort":  f"{icon('icon-sort1', size=self.tableIconSizeS)} {self.msg[324]}",
             "user":     icon("icon-user", size=self.tableIconSizeS),
@@ -2696,7 +2684,7 @@ class RMApp(App):
             "adjust":   icon("icon-adjust1", size=self.tableIconSizeS), # нижние
             "resize":   icon("icon-open_in_full", size=self.tableIconSizeS),
             "flist":    icon("icon-format_align_justify", size=self.tableIconSizeS),
-            "fgrid":    icon('icon-one-finger-swipe-left', size=self.tableIconSizeS), # Hawcons
+            "fgrid":    icon('icon-swipe', size=self.tableIconSizeS),
             "phone":    icon('icon-phone1', size=self.tableIconSizeS),
             "phone0":   icon('icon-phone1', size=self.tableIconSizeS, color=self.disabledColor),
             "nav":      icon("icon-location_on", size=self.tableIconSizeS),
@@ -2716,7 +2704,7 @@ class RMApp(App):
             "calendar": icon("icon-calendar"),
             "worked":   icon("icon-check"),
             "ellipsis": icon("icon-more_vert"), # Material icons
-            "contact":  icon("icon-user"),
+            "contact":  icon("icon-user"), # отличается от user тем, что не прописан размер
             "phone-square": icon("icon-phone-square"),
             "phone-thin": icon("icon-phone"),
             "shrink":   icon('icon-scissors'),
@@ -3048,6 +3036,7 @@ class RMApp(App):
                                            spacing=self.spacing * 1.5, padding=self.padding * 2, size_hint_y=None)
             self.scrollWidget.bind(minimum_height=self.scrollWidget.setter('height'))
             self.scroll = ScrollView(size=self.mainList.size, scroll_type=['content'])
+            rad = self.getRadius(90)[0]  # радиус закругления подсветки списка в участках и контактах
             if self.desktop:
                 self.height1 = self.height1 * (.8 if form == "ter" or form == "con" else .6)
             height = self.height1
@@ -3055,9 +3044,11 @@ class RMApp(App):
             if self.createFirstHouse: # запись "создайте один или несколько домов" для пустого сегмента
                 self.createFirstHouse = False
                 box1 = BoxLayout(orientation="vertical", size_hint_y=None, height=self.height1*1.05)
+                self.scrollRadius = [rad,]
                 box1.add_widget(ScrollButton(
                     id=None, height=box1.height,
                     text=f"{RM.button['plus-1']}{RM.button['home']} {RM.msg[12]}"))
+
                 self.scroll.add_widget(self.scrollWidget)
                 self.scrollWidget.add_widget(box1)
                 self.mainList.add_widget(self.scroll)
@@ -3132,7 +3123,6 @@ class RMApp(App):
                 # Все списки
 
             else:
-                rad = self.getRadius(90)[0]  # радиус закругления подсветки списка в участках и контактах
                 if form == "ter": self.scrollRadius = [rad, ] if len(self.houses) == 0 else [rad, rad, 0, 0]
                 elif form == "con": self.scrollRadius = [rad, rad, 0, 0]
                 elif form == "porchView":
@@ -3998,7 +3988,7 @@ class RMApp(App):
                         title=f"{self.flatTitle} {self.button['arrow']} {self.msg[161].lower()}",
                         message=self.msg[125],
                         multiline=True,
-                        details=f"{self.button['contact']} {self.msg[204]}",
+                        details=f"{self.button['user']} {self.msg[204]}",
                         neutral=self.button["phone"]
                     )
                 else: # сохранение первого посещения и выход в подъезд
@@ -5136,7 +5126,7 @@ class RMApp(App):
             message = self.msg[125],
             default = self.record.title,
             multiline=True,
-            details=f"{self.button['contact']} {self.msg[204]}",
+            details=f"{self.button['user']} {self.msg[204]}",
             neutral=self.button["phone"],
             focus=focus
         )
@@ -6715,7 +6705,7 @@ class RMApp(App):
             width = self.mainList.width * size_hint[0] * .9
             contentMain = BoxLayout(orientation="vertical")
             btnSave = PopupButton(
-                text=f"[size={self.fontM}]{icon('icon-plus-square-o')}[/size] {self.msg[188].upper() if self.language != 'ka' else self.msg[188]}"
+                text=f"{self.button['plus']} {self.msg[188].upper() if self.language != 'ka' else self.msg[188]}"
             )
             bBox = AnchorLayout(anchor_y="center", size_hint_y=None, height=btnSave.height*1.3)
             bBox.add_widget(btnSave)

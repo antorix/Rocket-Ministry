@@ -40,7 +40,7 @@
     r: 40 # закругление центральной кнопки
     canvas.before:
         Color:
-            rgba: ((app.globalBGColor if self.text == app.positive.text else app.buttonBackgroundColor) if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)) if self.text != "" else [0,0,0,0]
+            rgba: ((app.globalBGColor if self.text == app.positive.text else app.buttonBackgroundColor) if self.state=='normal' else ((app.sortButtonBackgroundColor if self.text == app.positive.text else app.roundButtonColorPressed) if app.mode == "light" else app.roundButtonColorPressed2)) if self.text != "" else [0,0,0,0]
         RoundedRectangle:
             pos: self.pos
             size: self.size
