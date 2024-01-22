@@ -1805,7 +1805,7 @@ class RecordButton(Button):
         self.size_hint_x = .88
 
     def on_release(self):
-        RM.btn[self.id].on_release()        
+        RM.btn[self.id].on_release()
 
 class Counter(AnchorLayout):
     """ Виджет счетчика """
@@ -2052,7 +2052,7 @@ class PorchSelector(GridLayout):
         self.pos = [Window.size[0] - self.size[0],
                     RM.boxFooter.size[1] + RM.bottomButtons.size[1] + RM.mainList.size[1] - self.size[1] + RM.padding]
         self.updateColor(RM.house.porches.index(RM.porch))
-    
+
     def switch(self, instance):
         porchIndex = self.buttons.index(instance)
         RM.porch = RM.house.porches[porchIndex]
@@ -2404,7 +2404,14 @@ class RMApp(App):
         self.standardTextHeightUncorrected = Window.size[1] * .038  # то же, что выше, но без коррекции на размер шрифта
         self.floorLabelWidth = self.standardTextHeightUncorrected / 2
         self.rep = Report()  # инициализация отчета
-        register('default_font', 'icomoon.ttf', 'icomoon.fontd')  # шрифты с иконками
+
+        if not os.path.exists("icomoon_updated.ttf"):
+            register('default_font', 'icomoon.ttf', 'icomoon.fontd')  # шрифты с иконками
+        else:
+            if os.path.exists("icomoon.ttf"): os.remove("icomoon.ttf")
+            os.rename("icomoon_updated.ttf", "icomoon.ttf") # если было обновление, сначала заменяем файл
+            register('default_font', 'icomoon.ttf', 'icomoon.fontd')
+            self.dprint("Найден и переименован загруженный файл icomoon.ttf.")
 
     # Первичное создание интерфейса
 
@@ -2670,10 +2677,10 @@ class RMApp(App):
             "home":     f" [size={self.listIconSize}][color={self.scrollColor}]{icon('icon-home')}[/color][/size] ",
 
             # центральная кнопка - все Material Icons, кроме последней
-            "plus":     f"[b][color={self.RoundButtonColor}]{icon('icon-add_circle', size=self.tableIconSizeS)}[/color][/b]",
-            "edit":     f"[b][color={self.RoundButtonColor}]{icon('icon-settings', size=self.tableIconSizeS)}[/color][/b]",
-            "save":     f"[b][color={self.saveColor}]{icon('icon-check_circle', size=self.tableIconSizeS)} {self.msg[5]}[/b][/color][/b]",
-            "search2":  f"[b][color={self.RoundButtonColor}]{icon('icon-binoculars')}[/color][/b]",
+            "plus":     f"[b]{icon('icon-add_circle', size=self.tableIconSizeS)}[/b]",
+            "edit":     f"[b]{icon('icon-settings', size=self.tableIconSizeS)}[/b]",
+            "save":     f"[b][color={self.saveColor}]{icon('icon-check_circle', size=self.tableIconSizeS)} {self.msg[5]}[/color][/b]",
+            "search2":  f"[b]{icon('icon-binoculars')}[/b]",
 
             # плашка первого посещения
             "lock":   f"[size={self.FCPIconSize}]{icon('icon-lock')}[/size]\n{self.msg[206]}",  #  нет дома
@@ -3145,7 +3152,7 @@ class RMApp(App):
                             # отдельный механизм добавления записей журнала отчета + ничего не найдено в поиске
                             self.btn.append(MyLabel(text=label.strip(), color=self.standardTextColor, halign="left",
                                                     valign="top", size_hint_y=None, height=self.height1, markup=True,
-                                                    text_size=(Window.size[0]-self.standardTextHeight, self.height1)))
+                                                    text_size=(Window.size[0]-self.horizontalOffset, self.height1)))
                             self.scrollWidget.add_widget(self.btn[i])
 
                         else: # стандартное добавление
@@ -5679,7 +5686,7 @@ class RMApp(App):
                               font_size=font_size, markup=True, halign=halign, valign=valign)
         if icon == "link": tip.bind(on_ref_press=func)
         return tip
-    
+
     def createFirstCallPopup(self, instance):
         """ Попап первого посещения """
         if self.flat is None: return
@@ -6972,9 +6979,8 @@ class RMApp(App):
                         source = downloadedFolder + "/" + file_name
                         destination = file_name
                         if os.path.isfile(source):
-                            try: shutil.move(source, destination)
-                            except: self.dprint("Не удалось переместить файл %s." % source)
-                    os.remove(file)
+                            if not "icomoon.ttf" in source: shutil.move(source, destination)
+                            else: shutil.move(source, "icomoon_updated.ttf")
                     shutil.rmtree(downloadedFolder)
                 elif forced:
                     Clock.schedule_once(lambda x: self.popup(message="Обновлений нет."), 1)
