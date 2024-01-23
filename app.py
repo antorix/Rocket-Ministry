@@ -494,8 +494,8 @@ class Flat(object):
     def wipe(self):
         """ Полностью очищает квартиру, оставляя только номер """
         del self.records[:]
-        self.status = self.note = self.phone = self.lastVisit = self.emoji = ""
-        self.color2 = 0
+        self.status = self.note = self.phone = self.emoji = ""
+        self.color2 = self.lastVisit = 0
         self.title = self.number
         if self.title == "virtual": self.title = ""
 
@@ -908,6 +908,16 @@ class EmptyButton(Widget):
         super(EmptyButton, self).__init__()
         self.size_hint_y = None
         self.height = height * .7
+
+class MainScroll(GridLayout):
+    def __init__(self, *args, **kwargs):
+        super(MainScroll, self).__init__()
+        #cols = (1 if Window.size[0] <= Window.size[1] else 2) if form != "porchView" else self.settings[0][10],
+        self.spacing = RM.spacing * 1.5
+        self.padding = RM.padding * 2
+        self.size_hint_y = None
+        #if RM.displayed.form == "porchView" and RM.settings[0][10] == 1:
+        #    RM.settings[0][10] = 2
 
 class MyLabel(Label):
     def __init__(self, text="", color=None, halign=None, valign=None, text_size=None, size_hint=None,
@@ -1731,7 +1741,7 @@ class SortListButton(Button):
 
 class ScrollButton(Button):
     """ Пункты всех списков кроме квартир """
-    def __init__(self, id, text, height):
+    def __init__(self, id, text, height, size_hint_y=1):
         super(ScrollButton, self).__init__()
         self.id = id # номер пункта, который передается элементу скролла и соответствует displayed.options
         self.text = text
@@ -1739,6 +1749,7 @@ class ScrollButton(Button):
         self.halign = "left"
         self.valign = "center"
         self.markup = True
+        self.size_hint_y = size_hint_y
         self.footers = []
         if RM.theme != "3D": self.size_hint_x = .96 if RM.displayed.form == "ter" or RM.displayed.form == "con" else .99
         self.pos_hint = {"center_x": .5}
@@ -2242,7 +2253,8 @@ class RMApp(App):
         Window.bind(on_touch_move=self.window_touch_move)
         Clock.schedule_interval(self.checkDate, 60)
         if not self.desktop: self.setParameters(reload=True) # перезагрузка параметров для решения бага у Andranik K на Android 14
-        self.terPressed()
+        #else: self.terPressed()
+        Clock.schedule_once(self.terPressed, 0)
         return self.interface
 
     # Подготовка переменных
@@ -2364,7 +2376,6 @@ class RMApp(App):
             if self.desktop:
                 from kivy.config import Config
                 Config.set('input', 'mouse', 'mouse, disable_multitouch')
-                #Config.set('input', 'mouse', 'mouse, enable_multitouch')
                 Config.write()
                 self.title = 'Rocket Ministry'
                 Window.icon = "icon.png"
@@ -2952,8 +2963,6 @@ class RMApp(App):
 
         self.checkOrientation()
 
-        self.originalMainListSizeHintY = self.mainList.size_hint_y
-
     # Основные действия с центральным списком
 
     def updateList(self, instance=None, progress=False):
@@ -3032,8 +3041,9 @@ class RMApp(App):
 
             self.btn = []  # массив кнопок для списка
             self.height1 = self.standardTextHeight * 2 / self.fontScale()  # высота кнопки списка
-            self.scrollWidget = GridLayout(cols=1 if self.displayed.form != "porchView" else self.settings[0][10],
-                                           spacing=self.spacing * 1.5, padding=self.padding * 2, size_hint_y=None)
+            #print(Window.size)
+            self.scrollWidget = MainScroll()
+            #cols=(1 if Window.size[0] <= Window.size[1] else 2) if form != "porchView" else self.settings[0][10], spacing=self.spacing * 1.5, padding=self.padding * 2, size_hint_y=None)
             self.scrollWidget.bind(minimum_height=self.scrollWidget.setter('height'))
             self.scroll = ScrollView(size=self.mainList.size, scroll_type=['content'])
             rad = self.getRadius(90)[0]  # радиус закругления подсветки списка в участках и контактах
@@ -3140,9 +3150,10 @@ class RMApp(App):
 
                         if form == "repLog":
                             # отдельный механизм добавления записей журнала отчета + ничего не найдено в поиске
-                            self.btn.append(MyLabel(text=label.strip(), color=self.standardTextColor, halign="left",
-                                                    valign="top", size_hint_y=None, height=self.height1, markup=True,
-                                                    text_size=(Window.size[0]-self.horizontalOffset, self.height1)))
+                            #self.btn.append(MyLabel(text=label.strip(), color=self.standardTextColor, halign="left",
+                            #                        valign="top", size_hint_y=None, height=self.height1, markup=True,
+                            #                        text_size=(Window.size[0]-self.horizontalOffset, self.height1)))
+                            self.btn.append(ScrollButton(id=None, text=label.strip(), size_hint_y=None, height=height))
                             self.scrollWidget.add_widget(self.btn[i])
 
                         else: # стандартное добавление
@@ -3702,10 +3713,11 @@ class RMApp(App):
                 self.window_touch_move(tip=False)
 
             elif self.porch.scrollview is not None and len(self.porch.flats) > 0: # переключение кол-ва колонок
-                if self.settings[0][10] == 1: self.settings[0][10] = 2
+                if self.settings[0][10] == 1:   self.settings[0][10] = 2
                 elif self.settings[0][10] == 2: self.settings[0][10] = 3
                 elif self.settings[0][10] == 3: self.settings[0][10] = 4
-                else: self.settings[0][10] = 1
+                else:
+                    self.settings[0][10] = 2 if self.displayed.form == "porchView" and self.orientation == "h" else 1
                 self.porch.scrollview.children[0].cols = self.settings[0][10]
                 for b in self.porch.scrollview.children[0].children:
                     for widget in b.children:
@@ -5918,7 +5930,7 @@ class RMApp(App):
         if len(cont.porches[p].flats[f].records) > 0:
                 lastRecordDate = cont.porches[p].flats[f].records[0].date
         else:   lastRecordDate = None#""
-        if cont.porches[p].flats[f].lastVisit == "": cont.porches[p].flats[f].lastVisit = 0
+        if cont.porches[p].flats[f].lastVisit == 0: cont.porches[p].flats[f].lastVisit = 0
         contacts.append([  # create list with one person per line with values:
             cont.porches[p].flats[f].getName(),  # 0 contact name
             cont.porches[p].flats[f].emoji,  # 1 emoji
@@ -6056,7 +6068,7 @@ class RMApp(App):
         """ Регистрация перетаскивания по экрану """
         # рисуем кнопку сброса позиции подъезда в свободном перемещении
         if self.porch is not None and self.porch.floorview is not None \
-                and self.displayed.form == "porchView" and self.porch.floors() and self.porch.pos[0]:
+            and self.displayed.form == "porchView" and self.porch.floors() and self.porch.pos[0]:
 
             if tip and self.resources[0][1][6] == 0: # при первом перемещении показываем подсказку
                 self.popup(title=self.msg[247], message=self.msg[13] % self.button["adjust"])
@@ -6842,7 +6854,7 @@ class RMApp(App):
         # Стандартное информационное окно либо запрос да/нет
 
         else:
-            size_hint = (.93, .17 * (self.fontScale()*2)) if self.orientation == "v" else (.6, .4)
+            size_hint = (.93, .17 * (self.fontScale()*2)) if self.orientation == "v" else (.6, .5)
             text_size = Window.size[0] * size_hint[0] * .92, None
             contentMain = BoxLayout(orientation="vertical")
             if checkboxText is not None: contentMain.add_widget(Widget())
