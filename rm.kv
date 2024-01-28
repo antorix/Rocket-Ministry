@@ -85,13 +85,18 @@
 <ProgressButton@Button>:
     color: [app.titleColor[0], app.titleColor[1], app.titleColor[2], .7]
     background_color: [0,0,0,0]
+    pos: Window.center[0] - self.size[0]/2, Window.center[1] - self.size[1]/2
+    font_size: app.fontXXL * 1.5
+    text: app.button["wait"]
+    background_normal: ""
+    background_down: ""
+    markup: True
     canvas.before:
         Color:
             rgba: [.8,.8,.8,.5] if app.mode == "light" else [.2,.2,.2,.5]
-        RoundedRectangle:
-            pos: self.pos
-            size: self.size
-            radius: app.getRadius(1)[1]
+        Ellipse:
+            size: self.size[0] * (2 if not app.desktop else 1), self.size[1] * (2 if not app.desktop else 1)
+            pos: Window.center[0] - self.size[0] / (1 if not app.desktop else 2), Window.center[1] - self.size[1] / (1 if not app.desktop else 2)
 
 <FirstCallButton1@FirstCallButton>: # нет дома
     color: app.linkColor if self.state == 'normal' else app.titleColorOnBlack
@@ -151,11 +156,11 @@
             radius: app.getRadius(80, instance=self)[1]
 
 <TableButton@Button>:
-    color: (app.linkColor if not self.disabled and app.button['phone'] in self.text else app.tableColor) if self.state=='normal' else app.titleColor
+    color: app.tableColor if self.state=='normal' else app.titleColor
     background_color: app.roundButtonBGColor
     canvas.before:
         Color:
-            rgba: (app.floatButtonBGColor if not self.disabled and app.button['phone'] in self.text else app.globalBGColor) if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)
+            rgba: app.globalBGColor if self.state=='normal' else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -183,7 +188,7 @@
     number: self.number
     flat: self.flat
     text_size: (None, None) if app.porch.floors() else self.size
-    k: .15
+    k: .17
     canvas.before:
         Color:
             rgba: (app.getColorForStatus(self.status) if self.state=='normal' else app.getColorForStatusPressed(self.status)) if (self.number is not None and not "." in self.number) or not app.porch.floors() else ([app.globalBGColor[0], app.globalBGColor[1], app.globalBGColor[2], 1] if self.state=='normal' else app.getColorForStatusPressed(self.status))
@@ -195,10 +200,8 @@
             rgba: app.getColor2(self.color2, self.flat)
         RoundedRectangle:
             pos: self.pos[0]+2, self.pos[1]+2
-            size: (self.size[0]*self.k, self.size[0]*self.k) if self.size[0] < self.size[1] else (self.size[1]*self.k, self.size[1]*self.k)
+            size: (self.size[0]*self.k*app.fontScale(), self.size[0]*self.k*app.fontScale()) if self.size[0] < self.size[1] else (self.size[1]*self.k*app.fontScale(), self.size[1]*self.k*app.fontScale())
             radius: [50,] if app.platform != "win" else [0,]
-        #Color:
-        #    rgba: [1,1,1,.5]
 
 <TipButton@Button>:
     text_size: self.size[0] * .95, self.size[1]
@@ -238,6 +241,8 @@
 <TTab@TabbedPanelHeader>:
     color: app.tabColors[0] if self.state=='normal' else app.titleColor
     text_size: self.size
+    defaultText: self.defaultText
+    text: f"{self.defaultText}" if self.state=='normal' else f"[b]{self.defaultText}[/b]"
 
 <SortListButton@Button>:
     color: app.linkColor if self.state=='normal' else app.titleColor
@@ -299,4 +304,4 @@
     text_size: self.size
 
 <MainScroll@GridLayout>:
-    cols: (1 if Window.size[0] < Window.size[1] else 2) if app.displayed.form != "porchView" or app.settings[0][10] == 1 else app.settings[0][10]
+    cols: (1 if Window.size[0] < Window.size[1] or app.displayed.form == "repLog" else 2) if app.displayed.form != "porchView" or app.settings[0][10] == 1 else app.settings[0][10]

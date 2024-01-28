@@ -14,10 +14,5 @@ except ImportError as e:
     print(e, "Installing...")
     check_call([executable, '-m', 'pip', 'install', 'plyer'])
 
-try: import requests
-except ImportError as e:
-    print(e, "Installing...")
-    check_call([executable, '-m', 'pip', 'install', 'requests'])
-
 from app import RM
 if __name__ == "__main__": RM.run()
