@@ -1072,7 +1072,7 @@ class MyTextInput(TextInput):
 
     def keyboard_on_key_up(self, window=None, keycode=None):
         """ Реагирование на ввод в реальном времени в зависимости от формы """
-        if RM.displayed.form == "rep" and RM.reportPanel.current_tab.text == RM.msg[49]: # служебный год
+        if RM.displayed.form == "rep" and RM.msg[49] in RM.reportPanel.current_tab.text: # служебный год
             RM.recalcServiceYear(allowSave=True)
         elif RM.firstCallPopup and RM.phoneInputOnPopup: # плашка первого посещения, активация кнопки телефона при вводе номера
             if RM.quickPhone.text != RM.flat.phone:
@@ -2717,10 +2717,12 @@ class RMApp(App):
             "restore":  icon("icon-upload"),
             "trash":    icon("icon-trash"),
             "arrow":    icon("icon-caret-right"),
+            "caret-up": icon("icon-caret-up"),
+            "caret-down": icon("icon-caret-down"),
             "chevron-up": icon("icon-chevron-up"),
             "chevron-down": icon("icon-chevron-down"),
-            "angle-up": icon("icon-caret-up"),
-            "angle-down": icon("icon-caret-down"),
+            "chevron-left": icon("icon-chevron-left"),
+            "chevron-right": icon("icon-chevron-right"),
             "warn":     icon("icon-warning"),
             "male":     icon("icon-male"),
             "female":   icon("icon-female"),
@@ -3092,7 +3094,7 @@ class RMApp(App):
                     self.porch.floorview.col_force_default = False
                     self.porch.floorview.col_default_width = 0
                     self.porch.floorview.row_default_height = 0
-                    self.porch.floorview.padding = self.padding, self.padding*2, self.padding*2, self.padding*2
+                    self.porch.floorview.padding = self.padding, 0, self.padding*2, 0
                     self.neutral.text = self.button["resize"]
                     for widget in self.porch.floorview.children:
                         if "app.FloorLabel" in str(widget):
@@ -3516,10 +3518,10 @@ class RMApp(App):
                 "[u][b]"+self.msg[38]+"[/u][/b]" if self.settings[0][19] == "р" else self.msg[38], # размер
                 "[u][b]"+self.msg[31]+"[/u][/b]" if self.settings[0][19] == "и" else self.msg[31], # интерес
                 "[u][b]"+self.msg[30]+"[/u][/b]" if self.settings[0][19] == "д" else self.msg[30], # дата
-               f"[u][b]{self.msg[32]}[/u][/b] {self.button['angle-down']}" if self.settings[0][19] == "п" else\
-               f"{self.msg[32]} {self.button['angle-down']}",     # обработка
-               f"[u][b]{self.msg[32]}[/u][/b] {self.button['angle-up']}" if self.settings[0][19] == "о" else\
-               f"{self.msg[32]} {self.button['angle-up']}"        # обработка назад
+               f"[u][b]{self.msg[32]}[/u][/b] {self.button['caret-down']}" if self.settings[0][19] == "п" else\
+               f"{self.msg[32]} {self.button['caret-down']}",     # обработка
+               f"[u][b]{self.msg[32]}[/u][/b] {self.button['caret-up']}" if self.settings[0][19] == "о" else\
+               f"{self.msg[32]} {self.button['caret-up']}"        # обработка назад
 
             ]
             for i in range(len(sortTypes)):
@@ -3541,10 +3543,10 @@ class RMApp(App):
             sortTypes = [
                 "[u][b]"+self.msg[29]+"[/u][/b]" if self.house.porchesLayout == "н" \
                 or self.house.porchesLayout == "а" else self.msg[29], # название
-               f"[u][b]{self.msg[38]}[/u][/b] {self.button['angle-down']}" if self.house.porchesLayout == "р" else\
-               f"{self.msg[38]} {self.button['angle-down']}",     # размер вниз
-               f"[u][b]{self.msg[38]}[/u][/b] {self.button['angle-up']}" if self.house.porchesLayout == "о" else\
-               f"{self.msg[38]} {self.button['angle-up']}"        # обработка размер вверх
+               f"[u][b]{self.msg[38]}[/u][/b] {self.button['caret-down']}" if self.house.porchesLayout == "р" else\
+               f"{self.msg[38]} {self.button['caret-down']}",     # размер вниз
+               f"[u][b]{self.msg[38]}[/u][/b] {self.button['caret-up']}" if self.house.porchesLayout == "о" else\
+               f"{self.msg[38]} {self.button['caret-up']}"        # обработка размер вверх
             ]
             for i in range(len(sortTypes)):
                 btn = SortListButton(text=sortTypes[i])
@@ -3561,10 +3563,10 @@ class RMApp(App):
             self.porch.flatsNonFloorLayoutTemp = None
             if not self.porch.floors(): # меню сортировки квартир в подъезде
                 sortTypes = [
-                    f"[u][b]{self.msg[34]}[/u][/b] {self.button['angle-down']}" if self.porch.flatsLayout == "н" else \
-                    f"{self.msg[34]} {self.button['angle-down']}", # номер
-                    f"[u][b]{self.msg[34]}[/u][/b] {self.button['angle-up']}" if self.porch.flatsLayout == "о" else \
-                    f"{self.msg[34]} {self.button['angle-up']}",   # номер обратно
+                    f"[u][b]{self.msg[34]}[/u][/b] {self.button['caret-down']}" if self.porch.flatsLayout == "н" else \
+                    f"{self.msg[34]} {self.button['caret-down']}", # номер
+                    f"[u][b]{self.msg[34]}[/u][/b] {self.button['caret-up']}" if self.porch.flatsLayout == "о" else \
+                    f"{self.msg[34]} {self.button['caret-up']}",   # номер обратно
                     f"[u][b]{self.msg[36]} 1[/u][/b]" if self.porch.flatsLayout == "с" else f"{self.msg[36]} 1", # цвет
                     f"[u][b]{self.msg[36]} 2[/u][/b]" if self.porch.flatsLayout == "с2" else f"{self.msg[36]} 2", # цвет2
                      "[u][b]"+self.msg[325]+"[/u][/b]" if self.porch.flatsLayout == "д" else self.msg[325], # дата посл. посещения
@@ -4394,7 +4396,7 @@ class RMApp(App):
 
         report.add_widget(MyLabel(text=self.msg[104], halign="center", valign="center", # часы
                                   text_size = text_size, color=self.standardTextColor, markup=True))
-        self.hours = Counter(picker=self.msg[108], type="time", text=ut.timeFloatToHHMM(self.rep.hours))
+        self.hours = Counter(picker=self.msg[108], type="time", text=ut.timeFloatToHHMM(self.rep.hours), mode="pan")
         report.add_widget(self.hours)
 
         if self.settings[0][2] == 1: # кредит
@@ -4989,9 +4991,10 @@ class RMApp(App):
         self.updateMainMenuButtons()
         self.clickedInstance = instance
         self.cacheFreeModeGridPosition()
-        number = " " if self.flat.number == "virtual" else self.flat.number + " " # прячем номера отдельных контактов
+        number = "" if self.flat.number == "virtual" else self.flat.number # прячем номера отдельных контактов
         flatPrefix = f"{self.msg[214]} " if "подъезд" in self.porch.type else ""
-        self.flatTitle = f"{flatPrefix}{number}{self.flat.getName()}".strip()
+        divider = f" – " if self.flat.getName() != "" and number != "" else ""
+        self.flatTitle = f"{flatPrefix}{number}{divider}{self.flat.getName()}".strip()
 
         if self.house.listType(): self.dest = self.flat.number
         elif self.house.type == "private":
