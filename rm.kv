@@ -67,9 +67,6 @@
     background_color: app.roundButtonBGColor if app.theme != "3D" else [0,0,0,0]
     color: [1,1,1,1]
     side: self.side
-    drag_rectangle: self.x, self.y, self.width, self.height
-    drag_timeout: 10000 if app.displayed.form == "flatView" else 0
-    drag_distance: 0
     canvas.before:
         Color:
             rgba: self.color if self.state=='normal' else (app.popupBGColorPressed if app.firstCallPopup else self.color)
@@ -304,4 +301,4 @@
     text_size: self.size
 
 <MainScroll@GridLayout>:
-    cols: (1 if Window.size[0] < Window.size[1] or app.displayed.form == "repLog" else 2) if app.displayed.form != "porchView" or app.settings[0][10] == 1 else app.settings[0][10]
+    cols: (1 if Window.size[0] < Window.size[1] or app.displayed.form == "repLog" else 2) if app.displayed.form != "porchView" else app.settings[0][10]

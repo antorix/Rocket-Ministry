@@ -1149,8 +1149,8 @@ class FloorView(DragBehavior, GridLayout):
             self.drag_distance = 30
             self.drag_timeout = 250
         else: # заполняющий режим - нельзя таскать
-            self.drag_timeout = 0
             self.drag_distance = 9999
+            self.drag_timeout = 0
 
         if self.porch.pos[0] and self.pos != self.centerPos and RM.resources[0][1][6] == 0:
             # при первом перемещении показываем подсказку
@@ -1410,7 +1410,7 @@ class FloatButton(Button):
         self.halign = "center"
         self.valign = "center"
 
-class RoundColorButton(DragBehavior, Button):
+class RoundColorButton(Button):
     def __init__(self, color, side=None, pos=None, size_hint=(None, None), text="", pos_hint=None):
         super(RoundColorButton, self).__init__()
         if pos is not None: self.pos = pos
@@ -1625,7 +1625,7 @@ class FlatButton(Button):
 
     def updateRecord(self):
         """ Обновление записей под кнопкой в режиме списка """
-        if RM.settings[0][10] <= 2:
+        if RM.settings[0][10] <= 2 or (RM.orientation == "h" and RM.settings[0][10] == 3):
             if self.flat.phone != "":
                 myicon = RM.button["phone-thin"]
                 phone = f"[color={RM.recordGray}]{myicon}[/color]\u00A0{self.flat.phone}\u00A0\u00A0"
@@ -3235,8 +3235,11 @@ class RMApp(App):
                         self.updateList() # повторный вызов, где список уже на scrollview, дальше манипуляции там
                     else:
                         grid = self.porch.scrollview.children[0]  # адресация таблицы, уже замонтированной на porch
+                        if form == "repLog": grid.cols = 1
+                        elif self.orientation == "h" and form != "porchView": grid.cols = 2
+                        else: grid.cols = self.settings[0][10]
                         self.mainList.add_widget(self.porch.scrollview)
-                        if not tableButtonClicked and self.flat is not None \
+                        if not tableButtonClicked and self.flat is not None and self.flat.buttonID is not None \
                                 and self.porch.flatsLayout != "с" \
                                 and self.porch.flatsLayout != "с2" and self.porch.flatsLayout != "т" \
                                 and self.porch.flatsLayout != "д" and self.porch.flatsLayout != "з":
@@ -3678,14 +3681,11 @@ class RMApp(App):
             if self.porch.floors(): # центровка подъезда на центр или верхний левый угол
                 self.porch.floorview.pos = [0, 0] if self.porch.floorview.oversized else self.porch.floorview.centerPos
                 self.window_touch_move(tip=False)
-
             elif self.porch.scrollview is not None and len(self.porch.flats) > 0: # переключение кол-ва колонок
                 if self.settings[0][10] == 1:   self.settings[0][10] = 2
                 elif self.settings[0][10] == 2: self.settings[0][10] = 3
                 elif self.settings[0][10] == 3: self.settings[0][10] = 4
-                else:
-                    self.settings[0][10] = 2 if self.displayed.form == "porchView" and self.orientation == "h" else 1
-                self.porch.scrollview.children[0].cols = self.settings[0][10]
+                elif self.settings[0][10] == 4: self.settings[0][10] = 1
                 for b in self.porch.scrollview.children[0].children:
                     for widget in b.children:
                         if "FlatButton" in str(widget):
@@ -5066,7 +5066,7 @@ class RMApp(App):
                     if status == self.flat.getStatus()[0][1]:
                         self.colorBtn[i].text = self.button["dot"]
                         self.colorBtn[i].markup = True
-                self.colorBox = BoxLayout(size_hint=(1, .18), spacing=self.spacing*2, padding=self.padding*2)
+                self.colorBox = BoxLayout(size_hint=(1, .163), spacing=self.spacing*2, padding=self.padding*2)
                 self.colorBox.add_widget(self.colorBtn[1])
                 self.colorBox.add_widget(self.colorBtn[2])
                 self.colorBox.add_widget(self.colorBtn[3])
