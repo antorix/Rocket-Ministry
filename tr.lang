@@ -86,8 +86,8 @@ e
 k
 Cümlenin ilk kelimesini büyük harfle yaz
 Tüm alanlar doldurulmalı ve sayısal değerlere sahip olmalıdır. Kat sayısı 0'dan yüksek olmalı. Aralık'taki son dairenin numarası ilk daireden az olmamalıdır.
-Başlıkta noktalara ve virgüllere izin verilmez!
-Başlıkta virgüllere izin verilmiyor!
+Noktalara ve virgüllere izin verilmez!
+Virgüllere izin verilmiyor!
 Her iki değer de sayı içermelidir, birincisi ikinciden büyük olmalıdır.
 Tarih YYYY-AA-GG formatında olmalıdır! Örneğin 2023-03-25.
 Bu numara zaten var!
@@ -217,7 +217,7 @@ Bu konumdaki bir daire silinsin mi? Daire numarasının kendisi bozulmadan kalac
 Konumu sil
 Güncellemeleri kontrol et:
 Hizmet başlansın mı?
-Simgeler
+Simgesi
 Yeni bir ay başladı! Raporunuzu gönderdiniz mi?
 kredi
 %s için rapor:
@@ -323,7 +323,7 @@ Google Drive'a aktar
 Kat bazında görünümde daire büyüklüğü
 Sırala
 Son ziyaret tarihi
-Bölge türü:
+Sahanın türü:
 Apartman#
 Özel#evler
 Adres#listesi

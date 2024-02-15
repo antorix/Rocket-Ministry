@@ -32,21 +32,21 @@
         on_release: root.do('selectall')
 
 <RoundButton@Button>:
-    color: app.tableColor if self.state=='normal' else app.titleColor
+    color: (app.tableColor if self == app.positive else app.linkColor) if self.state=='normal' else app.titleColor
     background_color: app.roundButtonBGColor
     text_size: self.size
     text: self.text
     rounded: self.rounded
-    r: 40 # закругление центральной кнопки
+    r: 37 # закругление центральной кнопки
     canvas.before:
         Color:
-            rgba: ((app.globalBGColor if self.text == app.positive.text else app.buttonBackgroundColor) if self.state=='normal' else ((app.sortButtonBackgroundColor if self.text == app.positive.text else app.roundButtonColorPressed) if app.mode == "light" else app.roundButtonColorPressed2)) if self.text != "" else [0,0,0,0]
+            rgba: ((app.globalBGColor if self == app.positive else app.buttonBackgroundColor) if self.state=='normal' else ((app.sortButtonBackgroundColor if self == app.positive else app.roundButtonColorPressed) if app.mode == "light" else app.roundButtonColorPressed2)) if self.text != "" else [0,0,0,0]
         RoundedRectangle:
             pos: self.pos
             size: self.size
             radius: app.getRadius(rad=100 if not self.rounded else self.r, instance=self)[1]
         Color:
-            rgba: (app.wiredButtonColor if self.state == "normal" else app.titleColor) if self.text == app.positive.text and self.text != "" else [0,0,0,0]
+            rgba: (app.wiredButtonColor if self.state == "normal" else app.titleColor) if self == app.positive and self.text != "" else [0,0,0,0]
         Line:
             width: app.thickness()[1]
             rounded_rectangle: self.x, self.y, self.width, self.height, app.getRadius(rad=100 if not self.rounded else self.r, instance=self)[0], 500
@@ -166,11 +166,11 @@
 <TerTypeButton@Button>:
     text_size: self.size
     on: self.on
-    color: app.titleColor
+    color: app.titleColor# if self.state == "normal" else [1,0,0,1]
     background_color: app.roundButtonBGColor if app.theme != "3D" else app.blackTint
     canvas.before:
         Color:
-            rgba: (([1,1,1,1] if app.theme == "purple" else app.scrollButtonBackgroundColor) if self.on else app.globalBGColor) if app.theme != "3D" else [0,0,0,0]
+            rgba: (([1,1,1,1] if app.mode == "light" else app.scrollButtonBackgroundColor) if self.on else app.globalBGColor) if app.theme != "3D" else [0,0,0,0]
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -185,10 +185,10 @@
     number: self.number
     flat: self.flat
     text_size: (None, None) if app.porch.floors() else self.size
-    k: .17
+    k: .33
     canvas.before:
         Color:
-            rgba: (app.getColorForStatus(self.status) if self.state=='normal' else app.getColorForStatusPressed(self.status)) if (self.number is not None and not "." in self.number) or not app.porch.floors() else ([app.globalBGColor[0], app.globalBGColor[1], app.globalBGColor[2], 1] if self.state=='normal' else app.getColorForStatusPressed(self.status))
+            rgba: (app.getColorForStatus(self.status) if self.state=='normal' else app.getColorForStatusPressed(self.status)) if (self.number is not None and not "." in self.number) or not app.porch.floors() else ([0,0,0,0] if self.state=='normal' else app.getColorForStatusPressed(self.status))
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -197,11 +197,21 @@
             rgba: app.getColor2(self.color2, self.flat)
         RoundedRectangle:
             pos: self.pos[0]+2, self.pos[1]+2
-            size: (self.size[0]*self.k*app.fontScale(), self.size[0]*self.k*app.fontScale()) if self.size[0] < self.size[1] else (self.size[1]*self.k*app.fontScale(), self.size[1]*self.k*app.fontScale())
             radius: [50,] if app.platform != "win" else [0,]
+            size: (self.size[0]*self.size[1])**self.k*app.fontScale(), (self.size[0]*self.size[1])**self.k*app.fontScale()
+
+<MyTextInput_@TextInput>:
+    canvas.before:
+        Color:
+            rgba: app.textInputColor
+        Line:
+            width: app.thickness()[1]
+            #rounded_rectangle: self.x, self.y, self.size[0], self.size[1], [20]#, 500
+            rectangle: self.x, self.y, self.size[0], self.size[1]
+            #ellipse: self.x, self.y, self.size[0], self.size[1]
 
 <TipButton@Button>:
-    text_size: self.size[0] * .95, self.size[1]
+    text_size: self.size#[0] * .95, self.size[1]
 
 <TopButton@Button>:
     color: app.topButtonColor if self.state=='normal' else (app.titleColor if app.theme != "3D" else app.topButtonColor)
@@ -248,8 +258,8 @@
 
 <ScrollButton@Button>:
     color: app.linkColor
-    background_color: app.roundButtonBGColor if app.theme != "3D" else app.roundButtonBGColor
-    text_size: self.size[0] * (.95 if app.displayed.form != "ter" and app.displayed.form != "con" else .93), self.size[1]
+    background_color: app.roundButtonBGColor
+    text_size: self.size
     canvas.before:
         Color:
             rgba: ((app.scrollButtonBackgroundColor if app.displayed.form == "ter" or app.displayed.form == "con" else app.globalBGColor) if self.state == "normal" else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)) if app.theme != "3D" else [0,0,0,0]
@@ -273,7 +283,7 @@
 <RecordButton@Button>:
     color: app.standardTextColor
     background_color: app.roundButtonBGColor if app.theme != "3D" else [0,0,0,0]
-    text_size: self.size[0] * .92, self.size[1]
+    text_size: self.size
     canvas.before:
         Color:
             rgba: (app.scrollButtonBackgroundColor if self.state == "normal" else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)) if app.theme != "3D" else [0,0,0,0]
@@ -289,7 +299,7 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: app.getRadius(instance=self)[1]
+            radius: app.getRadius(rad=150, instance=self)[1]
 
 <FlatFooterLabel@Label>:
     text_size: self.size

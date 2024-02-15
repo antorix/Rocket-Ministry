@@ -86,7 +86,7 @@ m
 ž
 Rečenica počinje velikim slovom
 Sva polja trebaju biti popunena sa brojčanim vrednostima. Broj spratova mora biti veći od 0. Zadnji stan u nizu ne može imati manji broj od početnog.
-Tačke i zarezi nisu dozvoljeni!
+Zarezi i tačke nisu dozvoljeni!
 Zarezi nisu dozvoljeni!
 Obe vrednosti treba da budu numeričke i prva vrednost ne može biti veća od druge.
 Datum mora biti u formatu GGGG-MM-DD. Na primer: 2023-03-25.
@@ -217,7 +217,7 @@ Uklonite broj stana u ovom položaju? Sam broj stana će ostati nepromenjen (о�
 Uklonite položaj
 Proverite da li postoje ispravke:
 Započnite službu?
-Emotikoni
+Emoji
 Počeo je novi mesec! Da li ste već predali svoj izveštaj?
 volonterski sati
 Izveštaj za %s:

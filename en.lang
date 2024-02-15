@@ -142,7 +142,7 @@ Rocket Ministry for Windows and Linux, documentation, source code:
 Questions, user support:
 Back to top
 Help
-Any information in a free form
+Global note. Displayed on the territories list. Can be used as a reminder.
 People search
 Enter name, address, or any other information about a person:
 Find
@@ -205,7 +205,7 @@ Details
 %s with one click
 Not at home
 Not interested
-In brackets, you may see how much time you are ahead (+) or behind (-) your monthly requirement for the current day of the month. For example, with the requirement of 50 hours, if you have had no service for today, this value will decrease approximately by 1:40 tomorrow.
+Failed to load file. Most likely, it has the wrong format or does not contain the necessary data.
 Data successfully loaded!
 Please wait
 street
@@ -217,7 +217,7 @@ Delete a flat in this position? The flat number itself will stay intact (except 
 Delete position
 Check for updates:
 Start ministry?
-Icons
+Icon
 It's a new month! Have you turned in your report already?
 credit
 Report for %s:
@@ -325,7 +325,7 @@ Sort
 Last visit date
 Territory type:
 Condo#
-Private#homes
+Private#houses
 Address#list
 Choose the territory type!
 Don't divide into streets
