@@ -2571,7 +2571,7 @@ class RMApp(App):
                 self.roundButtonColorPressed = [.11, .37, .54, 1]
                 self.roundButtonColorPressed2 = [.7, .8, .9, .23]
                 self.sortButtonBackgroundColorPressed = [.25,.26,.27, 1]
-                self.mainMenuButtonBackgroundColor = [.17, .17, .17, .6]#[.1, .1, .1, .25]
+                self.mainMenuButtonBackgroundColor = [.16, .16, .16, .6]#[.1, .1, .1, .25]
                 self.titleColor = self.mainMenuActivated = [.76, .86, .99, 1]
                 self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .6]
                 self.mainMenuButtonColor = self.timerOffColor = self.topButtonColor
@@ -3706,7 +3706,7 @@ class RMApp(App):
                     else:#elif self.settings[0][21] == "Google":
                         webbrowser.open(f"http://maps.google.com/?q={self.dest}")
 
-    def positivePressed(self, instant=False, instance=None, value=None, default=""):
+    def positivePressed(self, instance=None, instant=False, value=None, default=""):
         """ Что выполняет центральная кнопка в зависимости от экрана """
         global Rounded
 
@@ -4075,7 +4075,8 @@ class RMApp(App):
                     self.terPressed()
                 else:
                     self.save()
-                    self.detailsPressed()
+                    self.displayed.form = "ter"
+                    self.detailsPressed() # при ошибочном вводе даты вручную перезаходим в настройки
                     self.popup(message=self.msg[92])
                     return
 
@@ -5133,6 +5134,7 @@ class RMApp(App):
                                                  halign="center", valign="center")
             self.emojiSelector.bind(on_release=self.createEmojiPopup)
             self.floaterBox.add_widget(self.emojiSelector)
+            print(self.mainList.size[1])
 
     def recordView(self, instance=None, focus=False):
         self.displayed.form = "recordView"
