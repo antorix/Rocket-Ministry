@@ -52,7 +52,7 @@
             rounded_rectangle: self.x, self.y, self.width, self.height, app.getRadius(rad=100 if not self.rounded else self.r, instance=self)[0], 500
 
 <FloatButton@Button>:
-    color: (app.linkColor if app.button['phone-thin'] in self.text else (app.linkColor if app.button["add_emoji"] not in self.text else app.topButtonColor)) if self.state=='normal' else app.titleColor
+    color: (app.linkColor if app.button["add_emoji"] not in self.text else app.topButtonColorDarkened) if self.state=='normal' else app.titleColor
     background_color: app.roundButtonBGColor if app.theme != "3D" else [0,0,0,.5]
     text_size: self.size
     canvas.before:
@@ -166,7 +166,7 @@
 <TerTypeButton@Button>:
     text_size: self.size
     on: self.on
-    color: app.titleColor# if self.state == "normal" else [1,0,0,1]
+    color: app.titleColor
     background_color: app.roundButtonBGColor if app.theme != "3D" else app.blackTint
     canvas.before:
         Color:
@@ -182,10 +182,10 @@
     status: self.status
     color2: self.color2
     text: self.text
-    number: self.number
     flat: self.flat
+    number: self.number
     text_size: (None, None) if app.porch.floors() else self.size
-    k: .33
+    k: .32 # размер кружка
     canvas.before:
         Color:
             rgba: (app.getColorForStatus(self.status) if self.state=='normal' else app.getColorForStatusPressed(self.status)) if (self.number is not None and not "." in self.number) or not app.porch.floors() else ([0,0,0,0] if self.state=='normal' else app.getColorForStatusPressed(self.status))
@@ -262,7 +262,7 @@
     text_size: self.size
     canvas.before:
         Color:
-            rgba: ((app.scrollButtonBackgroundColor if app.displayed.form == "ter" or app.displayed.form == "con" else app.globalBGColor) if self.state == "normal" else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)) if app.theme != "3D" else [0,0,0,0]
+            rgba: ((app.scrollButtonBackgroundColor if app.displayed.form == "ter" or app.displayed.form == "con" or (app.displayed.form == "houseView" and not app.msg[6] in self.text) else app.globalBGColor) if self.state == "normal" else (app.roundButtonColorPressed if app.mode == "light" else app.roundButtonColorPressed2)) if app.theme != "3D" else [0,0,0,0]
         RoundedRectangle:
             pos: self.pos
             size: self.size

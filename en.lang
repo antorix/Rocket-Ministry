@@ -71,7 +71,7 @@ Example: Park Way, 30
 
 Enter new entrance name:
 Number or description
-A condominium may have one or more entrances or blocks with separate sets of apartments.
+An apartment building may have one or more entrances or blocks with separate sets of apartments.
 Enter new street name:
 
 Add entrance
@@ -324,8 +324,8 @@ Apartment size in per-floor view
 Sort
 Last visit date
 Territory type:
-Condo#
-Private#houses
+Building#
+Houses#
 Address#list
 Choose the territory type!
 Don't divide into streets

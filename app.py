@@ -3,13 +3,8 @@
 
 from sys import argv
 Devmode = 1 if "dev" in argv else 0
-Version = "2.14.003"
+Version = "2.14.004"
 """ 
-* Сортировка квартир и контактов по иконке.
-* Небольшие изменения в темах.
-* "Блокнот" переименован в "Заметки", его содержимое выводится на списке участков.
-* Число записей в журнале отчета снижено с 200 до 100.
-* Число резервных копий снижено с 20 до 10. 
 * Исправления и оптимизации.
 """
 
@@ -137,7 +132,7 @@ class House(object):
         if self.type != "condo" and len(list) == 0:
             list.append(f"{RM.button['plus-1']}{RM.button['pin']} {RM.msg[213]}")
         if self.type == "condo" and self.porchesLayout == "н" or self.porchesLayout == "а":
-            list.append(f"{RM.button['porch_inv']} [i]{RM.msg[6]} {self.getLastPorchNumber()}[/i]")
+            list.append(f"{RM.button['porch_inv']} {RM.msg[6]} {self.getLastPorchNumber()}")
         return list
 
     def getLastPorchNumber(self):
@@ -230,7 +225,7 @@ class Porch(object):
                 if f.number == str(self.highestNumber):
                     if f.status != "" or f.color2 != 0 or f.emoji != "": # проверка, чтобы последняя квартира была пустой
                         RM.popup(message=RM.msg[215])
-                        return
+                        return True
                     break
             i = self.flats.index(deletedFlat)
             popped = self.flats.pop(i)
@@ -531,7 +526,7 @@ class Flat(object):
     def showRecords(self):
         options = []
         for i in range(len(self.records)): # добавляем записи разговоров
-            options.append(f"{RM.button['entry']} {self.records[i].date}[i]{self.records[i].title}[/i]")
+            options.append(f"{RM.button['entry']} {self.records[i].date}|{self.records[i].title}")
         return options
 
     def addRecord(self, input):
@@ -686,7 +681,8 @@ class Report(object):
             RM.log(message, forceNotify=forceNotify)
             date = time.strftime("%d.%m", time.localtime()) + "." + str(int(time.strftime("%Y", time.localtime())) - 2000)
             time2 = time.strftime("%H:%M:%S", time.localtime())
-            RM.resources[2].insert(0, f"\n{date} {time2}: {message}")
+            dot = "." if RM.language != "hy" else ":"
+            RM.resources[2].insert(0, f"\n{date} {time2}{dot} {message}")
         if save: RM.save(verify=verify)
 
     def checkNewMonth(self, forceDebug=False):
@@ -1230,7 +1226,7 @@ class RetroButton(Button):
     def __init__(self, text="", size_hint_x=1, size_hint_y=1, size=None, disabled=False, font_name=None,
                  height=None, width=None, pos_hint=None, background_normal=None, color=None, font_size=None,
                  force_font_size=False, background_down=None, background_color=None, halign="center", valign="center",
-                 pos=None):
+                 alpha=None, pos=None):
         super(RetroButton, self).__init__()
         self.size_hint_x = size_hint_x
         self.size_hint_y = size_hint_y
@@ -1252,6 +1248,7 @@ class RetroButton(Button):
         self.markup = True
         self.halign = halign
         self.valign = valign
+        if alpha is not None: self.background_color[3] = alpha
 
     def hide(self):
         self.text = ""
@@ -1321,7 +1318,19 @@ class TerTypeButton(Button):
             self.button = f"[size={size}][color={get_hex_from_color(colorOn)}]{RM.button['dot'] if self.on else RM.button['dot-off']}[/color][/size]"
             self.text = f"{self.defaultTextOff}\n\n{self.button}"
 
-    def on_release(self):
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            for widget in self.parent.children:
+                widget.on = False
+            self.on = True
+            return True
+
+    def on_touch_up(self, touch):
+        if self.collide_point(*touch.pos):
+            self.click()
+            return True
+
+    def click(self):
         for widget in self.parent.children:
             if not "Label" in str(widget): widget.update(False)
         if self.type == "condo": hint = RM.msg[70] # обновление текста подсказки
@@ -1566,7 +1575,7 @@ class FloorLabel(Label):
 
 class FlatButton(Button):
     """ Кнопка квартиры (обычная или скрытая) – базовый класс """
-    def __init__(self, flat=None, size_hint_y=1, height=0, id=0, recBox=None):
+    def __init__(self, flat, size_hint_y=1, height=0, id=0, recBox=None):
         super(FlatButton, self).__init__()
         self.markup = True
         self.flat = flat
@@ -1578,6 +1587,7 @@ class FlatButton(Button):
         self.size_hint_y = size_hint_y
         self.height = height
         self.id = id
+        self.flat.buttonID = self
         self.halign = "center"
 
     def update(self, flat):
@@ -1585,7 +1595,7 @@ class FlatButton(Button):
         либо при удалении/восстановлении квартиры """
         self.flat = flat
         if RM.porch.floors():
-            gap = ("\n" if not RM.porch.pos[0] and RM.porch.columns > 7 else " ") if flat.emoji != "" else ""
+            gap = ("\n" if not RM.porch.pos[0] and RM.screenRatio > RM.flatSizeRatio else " ") if flat.emoji != "" else ""
             number = flat.number
             self.text = f"{number}{gap}{flat.emoji}"
             if not RM.desktop: self.font_size = RM.flatSizeInGrid
@@ -1618,13 +1628,13 @@ class FlatButton(Button):
                 if RM.msg[206].lower() in self.flat.note[:30]:
                     limit = self.flat.note.index("\n") if "\n" in self.flat.note else len(self.flat.note)
                 else: limit = RM.defaultLimit
-                note = f"[color={RM.recordGray}]{myicon}[/color]\u00A0{self.flat.note[:limit]}\u00A0\u00A0"
+                note = f"[color={RM.recordGray}]{myicon}[/color]\u00A0[i]{self.flat.note[:limit]}[/i]\u00A0\u00A0"
                 if "\n" in note: note = note[: note.index("\n")] + "  "
             else: note = ""
             if len(self.flat.records) > 0:
                 myicon = RM.button["chat"]
                 rec = self.flat.records[0].title.replace("\n", " ")
-                record = f"[color={RM.recordGray}]{myicon}[/color]\u00A0[i]{rec}[/i]"
+                record = f"[color={RM.recordGray}]{myicon}[/color]\u00A0{rec}"
             else: record = ""
             text = phone + note + record
         else: text = ""
@@ -1645,7 +1655,7 @@ class FlatButton(Button):
 class FlatButtonSquare(FlatButton):
     """ Кнопка квартиры в режиме сетки """
     def __init__(self, flat):
-        super(FlatButtonSquare, self).__init__()
+        super(FlatButtonSquare, self).__init__(flat=flat)
         self.update(flat)
 
 class FlatFooterLabel(Label):
@@ -1729,23 +1739,8 @@ class ScrollButton(Button):
         if RM.theme != "3D":
             self.background_normal = ""
             self.background_down = ""
-
-    """def on_press_(self):
-        self.state = "down"
-        for f in self.footers: f.state = "down"
-
-    def on_touch_down(self, touch):
-        if self.collide_point(touch.x, touch.y):
-            self.state = "down"
-            for f in self.footers: f.state = "down"
-            return True
-
-    def on_touch_up(self, touch):
-        self.state = "normal"
-        for f in self.footers: f.state = "normal"
-        if self.collide_point(touch.x, touch.y):
-            RM.scrollClick(instance=self)
-            return True"""
+        else:
+            self.background_color = [.84, .86, .87]
 
     def on_release(self):
         RM.scrollClick(instance=self)
@@ -1765,27 +1760,6 @@ class FooterButton(Button):
         self.valign = "center"
         self.halign = "left" if icon('icon-home') in text and RM.displayed.form == "con" else "center"
         self.font_size = (RM.fontS if RM.desktop else RM.fontXXS*.9) * RM.fontScale(cap=1.2)
-
-    """def on_press(self, *args):
-        self.state = "normal" 
-        
-    def on_touch_down(self, touch):
-        collide_point = self.collide_point(touch.x, touch.y)
-        if collide_point:
-            self.state = "down"
-            RM.btn[self.parentIndex].state = "down"
-            #for f in self.footers: f.state = "down"
-            return True
-
-    def on_touch_up_(self, touch):
-        collide_point = self.collide_point(touch.x, touch.y)
-        if collide_point:
-            self.state = "normal"
-            RM.btn[self.parentIndex].state = "normal"
-            #RM.scrollClick(instance=self)
-            #for f in self.footers: f.state = "normal"
-            return True        
-        """
 
     def on_release(self):
         RM.btn[self.parentIndex].state = "down"
@@ -1920,7 +1894,7 @@ class ColorStatusButton(Button):
         for button in RM.colorBtn: button.text = ""
         self.text = RM.button["dot"]
 
-    def on_release(self, instance=None):
+    def click(self):
         if self.status == "1" and RM.resources[0][1][5] == 0:
             RM.popup(title=RM.msg[247], message=RM.msg[82])
             RM.resources[0][1][5] = 1
@@ -1932,8 +1906,9 @@ class ColorStatusButton(Button):
                 RM.flat.addRecord(RM.multipleBoxEntries[1].text.strip())
         for i in ["0", "1", "2", "3", "4", "5", ""]:
             if self.status == "":
+                self.text = ""
                 RM.popup("resetFlatToGray", message=RM.msg[193], options=[RM.button["yes"], RM.button["no"]])
-                return
+                return False
             elif self.status == i:
                 RM.flat.status = i
                 if len(RM.stack) > 0: del RM.stack[0]
@@ -1942,6 +1917,15 @@ class ColorStatusButton(Button):
         RM.save()
         if RM.searchEntryPoint: RM.find(instance=True)
         else: RM.porchView(instance=self)
+        return True
+
+    def on_touch_up(self, touch):
+        if self.collide_point(touch.x, touch.y):
+            return self.click()
+        else:
+            self.text = ""
+            RM.activateColorButton()
+            return True
 
 class MainMenuButton(TouchRippleBehavior, Button):
     """ Три главные кнопки внизу экрана """
@@ -2316,6 +2300,7 @@ class RMApp(App):
         self.invisiblePorchName = "1-segment territory" # название сегмента в списочном участке, которое отключает сегменты
         self.listTypePorchName = "1-segment territory list type" # аналогично, но также превращает иконку участка в список
         self.FCP = PopupNoAnimation(title="") # попап первого посещения
+        self.floatButtonAlpha = .8  # прозрачность висячих кнопок
         self.horizontalOffset = 80 # ширина левой боковой полосы на горизонтальной ориентации на компьютере
         self.titleSizeHintY = .11  # ширина полосы заголовка
         self.tableSizeHintY = .09  # ширина полосы верхних табличных кнопок
@@ -2447,10 +2432,11 @@ class RMApp(App):
 
         # Светлые темы
         self.mode = "light"
-        self.globalBGColor = [.94, .94, .94, 0]
+        self.globalBGColor = [.95, .95, .95, 0]
         self.linkColor = self.wiredButtonColor = self.timerOffColor = [.15, .33, .45, 1]
         self.titleColor = self.mainMenuActivated = [0, .5,  .8,  1]
         self.topButtonColor = [.73, .73, .73, 1]  # поиск, настройки и кнопки счетчиков
+        self.topButtonColorDarkened = [.65, .65, .65, 1]  # более темная версия
         self.standardTextColor = [.2, .2, .2]
         self.activatedColor = [0, .15, .35, .9]
         self.textInputColor = [.15, .15, .15]
@@ -2462,7 +2448,7 @@ class RMApp(App):
                                         self.scrollButtonBackgroundColor[2] * k, 1]
         self.lightGrayFlat = [.6, .6, .6, 1]  # квартира без посещения
         self.darkGrayFlat = [.38, .38, .38, 1]  # квартира "нет дома"
-        self.floatButtonBGColor = [.85, .85, .85, .8]
+        self.floatButtonBGColor = [.85, .85, .85, self.floatButtonAlpha]
         self.recordGray = get_hex_from_color(self.topButtonColor)
         self.sortButtonBackgroundColorPressed = self.roundButtonColorPressed
         self.interestColor = get_hex_from_color(self.getColorForStatus("1"))  # должен соответствовать зеленому статусу или чуть светлее
@@ -2481,6 +2467,7 @@ class RMApp(App):
             self.standardTextColor = [.22, .2, .19]
             self.topButtonColor[0] += 0.01
             self.topButtonColor[2] -= 0.01
+            self.disabledColor = get_hex_from_color(self.topButtonColor)
             self.buttonBackgroundColor[0]   += 0.01
             self.buttonBackgroundColor[2]   -= 0.01
             self.roundButtonColorPressed[0] += 0.02
@@ -2489,6 +2476,7 @@ class RMApp(App):
             self.sortButtonBackgroundColor[2] -= 0.01
 
         elif self.theme == "purple":  # Пурпур
+            self.globalBGColor = [.94, .94, .94, 0]
             self.mainMenuButtonColor = [.31, .31, .31, 1]
             self.mainMenuButtonBackgroundColor = [0.55, 0.55, 0.55, .25]
             self.roundButtonColorPressed[1] -= 0.02
@@ -2504,7 +2492,7 @@ class RMApp(App):
         elif self.theme == "teal":  # Бирюза
             self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .6]
             self.mainMenuActivated = self.titleColor
-            self.mainMenuButtonColor = [.46, .51, .54, 1]
+            self.mainMenuButtonColor = [.43, .48, .51, 1]
             self.mainMenuButtonBackgroundColor = [.7, .75, .8, .25]
             self.roundButtonColorPressed[0] -= 0.04
             self.roundButtonColorPressed[2] += 0.04
@@ -2524,17 +2512,17 @@ class RMApp(App):
             self.mode = "dark"
             self.globalBGColor = [0, 0, 0, 0]
             self.mainMenuButtonBackgroundColor = [0, 0, 0, .25]
-            self.scrollButtonBackgroundColor = [.1, .1, .1, 1]
+            self.scrollButtonBackgroundColor = [.12, .12, .12, 1]
             self.buttonBackgroundColor = [.15, .15, .15, 1]
             self.roundButtonColorPressed = self.sortButtonBackgroundColorPressed = [.2, .2, .22, 1]
             self.roundButtonColorPressed2 = [.97, .97, 1, .2]
-            self.sortButtonBackgroundColor = [.15, .15, .15, .95]
+            self.sortButtonBackgroundColor = [.18, .18, .18, .95]
             self.textInputBGColor = [.25, .25, .27, .9]
             self.textInputColor = [1, 1, 1]
             self.lightGrayFlat = [.53, .53, .53, 1]
             self.darkGrayFlat = [.31, .31, .31, 1]
             self.floatButtonBGColor = copy(self.sortButtonBackgroundColor)
-            self.mainMenuButtonColor = [.95, .95, .95]
+            self.mainMenuButtonColor = self.timerOffColor = self.topButtonColor
             self.standardTextColor = [.9, .9, .9, 1]
             self.popupButtonColor = [.25, .25, .25, 1]
             self.titleColor = self.mainMenuActivated = [.3, .87, 1, 1]
@@ -2543,16 +2531,15 @@ class RMApp(App):
             self.wiredButtonColor = self.topButtonColor
             self.recordGray = get_hex_from_color(self.standardTextColor)
             self.interestColor = get_hex_from_color(self.getColorForStatus("1"))
-            self.timerOffColor = self.linkColor
             self.saveColor = "00E7C8"
             self.disabledColor = "4C4C4C"
             self.tabColors = [self.linkColor, "tab_background_night.png"]
 
             if self.theme == "morning":  # Утро
-                self.globalBGColor = [.1, .1, .1, 0]
-                self.mainMenuButtonColor = self.timerOffColor = self.topButtonColor
+                self.globalBGColor = [.07, .07, .07, 0]
                 self.linkColor = [.96, .96, .96, 1]
                 self.scrollButtonBackgroundColor = [.16, .16, .16, 1]
+                self.sortButtonBackgroundColor = [.21, .21, .21, .95]
                 self.textInputBGColor = [.3, .3, .3, .9]
                 self.mainMenuButtonBackgroundColor = [.2, .2, .2, .6]
                 self.roundButtonColorPressed1 = self.roundButtonColorPressed + [0]
@@ -2562,7 +2549,7 @@ class RMApp(App):
                 self.tabColors = [self.linkColor, "tab_background_purple_light.png"]
 
             elif self.theme == "gray":  # Вечер
-                self.globalBGColor = [.1, .1, .1, 0]
+                self.globalBGColor = [.08, .08, .08, 0]
                 self.darkGrayFlat = [.4, .4, .4, 1]
                 self.scrollButtonBackgroundColor = [.15, .16, .17, 1]
                 self.textInputBGColor = [.28, .28, .29, .95]
@@ -2571,10 +2558,9 @@ class RMApp(App):
                 self.roundButtonColorPressed = [.11, .37, .54, 1]
                 self.roundButtonColorPressed2 = [.7, .8, .9, .23]
                 self.sortButtonBackgroundColorPressed = [.25,.26,.27, 1]
-                self.mainMenuButtonBackgroundColor = [.16, .16, .16, .6]#[.1, .1, .1, .25]
+                self.mainMenuButtonBackgroundColor = [.17, .17, .17, .6]#[.1, .1, .1, .25]
                 self.titleColor = self.mainMenuActivated = [.76, .86, .99, 1]
                 self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .6]
-                self.mainMenuButtonColor = self.timerOffColor = self.topButtonColor
                 self.textInputColor = [1, 1, 1]
                 self.saveColor = "00E79E"
                 self.disabledColor = get_hex_from_color(self.darkGrayFlat)
@@ -2593,7 +2579,8 @@ class RMApp(App):
                 self.sortButtonBackgroundColor = [.2, .2, .2, .95]
                 self.sortButtonBackgroundColorPressed = [.4, .42, .42, 1]
                 self.roundButtonColorPressed2 = [0, .8, .8, 1]
-                self.floatButtonBGColor = self.darkGrayFlat = [.4, .4, .4, 1]
+                self.darkGrayFlat = [.4, .4, .4, 1]
+                self.floatButtonBGColor = [.4, .4, .4, self.floatButtonAlpha]
                 self.blackTint = [.54, .56, .57]
                 self.roundButtonBGColor = [1, 1, 1, 1]
                 self.interestColor = get_hex_from_color(self.titleColor)
@@ -2939,6 +2926,7 @@ class RMApp(App):
             self.popupEntryPoint = 0
             self.firstCallPopup = False
             self.sortButton.disabled = True
+            self.allowDelayOnUpdateList = True
 
             # Считываем содержимое Feed/displayed
 
@@ -2951,7 +2939,7 @@ class RMApp(App):
 
             if self.displayed.positive != "":
                 self.positive.disabled = False
-                self.positive.text = f"[b]{self.displayed.positive}[/b]"
+                self.positive.text = self.displayed.positive#f"[b]{self.displayed.positive}[/b]"
                 self.positive.color = self.linkColor
             else:
                 self.positive.text = ""
@@ -2999,6 +2987,8 @@ class RMApp(App):
                 if len(self.displayed.tip) == 2:
                     if self.displayed.tip[0] is not None:
                         self.mainList.add_widget(self.tip(text=self.displayed.tip[0], icon=self.displayed.tip[1]))
+                    if self.displayed.tip[1] == "header":
+                        self.mainList.padding = 0, self.padding*2, 0, 0
                 else:
                     self.mainList.add_widget(self.tip(self.displayed.tip))
 
@@ -3031,6 +3021,8 @@ class RMApp(App):
 
             elif form == "porchView" and self.porch.floors():
                 self.floatView.clear_widgets()
+                self.screenRatio = self.mainList.size[1] / self.mainList.size[0] # соотношение сторон mainList
+                self.flatSizeRatio = RM.porch.rows/RM.porch.columns
                 self.flatSizeInGrid = self.fontS * self.fontScale(cap=1.2)
                 if self.porch.columns >= 15 or self.porch.rows >= 30: rad = 9999
                 elif self.porch.columns >= 10 or self.porch.rows >= 20: rad = 250
@@ -3187,14 +3179,12 @@ class RMApp(App):
                                 box.add_widget(footerGrid)
 
                             elif form == "flatView" and len(self.flat.records) > 0: # запись посещения
-                                record = label[label.index("[i]"):]
-                                string = record.replace("\n", " ")
-                                box.add_widget(RecordButton(text=string, id=i))
-                                button.text = button.text[: button.text.index("[i]")]
+                                box.add_widget(RecordButton(text=label[label.index("|")+1:].replace("\n", " "), id=i))
+                                button.text = button.text[: button.text.index("|")]
                                 button.valign = "center"
                                 button.size_hint_y = None
                                 button.height = height * 1.05
-                                box.height = self.mainList.height * .5 if i == 0 else button.height + self.standardTextHeight * 1.7
+                                box.height = self.mainList.height * .48 if i == 0 else button.height + self.standardTextHeight * 1.7
                                 box.spacing = self.spacing
                             self.scrollWidget.add_widget(box)
 
@@ -3265,10 +3255,14 @@ class RMApp(App):
                                 scrollselfUp = FloatButton(text=self.button["chevron-up"], size=btnSize)
                                 scrollselfDown = FloatButton(text=self.button["chevron-down"], size=btnSize)
                             else:
-                                scrollselfUp = RetroButton(text=self.button["chevron-up"], width=btnSize[0], height=btnSize[1],
-                                                          size_hint_x=None, size_hint_y=None, halign="center", valign="center")
-                                scrollselfDown = RetroButton(text=self.button["chevron-down"], width=btnSize[0], height=btnSize[1],
-                                                            size_hint_x=None, size_hint_y=None, halign="center", valign="center")
+                                scrollselfUp = RetroButton(text=self.button["chevron-up"], width=btnSize[0],
+                                                           height=btnSize[1], alpha=self.floatButtonAlpha,
+                                                           size_hint_x=None, size_hint_y=None, halign="center",
+                                                           valign="center")
+                                scrollselfDown = RetroButton(text=self.button["chevron-down"], width=btnSize[0],
+                                                             height=btnSize[1], alpha=self.floatButtonAlpha,
+                                                             size_hint_x=None, size_hint_y=None, halign="center",
+                                                             valign="center")
                             def __scrollClick(instance):
                                 if self.button["chevron-down"] in instance.text:
                                     self.scroll.scroll_to(self.btn[len(self.btn)-1])
@@ -3284,7 +3278,7 @@ class RMApp(App):
                             fBox.add_widget(scrollselfDown)
                             self.floaterBox.add_widget(fBox)
 
-        if progress:
+        if progress and self.allowDelayOnUpdateList:
             self.showProgress()
             Clock.schedule_once(__continue, 0)
         else: __continue()
@@ -3297,7 +3291,7 @@ class RMApp(App):
                            options=[self.button["yes"], self.button["no"]])
             Clock.schedule_once(__ask, 60)
 
-    def scrollClick(self, instance):
+    def scrollClick(self, instance, delay=True):
         """ Действия, которые совершаются на указанных списках по нажатию на пункт списка """
 
         def __click(*args): # действие всегда выполняется с запаздыванием, чтобы отобразилась анимация на кнопке
@@ -3305,7 +3299,7 @@ class RMApp(App):
             self.clickedBtnIndex = instance.id
             # self.porchSelector.hide()
             if self.msg[6] in instance.text: # "создать подъезд"
-                text = instance.text[len(self.msg[6])+73 : ] # число символов во фразе msg[6] + 4 на форматирование
+                text = instance.text[len(self.msg[6])+70 : ] # число символов во фразе msg[6] + 4 на форматирование
                 #print(text) # должно выглядеть: 1[/i]
                 if "[/i]" in text: text = text[ : text.index("[")]
                 newPorch = self.house.addPorch(text.strip())
@@ -3365,7 +3359,8 @@ class RMApp(App):
                     self.contactsEntryPoint = 0
                     self.flatView(instance=instance)
 
-        Clock.schedule_once(__click, 0)
+        if delay: Clock.schedule_once(__click, 0)
+        else: __click()
 
     def titlePressed(self, instance, value):
         """ Нажатие на заголовок экрана """
@@ -3435,15 +3430,13 @@ class RMApp(App):
             )
 
         elif self.displayed.form == "rep": # журнал отчета
-            options=[]
-            for line in self.resources[2]:
-                options.append(line)
-            tip = self.msg[240] % self.rep.reportLogLimit if len(options) == 0 else None
+            options = []
+            for line in self.resources[2]: options.append(line)
             self.displayed.update(
                 title=self.msg[10],
                 options=options,
                 form="repLog",
-                tip=tip
+                tip=self.msg[240] % self.rep.reportLogLimit if len(options) == 0 else None
             )
             self.updateList(instance=instance, progress=True)
 
@@ -4221,7 +4214,7 @@ class RMApp(App):
             sort=self.button['sort'] if len(self.houses) > 0 else None,
             positive=f"{self.button['plus']} {self.msg[98]}",
             back=False,
-            tip=[self.resources[0][0] if self.resources[0][0] != "" else None, "header"],
+            tip=[self.resources[0][0], "header"] if self.resources[0][0] != "" else None,
             jump=self.houses.index(self.house) if self.house is not None and self.house in self.houses else None
         )
         self.stack = ["ter"]
@@ -4339,7 +4332,7 @@ class RMApp(App):
         self.repBox.bind(focus=self.editLastMonthReport)
 
         if self.theme != "3D":
-            btnSend = RoundButton(text=f"{self.button['share']} {self.msg[110]}", size_hint_x=1, size_hint_y=None,
+            btnSend = RoundButton(text=f"{self.button['share']} {self.msg[110]} ", size_hint_x=1, size_hint_y=None,
                                   size=(0, self.standardTextHeightUncorrected * 1.3))
         else:
             btnSend = RetroButton(text=f"{self.button['share']} {self.msg[110]}", size_hint_x=1, size_hint_y=None,
@@ -4946,7 +4939,7 @@ class RMApp(App):
 
     def porchView(self, instance, update=True):
         """ Вид подъезда - список квартир или этажей """
-        self.updateMainMenuButtons()
+
         self.blockFirstCall = 0
         self.exitToPorch = False
         floors = self.porch.floors()
@@ -4999,7 +4992,7 @@ class RMApp(App):
                 if "FlatButtonSquare" in str(button):
                     button.update(flat=self.porch.flats[f])
                     f -= 1
-
+        self.updateMainMenuButtons()
         if len(self.porch.flats) == 0 and self.house.type == "condo": # если нет квартир, сразу форма создания
             self.positivePressed()
 
@@ -5074,13 +5067,7 @@ class RMApp(App):
                     self.mainList.add_widget(self.tip(icon="info", text=self.msg[106], k=.7, halign="center",
                                                       valign="bottom", hint_y=.15))
                 self.colorBtn = []
-                for i, status in zip(range(7), ["0", "1", "2", "3", "4", "5", ""]):
-                    self.colorSelect = self.getColorForStatus(status)
-                    self.colorSelect[3] = 1
-                    self.colorBtn.append(ColorStatusButton(status))
-                    if status == self.flat.getStatus()[0][1]:
-                        self.colorBtn[i].text = self.button["dot"]
-                        self.colorBtn[i].markup = True
+                self.activateColorButton()
                 self.colorBox = BoxLayout(size_hint=(1, .163), spacing=self.spacing*2, padding=self.padding*2)
                 self.colorBox.add_widget(self.colorBtn[1])
                 self.colorBox.add_widget(self.colorBtn[2])
@@ -5131,11 +5118,19 @@ class RMApp(App):
                 self.emojiSelector = RetroButton(text=emoji, width=self.standardTextHeight*1.5, pos=pos2,
                                                  font_size=font_size, height=side, size_hint_x=None, size_hint_y=None,
                                                  color=self.topButtonColor if emoji == self.button["add_emoji"] else self.linkColor,
-                                                 halign="center", valign="center")
+                                                 alpha=self.floatButtonAlpha, halign="center", valign="center")
             self.emojiSelector.bind(on_release=self.createEmojiPopup)
             self.floaterBox.add_widget(self.emojiSelector)
-            print(self.mainList.size[1])
 
+    def activateColorButton(self):
+        """ Определяем, какая кнопка выбора цвета в квартире должна иметь точку """
+        for i, status in zip(range(7), ["0", "1", "2", "3", "4", "5", ""]):
+            self.colorSelect = self.getColorForStatus(status)
+            self.colorSelect[3] = 1
+            self.colorBtn.append(ColorStatusButton(status))
+            if status == self.flat.getStatus()[0][1]:
+                self.colorBtn[i].text = self.button["dot"]
+    
     def recordView(self, instance=None, focus=False):
         self.displayed.form = "recordView"
         self.createInputBox(
@@ -5304,7 +5299,11 @@ class RMApp(App):
         elif nav is not None:
             self.navButton.text = nav
             self.navButton.disabled = False
-        if note is not None: self.mainList.add_widget(self.tip(note, icon="note"))
+        if note is not None:
+            if self.displayed.form != "flatView":
+                self.mainList.add_widget(self.tip(note, icon="note"))
+            else:
+                self.mainList.add_widget(self.tip(note, icon="header"))
 
         grid = GridLayout(rows=len(options), cols=2, pos_hint={"top": 1}, spacing=self.spacing, padding=self.padding*2)
 
@@ -5682,7 +5681,7 @@ class RMApp(App):
         if icon == "warn":
             color = "F4CA16"  # желтый
             background_color = [.96, .95, .78] if self.mode == "light" else [.37, .32, .11]
-            size_hint_y = hint_y if hint_y is not None else 0.18*self.fontScale()#22
+            size_hint_y = hint_y if hint_y is not None else 0.18 * self.fontScale()
             size_hint_y *= self.fontScale()
             if self.bigLanguage: size_hint_y *= 1.25
             k = .95
@@ -5698,9 +5697,10 @@ class RMApp(App):
         elif icon == "header": # заметка над списком
             color = get_hex_from_color(self.scrollIconColor)
             size_hint_y = None
-            padding = self.padding*9 if self.displayed.form != "flatView" else 0, 0
+            padding = self.padding * 9 if self.displayed.form != "flatView" else 0, 0
             halign = "center" if self.displayed.form == "flatView" else "left"
             valign = "top"
+            font_size *= .97
         elif icon == "link":
             color = get_hex_from_color(self.linkColor)
             size_hint_y = hint_y if hint_y is not None else 0.5
@@ -5714,7 +5714,7 @@ class RMApp(App):
                                 size_hint_y=size_hint_y, font_size=font_size, halign=halign, valign="center",
                                 text_size=[self.mainList.size[0] * k, None], background_color=background_color)
         elif icon == "header":
-            tip = TipButton(text=f"[color={color}]{self.button[icon]}[/color] [color={textColor}]{text}[/color]",
+            tip = TipButton(text=f"[color={color}]{self.button[icon]}[/color] [color={textColor}][i]{text}[/i][/color]",
                             padding=padding, height=self.standardTextHeight, size_hint_y=size_hint_y,
                             font_size=font_size, halign=halign, valign=valign, background_color=background_color)
         else:
@@ -6245,6 +6245,7 @@ class RMApp(App):
                 if not "Progress" in str(instance.text) and instance != self.positive:
                     rad = 9999  # убираем закругление на win
             elif instance.text == icon('icon-minus') or instance.text == icon('icon-plus') \
+                    or instance.text == f"{self.button['share']} {self.msg[110]} " \
                     or instance.text == self.button['calendar'] or instance.text == self.button['male'] \
                     or instance.text == self.button['female']: # уменьшаем радиус для некоторых видов кнопок
                 rad = 280
@@ -6577,12 +6578,16 @@ class RMApp(App):
                                 self.FCP.dismiss()
                                 self.porchView(instance=instance)
                             else: # удаление позиции на сетке подъезда
-                                self.porch.deleteFlat(self.flat)
-                                if self.displayed.form != "flatDetails": # не из настроек
-                                    self.porchView(instance=instance, update=False)
-                                else: # из настроек
-                                    self.porch.floorview = None
-                                    self.porchView(instance=instance)
+                                blockDelete = self.porch.deleteFlat(self.flat)
+                                if blockDelete != True:
+                                    if self.displayed.form != "flatDetails": # не из настроек
+                                        self.porchView(instance=instance, update=False)
+                                    else: # из настроек
+                                        selected = self.house.porches.index(self.porch)
+                                        self.allowDelayOnUpdateList = False
+                                        self.porchView(instance=instance, update=False)
+                                        self.backPressed()
+                                        self.btn[selected].on_release() # не элегантно, но пока работает
 
                 else: # обычное удаление в сегменте
                     self.porch.deleteFlat(self.flat)
@@ -6630,8 +6635,9 @@ class RMApp(App):
                 self.restart()
 
         elif self.popupForm == "resetFlatToGray":
+            self.dismissTopPopup()
             if self.button["yes"] in instance.text.lower():
-                self.house.statsCached= None
+                self.house.statsCached = None
                 if len(self.stack) > 0: del self.stack[0]
                 self.flat.wipe()
                 if self.contactsEntryPoint:  self.conPressed()
@@ -6640,10 +6646,7 @@ class RMApp(App):
                 self.save()
             else:
                 self.colorBtn[6].text = ""
-                for i, status in zip(range(7), ["0", "1", "2", "3", "4", "5", ""]):
-                    if status == self.flat.getStatus()[0][1]:
-                        self.colorBtn[i].text = self.button["dot"]
-                        self.colorBtn[i].markup = True
+                self.activateColorButton()
 
         elif self.popupForm == "submitReport":
             if self.button["no"] in instance.text.lower():
@@ -7191,9 +7194,10 @@ class RMApp(App):
     # Системные функции
 
     def on_pause(self):
-        """ На паузе приложения делаем верифицированное сохранение либо резервирование, если изменилась дата """
+        """ На паузе приложения """
         self.cacheFreeModeGridPosition()
         self.save(verify=True)
+        if self.porch is not None: self.porch.scrollview = None # перезагружаем кеш списка подъезда для решения бага, когда после возврата из паузы весь подъезд пропадает
         self.checkDate()
         return True
 
