@@ -135,7 +135,7 @@
 
 <PopupButtonGray@PopupButton>:
     color: "lightgray" if self.state=='normal' else app.titleColorOnBlack
-    background_color: [.22, .22, .22, 1] if self.state=='normal' else app.popupBGColorPressed
+    background_color: [.2, .2, .2, 1] if self.state=='normal' else app.popupBGColorPressed
     text_size: self.size
 
 <RetroButton@Button>:
@@ -197,21 +197,21 @@
             rgba: app.getColor2(self.color2, self.flat)
         RoundedRectangle:
             pos: self.pos[0]+2, self.pos[1]+2
-            radius: [50,] if app.platform != "win" else [0,]
+            radius: [80,] if app.platform != "win" else [0,]
             size: (self.size[0]*self.size[1])**self.k*app.fontScale(), (self.size[0]*self.size[1])**self.k*app.fontScale()
 
-<MyTextInput_@TextInput>:
-    canvas.before:
+<MyTextInput@TextInput>:
+    wired_border: self.wired_border
+    rounded: self.rounded
+    canvas.after:
         Color:
-            rgba: app.textInputColor
+            rgba: (app.textBorderColorActive if self.focus else app.textBorderColorInactive) if self.wired_border else (0,0,0,0)
         Line:
-            width: app.thickness()[1]
-            #rounded_rectangle: self.x, self.y, self.size[0], self.size[1], [20]#, 500
-            rectangle: self.x, self.y, self.size[0], self.size[1]
-            #ellipse: self.x, self.y, self.size[0], self.size[1]
+            rounded_rectangle: self.x, self.y, self.width, self.height, app.getRadius(instance=self)[0], 500
+            width: app.thickness()[1] * 1.5
 
 <TipButton@Button>:
-    text_size: self.size#[0] * .95, self.size[1]
+    text_size: self.size
 
 <TopButton@Button>:
     color: app.topButtonColor if self.state=='normal' else (app.titleColor if app.theme != "3D" else app.topButtonColor)
@@ -293,9 +293,10 @@
             radius: app.getRadius(instance=self)[1]
 
 <ColorStatusButton@Button>:
+    status: self.status
     canvas.before:
         Color:
-            rgba: app.colorSelect
+            rgba: app.getColorForStatus(self.status) if self.state == "normal" else app.getColorForStatusPressed(self.status)
         RoundedRectangle:
             pos: self.pos
             size: self.size
