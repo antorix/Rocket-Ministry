@@ -208,7 +208,7 @@
             rgba: (app.textBorderColorActive if self.focus else app.textBorderColorInactive) if self.wired_border else (0,0,0,0)
         Line:
             rounded_rectangle: self.x, self.y, self.width, self.height, app.getRadius(instance=self)[0], 500
-            width: app.thickness()[1] * 1.5
+            width: app.thickness()[1] * (1.5 if not app.desktop else 1)
 
 <TipButton@Button>:
     text_size: self.size
