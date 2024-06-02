@@ -208,7 +208,7 @@
             rgba: (app.textBorderColorActive if self.focus else app.textBorderColorInactive) if self.wired_border else (0,0,0,0)
         Line:
             rounded_rectangle: self.x, self.y, self.width, self.height, app.getRadius(instance=self)[0], 500
-            width: app.thickness()[1] * (1.5 if not app.desktop else 1)
+            width: app.thickness()[1]# * (1.5 if not app.desktop else 1)
 
 <TipButton@Button>:
     text_size: self.size
@@ -250,6 +250,9 @@
     text_size: self.size
     defaultText: self.defaultText
     text: f"{self.defaultText}" if self.state=='normal' else f"[b]{self.defaultText}[/b]"
+
+<_TTab@TabbedPanelHeader>:
+    color: [.3, 0, 0, 1] if self.state=='normal' else [1, 0, 0, 1]
 
 <SortListButton@Button>:
     color: app.linkColor if self.state=='normal' else app.titleColor
