@@ -48,7 +48,7 @@ volonterski sati: %s
 Promene su sačuvane: sati: %s, %sBK: %d
 Službena god.
 da
-Tokom prethodnog pokretanja, aplikacija se ugasila zbog greške u pisanju memorije. Ako se ova greška često javlja, kontaktirajte programera.
+
 Podešavanja
 Podešavanja su sačuvana
 Podaci
@@ -192,7 +192,7 @@ Lista
 Podaci su uspešno obrisani
 Označavanje stana sivom bojom će obrisati sve njegove informacije. Nastaviti?
 Obrisati područje
-Pre brisanja područja, proverite da li su svi stanari koji želite da sačuvate označeni svetlo-zelenom bojom. U suprotnom biće obrisani zajedno sa područjem! Nastaviti sa brisanjem?
+Pre brisanja područja, proverite da li su svi stanari koji želite da sačuvate označeni svetlo-zelenom bojom. Na taj način će ostati u odeljku za kontakte. Nastaviti sa brisanjem?
 Izbriši ulaz
 Uklonite ulicu
 Da li ste sigurni?

@@ -48,7 +48,7 @@ credit: %s
 Saved changes: hours: %s, %sBS: %d
 Service Year
 Yes
-During the previous launch, the application crashed due to a memory write error. If this error occurs frequently, please contact the developer.
+
 Settings
 Settings saved
 Data
@@ -192,7 +192,7 @@ List
 Data wiped successfully
 Setting an apartment to the light gray color will delete all its information! Proceed?
 Delete territory
-Before deleting the territory, make sure that all householders you want to keep have the green-light color. Otherwise they will be deleted along with the territory! Proceed with deletion?
+Before deleting the territory, make sure that all householders you want to keep have the green-light color. This way, they will remain in the contacts section. Proceed with deletion?
 Delete entrance
 Delete street
 Are you sure?

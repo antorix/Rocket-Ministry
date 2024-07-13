@@ -3,10 +3,39 @@
 
 from sys import argv
 Devmode = 1 if "dev" in argv else 0
-Version = "2.14.006"
+Version = "2.14.007"
 """ 
-Исправления и оптимизации.
+* Более точный подсчет 4-месячной просрочки участка.
+* У новых пользователей на русском языке кнопка «Нет дома» по умолчанию включена. 
+* Мелкие исправления и оптимизации.
 """
+
+try:
+    from kivy.app import App
+except ImportError as e:
+    print(e, "\nInstalling...")
+    from subprocess import check_call
+    from sys import executable
+    check_call([executable, '-m', 'pip', 'install', 'kivy==2.1.0'])
+    from kivy.app import App
+
+try:
+    import plyer
+except ImportError as e:
+    print(e, "\nInstalling...")
+    from subprocess import check_call
+    from sys import executable
+    check_call([executable, '-m', 'pip', 'install', 'plyer'])
+    import plyer
+
+try:
+    from dateutil import relativedelta
+except ImportError as e:
+    print(e, "\nInstalling...")
+    from subprocess import check_call
+    from sys import executable
+    check_call([executable, '-m', 'pip', 'install', 'python-dateutil'])
+    from dateutil import relativedelta
 
 import utils as ut
 import os
@@ -15,12 +44,10 @@ import json
 import shutil
 import datetime
 import webbrowser
-import plyer
 from functools import partial
 from copy import copy
 from iconfonts import icon
 from iconfonts import register
-from kivy.app import App
 from kivy.uix.behaviors import DragBehavior
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.behaviors.touchripple import TouchRippleBehavior
@@ -56,10 +83,18 @@ if platform == "android":
     mActivity = PythonActivity.mActivity
 else:
     import _thread
-    import requests
-if platform == "win" and not Devmode:  # убираем консоль
+    try:
+        import requests
+    except ImportError as e:
+        print(e, "\nInstalling...")
+        from subprocess import check_call
+        from sys import executable
+        check_call([executable, '-m', 'pip', 'install', 'requests'])
+        import requests
+
+if platform == "win" and not Devmode:
     import ctypes
-    ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
+    ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0) # убираем консоль на Windows
 
 # Классы объектов участка
 
@@ -103,11 +138,11 @@ class House(object):
     def due(self):
         """ Определяет, что участок просрочен """
         if self.dueCached is None:
-            d1 = datetime.datetime.strptime(self.date, "%Y-%m-%d")
-            d2 = datetime.datetime.strptime(time.strftime("%Y-%m-%d", time.localtime()), "%Y-%m-%d")
-            days_between = abs((d2 - d1).days)
-            if days_between > 122: self.dueCached = True
-            else: self.dueCached = False
+            start = datetime.datetime.strptime(self.date, "%Y-%m-%d")
+            end = datetime.datetime.strptime(time.strftime("%Y-%m-%d", time.localtime()), "%Y-%m-%d")
+            delta = relativedelta.relativedelta(end, start)
+            diff = delta.months + (delta.years * 12)
+            self.dueCached = True if diff >= 4 else False
         return self.dueCached
 
     def getPorchType(self):
@@ -145,7 +180,7 @@ class House(object):
 
     def addPorch(self, input="", type="подъезд"):
         """ Создает новый подъезд и возвращает его """
-        newPorch = Porch(title=input.strip(), type=type, pos=[True, [0,0]])
+        newPorch = Porch(title=input.strip(), type=type, pos=[True, [0, 0]])
         self.porches.append(newPorch)
         return newPorch
 
@@ -167,12 +202,7 @@ class House(object):
 
     def export(self):
         return [
-            self.title,
-            self.porchesLayout,
-            self.date,
-            self.note,
-            self.type,
-            [porch.export() for porch in self.porches]
+            self.title, self.porchesLayout, self.date, self.note, self.type, [porch.export() for porch in self.porches]
         ]
 
 class Porch(object):
@@ -222,7 +252,7 @@ class Porch(object):
         RM.porch.flat = None
         if self.floors() and not regularDelete: # если подъезд c сеткой
             for f in self.flats:
-                if f.number == str(self.highestNumber):
+                if f.number == self.lastFlatNumber:
                     if f.status != "" or f.color2 != 0 or f.emoji != "": # проверка, чтобы последняя квартира была пустой
                         RM.popup(message=RM.msg[215])
                         return True
@@ -236,6 +266,7 @@ class Porch(object):
                 if ".1" in self.flats[i].number and float(self.flats[i].number) > adjustedNumber:
                     self.flats[i].number = "%.1f" % (float(self.flats[i].number)-1)
             self.flatsLayout = str(self.rows)
+            self.sortFlats() # повторная сортировка, чтобы обновить lastFlatNumber
         else: # простое удаление
             i = self.flats.index(deletedFlat)
             del self.flats[i]
@@ -318,7 +349,7 @@ class Porch(object):
             self.flats.sort(key=lambda x: x.number)
             self.flats.sort(key=lambda x: ut.numberize(x.number))
 
-        elif self.flatsLayout == "о": # numeric by number reversed
+        elif self.flatsLayout == "о":  # numeric by number reversed
             self.flatsNonFloorLayoutTemp = self.flatsLayout
             self.flats.sort(key=lambda x: x.number, reverse=True)
             self.flats.sort(key=lambda x: ut.numberize(x.number), reverse=True)
@@ -326,6 +357,7 @@ class Porch(object):
         else:
             self.flats.sort(key=lambda x: x.number) # две числовые сортировки обязательны перед всеми остальными
             self.flats.sort(key=lambda x: ut.numberize(x.number))
+            self.lastFlatNumber = self.flats[len(self.flats)-1].number # определяем номер в виде строки последней квартиры (максимальной по нумерации)
 
             if self.flatsLayout == "с": # статус (основной цвет)
                 self.flatsNonFloorLayoutTemp = self.flatsLayout
@@ -444,12 +476,7 @@ class Porch(object):
 
     def export(self):
         return [
-            self.title,
-            self.pos,
-            self.flatsLayout,
-            self.floor1,
-            self.note,
-            self.type,
+            self.title, self.pos, self.flatsLayout, self.floor1, self.note, self.type,
             [flat.export() for flat in self.flats]
         ]
 
@@ -463,7 +490,7 @@ class Flat(object):
                          # у виртуальных автоматически присваивается "virtual", а обычного номера нет
         self.status = status # статус, формируется динамически
         self.color2 = color2 # цвет кружочка
-        self.emoji = emoji#"\U0001F601" # смайлик U+1F600 -> \U0001F600
+        self.emoji = emoji #"\U0001F601" # смайлик U+1F600 -> \U0001F600
         self.phone = phone # телефон
         self.lastVisit = lastVisit # дата последней встречи в абсолютных секундах (формат time.time())
         self.records = [] # список записей посещений
@@ -621,15 +648,8 @@ class Flat(object):
 
     def export(self):
         return [
-            self.title,
-            self.note,
-            self.number,
-            self.status,
-            self.phone,
-            self.lastVisit,
-            self.color2,
-            self.emoji,
-            self.extra,
+            self.title, self.note, self.number, self.status, self.phone,
+            self.lastVisit, self.color2, self.emoji, self.extra,
             [record.export() for record in self.records]
         ]
 
@@ -648,9 +668,9 @@ class Report(object):
     def __init__(self):
         self.hours = RM.settings[2][0]
         self.credit = RM.settings[2][1]
-        self.placements = RM.settings[2][2]
-        self.videos = RM.settings[2][3]
-        self.returns = RM.settings[2][4]
+        #self.placements = RM.settings[2][2]
+        #self.videos = RM.settings[2][3]
+        #self.returns = RM.settings[2][4]
         self.studies = RM.settings[2][5]
         self.startTime = RM.settings[2][6]
         self.endTime = RM.settings[2][7]
@@ -666,9 +686,9 @@ class Report(object):
         RM.settings[2] = [
             self.hours,
             self.credit,
-            self.placements,
-            self.videos,
-            self.returns,
+            None, # бывшее self.placements,
+            None, # бывшее self.videos,
+            None, # бывшее self.returns,
             self.studies,
             self.startTime,
             self.endTime,
@@ -813,7 +833,6 @@ class Report(object):
             elif input == "и": # изучения
                 self.studies += 1
                 self.saveReport(RM.msg[241])
-        #self.checkNewMonth()
 
     def optimizeReportLog(self):
         if Devmode: return
@@ -877,7 +896,7 @@ class TipButton(Button):
         self.background_normal = ""
         self.background_down = ""
         self.halign = halign
-        self.valign = valign#"center"
+        self.valign = valign
         self.padding = [RM.padding*3, RM.padding] if padding is None else padding
         self.pos_hint = {"center_x": .5}
         self.color = RM.standardTextColor
@@ -933,6 +952,7 @@ class MyTextInput(TextInput):
             self.font_size = font_size if font_size is not None else (RM.fontS * RM.fontScale())
         if RM.specialFont is not None or specialFont: self.font_name = RM.differentFont
         if background_disabled_normal is not None: self.background_disabled_normal = background_disabled_normal
+        #self.text_validate_unfocus = True
         self.multiline = multiline
         self.markup = True
         self.limit = limit
@@ -1023,11 +1043,8 @@ class MyTextInput(TextInput):
             return super().insert_text(char, from_undo=from_undo)
 
     def on_text_validate(self):
-        try:
-            if not self.popup and not self.blockPositivePress:
-                self.text += " " # для бага на старых моделях, где Enter отправляет пустую строку
-                RM.positivePressed(instance=self)
-        except: pass
+        if not self.popup and not self.blockPositivePress:
+            RM.positivePressed(instance=self)
 
     def on_focus(self, instance=None, value=None):
         if platform == "android":
@@ -1127,7 +1144,7 @@ class FloorView(DragBehavior, GridLayout):
                 self.porch.pos[0] = True
         elif self.porch.pos[0]: # заход в уже существующий подъезд
             if self.oversized: # если подъезд перестал влезать, заполняем
-                self.pos = [0, 0] # 0,0
+                self.pos = [0, 0]
                 self.porch.pos[0] = False
             else:
                 self.pos = self.porch.pos[1] if self.porch.pos[1] != [0, 0] else self.centerPos
@@ -1907,7 +1924,7 @@ class ColorStatusButton(Button):
         def __click(*args):
             if self.status == "1" and RM.resources[0][1][5] == 0:
                 RM.popup(title=RM.msg[247], message=RM.msg[82])
-            RM.resources[0][1][5] = 1
+                RM.resources[0][1][5] = 1
             if len(RM.flat.records) == 0:
                 if RM.multipleBoxEntries[0].text.strip() != "":
                     RM.flat.updateName(RM.multipleBoxEntries[0].text.strip())
@@ -2147,6 +2164,7 @@ class RMApp(App):
         self.load(allowSave=False)
         self.today = time.strftime("%d", time.localtime())
         self.setParameters()
+        self.noDataFileActions()
         self.setTheme()
         self.displayed = DisplayedList()
         self.createInterface()
@@ -2155,11 +2173,25 @@ class RMApp(App):
         self.update()
         self.rep.checkNewMonth()
         self.rep.optimizeReportLog()
-        self.checkCrashFlag()
         Window.bind(on_touch_move=self.window_touch_move)
         Clock.schedule_interval(self.checkDate, 60)
         self.terPressed()
         return self.interface
+
+    def noDataFileActions(self):
+        """ Выполнение некоторых действий в зависимости от наличия файла данных """
+        if os.path.exists(self.userPath + self.dataFile):
+            self.dprint("Поиск файла данных: найден.")
+        else:
+            self.dprint("Поиск файла данных: НЕ найден.")
+            if self.language == "ru": # в русском языке принудительно включаем кнопку «Нет дома»
+                self.settings[0][13] = 1
+            if not self.desktop and self.resources[0][1][8] == 0:  # интересует версия для ПК?
+                self.resources[0][1][8] = 1
+                def __ask(*args):
+                    self.popup(popupForm="windows", message=self.msg[107], options=[self.button["yes"], self.button["no"]])
+                Clock.schedule_once(__ask, 60)
+            self.save()
 
     # Подготовка переменных
 
@@ -2352,7 +2384,7 @@ class RMApp(App):
                 self.themeOverriden = True
         else: self.themeOverriden = False
 
-        ck = .9
+        ck = .9 # коэффициент блеклости иконки на пункте списка
         k = .82
 
         # Светлые темы
@@ -2386,7 +2418,7 @@ class RMApp(App):
         self.tabColors = [self.linkColor, "tab_background_default.png"]
 
         if self.theme == "sepia":  # Сепия
-            self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .6]
+            self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .7]
             self.standardTextColor = [.22, .2, .19]
             self.topButtonColor[0] += 0.01
             self.topButtonColor[2] -= 0.01
@@ -2415,7 +2447,7 @@ class RMApp(App):
             self.tabColors = [self.linkColor, "tab_background_purple.png"]
 
         elif self.theme == "teal":  # Бирюза
-            self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .6]
+            self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .7]
             self.mainMenuActivated = self.titleColor
             self.mainMenuButtonColor = [.43, .48, .51, 1]
             self.mainMenuButtonBackgroundColor = [.7, .75, .8, .25]
@@ -2424,7 +2456,7 @@ class RMApp(App):
 
         elif self.theme == "green":  # Эко
             self.titleColor = self.mainMenuActivated = [.09, .65, .58, 1]
-            self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .6]
+            self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .7]
             self.timerOffColor = [.1, .3, .3, .8]
             self.mainMenuButtonColor = [.48, .5, .48, 1]
             self.roundButtonColorPressed[0] -= 0.03
@@ -2449,7 +2481,7 @@ class RMApp(App):
             self.standardTextColor = [.9, .9, .9, 1]
             self.popupButtonColor = [.25, .25, .25, 1]
             self.titleColor = self.mainMenuActivated = [.3, .87, 1, 1]
-            self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .8]
+            self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .85]
             self.linkColor = [.95, .95, .96, 1]
             self.wiredButtonColor = self.topButtonColor
             self.recordGray = get_hex_from_color(self.standardTextColor)
@@ -2479,9 +2511,9 @@ class RMApp(App):
                 self.roundButtonColorPressed = [.11, .37, .54, 1]
                 self.roundButtonColorPressed2 = [.7, .8, .9, .23]
                 self.sortButtonBackgroundColorPressed = [.25,.26,.27, 1]
-                self.mainMenuButtonBackgroundColor = [.17, .17, .17, .6]#[.1, .1, .1, .25]
+                self.mainMenuButtonBackgroundColor = [.17, .17, .17, .6]
                 self.titleColor = self.mainMenuActivated = [.76, .86, .99, 1]
-                self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .6]
+                self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .85]
                 self.saveColor = "00E79E"
                 self.disabledColor = get_hex_from_color(self.darkGrayFlat)
                 self.linkColor = [.97, .97, .97, 1]
@@ -2490,7 +2522,7 @@ class RMApp(App):
             elif self.theme == "3D":  # 3D
                 self.globalBGColor = [.15, .15, .15, 1]
                 self.titleColor = self.mainMenuActivated = [0, 1, .9, 1]
-                self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .6]
+                self.scrollIconColor = [self.titleColor[0] * ck, self.titleColor[1] * ck, self.titleColor[2] * ck, .85]
                 self.linkColor = self.mainMenuButtonColor = self.timerOffColor = [.97, 1, .97, 1]
                 self.mainMenuBGColor = [.5, .5, .5, 1]
                 self.scrollButtonBackgroundColor = [1, 1, 1, 1]
@@ -2510,8 +2542,8 @@ class RMApp(App):
         if self.theme == "purple": self.titleColorOnBlack = [.76, .65, .89]
         elif self.theme == "gray": self.titleColorOnBlack = [.63, .78, .99]
         else: self.titleColorOnBlack = [self.titleColor[0], self.titleColor[1], self.titleColor[2]]
-        self.textInputColor = self.standardTextColor #
-        self.textInputBGColor = 0,0,0,0#self.globalBGColor
+        self.textInputColor = self.standardTextColor
+        self.textInputBGColor = 0, 0, 0, 0
         self.timerOffColor[3] = .9
         self.floatButtonBGColor[3] = .78
         Window.clearcolor = self.globalBGColor
@@ -2530,7 +2562,7 @@ class RMApp(App):
         self.FCPIconSize = self.fontM
         self.tableIconSize = int(self.fontS * 1.05 * self.fontScale(cap=1.2)) if not self.desktop else int(self.fontL)
         self.tableIconSizeL = int(self.tableIconSize * 1.2)  # вариант чуть побольше
-        br = '\n' if self.settings[0][13] == 1 else "  "
+        br = '\n' if self.settings[0][13] else "  "
 
         self.button = {
             # иконки элементов списка
@@ -2551,7 +2583,7 @@ class RMApp(App):
             "save":     f"[b][color={self.saveColor}]{icon('icon-check-circle', size=self.tableIconSize)} {self.msg[5]}[/color][/b]",
 
             # плашка первого посещения
-            "lock":   f"[size={self.FCPIconSize}]{icon('icon-lock')}[/size]\n{self.msg[206]}",      # нет дома
+            "lock":   f"[size={self.FCPIconSize}]{icon('icon-lock')}[/size]{br}{self.msg[206]}",    # нет дома
             "record": f"[size={self.FCPIconSize}]{icon('icon-pencil')}[/size]{br}{self.msg[163]}",  # запись
             "reject": f"[size={self.FCPIconSize}]{icon('icon-ban')}[/size]{br}{self.msg[207]}",     # отказ
 
@@ -2812,10 +2844,6 @@ class RMApp(App):
         self.neutral.bind(on_release=self.neutralPressed)
         self.bottomButtons.add_widget(self.neutral)
 
-        #self.negative = TableButton(text="123",background_color=self.globalBGColor, size_hint_x=.20)
-        #self.negative.bind(on_release=self.backPressed)
-        #self.bottomButtons.add_widget(self.negative)
-
         self.floaterBox = FloatLayout(size_hint=(0, 0)) # контейнер для парящих кнопок на некоторых формах
         self.boxCenter.add_widget(self.floaterBox)
 
@@ -2853,13 +2881,9 @@ class RMApp(App):
             self.pageTitle.text = f"[ref=title]{self.displayed.title}[/ref]" if "View" in form \
                 else self.displayed.title
 
-            #from kvdroid.tools.lang import device_lang
-            #DL = device_lang()
-            #self.pageTitle.text = str(self.density())#str(DL)
-
             if self.displayed.positive != "":
                 self.positive.disabled = False
-                self.positive.text = self.displayed.positive#f"[b]{self.displayed.positive}[/b]"
+                self.positive.text = self.displayed.positive
                 self.positive.color = self.linkColor
             else:
                 self.positive.text = ""
@@ -3053,12 +3077,9 @@ class RMApp(App):
                             box.add_widget(button)
 
                             if addEllipsis: # добавляем три точки
-                                if 1:#form != "con":
-                                    box.add_widget(SettingsButton(id=i if not self.button['porch_inv'] in label else None))
-                                    self.scrollWidget.padding = RM.padding * 2, RM.padding * 2,\
-                                                                0 if self.desktop else 1, RM.padding * 2
-                                else:
-                                    box.add_widget(Widget(size_hint_x=sideMargin))
+                                box.add_widget(SettingsButton(id=i if not self.button['porch_inv'] in label else None))
+                                self.scrollWidget.padding = RM.padding * 2, RM.padding * 2,\
+                                                            0 if self.desktop else 1, RM.padding * 2
                                 box.add_widget(Widget(size_hint=(0, 0)))
 
                             if self.displayed.footer != []: # индикаторы-футеры, если они есть
@@ -3192,14 +3213,6 @@ class RMApp(App):
             self.showProgress()
             Clock.schedule_once(__continue, 0)
         else: __continue()
-
-        if not self.desktop and self.resources[0][1][8] == 0: # интересует версия для ПК?
-            self.resources[0][1][8] = 1
-            self.save()
-            def __ask(*args):
-                self.popup(popupForm="windows", message=self.msg[107],
-                           options=[self.button["yes"], self.button["no"]])
-            Clock.schedule_once(__ask, 60)
 
     def scrollClick(self, instance, delay=True):
         """ Действия, которые совершаются на указанных списках по нажатию на пункт списка """
@@ -3591,17 +3604,20 @@ class RMApp(App):
                 self.porch.floorview.pos = [0, 0] if self.porch.floorview.oversized else self.porch.floorview.centerPos
                 self.window_touch_move(tip=False)
             elif len(self.porch.flats) > 0: # переключение кол-ва колонок
-                if self.settings[0][10] == 1:   self.settings[0][10] = 2
-                elif self.settings[0][10] == 2: self.settings[0][10] = 3
-                elif self.settings[0][10] == 3: self.settings[0][10] = 4
-                elif self.settings[0][10] == 4: self.settings[0][10] = 1
-                if self.porch.scrollview is None: self.updateList(instance=instance)
-                for b in self.porch.scrollview.children[0].children:
-                    for widget in b.children:
-                        if "FlatButton" in str(widget):
-                            widget.update(flat=widget.flat)
-                            break
-                self.porchView(instance=instance)
+                def __continue(*args):
+                    if self.settings[0][10] == 1:   self.settings[0][10] = 2
+                    elif self.settings[0][10] == 2: self.settings[0][10] = 3
+                    elif self.settings[0][10] == 3: self.settings[0][10] = 4
+                    elif self.settings[0][10] == 4: self.settings[0][10] = 1
+                    if self.porch.scrollview is None: self.updateList(instance=instance)
+                    for b in self.porch.scrollview.children[0].children:
+                        for widget in b.children:
+                            if "FlatButton" in str(widget):
+                                widget.update(flat=widget.flat)
+                                break
+                    self.porchView(instance=instance)
+                self.showProgress()
+                Clock.schedule_once(__continue, 0)
 
         elif self.dest is not None: # Навигация до участка/контакта
             try:
@@ -4049,7 +4065,9 @@ class RMApp(App):
         if instant: # мгновенный вызов без запаздывания
             __press()
             return True
-        else: Clock.schedule_once(__press, 0)
+        else:
+            Clock.schedule_once(__press, 0)
+            return True
 
     def neutralPressed(self, instance=None):
         if self.displayed.form == "porchView":
@@ -4181,7 +4199,7 @@ class RMApp(App):
 
             if self.allcontacts[i][3] == "virtual": self.allcontacts[i][3] = ""
             if self.allcontacts[i][15] != "condo" and self.allcontacts[i][15] != "virtual":
-                porch = self.allcontacts[i][12]#f"{self.allcontacts[i][12]}, " if self.allcontacts[i][14] else ""
+                porch = self.allcontacts[i][12]
                 gap = ", "
             else: porch = gap = ""
 
@@ -4520,23 +4538,6 @@ class RMApp(App):
                                  halign="center"))
             openFileBox.add_widget(openFile)
             g.add_widget(openFileBox)
-
-            if 0: #not self.desktop: # Экспорт в Google Drive, если он есть
-                from kvdroid.tools.package import is_package_enabled
-                if is_package_enabled("com.google.android.apps.docs"):
-                    g.rows += 1
-                    gdriveBox = BoxLayout(orientation="vertical", padding=padding, spacing=sp)
-                    if self.theme != "3D":
-                        googleExport = RoundButton(text=f"{self.button['gdrive']}\n{self.msg[321]}", size_hint_y=size_hint_y)
-                    else:
-                        googleExport = RetroButton(text=f"{self.button['gdrive']}\n{self.msg[321]}", size_hint_y=size_hint_y)
-                    def __cloud(instance):
-                        self.share(email=True, create_chooser=False)
-                    googleExport.bind(on_release=__cloud)
-                    g.add_widget(MyLabel(text=self.msg[322], text_size=text_size, valign="top", halign="center",
-                                         font_size=self.fontXS * self.fontScale(cap=cap)))
-                    gdriveBox.add_widget(googleExport)
-                    g.add_widget(gdriveBox)
 
             restoreBox = BoxLayout(orientation="vertical", padding=padding, spacing=sp) # Восстановление
             if self.theme != "3D":
@@ -5310,7 +5311,6 @@ class RMApp(App):
             if allowMount: grid.add_widget(self.multipleBoxLabels[row])
 
             textbox = BoxLayout(size_hint=entrySize_hint, height=height)
-            #textbox = RelativeLayout(size_hint=entrySize_hint, height=height)
 
             if self.msg[127] in str(options[row]): self.multipleBoxEntries.append(RejectColorSelectButton())
             elif self.msg[131] in str(options[row]): self.multipleBoxEntries.append(self.languageSelector())
@@ -5334,9 +5334,8 @@ class RMApp(App):
 
             if self.displayed.form == "houseDetails" and\
                     self.multipleBoxLabels[row].text == self.msg[17]:  # добавляем кнопку календаря в настройки участка
-                #textbox = RelativeLayout(size_hint=entrySize_hint, height=height)
                 if self.theme != "3D":
-                    calButton = RoundButton(text=self.button["calendar"], #pos_hint={"x": 5, "y": 0},
+                    calButton = RoundButton(text=self.button["calendar"],
                                             size_hint_x=.2 if self.orientation == "v" else .1)
                 else:
                     calButton = RetroButton(text=self.button["calendar"],
@@ -5347,10 +5346,8 @@ class RMApp(App):
                 textbox.spacing = self.spacing
                 grid.add_widget(textbox)
             elif allowMount:
-                #textbox = BoxLayout(size_hint=entrySize_hint, height=height)
                 textbox.add_widget(self.multipleBoxEntries[row])
                 grid.add_widget(textbox)
-
 
             if self.displayed.form == "flatView" and self.multipleBoxLabels[row].text == self.msg[22]:  # добавляем кнопки М и Ж
                 if self.desktop:
@@ -5703,7 +5700,6 @@ class RMApp(App):
             text=self.button['shrink'] if self.porch.floors() else self.button['trash'],
             form=self.popupForm, font_size=font_size, size_hint_x=None, size_hint_y=None, size=size)
         def __shrink(instance):
-            #self.FCP.dismiss()
             self.blockFirstCall = 1
             self.deletePressed(forced=True)
 
@@ -5786,6 +5782,9 @@ class RMApp(App):
                 firstCallNotAtHome = RetroButton(text=RM.button['lock'], color="lightgray")
 
             def __notAtHome(instance=None):
+                if not self.resources[0][1][4] and self.language == "ru":
+                    self.popup(title=self.msg[247], message="Кнопку «Нет дома» можно отключить в настройках!")
+                    self.resources[0][1][4] = 1
                 self.house.statsCached= None
                 date = time.strftime("%d", time.localtime())
                 month = self.monthName()[5]
@@ -6218,7 +6217,7 @@ class RMApp(App):
             from kivy.base import EventLoop
             EventLoop.ensure_window()
             return EventLoop.window.dpi / 96.
-        else:#elif platform == 'win':
+        else:
             return 1.0
 
     def fontScale(self, cap=999):
@@ -6250,7 +6249,8 @@ class RMApp(App):
             plyer.notification.notify(toast=True, message=message)
         else:
             icon = "" if not self.desktop else "icon.ico"
-            try: plyer.notification.notify(app_name="Rocket Ministry", title=title, app_icon=icon, ticker="Rocket Ministry", message=message, timeout=timeout)
+            try: plyer.notification.notify(app_name="Rocket Ministry", title=title, app_icon=icon,
+                                           ticker="Rocket Ministry", message=message, timeout=timeout)
             except: plyer.notification.notify(toast=True, message=message)
 
     def addHouse(self, houses, input, type=True):
@@ -6520,7 +6520,6 @@ class RMApp(App):
                                 self.FCP.dismiss()
                                 self.porchView(instance=instance)
                             else: # удаление позиции на сетке подъезда
-                                #self.FCP.dismiss(all=True)
                                 blockDelete = self.porch.deleteFlat(self.flat)
                                 if blockDelete != True:
                                     if self.displayed.form != "flatDetails": # не из настроек
@@ -6534,6 +6533,7 @@ class RMApp(App):
                                         self.scrollClick(instance=self.btn[selected], delay=False) # не элегантно, но пока работает
 
                 else: # обычное удаление в сегменте
+                    self.FCP.dismiss(all=True)
                     self.porch.deleteFlat(self.flat)
                     self.porchView(instance=instance)
                 self.save()
@@ -6580,7 +6580,6 @@ class RMApp(App):
                 self.restart()
 
         elif self.popupForm == "resetFlatToGray":
-            #self.dismissTopPopup()
             if self.button["yes"] in instance.text.lower():
                 self.house.statsCached = None
                 if len(self.stack) > 0: del self.stack[0]
@@ -6869,10 +6868,10 @@ class RMApp(App):
                     box.add_widget(self.confirmButtonNegative)
                 contentMain.add_widget(box)
 
-        self.popups.insert(0,
-                           PopupNoAnimation(title=title, content=contentMain, size_hint=size_hint,
-                                            auto_dismiss=auto_dismiss,
-                                            separator_color=self.titleColorOnBlack if separator else [0,0,0,0])
+        self.popups.insert(
+            0,
+            PopupNoAnimation(title=title, content=contentMain, size_hint=size_hint, auto_dismiss=auto_dismiss,
+                             separator_color=self.titleColorOnBlack if separator else [0, 0, 0, 0])
         )
 
         if firstCall:
@@ -6900,8 +6899,7 @@ class RMApp(App):
         import csv
         import glob
         languages = []
-        for l in self.languages.keys():
-            languages.append([])
+        for l in self.languages.keys(): languages.append([])
         dir = "c:\\Users\\antor\\Downloads\\" if os.name == "nt" else "/home/antorix/Загрузки/"
         filenames = glob.glob(dir + "Rocket Ministry localization sheet*.csv")
         def __generate(file, col):
@@ -6935,7 +6933,6 @@ class RMApp(App):
                     newVersion = line.decode('utf-8').strip()
             except:
                 self.dprint("Не удалось подключиться к серверу.")
-                #return result
             else:  # успешно подключились, сохраняем сегодняшнюю дату последнего обновления (пока не используется)
                 """Version = '2.09.005' # тестирование версий
                 print(Version)
@@ -7114,7 +7111,8 @@ class RMApp(App):
             lastTheoMonthNum = 3
             curTheoMonthNum = 4
 
-        return curMonthUp, curMonthLow, lastMonthUp, lastMonthLow, lastMonthEn, curMonthRuShort, monthNum, lastTheoMonthNum, curTheoMonthNum
+        return curMonthUp, curMonthLow, lastMonthUp, lastMonthLow, lastMonthEn,\
+               curMonthRuShort, monthNum, lastTheoMonthNum, curTheoMonthNum
 
     def checkDate(self, *args):
         """ Проверка сегодняшней даты. Если она изменилась, делаем резервную копию, обнуляется house.due и проверяется отчет """
@@ -7126,16 +7124,6 @@ class RMApp(App):
             for house in self.houses: house.dueCached = None
             self.save(backup=True)
             self.today = time.strftime("%d", time.localtime())
-
-    def checkCrashFlag(self):
-        """ Проверка файла-флага о падении приложения в прошлый раз """
-        def __warn(*args):
-            self.popup(message=self.msg[51])
-        if os.path.exists(self.userPath + "crash_flag"):
-            os.remove(self.userPath + "crash_flag")
-            Clock.schedule_once(__warn, 1)
-        else:
-            self.save(backup=True)
 
     def dprint(self, text):
         """ Вывод отладочной информации в режиме разработчика """
@@ -7163,6 +7151,7 @@ class RMApp(App):
         """ Перезапуск либо перерисовка """
         self.checkOrientation(width=Window.size[0], height=Window.size[1])
         if mode == "soft": # простая перерисовка интерфейса
+            self.noDataFileActions()
             self.setParameters(reload=True)
             self.interface.clear_widgets()
             self.setTheme()
@@ -7198,8 +7187,7 @@ class RMApp(App):
         """ Возвращает исходные значения houses, settings, resources """
         return [], \
                [
-                   [1, 5, 0, 0, "и", "", "", None, 5, 0, 1, 1, 1, 0, "", 1, 0, "", "5", "д", 1, "sepia", 1],
-                   # program settings
+                   [1, 5, 0, 0, "и", "", "", None, 5, 0, 1, 1, 1, 0, "", 1, 0, "", "5", "д", 1, "sepia", 1], # program settings
                    "",  # дата последнего обновления    settings[1]
                    # report:                            settings[2]
                    [0.0, # [0] hours                    settings[2][0…]
@@ -7227,7 +7215,7 @@ class RMApp(App):
                    # resources[0][1][1] - показана подсказка про масштабирование подъезда
                    # resources[0][1][2] - показана подсказка про таймер
                    # resources[0][1][3] - показана подсказка про переключение вида подъезда
-                   # resources[0][1][4] - показана подсказка про фильтр темно-серых квартир
+                   # resources[0][1][4] - показана подсказка про кнопку «Нет дома»
                    # resources[0][1][5] - показана подсказка про первого интересующегося
                    # resources[0][1][6] - показана подсказка про возвращение подъезда в исходное положение
                    # resources[0][1][7] - показана подсказка про экран первого посещения
@@ -7425,7 +7413,6 @@ class RMApp(App):
                 message = f"Не удалось создать корректную резервную копию после {count} попыток! Удаляем файл {bkFile} и перезагружаемся..."
                 self.dprint(message)
                 os.remove(bkFile)
-                with open(self.userPath + "crash_flag", "w") as file: pass  # создаем файл-флаг на диске, чтобы при следующем запуске показать оповещение
                 self.restart()
 
         # Сохраняем
@@ -7555,7 +7542,7 @@ class RMApp(App):
                 self.settings[2] = buffer[0][2]
                 self.settings[3] = buffer[0][3]
                 self.settings[4] = buffer[0][4]
-                if len(self.settings[0]) == 22: self.settings[0].append(1)  # удалить в 2024
+                if len(self.settings[0]) == 22: self.settings[0].append(1)
 
                 self.resources[0] = buffer[1][0]  # загружаем блокнот
 
@@ -7574,7 +7561,7 @@ class RMApp(App):
                     h.append(buffer[s])
                 self.houseRetrieve(self.houses, housesNumber, h)
 
-                # Конвертации данных до новой версии
+                # Конвертации данных устаревших версий
 
                 if len(self.resources[0]) == 0: # конвертация заметок блокнота версии 1.x
                     self.resources[0].append("")
@@ -7596,7 +7583,7 @@ class RMApp(App):
                 if self.settings[0][10] == 0: self.settings[0][10] = 1 # кол-во колонок
 
         except: return False
-        else: return True
+        else:   return True
 
     def clearDB(self, silent=True):
         """ Очистка базы данных """
@@ -7670,4 +7657,5 @@ class RMApp(App):
 
 RM = RMApp()
 
-if __name__ == "__main__": RM.run()
+if __name__ == "__main__":
+    RM.run()

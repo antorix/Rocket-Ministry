@@ -48,7 +48,7 @@ kredi: %s
 Değişiklikler kaydedildi: saatler: %s, %stetkik: %d
 Hizmet yılı
 evet
-Önceki başlatma sırasında uygulama, belleğe yazma hatası nedeniyle çöktü. Bu hata sık sık meydana geliyorsa lütfen geliştiriciyle iletişime geçin.
+
 Ayarlar
 Ayarlar kaydedildi
 Veriler
@@ -192,7 +192,7 @@ Liste
 Veriler başarıyla temizlendi
 Bir daireyi griye sıfırlamak içindeki tüm bilgileri silecektir! Devam edelim mi?
 Saha'yı sil
-Bir sahayı kaldırmadan önce, kaydetmek istediğiniz tüm kişilerin durumunun açık yeşil olduğundan emin olun. Aksi takdirde saha ile birlikte silineceklerdir! Silinsin mi?
+Bir sahayı kaldırmadan önce, kaydetmek istediğiniz tüm kişilerin durumunun açık yeşil olduğundan emin olun. Bu şekilde kişiler bölümünde kalacaklar. Silinsin mi?
 Bloğu sil
 Sokağı sil
 Bundan emin misiniz?
