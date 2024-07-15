@@ -5,6 +5,7 @@ from sys import argv
 Devmode = 1 if "dev" in argv else 0
 Version = "2.14.007"
 """ 
+* Сортировка участков по дате последнего посещения.
 * Более точный подсчет 4-месячной просрочки участка.
 * У новых пользователей на русском языке кнопка «Нет дома» по умолчанию включена. 
 * Мелкие исправления и оптимизации.
@@ -125,14 +126,16 @@ class House(object):
     def getHouseStats(self):
         """ Подсчет посещенных и интересующихся на участке """
         if self.statsCached is None:
-            visited = interest = totalFlats = 0
+            visited = interest = totalFlats = lastVisit = 0
             for porch in self.porches:
                 for flat in porch.flats:
+                    print(flat.lastVisit)
                     if not "." in str(flat.number) or self.type == "private": totalFlats += 1
                     if len(flat.records) > 0: visited += 1
                     if flat.status == "1": interest += 1
+                    if isinstance(flat.lastVisit, float) and flat.lastVisit > lastVisit: lastVisit = flat.lastVisit
             ratio = visited / totalFlats if totalFlats != 0 else 0
-            self.statsCached = visited, interest, ratio, totalFlats
+            self.statsCached = visited, interest, ratio, totalFlats, lastVisit
         return self.statsCached
 
     def due(self):
@@ -3437,7 +3440,8 @@ class RMApp(App):
                 "[u][b]" + self.msg[332] + "[/u][/b]" if self.settings[0][19] == "т" else self.msg[332], # тип
                 "[u][b]"+self.msg[38]+"[/u][/b]" if self.settings[0][19] == "р" else self.msg[38], # размер
                 "[u][b]"+self.msg[31]+"[/u][/b]" if self.settings[0][19] == "и" else self.msg[31], # интерес
-                "[u][b]"+self.msg[30]+"[/u][/b]" if self.settings[0][19] == "д" else self.msg[30], # дата
+                "[u][b]"+self.msg[30]+"[/u][/b]" if self.settings[0][19] == "д" else self.msg[30], # дата взятия
+                "[u][b]"+self.msg[325]+"[/u][/b]" if self.settings[0][19] == "в" else self.msg[325], # дата посл. посещения
                f"[u][b]{self.msg[32]}[/u][/b] {self.button['caret-down']}" if self.settings[0][19] == "п" else\
                f"{self.msg[32]} {self.button['caret-down']}",     # обработка
                f"[u][b]{self.msg[32]}[/u][/b] {self.button['caret-up']}" if self.settings[0][19] == "о" else\
@@ -3452,8 +3456,9 @@ class RMApp(App):
                     elif instance.text == sortTypes[2]: self.settings[0][19] = "р"
                     elif instance.text == sortTypes[3]: self.settings[0][19] = "и"
                     elif instance.text == sortTypes[4]: self.settings[0][19] = "д"
-                    elif instance.text == sortTypes[5]: self.settings[0][19] = "п"
-                    elif instance.text == sortTypes[6]: self.settings[0][19] = "о"
+                    elif instance.text == sortTypes[5]: self.settings[0][19] = "в"
+                    elif instance.text == sortTypes[6]: self.settings[0][19] = "п"
+                    elif instance.text == sortTypes[7]: self.settings[0][19] = "о"
                     self.terPressed()
                     self.dropSortMenu.dismiss()
                 btn.bind(on_release=__resortHouses)
@@ -4129,6 +4134,10 @@ class RMApp(App):
             self.houses.sort(key=lambda x: x.progress, reverse=True)
         elif self.settings[0][19] == "т":  # by type
             self.houses.sort(key=lambda x: x.sort())
+        elif self.settings[0][19] == "в":  # by last visit
+            for house in self.houses:
+                house.progress = house.getHouseStats()[4]
+            self.houses.sort(key=lambda x: x.progress, reverse=False)
 
         housesList = []
         footer = []
@@ -4994,7 +5003,7 @@ class RMApp(App):
                     multilines=[False, True],
                     disabled=[False, False],
                     details=f"{self.button['user']} {self.msg[204]}",
-                    neutral=self.button["phone"],
+                    neutral=self.button["phone"] if self.flat.phone == "" else self.button["phone-square"],
                     nav=nav,
                     sort="",
                     note=note
