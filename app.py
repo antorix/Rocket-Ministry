@@ -3,12 +3,12 @@
 
 from sys import argv
 Devmode = 1 if "dev" in argv else 0
-Version = "2.14.007"
+Version = "2.14.008"
 """ 
-* Сортировка участков по дате последнего посещения.
-* Более точный подсчет 4-месячной просрочки участка.
-* У новых пользователей на русском языке кнопка «Нет дома» по умолчанию включена. 
-* Мелкие исправления и оптимизации.
+* Сумма часов служения и кредита урезается до 55 на вкладке служебного года.
+* Сортировка подъездов по дате последнего посещения.
+* Исправлен баг, из-за которого не создавались резервные копии.
+* Исправления и оптимизации.
 """
 
 try:
@@ -129,7 +129,6 @@ class House(object):
             visited = interest = totalFlats = lastVisit = 0
             for porch in self.porches:
                 for flat in porch.flats:
-                    print(flat.lastVisit)
                     if not "." in str(flat.number) or self.type == "private": totalFlats += 1
                     if len(flat.records) > 0: visited += 1
                     if flat.status == "1": interest += 1
@@ -159,6 +158,8 @@ class House(object):
         if self.porchesLayout == "н" or self.porchesLayout == "а": # сортировка подъездов по номеру/названию
             self.porches.sort(key=lambda x: x.title, reverse=False)
             self.porches.sort(key=lambda x: ut.numberize(x.title), reverse=False)
+        elif self.porchesLayout == "п": # сортировка подъездов по дате последнего посещения
+            self.porches.sort(key=lambda x: x.getLastVisit(), reverse=False)
         elif self.porchesLayout == "р": # сортировка подъездов по размеру (кол-ву квартир)
             self.porches.sort(key=lambda x: x.getSize(), reverse=False)
         elif self.porchesLayout == "о": # сортировка по размеру обратная
@@ -178,7 +179,10 @@ class House(object):
         if len(self.porches) == 0: number = 1
         else:
             last = len(self.porches) - 1
-            number = int(self.porches[last].title) + 1 if self.porches[last].title.isnumeric() else len(self.porches)+1
+            if self.porches[last].title.isnumeric():
+                number = int(self.porches[last].title) + 1
+            else:
+                number = int(ut.numberize(self.porches[last].title)) + 1
         return number
 
     def addPorch(self, input="", type="подъезд"):
@@ -302,6 +306,11 @@ class Porch(object):
             for flat in self.flats:
                 if "." not in flat.number: count += 1
         return count
+
+    def getLastVisit(self):
+        """ Выдает дату последнего посещения квартиры внутри подъезда для сортировки """
+        self.flats.sort(key=lambda x: x.lastVisit, reverse=True)
+        return self.flats[0].lastVisit if len(self.flats) > 0 else 0
 
     def getFlatsRange(self):
         """ Выдает диапазон квартир в подъезде """
@@ -741,6 +750,13 @@ class Report(object):
             # Clear service year in October
             if int(time.strftime("%m", time.localtime())) == 10:
                 RM.settings[4] = [None, None, None, None, None, None, None, None, None, None, None, None]
+
+            hourCap = 55
+            if self.hours >= hourCap: # обрезаем общий итог до 55 часов, если нужно
+                self.credit = 0
+            elif self.hours + self.credit >= hourCap:
+                self.hours = hourCap
+                self.credit = 0
 
             # Save last month hour+credit into service year
             RM.settings[4][RM.monthName()[7] - 1] = self.hours + self.credit
@@ -2123,7 +2139,8 @@ class DatePicker(BoxLayout):
         if self.date.month == 12:
             self.date = datetime.date(self.date.year + 1, 1, self.date.day)
         else:
-            self.date = datetime.date(self.date.year, self.date.month + 1, self.date.day)
+            try: self.date = datetime.date(self.date.year, self.date.month + 1, self.date.day)
+            except: self.date = datetime.date(self.date.year, self.date.month + 1, self.date.day - 1)
         self.populate_header()
         self.populate_body()
 
@@ -2131,7 +2148,8 @@ class DatePicker(BoxLayout):
         if self.date.month == 1:
             self.date = datetime.date(self.date.year - 1, 12, self.date.day)
         else:
-            self.date = datetime.date(self.date.year, self.date.month -1, self.date.day)
+            try: self.date = datetime.date(self.date.year, self.date.month -1, self.date.day)
+            except: self.date = datetime.date(self.date.year, self.date.month + 1, self.date.day - 1)
         self.populate_header()
         self.populate_body()
 
@@ -2179,6 +2197,7 @@ class RMApp(App):
         Window.bind(on_touch_move=self.window_touch_move)
         Clock.schedule_interval(self.checkDate, 60)
         self.terPressed()
+        self.save(backup=True)
         return self.interface
 
     def noDataFileActions(self):
@@ -2338,7 +2357,8 @@ class RMApp(App):
                     self.checkOrientation(width=args[0].size[0], height=args[0].size[1])
                 Window.bind(on_request_close=__close, on_resize=self.checkOrientation)
             else:
-                plyer.orientation.set_portrait()
+                try: plyer.orientation.set_portrait()
+                except: pass
 
         self.standardTextHeightUncorrected = (Window.size[1] * .038) if not self.desktop else 30
         self.floorLabelWidth = self.standardTextHeightUncorrected / 2
@@ -3466,19 +3486,22 @@ class RMApp(App):
 
         if self.displayed.form == "houseView": # меню сортировки подъездов
             sortTypes = [
-                "[u][b]"+self.msg[29]+"[/u][/b]" if self.house.porchesLayout == "н" \
-                or self.house.porchesLayout == "а" else self.msg[29], # название
-               f"[u][b]{self.msg[38]}[/u][/b] {self.button['caret-down']}" if self.house.porchesLayout == "р" else\
-               f"{self.msg[38]} {self.button['caret-down']}",     # размер вниз
-               f"[u][b]{self.msg[38]}[/u][/b] {self.button['caret-up']}" if self.house.porchesLayout == "о" else\
-               f"{self.msg[38]} {self.button['caret-up']}"        # обработка размер вверх
+                "[u][b]"+self.msg[29]+"[/u][/b]" if self.house.porchesLayout == "н" or self.house.porchesLayout == "а" else\
+                    self.msg[29], # название
+                "[u][b]"+self.msg[325]+"[/u][/b]" if self.house.porchesLayout == "п" else\
+                    self.msg[325], # посл. посещение
+                f"[u][b]{self.msg[38]}[/u][/b] {self.button['caret-down']}" if self.house.porchesLayout == "р" else\
+                    f"{self.msg[38]} {self.button['caret-down']}",     # размер вниз
+                f"[u][b]{self.msg[38]}[/u][/b] {self.button['caret-up']}" if self.house.porchesLayout == "о" else\
+                    f"{self.msg[38]} {self.button['caret-up']}"        # обработка размер вверх
             ]
             for i in range(len(sortTypes)):
                 btn = SortListButton(text=sortTypes[i])
                 def __resortPorches(instance=None):
                     if instance.text == sortTypes[0]:   self.house.porchesLayout = "н"
-                    elif instance.text == sortTypes[1]: self.house.porchesLayout = "р"
-                    elif instance.text == sortTypes[2]: self.house.porchesLayout = "о"
+                    elif instance.text == sortTypes[1]: self.house.porchesLayout = "п"
+                    elif instance.text == sortTypes[2]: self.house.porchesLayout = "р"
+                    elif instance.text == sortTypes[3]: self.house.porchesLayout = "о"
                     self.houseView()
                     self.dropSortMenu.dismiss()
                 btn.bind(on_release=__resortPorches)
@@ -4543,8 +4566,8 @@ class RMApp(App):
                     request_permissions([Permission.READ_EXTERNAL_STORAGE, Permission.WRITE_EXTERNAL_STORAGE])
                     Chooser(self.chooser_callback).choose_content("text/*")
             openFile.bind(on_release=__open)
-            g.add_widget(MyLabel(text=self.msg[317], text_size=text_size, font_size=self.fontXS * self.fontScale(cap=cap),
-                                 halign="center"))
+            g.add_widget(MyLabel(text=self.msg[317], text_size=text_size, halign="center",
+                                 font_size=self.fontXS * self.fontScale(cap=cap)))
             openFileBox.add_widget(openFile)
             g.add_widget(openFileBox)
 
@@ -4556,8 +4579,8 @@ class RMApp(App):
             def __restore(instance):
                 self.popup("restoreBackup")
             restoreBtn.bind(on_release=__restore)
-            g.add_widget(MyLabel(text=self.msg[319], text_size=text_size, font_size=self.fontXS * self.fontScale(cap=cap),
-                                 halign="center"))
+            g.add_widget(MyLabel(text=self.msg[319], text_size=text_size, halign="center",
+                                 font_size=self.fontXS * self.fontScale(cap=cap)))
             restoreBox.add_widget(restoreBtn)
             g.add_widget(restoreBox)
 
@@ -4686,7 +4709,6 @@ class RMApp(App):
             self.settings[0][0] = self.multipleBoxEntries[3].active  # уведомление при запуске таймера
             self.settings[0][20] = self.multipleBoxEntries[4].active  # служение по телефону
             self.settings[0][13] = self.multipleBoxEntries[5].active  # нет дома
-
             self.settings[0][2] = self.multipleBoxEntries[6].active  # кредит
             if not self.desktop:
                 self.settings[0][11] = self.multipleBoxEntries[7].active  # новое предложение с заглавной
@@ -5309,9 +5331,12 @@ class RMApp(App):
             # инструкции, какие поля разрешено монтировать, а какие нет
             if self.invisiblePorchName in str(default):  # поле "номер/адрес" для виртуальных контактов
                 allowMount = False
+            #elif self.msg[87] in text:  # временно отключена опция начала предложения с заглавной буквы
+            #    allowMount = False
             elif default != "virtual" and timerOK:  # поле сегмента для участков без сегментов
                 allowMount = True
-            else: allowMount = False
+            else:
+                allowMount = False
 
             self.multipleBoxLabels.append(MyLabel(text=text, valign="center", halign="center", size_hint=labelSize_hint,
                                                   markup=True, text_size=[text_size[0], None], pos_hint={"top": 0},
@@ -6790,9 +6815,8 @@ class RMApp(App):
             if self.orientation == "v": size_hint[1] *= self.fontScale()
             contentMain = BoxLayout(orientation="vertical", pos_hint={"top": 1})
             contentMain.add_widget(Label(text=self.msg[102], color=[.95, .95, .95], halign="left", valign="center",
-                                         height=self.standardTextHeight*1.5,
-                                         text_size=(self.mainList.width*size_hint[0]*.9, self.standardTextHeight*1.5),
-                                         size_hint=(1, None)))
+                                         height=self.standardTextHeight*1.5, size_hint=(1, None),
+                                         text_size=(self.mainList.width*size_hint[0]*.9, self.standardTextHeight*1.5)))
 
             self.fileDates = [] # собираем файлы резервных копий
             try:
@@ -6805,13 +6829,13 @@ class RMApp(App):
             for file in files:
                 self.fileDates.append(str("{:%d.%m.%Y, %H:%M:%S}".format(
                     datetime.datetime.strptime(time.ctime((os.path.getmtime(self.backupFolderLocation + file))),
-                                               "%a %b %d %H:%M:%S %Y"))))
+                                               "%a %b %d %H:%M:%S %Y"))) + f" ({os.path.getsize(self.backupFolderLocation + file)} B)")
             def __clickOnFile(instance): # обработка клика по файлу
                 def __do(*args):
                     for i in range(len(files)):
-                        if instance.text == str("{:%d.%m.%Y, %H:%M:%S}".format(
+                        if str("{:%d.%m.%Y, %H:%M:%S}".format(
                             datetime.datetime.strptime(time.ctime((os.path.getmtime(self.backupFolderLocation + files[i]))),
-                                                       "%a %b %d %H:%M:%S %Y"))):
+                                                       "%a %b %d %H:%M:%S %Y"))) in instance.text:
                             break
                     self.fileToRestore = i
                     self.popup("restoreRequest", title=self.msg[44], message=self.msg[45] % self.fileDates[i],
