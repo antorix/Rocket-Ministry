@@ -29,7 +29,7 @@ source.include_exts = py,ttf,fontd,png,lang,kv
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 2.14.008
+version = 2.15.000
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
@@ -37,10 +37,7 @@ version = 2.14.008
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = kivy==2.1.0, python3, plyer, kvdroid, python-dateutil, androidstorage4kivy
-#requirements = kivy==2.2.1, python3, plyer, kvdroid, requests, certifi, chardet, idna, urllib3, androidstorage4kivy
-#https://github.com/kivy/plyer/archive/refs/heads/master.zip
-#https://github.com/kvdroid/Kvdroid/archive/refs/heads/master.zip,
+requirements = kivy==2.3.0, python3, plyer, kvdroid, python-dateutil, androidstorage4kivy
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -112,7 +109,7 @@ android.api = 34
 #android.sdk = 20
 
 # (str) Android NDK version to use
-#android.ndk = 25b
+android.ndk = 25b
 
 # (int) Android NDK API to use. This is the minimum API your app will support, it should usually match android.minapi.
 #android.ndk_api = 21
@@ -288,7 +285,7 @@ android.archs = arm64-v8a, armeabi-v7a
 
 # (int) overrides automatic versionCode computation (used in build.gradle)
 # this is not the same as app version and should only be edited if you know what you're doing
-android.numeric_version = 102120165
+android.numeric_version = 102120166
 
 # (bool) enables Android auto backup feature (Android API >=23)
 android.allow_backup = True

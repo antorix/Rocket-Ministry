@@ -7,7 +7,7 @@ Add entrance
 Are you a pioneer? We will set up the monthly hour requirement in settings. You may change it manually.
 Nothing found
 Database error
-Report log
+Ministry log
 Add
 Add house(s)
 Press %s to return the entrance grid to its original position.
@@ -38,17 +38,17 @@ Note
 Size
 Close
 Timer
-Where to log time?
+Hide until restart
 Ministry
 Credit
 Data recovery
 Restore backup from %s?
 Error in some of the fields, please check data!
 credit: %s
-Saved changes: hours: %s, %sBS: %d
+Don't divide into streets
 Service Year
 Yes
-
+Type
 Settings
 Settings saved
 Data
@@ -68,17 +68,17 @@ Add territory
 Remember my choice
 All data
 Example: Park Way, 30
-
+Sort
 Enter new entrance name:
 Number or description
 An apartment building may have one or more entrances or blocks with separate sets of apartments.
 Enter new street name:
-
+Export
 Add entrance
 Add street
 Add contact
 Enter contact name and/or description:
-You are creating a standalone contact not associated with any territory. People from all your territories are listed in the contacts automatically if they are assigned the light-green status.
+You are creating a standalone contact not associated with any territory. People from all your territories are listed in the contacts automatically if they are assigned the light-green color.
 Congratulations, you have your first interested person! He/she will be automatically added to the Contacts screen due to the light-green color.
 No doorbell
 N/A
@@ -223,22 +223,22 @@ credit
 Report for %s:
 Comments
 Timer started
-Timer stopped, added to report: %s h.
-Timer stopped, added to report: %s h. of credit
-Added to report
+Timer stopped, added [b]%s[/b] h.
+Timer stopped, added [b]%s[/b] h. of credit
 You are now on the first call screen. It appears only when you are visiting a person for the first time.
 Update entrance parameters?
-1 hour added to report
-%s hour(s) added to report
-1 hour of credit added to report
-%s hour(s) of credit added to report
+Last visit date
+Building#
+Houses#
+Address#list
+Choose the territory type!
 Cut
 Copy
 Paste
 Select all
 There are unsaved changes at the page! Proceed without saving?
 Here you will find the history of all report updates (max. %s entries).
-1 Bible study added to report
+Apartment size in per-floor view
 Database wiped!
 Unable to access file. Most likely, the link is not assigned public access rights.
 Failed to load data file. Most likely, it is damaged or of wrong format.
@@ -318,15 +318,18 @@ Load data into the app
 Save all app data to a file
 Recover a backup copy if something went wrong
 Full reset of all program data and settings, including backups
-Export
-Export to Google Drive
-Apartment size in per-floor view
-Sort
-Last visit date
-Territory type:
-Building#
-Houses#
-Address#list
-Choose the territory type!
-Don't divide into streets
-Type
+[b]%s[/b] hour(s) added
+[b]%s[/b] hour(s) of credit added
+The search works in all fields of all apartments and contacts.
+Pause#
+End#ministry
+End#credit
+Timer paused
+Timer restarted
+Label (optional)
+A label is any text at the end of a log entry. It can be entered when disabling the timer or directly in the log.
+New entry
+New log entry
+Label text
+You can add a log entry in the form of a date and time with a sole label. The date and time are entered automatically. Such an entry can be completely deleted if desired (regular log entries are not deleted).
+Only with labels

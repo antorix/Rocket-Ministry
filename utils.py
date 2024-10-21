@@ -53,7 +53,7 @@ def timeHHMMToFloat(timeH):
     """ Преобразование HH:MM во float с коррекцией минутной погрешности """
     def __timeHHMMToFloatUnadjusted(mytime):
         """ Преобразование HH:MM во float без коррекции погрешности """
-        if mytime == None: return None
+        if mytime is None: return None
         try:
             if ":" not in mytime:
                 result1 = abs(int(mytime.strip()))
@@ -82,7 +82,7 @@ def timeHHMMToFloat(timeH):
 
 def sumHHMM(list=None, mode="+"):
     """ Складывает два значения времени вида HH:MM, полученных в списке """
-    if list == None: list = ['25:06', '9:31']
+    if list is None: list = ['25:06', '9:31']
     mysum = datetime.timedelta()
     for i in list:
         (h, m) = i.split(':')
@@ -94,7 +94,7 @@ def sumHHMM(list=None, mode="+"):
 
 def timeFloatToHHMM(hours=None, delta=None):
     """ Преобразует числовое время в HHMM в зависимости от типа и длины строки, которую выдает timedelta """
-    if delta == None: delta = str(datetime.timedelta(hours=hours)).strip()
+    if delta is None: delta = str(datetime.timedelta(hours=hours)).strip()
     if "." in delta: delta = delta[0: delta.index(".")]
     if len(delta) == 7:                             # "1:00:00"
         result = "%s:%s" % (delta[0:1], delta[2:4])

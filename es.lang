@@ -7,7 +7,7 @@ Agregar entrada
 ¿Eres precursor? Estableceremos el requisito de horas mensuales en los ajustes. Puedes cambiarlo manualmente
 No se ha encontrado nada
 Error en la base de datos
-Informe de registro
+Informe de servicio
 Agregar
 Agregar casa(s)
 Presione %s para devolver la imagen de entrada a su posición original.
@@ -38,17 +38,17 @@ Nota
 Tamaño
 Cerrar
 Cronómetro
-¿Dónde registrar el tiempo?
+Ocultar hasta reiniciar
 Servicio
 Crédito
 Recuperación de datos
 ¿Restaurar copia de seguridad del %s?
 Error en algunos de los campos, ¡por favor, compruebe los datos!
 crédito: %s
-Cambios guardados: horas: %s, %sEB: %d
+No dividir en calles
 Año de Serv.
 si
-
+Tipo
 Ajustes
 Ajustes guardados
 Datos
@@ -68,12 +68,12 @@ Añadir territorio
 Recuerda mi elección
 Todos los datos
 Ejemplo: Avenida del Parque, 30
-
+Ordenar
 Introduzca el nombre de la nueva entrada:
 Número o descripción
 Un condominio puede tener una o más entradas o bloques con conjuntos separados de apartamentos.
 Ingrese el nuevo nombre de la calle:
-
+Exportar
 Agregar entrada
 Agregar calle
 Agregar contacto
@@ -223,22 +223,22 @@ credito
 Informe para %s:
 Nota
 Cronómetro activado
-Cronómetro parado, añadido al informe: %s h.
-Cronómetro parado, agregado al informe: %s h. de crédito
-Agregado al informe
+Cronómetro parado, agregado [b]%s[/b] h.
+Cronómetro parado, agregado [b]%s[/b] h. de crédito
 Ahora se encuentra en la pantalla de primera coonversación. Sólo aparece cuando visita a una persona por primera vez.
 ¿Actualizar parámetros de entrada?
-1 hora agregada al informe
-%s hora(s) agregada(s) al informe
-1 hora de crédito agregada al informe
-%s hora(s) de crédito agregada(s) al informe
+Fecha de la última visita
+Condominio#
+Casas#particulares
+Lista de#direcciones
+¡Elige el tipo de territorio!
 Cortar
 Copiar
 Pegar
 Seleccionar todo
 ¡Hay cambios sin guardar en la página! ¿Proceder sin guardar?
 Aquí encontrará el historial de todas las actualizaciones de informes (máx. %s entradas).
-1 Estudio bíblico agregado al informe
+Tamaño del apartamento en vista por piso
 ¡Base de datos borrada!
 No se puede acceder al archivo. Lo más probable es que el enlace no tenga asignados derechos de acceso público.
 No se ha podido cargar el archivo de datos. Lo más probable es que esté dañado o tenga un formato incorrecto.
@@ -318,15 +318,18 @@ Cargar datos en la aplicación
 Guarde todos los datos de la aplicación en un archivo
 Recuperar una copia de seguridad si algo salió mal
 Restablecimiento de todos los datos y configuraciones, incluidas las copias de seguridad
-Exportar
-Exportar a Google Drive
-Tamaño del apartamento en vista por piso
-Ordenar
-Fecha de la última visita
-Tipo de territorio:
-Condominio#
-Casas#particulares
-Lista de#direcciones
-¡Elige el tipo de territorio!
-No dividir en calles
-Tipo
+[b]%s[/b] hora(s) agregada(s)
+[b]%s[/b] hora(s) de crédito agregada(s)
+La búsqueda funciona en todos los campos de todos los apartamentos y contactos.
+Pausa#
+Fin#servicio
+Fin#crédito
+Cronómetro en pausa
+Cronómetro reiniciado
+Descripción
+Una etiqueta es cualquier texto que se coloca al final de una entrada del registro. Se puede introducir al desactivar el temporizador o directamente en el registro.
+Nueva entrada
+Nueva entrada del registro
+Texto de la etiqueta
+Puede crear una entrada del registro en forma de fecha y hora con una sola etiqueta. La fecha y la hora se introducen automáticamente. Dicha entrada se puede eliminar por completo si se desea (las entradas del registro normales no se eliminan).
+Solo con etiquetas

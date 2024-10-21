@@ -38,17 +38,17 @@ Not
 Büyüklüğü
 Kapat
 Kronometre
-Saati nereye yazacağım?
+Yeniden başlatılana kadar gizle
 Hizmet
 Kredi
 Veri kurtarma
 %s tarihli yedekleme geri yüklensin mi?
 Alanlardan birinde hata var, verileri kontrol edin!
 kredi: %s
-Değişiklikler kaydedildi: saatler: %s, %stetkik: %d
+Sokaklara bölünmeyin
 Hizmet yılı
 evet
-
+Tip
 Ayarlar
 Ayarlar kaydedildi
 Veriler
@@ -68,12 +68,12 @@ Yeni saha
 Seçimimi hatırla
 Tüm veriler
 Örnek: Kurtuluş, 20
-
+Sırala
 Yeni block kapısını adlandırın:
 Numarası veya açıklaması
 Apartman'da bir veya birçok giriş kapısı olabilir.
 Yeni sokak adını girin:
-
+Dışa aktar
 Yeni blok
 Yeni sokak
 Yeni kişi numarası
@@ -223,22 +223,22 @@ kredi
 %s için rapor:
 Not
 Zamanlayıcı başladı
-Zamanlayıcı durduruldu ve rapora %s saat eklendi.
-Zamanlayıcı durduruldu, rapora %s saat kredi eklendi
-Rapora eklendi
+Zamanlayıcı durduruldu ve [b]%s[/b] saat eklendi
+Zamanlayıcı durduruldu ve [b]%s[/b] saat kredi eklendi
 Önünüzde ilk ziyaret ekranı. Sadece kişiyi ilk kez ziyaret ettiğinizde ortaya çıkar.
 Blok parametreleri güncellensin mi?
-Rapora 1 saat eklendi.
-Bildirmek için %s saat eklendi.
-Rapora 1 saatlik kredi eklendi
-Rapora %s saat kredisi eklendi
+Son ziyaret tarihi
+Apartman#
+Özel#evler
+Adres#listesi
+Bölge türünü seçin!
 Kes
 Kopyala
 Yapıştır
 Tümünü seç
 Sayfada kaydedilmemiş değişiklikler var! Kaydetmeden devam edilsin mi?
 Burada tüm rapor güncellemelerinin bir geçmişi olacaktır (maksimum %s kayıt).
-Rapora 1 tetkik eklendi
+Kat bazında görünümde daire büyüklüğü
 Veritabanı temizlendi!
 Dosyaya erişilemiyor. Büyük olasılıkla, kendisine genel erişim hakları verilmemiştir.
 Veri dosyası yüklenemedi. Büyük olasılıkla hasar görmüş veya formata uymuyor.
@@ -318,15 +318,18 @@ Uygulamaya veri yükleyin
 Tüm uygulama verilerini bir dosyaya kaydedin
 Bir şeyler ters giderse yedek kopyayı kurtarın
 Yedeklemeler dahil tüm program verilerinin ve ayarlarının tamamen sıfırlanması
-Dışa aktar
-Google Drive'a aktar
-Kat bazında görünümde daire büyüklüğü
-Sırala
-Son ziyaret tarihi
-Sahanın türü:
-Apartman#
-Özel#evler
-Adres#listesi
-Bölge türünü seçin!
-Sokaklara bölünmeyin
-Tip
+[b]%s[/b] saat eklendi
+[b]%s[/b] saat kredi eklendi
+Arama, tüm dairelerin ve kişilerin tüm alanlarında çalışır.
+Duraklatma#
+Son#hizmet
+Son#kredi
+Zamanlayıcı duraklatıldı
+Zamanlayıcı yeniden başlatıldı
+Açıklama
+Etiket, bir günlük girişinin sonundaki herhangi bir metindir. Zamanlayıcı devre dışı bırakıldığında veya doğrudan günlüğe girilebilir.
+Yeni giriş
+Yeni günlük girişi
+Etiket metni
+Tek bir etiketle tarih ve saat biçiminde bir günlük girişi oluşturabilirsiniz. Tarih ve saat otomatik olarak girilir. İstenirse böyle bir giriş tamamen silinebilir (normal günlük girişleri silinmez).
+Yalnızca etiketlerle
