@@ -4,9 +4,10 @@
 from sys import argv
 Devmode = 1 if "dev" in argv else 0
 Mobmode = 1 if "mob" in argv else 0
-Version = "2.15.000"
+Version = "2.15.001"
 
 """ 
+* Исправлен баг, при котором программа могла упасть при заходе в просроченный участок.
 * Постановка таймера на паузу.
 * Текстовые метки (описания) после каждого служения и любой другой записи в журнале служения.
 * Создание новых записей журнала, их редактирование и фильтрация.
@@ -182,7 +183,8 @@ class House(object):
             listIcon = f"{RM.button['porch']} {porchString}" if self.type == "condo" else RM.button['pin']
             list.append(f"{listIcon} [b]{porch.title}[/b] {porch.getFlatsRange()}")
         if self.type != "condo" and len(list) == 0:
-            list.append(f"{RM.button['plus-1']}{RM.button['pin']} {RM.msg[213]}")
+            list.append(f"{RM.button['plus-1']}{RM.button['pin']} {RM.msg[213]}") # создайте первую улицу
+            #RM.createFirstHouse = True
         if self.type == "condo" and self.porchesLayout == "н" or self.porchesLayout == "а":
             list.append(f"{RM.button['porch_inv']} {RM.msg[6]} {self.getLastPorchNumber()}")
         return list
@@ -3342,9 +3344,8 @@ class RMApp(App):
             rad = self.getRadius(90)[0]  # радиус закругления подсветки списка в участках и контактах
             if self.desktop:
                 self.height1 = self.height1 * (.8 if form == "ter" or form == "con" else .6)
-            #height = self.height1
 
-            if self.createFirstHouse: # запись "создайте один или несколько домов" для пустого сегмента
+            if self.createFirstHouse: # запись "создайте дом(а)" для пустого сегмента
                 self.createFirstHouse = False
                 self.floaterBox.clear_widgets()
                 box1 = BoxLayout(orientation="vertical", size_hint_y=None, height=self.height1*1.05)
@@ -3425,13 +3426,14 @@ class RMApp(App):
                 if form == "ter": self.scrollRadius = [rad, ] if len(self.houses) == 0 else [rad, rad, 0, 0]
                 elif form == "con": self.scrollRadius = [rad, rad, 0, 0]
                 elif form == "houseView":
+                    due = self.house.due()
                     self.scrollRadius = [rad, ]
-                    if self.house.due() and self.dueWarnMessageShow:
+                    if due and self.dueWarnMessageShow:
                         self.mainList.add_widget(self.tip(icon="warn"))
                 elif form == "porchView":
                     self.height1 *= .9 # высота списка квартир чуть меньше обычного
-                    if self.invisiblePorchName in self.porch.title and self.house.due() and self.dueWarnMessageShow:
-                        if self.house.due() and self.dueWarnMessageShow:
+                    if self.invisiblePorchName in self.porch.title and due and self.dueWarnMessageShow:
+                        if due and self.dueWarnMessageShow:
                             self.mainList.add_widget(self.tip(icon="warn"))
                 elif form == "repLog":
                     #self.scrollRadius = [rad, rad, 0, 0]
@@ -3495,7 +3497,8 @@ class RMApp(App):
                             box.add_widget(button)
 
                         if addEllipsis: # добавляем три точки (или пустое место - определяется через id)
-                            box.add_widget(SettingsButton(id=i if not self.msg[6] in label else None))
+                            box.add_widget(SettingsButton(
+                                id=None if self.msg[6] in label or self.msg[213] in label else i))
                             self.scrollWidget.padding = RM.padding * 2, RM.padding * 2,\
                                                         0 if self.desktop else 1, RM.padding * 2
                             box.add_widget(Widget(size_hint=(0, 0)))
@@ -5310,7 +5313,7 @@ class RMApp(App):
             tip=[note, "header"]
         )
         self.stack = ['houseView', 'ter']
-        self.updateList(instance=instance, progress=True if len(self.house.porches) > 5 and not due else False)
+        self.updateList(instance=instance, progress=True if len(self.house.porches) > 5 and not self.house.due() else False)
 
     def porchView(self, instance, update=True):
         """ Вид подъезда - список квартир или этажей """
@@ -5729,7 +5732,7 @@ class RMApp(App):
                 else: timerOK = False
             else:
                 settings = False
-                shrink = True if self.displayed.form == "flatView" else False
+                shrink = True if self.displayed.form == "flatView" and not self.contactsEntryPoint and not self.searchEntryPoint else False
                 grid.spacing = self.spacing * 2
                 y = 1 if multiline else None
                 text = options[row].strip()
