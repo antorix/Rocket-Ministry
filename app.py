@@ -3,6 +3,7 @@
 
 from sys import argv
 Devmode = 1 if "dev" in argv else 0
+Mobmode = 1 if "mob" in argv else 0
 Version = "2.15.000"
 
 """ 
@@ -14,7 +15,7 @@ Version = "2.15.000"
 * Исправления и оптимизации.
 
 Известные баги:
-* Прыгают элементы при перерисовке интерфейса из настроек. 
+* Прыгают элементы при перерисовке интерфейса из настроек (def restart). 
 """
 
 try: # на ПК проверяем версию Kivy и обновляем при необходимости
@@ -330,14 +331,14 @@ class Porch(object):
         list = []
         alpha = False
         check = True
+        range = ""
         for flat in self.flats:
             if not "." in flat.number or self.type == "сегмент":
                 list.append(flat)
                 if check and not flat.number.isnumeric():
                     alpha = True
                     check = False
-        if len(list) == 0: range = ""
-        elif len(list) == 1:
+        if len(list) == 1:
             if "подъезд" in self.type: range = f" {RM.msg[214]} [i]{list[0].number}[/i]"
             else: range = f" [i]{list[0].number}[/i]"
         elif len(list) > 1:
@@ -2578,6 +2579,7 @@ class RMApp(App):
     def setParameters(self, reload=False):
         # Определение платформы
         self.desktop = True if platform == "win" or platform == "linux" or platform == "macosx" else False
+        if Mobmode: self.desktop = False # переопределение через аргумент (для IDE)
         self.platform = platform
         self.DL = None
         if self.settings[0][6] in self.languages.keys():
@@ -2659,7 +2661,6 @@ class RMApp(App):
             self.stack = []
             self.restore = 0
             self.blockFirstCall = 0
-            self.importHelp = 0
             self.house = self.porch = self.flat = self.record = self.clickedBtnIndex = None
             EventLoop.window.bind(on_keyboard=self.hook_keyboard)
             Window.fullscreen = False # размеры и визуальные элементы
@@ -2685,7 +2686,7 @@ class RMApp(App):
             self.flatSizeInList = self.fontM * .9 * self.fontScale()  # размер шрифта квартир в режиме списка
             self.tablePCFontSize = self.fontM
 
-            if self.platform == "macosx" or Devmode:
+            if self.platform == "macosx" or Devmode or Mobmode:
                 # В режиме разработчика задаем размер окна принудительно (а также на Mac OS при первом запуске,
                 # где горизонтальная ориентация не оптимизирована)
                 k = .38
@@ -3829,9 +3830,9 @@ class RMApp(App):
 
         elif self.displayed.form == "set": # Помощь
             if self.language == "ru" or self.language == "uk":
-                webbrowser.open("https://github.com/antorix/Rocket-Ministry/wiki/ru")
+                webbrowser.open("https://github.com/antorix/rocket-ministry/wiki/ru")
             else:
-                webbrowser.open("https://github.com/antorix/Rocket-Ministry/wiki")
+                webbrowser.open("https://github.com/antorix/rocket-ministry/wiki")
 
     def backPressed(self, instance=None):
         """ Нажата кнопка «назад» """
@@ -4653,7 +4654,7 @@ class RMApp(App):
         if updateStack: self.stack = ["ter"]
         self.updateList(instance=instance, progress=False)
 
-        if len(self.houses) == 0: # слегка анимируем запись "Создайте первый участок"
+        if len(self.houses) == 0 and self.orientation == "v": # слегка анимируем запись "Создайте первый участок"
             self.mainList.padding = (0, self.padding * 5, 0, Window.size[1] * .3)
             self.scroll.scroll_to(widget=self.btn[0], animate=True)
 
@@ -5140,8 +5141,8 @@ class RMApp(App):
 
             def __click(instance, value):
                 if value == "web":
-                    if self.language == "ru":   webbrowser.open("https://github.com/antorix/Rocket-Ministry/wiki/ru")
-                    else:                       webbrowser.open("https://github.com/antorix/Rocket-Ministry/")
+                    if self.language == "ru":   webbrowser.open("https://github.com/antorix/rocket-ministry/wiki/ru")
+                    else:                       webbrowser.open("https://github.com/antorix/rocket-ministry/")
                 elif value == "email":          webbrowser.open("mailto:inoblogger@gmail.com?subject=Rocket Ministry")
                 elif value == "store":          webbrowser.open(store[1])
             aboutBtn.bind(on_ref_press=__click)
@@ -6120,7 +6121,7 @@ class RMApp(App):
             halign = "center" if self.displayed.form == "flatView" else "left"
             valign = "top"
             font_size *= .97
-        elif icon == "link":
+        else:#elif icon == "link":
             color = get_hex_from_color(self.linkColor)
             size_hint_y = hint_y if hint_y is not None else 0.5
             size_hint_y *= self.fontScale()
@@ -6905,9 +6906,9 @@ class RMApp(App):
             self.dismissTopPopup(all=True)
             if self.button["yes"] in instance.text.lower():
                 if self.language == "ru":
-                    webbrowser.open("https://github.com/antorix/Rocket-Ministry/wiki/ru#windows")
+                    webbrowser.open("https://github.com/antorix/rocket-ministry/wiki/ru#windows")
                 else:
-                    webbrowser.open("https://github.com/antorix/Rocket-Ministry/wiki#windows")
+                    webbrowser.open("https://github.com/antorix/rocket-ministry/wiki#windows")
 
         elif self.popupForm == "clearData":
             if self.button["yes"] in instance.text.lower():
@@ -7113,14 +7114,6 @@ class RMApp(App):
                 self.timerPressed(activate=True)
                 if self.displayed.form == "rep": self.repPressed()
                 elif self.displayed.form == "repLog": self.repPressed(jumpToLog=True)
-
-        elif self.importHelp:
-            if self.button["yes"] in instance.text.lower():
-                if self.language == "ru" or self.language == "uk":
-                    webbrowser.open("https://github.com/antorix/Rocket-Ministry/wiki/ru#синхронизация-и-резервирование-данных")
-                else:
-                    webbrowser.open("https://github.com/antorix/Rocket-Ministry/wiki#data-synchronization-and-backup")
-            self.importHelp = 0
 
         self.popupForm = ""
 
@@ -7513,7 +7506,7 @@ class RMApp(App):
 
         def __update(threadName, delay):
             try:  # подключаемся к GitHub
-                for line in requests.get("https://raw.githubusercontent.com/antorix/Rocket-Ministry/master/version"):
+                for line in requests.get("https://raw.githubusercontent.com/antorix/rocket-ministry/master/version"):
                     newVersion = line.decode('utf-8').strip()
             except:
                 self.dprint("Не удалось подключиться к серверу.")
@@ -7525,7 +7518,7 @@ class RMApp(App):
                 if newVersion > Version:
                     Clock.schedule_once(lambda x: self.popup(message=self.msg[310], dismiss=False), 5)
                     self.dprint("Найдена новая версия, скачиваем.")
-                    response = requests.get("https://github.com/antorix/Rocket-Ministry/archive/refs/heads/master.zip")
+                    response = requests.get("https://github.com/antorix/rocket-ministry/archive/refs/heads/master.zip")
                     import tempfile
                     import zipfile
                     file = tempfile.TemporaryFile()
@@ -7533,7 +7526,7 @@ class RMApp(App):
                     fzip = zipfile.ZipFile(file)
                     fzip.extractall("")
                     file.close()
-                    downloadedFolder = "Rocket-Ministry-master"
+                    downloadedFolder = "rocket-ministry-master"
                     for file_name in os.listdir(downloadedFolder):
                         source = downloadedFolder + "/" + file_name
                         destination = file_name
