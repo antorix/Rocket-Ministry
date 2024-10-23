@@ -184,7 +184,6 @@ class House(object):
             list.append(f"{listIcon} [b]{porch.title}[/b] {porch.getFlatsRange()}")
         if self.type != "condo" and len(list) == 0:
             list.append(f"{RM.button['plus-1']}{RM.button['pin']} {RM.msg[213]}") # создайте первую улицу
-            #RM.createFirstHouse = True
         if self.type == "condo" and self.porchesLayout == "н" or self.porchesLayout == "а":
             list.append(f"{RM.button['porch_inv']} {RM.msg[6]} {self.getLastPorchNumber()}")
         return list
@@ -3351,8 +3350,7 @@ class RMApp(App):
                 box1 = BoxLayout(orientation="vertical", size_hint_y=None, height=self.height1*1.05)
                 self.scrollRadius = [rad,]
                 box1.add_widget(ScrollButton(
-                    id=None, height=box1.height,
-                    text=f"{RM.button['plus-1']}{RM.button['home']} {RM.msg[12]}"))
+                    id=None, height=box1.height, text=f"{RM.button['porch_inv']} {RM.msg[12]}"))
                 self.scroll.add_widget(self.scrollWidget)
                 self.scrollWidget.add_widget(box1)
                 self.mainList.add_widget(self.scroll)
@@ -3431,6 +3429,7 @@ class RMApp(App):
                     if due and self.dueWarnMessageShow:
                         self.mainList.add_widget(self.tip(icon="warn"))
                 elif form == "porchView":
+                    due = self.house.due()
                     self.height1 *= .9 # высота списка квартир чуть меньше обычного
                     if self.invisiblePorchName in self.porch.title and due and self.dueWarnMessageShow:
                         if due and self.dueWarnMessageShow:
@@ -5301,6 +5300,10 @@ class RMApp(App):
         self.mainListsize1 = self.mainList.size[1]
         self.dest = self.house.title
 
+        if 0:#self.house.type != "condo" and len(self.house.porches) == 0:
+            tip = "Нажмите на кнопку «Новая улица»"
+        else: tip = [note, "header"]
+
         self.displayed.update(
             form="houseView",
             title=f"[b]{self.house.title}[/b]",
@@ -5310,7 +5313,7 @@ class RMApp(App):
             positive=f"{self.button['plus']} {self.msg[77 if self.house.type == 'condo' else 78]}",
             jump=self.house.porches.index(self.porch) if jump is None and self.porch is not None and \
                                                          self.porch in self.house.porches else jump,
-            tip=[note, "header"]
+            tip=tip#[note, "header"]
         )
         self.stack = ['houseView', 'ter']
         self.updateList(instance=instance, progress=True if len(self.house.porches) > 5 and not self.house.due() else False)
@@ -7738,7 +7741,7 @@ class RMApp(App):
             self.setParameters(reload=True)
             self.setTheme()
             self.createInterface()
-            Clock.schedule_once(lambda x: self.terPressed(instance=self.settingsButton, updateStack=False), 0)
+            self.settingsPressed()
         else: # полная перезагрузка приложения
             if platform == "android":
                 from kvdroid.tools import restart_app
